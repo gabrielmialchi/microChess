@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MicroChess</title>
+    <style>
+        :root { 
+            --bg: #0a0a0a; 
+            --panel-bg: #151515;
+            --text-color: #ffffff;
+            --board-border: #444;
+            --cell-light: #4d4d4d;
+            --cell-dark: #2b2b2b;
+            --topbar-bg: #222;
+            
+            --white-p: #ffffff; 
+            --black-p: #111111; 
+            
+            --white-glow: drop-shadow(0 0 5px rgba(52, 152, 219, 0.7)); 
+            --black-glow: drop-shadow(0 0 5px rgba(155, 89, 182, 0.9)); 
+        }
+
+        body.theme-light {
+            --bg: #e8e8e8;
+            --panel-bg: #f5f5f5;
+            --text-color: #111111;
+            --board-border: #888;
+            --cell-light: #dcdcdc;
+            --cell-dark: #a9a9a9;
+            --topbar-bg: #ddd;
+        }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text-color); display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; min-height: 100vh; transition: background 0.5s; }
+        
+        #host-entry-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; text-align: center; color: white;}
+        #host-entry-screen h1 { color: #f1c40f; letter-spacing: 3px; margin-bottom: 10px;}
+        #link-display { background: #111; border: 1px solid #333; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 1.1rem; color: #fff; margin: 20px 0; width: 100%; max-width: 400px; word-break: break-all; }
+        .btn-large { padding: 15px 30px; background: #f39c12; color: #000; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 1.2rem; transition: 0.2s; width: 100%; max-width: 300px;}
+
+        #game-area { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 450px; }
+
+        #top-bar { display: flex; justify-content: space-between; width: 100%; margin-bottom: 15px; background: var(--topbar-bg); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--board-border); box-sizing: border-box; transition: 0.3s;}
+        #phase-title { margin: 0; color: #f1c40f; text-align: center; width: 100%; letter-spacing: 2px; font-size: 1.2rem;}
+
+        .panel { background: var(--panel-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--board-border); width: 100%; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; transition: 0.3s;}
+        
+        .board-container { position: relative; margin: 15px 0; width: 100%; aspect-ratio: 1 / 1; z-index: 1; }
+        .board { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); background: var(--board-border); border: 4px solid var(--board-border); width: 100%; height: 100%; box-sizing: border-box; transition: 0.3s;}
+        .cell { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-sizing: border-box; border: 1px solid rgba(0,0,0,0.1); transition: 0.3s;}
+        .cell.light { background: var(--cell-light); } 
+        .cell.dark { background: var(--cell-dark); }
+        
+        .cell.highlight { background: rgba(46, 204, 113, 0.5) !important; box-shadow: inset 0 0 10px rgba(46,204,113,0.8); }
+        .cell.planned { background: rgba(241, 196, 15, 0.4) !important; box-shadow: inset 0 0 10px rgba(241,196,15,0.8); }
+
+        #pieces-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        
+        .piece { position: absolute; width: 25%; height: 25%; display: flex; justify-content: center; align-items: center; font-size: 11vw; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
+        @media (min-width: 450px) { .piece { font-size: 50px; } }
+        
+        .piece.white { color: var(--white-p); filter: var(--white-glow); text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+        .piece.black { color: var(--black-p); filter: var(--black-glow); }
+        
+        .piece.ghost { opacity: 0.35; filter: grayscale(1); }
+        .piece.buffed { filter: drop-shadow(0 0 12px #f1c40f) !important; } 
+        .piece.selected { transform: scale(1.15); z-index: 20; }
+        .piece.selected.white { filter: drop-shadow(0 0 10px rgba(52, 152, 219, 1)); }
+        .piece.selected.black { filter: drop-shadow(0 0 10px rgba(155, 89, 182, 1)); }
+
+        .inventory-area { width: 100%; text-align: center; position: relative;}
+        
+        .shop-wrapper { display: flex; align-items: center; justify-content: center; gap: 5px; width: 100%; flex-wrap: wrap;}
+        .shop-btns button { padding: 8px 12px; margin: 2px; cursor: pointer; background: #222; color: #fff; border: 1px solid #555; border-radius: 4px; font-size: 1.1rem;}
+        body.theme-light .shop-btns button { background: #fff; color: #000; border-color: #ccc;}
+        .shop-btns button:disabled { opacity: 0.3; cursor: not-allowed; }
+        
+        #btn-reset-draft { width: 38px; height: 38px; background: #c0392b; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; color: white; font-size: 1.1rem; display: none; line-height: 1; padding: 0;}
+
+        .inv-piece { display:inline-block; width:45px; height:45px; line-height:45px; border:2px solid var(--board-border); border-radius: 6px; background: var(--topbar-bg); text-align:center; cursor:pointer; margin:3px; font-size:26px; transition: 0.2s; }
+        .inv-piece.selected { border-color: gold; transform: scale(1.1); box-shadow: 0 0 8px gold; }
+        .inv-piece.white { color: var(--white-p); filter: drop-shadow(0 0 2px rgba(52, 152, 219, 0.5));}
+        .inv-piece.black { color: var(--black-p); filter: drop-shadow(0 0 2px rgba(155, 89, 182, 0.5));}
+
+        .btn-ready { width: 100%; padding: 15px; background: #2ecc71; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; font-size: 1.2rem; color: #000; transition: 0.2s;}
+        .btn-ready:disabled { background: #555; color: #aaa; cursor: not-allowed; }
+        
+        #duel-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; padding: 15px; box-sizing: border-box;}
+        #duel-status { letter-spacing: 2px; text-align: center; color: white; margin-top: 0; font-size: 1.5rem;}
+        
+        .duel-container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 320px; }
+        
+        .duel-card { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 15px; border-radius: 12px; box-sizing: border-box; transition: 0.3s; }
+        .duel-card.opp { border: 2px dashed #444; background: rgba(255,255,255,0.02); }
+        
+        .card-theme-white .duel-name-badge { background: #f0f0f0; color: #111; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 1rem; width: 80%; text-align: center; margin-bottom: 10px; }
+        .card-theme-white .dice-interactive { border-color: #f0f0f0; }
+        
+        .card-theme-black .duel-name-badge { background: #222; color: #f0f0f0; border: 1px solid #555; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 1rem; width: 80%; text-align: center; margin-bottom: 10px; }
+        .card-theme-black .dice-interactive { border-color: #555; background: #111; }
+        
+        .dice-interactive { width: 90px; height: 90px; border-radius: 50%; background: #111; border: 3px solid; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; color: white;}
+        .duel-card.opp .dice-interactive { pointer-events: none; }
+        .dice-interactive.winner-pulse { border-color: gold !important; box-shadow: 0 0 30px rgba(255, 215, 0, 0.7); transform: scale(1.1); }
+        .dice-interactive:active { transform: scale(0.95); }
+        
+        .dice-unicode { font-size: 65px; line-height: 1; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
+        
+        .result-box { display: none; flex-direction: column; align-items: center; margin-top: 10px; width: 100%; animation: fadein 0.5s; }
+        .result-box.show { display: flex; }
+        .result-total { font-size: 3.5rem; font-weight: 900; color: #f1c40f; line-height: 1; text-shadow: 0 0 15px rgba(241, 196, 15, 0.5);}
+        .result-math { font-size: 0.9rem; color: #ccc; margin-top: 8px; background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 20px;}
+        
+        .opp-label { font-size: 0.8rem; color: #aaa; letter-spacing: 2px; align-self: flex-start; margin-bottom: 5px; font-weight: bold; text-shadow: 0 1px 2px #000;}
+        
+        /* TELA DE FIM DE JOGO */
+        #game-over-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; text-align: center; color: white; animation: fadein 0.5s;}
+        #game-over-screen h1 { font-size: 1.5rem; color: #aaa; letter-spacing: 4px; margin-bottom: 0; }
+        #game-over-result { font-size: 3.5rem; margin: 10px 0 40px 0; text-transform: uppercase; font-weight: 900; line-height: 1.1; }
+        .win-text { color: #2ecc71; text-shadow: 0 0 30px rgba(46, 204, 113, 0.8); }
+        .lose-text { color: #e74c3c; text-shadow: 0 0 30px rgba(231, 76, 60, 0.8); }
+
+        @keyframes fadein { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="host-entry-screen">
+        <h1>MICROCHESS</h1>
+        <p style="color: #aaa; margin-top: 0;">Sincronia e Vácuo</p>
+        <p style="margin-top: 40px;">Sala criada com sucesso!</p>
+        <p style="color: #aaa; font-size: 0.9rem;">Compartilhe este link com seu oponente:</p>
+        <div id="link-display">Obtendo link...</div>
+        <button class="btn-large" onclick="copyLink()" id="btn-copy-main">COPIAR LINK</button>
+        <p style="color: #e67e22; margin-top: 50px; font-weight: bold;" id="await-p2">Aguardando P2 se conectar...</p>
+    </div>
+
+    <div id="game-over-screen">
+        <h1>FIM DE JOGO</h1>
+        <div id="game-over-result">RESULTADO</div>
+        <button class="btn-large" onclick="playAgain()">JOGAR NOVAMENTE</button>
+    </div>
+
+    <div id="game-area">
+        <div id="top-bar">
+            <div style="font-size:13px; font-weight:bold;" id="opp-status">Adversário: Conectando...</div>
+            <div style="font-size:13px; font-weight:bold; opacity: 0.7;" id="opp-pts">Pts: ?</div>
+        </div>
+
+        <div class="panel" id="my-panel">
+            <h2 id="phase-title">CONECTANDO...</h2>
+            <div id="my-budget" style="color:#f1c40f; margin: 0 0 10px 0; font-weight:bold; font-size: 1.2rem;">Meus Pts: 5</div>
+            
+            <div class="inventory-area">
+                <div class="shop-wrapper">
+                    <div class="shop-btns" id="shop-btns-container"></div>
+                    <button id="btn-reset-draft" onclick="resetDraft()" title="Limpar">❌</button>
+                </div>
+                <div id="my-inv-stack" style="margin-top: 10px;"></div>
+            </div>
+
+            <div class="board-container">
+                <div class="board" id="main-board"></div>
+                <div id="pieces-layer"></div>
+            </div>
+            
+            <button id="btn-ready" class="btn-ready" onclick="setReady()">PRONTO</button>
+        </div>
+    </div>
+
+    <div id="duel-modal">
+        <h1 id="duel-status">CONFLITO!</h1>
+        <div class="duel-container" id="duel-container"></div>
+        <button id="close-duel" class="btn-ready" style="max-width:300px; margin-top:30px; display:none; background:#f1c40f" onclick="finishDuel()">RESOLVER JOGADA</button>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAbhFyIevh5QmD7ccdF5kbHOcqsEdlhWUI",
+        authDomain: "micro-chess-bcbc3.firebaseapp.com",
+        projectId: "micro-chess-bcbc3",
+        storageBucket: "micro-chess-bcbc3.firebasestorage.app",
+        messagingSenderId: "757899553536",
+        appId: "1:757899553536:web:5b365419c7c4f8f672a1e5",
+        databaseURL: "https://micro-chess-bcbc3-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let roomID = urlParams.get('sala');
+    let myColor = 'white'; 
+    let oppColor = 'black';
+    let isHost = false;
+
+    if (!roomID) {
+        isHost = true;
+        roomID = Math.random().toString(36).substring(2, 8);
+        window.history.replaceState(null, '', `?sala=${roomID}`);
+        
+        document.getElementById('host-entry-screen').style.display = 'flex';
+        document.getElementById('link-display').innerText = window.location.href;
+    } else {
+        myColor = 'black';
+        oppColor = 'white';
+        document.title = "MicroChess v6 - P2 (Pretas)";
+        document.body.classList.add('theme-light'); 
+        document.getElementById('game-area').style.display = 'flex';
+    }
+
+    const gameRef = ref(db, `rooms/${roomID}`);
+
+    window.copyLink = () => {
+        navigator.clipboard.writeText(window.location.href);
+        const btnMain = document.getElementById('btn-copy-main');
+        if(btnMain) {
+            btnMain.innerText = "COPIADO!";
+            btnMain.style.background = "#2ecc71";
+            setTimeout(() => { btnMain.innerText = "COPIAR LINK"; btnMain.style.background = "#f39c12"; }, 2000);
+        }
+    };
+
+    let localSelection = null;
+    let rollInterval = null;
+    let state = null;
+    let isAdvancing = false; 
+    let localDiceAnimating = false;
+
+    const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+    const CONFIG = {
+        'Q': { name: 'Rainha', cost: 5, bonus: 5, icon: '♕' }, 'R': { name: 'Torre', cost: 4, bonus: 4, icon: '♖' },
+        'N': { name: 'Cavalo', cost: 3, bonus: 3, icon: '♘' }, 'B': { name: 'Bispo', cost: 2, bonus: 2, icon: '♗' },
+        'P': { name: 'Peão', cost: 1, bonus: 1, icon: '♙' }, 'K': { name: 'Rei', cost: 0, bonus: 5, icon: '♔' }
+    };
+
+    async function initGame() {
+        if (myColor === 'white') {
+            const snap = await get(gameRef);
+            if (!snap.exists()) {
+                await set(gameRef, {
+                    phase: 'DRAFT', p2Connected: false,
+                    budget: { white: 5, black: 5 },
+                    army: [
+                        { id: "wk1", type: 'K', x: 1, y: 0, color: 'white', bonus: 5, buffed: false },
+                        { id: "bk1", type: 'K', x: 2, y: 3, color: 'black', bonus: 5, buffed: false }
+                    ],
+                    inventory: { white: [], black: [] },
+                    ready: { white: false, black: false },
+                    planning: { white: null, black: null },
+                    duel: { active: false, pressed: { white: false, black: false }, rolls: { white: 0, black: 0 }, wPiece: null, bPiece: null, tx: 0, ty: 0, suddenDeath: false },
+                    duelQueue: []
+                });
+            }
+        } else {
+            await update(gameRef, { p2Connected: true });
+        }
+
+        onValue(gameRef, (snapshot) => {
+            const data = snapshot.val();
+            if(!data) return;
+            state = data;
+            
+            if (isHost && state.p2Connected && document.getElementById('host-entry-screen').style.display !== 'none') {
+                document.getElementById('host-entry-screen').style.display = 'none';
+                document.getElementById('game-area').style.display = 'flex';
+            }
+
+            state.phase = state.phase || 'DRAFT';
+            state.army = state.army || [];
+            state.budget = state.budget || { white: 5, black: 5 };
+            state.inventory = state.inventory || { white: [], black: [] };
+            state.inventory.white = state.inventory.white || [];
+            state.inventory.black = state.inventory.black || [];
+            state.ready = state.ready || { white: false, black: false };
+            state.planning = state.planning || { white: null, black: null };
+            state.duel = state.duel || { active: false };
+            state.duel.pressed = state.duel.pressed || { white: false, black: false };
+            state.duel.rolls = state.duel.rolls || { white: 0, black: 0 };
+            state.duelQueue = state.duelQueue || [];
+
+            updateUI();
+
+            if (myColor === 'white' && state.ready.white && state.ready.black && !isAdvancing && state.phase !== 'GAMEOVER') {
+                isAdvancing = true;
+                advanceHost().finally(() => { isAdvancing = false; });
+            }
+        });
+    }
+
+    function updateUI() {
+        // TELA DE GAME OVER
+        if (state.phase === 'GAMEOVER') {
+            const wk = state.army.find(p => p.type === 'K' && p.color === 'white');
+            const bk = state.army.find(p => p.type === 'K' && p.color === 'black');
+            let winnerColor = wk ? 'white' : (bk ? 'black' : 'draw'); 
+
+            const goScreen = document.getElementById('game-over-screen');
+            const goResult = document.getElementById('game-over-result');
+            
+            goScreen.style.display = 'flex';
+            document.getElementById('duel-modal').style.display = 'none'; // Garante que o modal suma
+            
+            if (winnerColor === myColor) {
+                goResult.innerText = "VOCÊ VENCEU!";
+                goResult.className = "win-text";
+            } else {
+                goResult.innerText = "VOCÊ PERDEU!";
+                goResult.className = "lose-text";
+            }
+            return; // Interrompe as atualizações da UI do jogo se acabou
+        } else {
+            document.getElementById('game-over-screen').style.display = 'none';
+        }
+
+        document.getElementById('phase-title').innerText = state.phase === 'REVEAL' ? "REVELAÇÃO!" : state.phase;
+        
+        const oppReady = state.ready[oppColor];
+        if (state.phase === 'REVEAL') {
+             document.getElementById('opp-status').innerText = "Adversário: Vendo tabuleiro";
+             document.getElementById('opp-status').style.color = "#f1c40f";
+        } else {
+            document.getElementById('opp-status').innerText = oppReady ? "Adversário: PRONTO" : "Adversário: PENSANDO...";
+            document.getElementById('opp-status').style.color = oppReady ? "#2ecc71" : "#e67e22";
+        }
+        document.getElementById('opp-pts').innerText = `Pts: ${state.budget[oppColor]}`;
+
+        const btnReady = document.getElementById('btn-ready');
+        btnReady.disabled = state.ready[myColor] || state.phase === 'REVEAL';
+        
+        if (state.phase === 'REVEAL') {
+            btnReady.innerText = "PREPARANDO AÇÃO...";
+            btnReady.style.background = "#555";
+            btnReady.style.color = "#aaa";
+        } else {
+            btnReady.innerText = state.ready[myColor] ? "AGUARDANDO OPONENTE..." : "PRONTO";
+            btnReady.style.background = state.ready[myColor] ? "#555" : "#2ecc71";
+            btnReady.style.color = state.ready[myColor] ? "#aaa" : "#000";
+        }
+
+        document.getElementById('btn-reset-draft').style.display = (state.phase === 'DRAFT' && !state.ready[myColor]) ? 'block' : 'none';
+
+        renderShopAndInventory();
+        syncBoard();
+        handleDuelUI();
+    }
+
+    function renderShopAndInventory() {
+        const invStack = document.getElementById('my-inv-stack');
+        invStack.innerHTML = '';
+        const shopContainer = document.getElementById('shop-btns-container');
+        shopContainer.innerHTML = ''; 
+        
+        document.getElementById('my-budget').innerText = `Meus Pts: ${state.budget[myColor]}`;
+
+        ['Q','R','N','B','P'].forEach(type => {
+            const btn = document.createElement('button');
+            btn.innerText = `${CONFIG[type].icon}(${CONFIG[type].cost})`;
+            btn.disabled = state.budget[myColor] < CONFIG[type].cost || state.phase !== 'DRAFT' || state.ready[myColor]; 
+            btn.onclick = () => buyPiece(type);
+            shopContainer.appendChild(btn);
+        });
+
+        state.inventory[myColor].forEach((item, idx) => {
+            const span = document.createElement('span');
+            span.className = `inv-piece ${myColor}`; 
+            if (localSelection?.idx === idx && localSelection?.fromInv) span.classList.add('selected');
+            span.innerText = CONFIG[item.type].icon;
+            
+            span.onclick = () => { 
+                if(state.phase === 'POSITION' && !state.ready[myColor]) {
+                    if (localSelection?.idx === idx && localSelection?.fromInv) localSelection = null;
+                    else localSelection = {...item, idx, fromInv: true}; 
+                    updateUI(); 
+                }
+            };
+            invStack.appendChild(span);
+        });
+    }
+
+    function syncBoard() {
+        const boardEl = document.getElementById('main-board');
+        const layerEl = document.getElementById('pieces-layer');
+        boardEl.innerHTML = '';
+        
+        for (let r = 0; r < 4; r++) {     
+            for (let c = 0; c < 4; c++) { 
+                let logicalX = myColor === 'white' ? c : 3 - c;
+                let logicalY = myColor === 'white' ? 3 - r : r;
+                
+                const cell = document.createElement('div');
+                const isDark = ((logicalX + logicalY) % 2) === 0;
+                cell.className = `cell ${isDark ? 'dark' : 'light'}`;
+                
+                if(state.phase !== 'REVEAL' && localSelection && !localSelection.fromInv && isValidMove(localSelection, logicalX, logicalY)) {
+                    cell.classList.add('highlight');
+                }
+                if(state.planning[myColor] && state.planning[myColor].tx === logicalX && state.planning[myColor].ty === logicalY) {
+                    cell.classList.add('planned');
+                }
+                
+                cell.onclick = () => handleCellClick(logicalX, logicalY);
+                boardEl.appendChild(cell);
+            }
+        }
+
+        layerEl.innerHTML = '';
+        state.army.forEach(p => {
+            if (state.phase === 'POSITION' && p.color !== myColor && p.type !== 'K') {
+                return; 
+            }
+
+            const pEl = document.createElement('div');
+            pEl.className = `piece ${p.color}`;
+            if(p.buffed) pEl.classList.add('buffed');
+            pEl.innerText = CONFIG[p.type].icon;
+            
+            if(localSelection && !localSelection.fromInv && localSelection.id === p.id && p.color === myColor) {
+                pEl.classList.add('selected');
+            }
+
+            let isOpponentGhost = state.planning[oppColor] && state.planning[oppColor].pieceId === p.id && p.color === oppColor;
+            if(state.phase === 'POSITION' && isOpponentGhost) return; 
+
+            if(state.planning[myColor] && state.planning[myColor].pieceId === p.id && p.color === myColor) {
+                pEl.classList.add('ghost');
+                pEl.classList.remove('selected'); 
+            }
+            
+            if(state.phase === 'REVEAL' && isOpponentGhost) pEl.classList.add('ghost');
+
+            let visualX = myColor === 'white' ? p.x : 3 - p.x;
+            let visualY = myColor === 'white' ? 3 - p.y : p.y;
+
+            pEl.style.left = `${visualX * 25}%`; 
+            pEl.style.top = `${visualY * 25}%`;
+            layerEl.appendChild(pEl);
+        });
+    }
+
+    window.resetDraft = async () => {
+        if(state.phase !== 'DRAFT' || state.ready[myColor]) return;
+        localSelection = null;
+        await update(gameRef, { [`budget/${myColor}`]: 5, [`inventory/${myColor}`]: [] });
+    };
+
+    window.buyPiece = async (type) => {
+        if(state.budget[myColor] >= CONFIG[type].cost) {
+            const newInv = [...(state.inventory[myColor] || [])];
+            newInv.push({ type, color: myColor, id: `p_${Date.now()}` });
+            await update(gameRef, {
+                [`budget/${myColor}`]: state.budget[myColor] - CONFIG[type].cost,
+                [`inventory/${myColor}`]: newInv
+            });
+        }
+    };
+
+    window.handleCellClick = async (logicalX, logicalY) => {
+        if(state.ready[myColor] || state.phase === 'REVEAL') return; 
+
+        if(state.phase === 'POSITION') {
+            const pAt = state.army.find(p => p.x === logicalX && p.y === logicalY);
+            
+            if (pAt && pAt.color === myColor && pAt.type !== 'K') {
+                const newArmy = state.army.filter(a => a.id !== pAt.id);
+                const newInv = [...state.inventory[myColor]];
+                newInv.push({ type: pAt.type, color: pAt.color, id: pAt.id });
+                
+                if (localSelection?.id === pAt.id) localSelection = null;
+                await update(gameRef, { army: newArmy, [`inventory/${myColor}`]: newInv });
+                return;
+            }
+
+            if(localSelection?.fromInv && !pAt && ((myColor==='white'&&logicalY<2)||(myColor==='black'&&logicalY>1))) {
+                const newArmy = [...state.army];
+                newArmy.push({ id: localSelection.id, type: localSelection.type, color: myColor, x: logicalX, y: logicalY, bonus: CONFIG[localSelection.type].bonus, buffed: false });
+                const newInv = [...state.inventory[myColor]];
+                newInv.splice(localSelection.idx, 1);
+                localSelection = null;
+                await update(gameRef, { army: newArmy, [`inventory/${myColor}`]: newInv });
+            }
+        } 
+        else if(state.phase === 'ACTION') {
+            const pAt = state.army.find(p => p.x === logicalX && p.y === logicalY);
+            if(pAt?.color === myColor) {
+                if (localSelection && localSelection.id === pAt.id) localSelection = null;
+                else localSelection = pAt;
+                updateUI();
+            } else if(localSelection && isValidMove(localSelection, logicalX, logicalY)) {
+                await update(ref(db, `rooms/${roomID}/planning/${myColor}`), {
+                    pieceId: localSelection.id, tx: logicalX, ty: logicalY
+                });
+                localSelection = null;
+            }
+        }
+    };
+
+    window.setReady = async () => { await update(ref(db, `rooms/${roomID}/ready`), { [myColor]: true }); };
+
+    function isPathClear(p, tx, ty) {
+        let dx = Math.sign(tx - p.x); let dy = Math.sign(ty - p.y);
+        let currX = p.x + dx; let currY = p.y + dy; let limit = 0;
+        while ((currX !== tx || currY !== ty) && limit < 10) {
+            if (state.army.some(a => a.x === currX && a.y === currY)) return false;
+            currX += dx; currY += dy; limit++;
+        }
+        return true;
+    }
+
+    function isValidMove(p, tx, ty) {
+        const dx = Math.abs(tx - p.x); const dy = Math.abs(ty - p.y);
+        if (dx === 0 && dy === 0) return false; 
+
+        const targetPiece = state.army.find(a => a.x === tx && a.y === ty);
+        if(targetPiece && targetPiece.color === p.color) return false;
+
+        let validGeometry = false;
+        switch(p.type) {
+            case 'K': validGeometry = (dx <= 1 && dy <= 1); break;
+            case 'Q': validGeometry = (dx === dy || dx === 0 || dy === 0); break;
+            case 'R': validGeometry = (dx === 0 || dy === 0); break;
+            case 'B': validGeometry = (dx === dy); break;
+            case 'N': validGeometry = ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)); break;
+            case 'P':
+                const isEnemy = targetPiece && targetPiece.color !== p.color;
+                const forwardDirection = p.color === 'white' ? 1 : -1; 
+                const diffY = ty - p.y; 
+                if (p.buffed) {
+                    if (isEnemy && dx === 1 && Math.abs(dy) === 1) validGeometry = true;
+                    else if (!isEnemy && ((dx === 0 && Math.abs(dy) === 1) || (dx === 1 && dy === 0))) validGeometry = true;
+                } else {
+                    if (isEnemy && dx === 1 && diffY === forwardDirection) validGeometry = true;
+                    else if (!isEnemy && dx === 0 && Math.abs(dy) === 1) validGeometry = true;
+                }
+                break;
+        }
+
+        if (!validGeometry) return false;
+        if (['Q', 'R', 'B'].includes(p.type) && !isPathClear(p, tx, ty)) return false;
+        return true;
+    }
+
+    async function advanceHost() {
+        let nextPhase = state.phase;
+        
+        if(state.phase === 'DRAFT') nextPhase = 'POSITION';
+        else if(state.phase === 'POSITION') {
+            nextPhase = 'REVEAL';
+            setTimeout(() => {
+                isAdvancing = true;
+                update(gameRef, { phase: 'ACTION', 'ready/white': false, 'ready/black': false }).finally(() => isAdvancing = false);
+            }, 3000);
+        }
+        else if(state.phase === 'REVEAL') { return; }
+        else if(state.phase === 'ACTION') { await resolveActionHost(); return; }
+        
+        await update(gameRef, { phase: nextPhase, 'ready/white': false, 'ready/black': false });
+        localSelection = null; 
+    }
+
+    function checkFinalDuel(army) {
+        if(army.length === 2 && army[0].type === 'K' && army[1].type === 'K') return true;
+        return false;
+    }
+
+    async function resolveActionHost() {
+        const pW = state.planning.white; const pB = state.planning.black;
+        let army = [...state.army]; 
+        let duelQueue = [];
+
+        const pieceW = pW ? army.find(p => p.id === pW.pieceId) : null;
+        const pieceB = pB ? army.find(p => p.id === pB.pieceId) : null;
+
+        let clashFrontal = false;
+        let swapClash = false;
+
+        if (pW && pB && pW.tx === pB.tx && pW.ty === pB.ty) clashFrontal = true;
+        if (pW && pB && pW.tx === pieceB.x && pW.ty === pieceB.y && pB.tx === pieceW.x && pB.ty === pieceW.y) swapClash = true;
+
+        if (clashFrontal) {
+            duelQueue.push({ type: 'frontal', wPiece: pieceW, bPiece: pieceB, txW: pW.tx, tyW: pW.ty, txB: pB.tx, tyB: pB.ty, priority: Math.max(pieceW.bonus, pieceB.bonus) });
+        } else if (swapClash) {
+            duelQueue.push({ type: 'swap', wPiece: pieceW, bPiece: pieceB, txW: pW.tx, tyW: pW.ty, txB: pB.tx, tyB: pB.ty, priority: Math.max(pieceW.bonus, pieceB.bonus) });
+        } else {
+            if (pW) {
+                let targetBlack = army.find(p => p.x === pW.tx && p.y === pW.ty && p.color === 'black');
+                if (targetBlack) {
+                    duelQueue.push({ type: 'attack', attackerColor: 'white', wPiece: pieceW, bPiece: targetBlack, txW: pW.tx, tyW: pW.ty, txB: targetBlack.x, tyB: targetBlack.y, priority: pieceW.bonus });
+                } else {
+                    pieceW.x = pW.tx; pieceW.y = pW.ty; 
+                }
+            }
+            if (pB) {
+                let targetWhite = army.find(p => p.x === pB.tx && p.y === pB.ty && p.color === 'white');
+                if (targetWhite) {
+                    duelQueue.push({ type: 'attack', attackerColor: 'black', wPiece: targetWhite, bPiece: pieceB, txW: targetWhite.x, tyW: targetWhite.y, txB: pB.tx, tyB: pB.ty, priority: pieceB.bonus });
+                } else {
+                    pieceB.x = pB.tx; pieceB.y = pB.ty; 
+                }
+            }
+        }
+
+        duelQueue.sort((a, b) => b.priority - a.priority);
+
+        army.forEach(p => {
+            if (p.type === 'P' && !p.buffed) {
+                if ((p.color === 'white' && p.y === 3) || (p.color === 'black' && p.y === 0)) { p.buffed = true; p.bonus = 2; }
+            }
+        });
+
+        let currentDuel = { active: false };
+        let remainingQueue = [];
+
+        if (duelQueue.length > 0) {
+            const next = duelQueue[0];
+            currentDuel = {
+                ...next,
+                active: true, resolveTime: false, suddenDeath: false,
+                pressed: {white: false, black: false}, rolls: {white: 0, black: 0}
+            };
+            remainingQueue = duelQueue.slice(1);
+        } else if (checkFinalDuel(army)) {
+            const kingW = army.find(k => k.color === 'white');
+            const kingB = army.find(k => k.color === 'black');
+            currentDuel = { 
+                active: true, resolveTime: false, wPiece: kingW, bPiece: kingB, suddenDeath: true,
+                pressed: {white: false, black: false}, rolls: {white: 0, black: 0} 
+            };
+        }
+
+        await update(gameRef, { army: army, planning: { white: null, black: null }, ready: { white: false, black: false }, duel: currentDuel, duelQueue: remainingQueue });
+        localSelection = null; 
+    }
+
+    function buildDuelCard(isOpponent, pieceData, rollData, pressedState) {
+        const themeClass = pieceData.color === 'white' ? 'card-theme-white' : 'card-theme-black';
+        const nameText = `${CONFIG[pieceData.type].name} +${pieceData.bonus}`;
+        
+        let diceContent = '🎲';
+        let diceClass = 'dice-interactive';
+        let resultHTML = '';
+        
+        if (state.duel.resolveTime) {
+            diceContent = DICE_FACES[rollData - 1];
+            const total = rollData + pieceData.bonus;
+            resultHTML = `
+                <div class="result-box show">
+                    <div class="result-total">${total}</div>
+                    <div class="result-math">Dado (${rollData}) + Bônus (${pieceData.bonus})</div>
+                </div>`;
+        } else if (pressedState) {
+            diceContent = '⏳';
+        }
+
+        return `
+            ${isOpponent ? '<div class="opp-label">OPONENTE</div>' : '<div class="opp-label" style="color:var(--white-p); margin-bottom:-5px;">VOCÊ</div>'}
+            <div class="duel-card ${isOpponent ? 'opp' : ''} ${themeClass}">
+                <div class="duel-name-badge">${nameText}</div>
+                <div class="${diceClass}" id="dice-btn-${pieceData.color}" ${!isOpponent && !pressedState ? `onclick="pressRoll('${pieceData.color}')"` : ''}>
+                    <div class="dice-unicode" id="dice-val-${pieceData.color}">${diceContent}</div>
+                </div>
+                ${resultHTML}
+            </div>
+        `;
+    }
+
+    function handleDuelUI() {
+        const modal = document.getElementById('duel-modal');
+        const d = state.duel;
+        const container = document.getElementById('duel-container');
+        
+        if (!d || !d.active) {
+            modal.style.display = 'none'; 
+            if (rollInterval) { clearInterval(rollInterval); rollInterval = null; }
+            localDiceAnimating = false;
+            return;
+        }
+
+        modal.style.display = 'flex';
+        
+        document.getElementById('duel-status').innerText = d.suddenDeath ? "MORTE SÚBITA!" : "CONFLITO!";
+        if(d.suddenDeath) document.getElementById('duel-status').style.color = "#e74c3c";
+
+        let htmlContent = '';
+        if (myColor === 'white') {
+            htmlContent += buildDuelCard(false, d.wPiece, d.rolls.white, d.pressed.white);
+            htmlContent += buildDuelCard(true, d.bPiece, d.rolls.black, d.pressed.black);
+        } else {
+            htmlContent += buildDuelCard(false, d.bPiece, d.rolls.black, d.pressed.black);
+            htmlContent += buildDuelCard(true, d.wPiece, d.rolls.white, d.pressed.white);
+        }
+        
+        if (!localDiceAnimating && !d.resolveTime) {
+            container.innerHTML = htmlContent;
+        }
+
+        if (d.suddenDeath && isHost && !d.pressed.white && !d.pressed.black) {
+             setTimeout(() => {
+                 update(ref(db, `rooms/${roomID}/duel`), { 
+                     'pressed/white': true, 'pressed/black': true, 
+                     'rolls/white': Math.floor(Math.random()*6)+1, 'rolls/black': Math.floor(Math.random()*6)+1 
+                 });
+             }, 1000);
+        }
+
+        if (d.pressed[myColor] && !d.pressed[oppColor] && !rollInterval) {
+            rollInterval = setInterval(() => { 
+                const dVal = document.getElementById(`dice-val-${myColor}`);
+                if(dVal) dVal.innerText = DICE_FACES[Math.floor(Math.random() * 6)]; 
+            }, 80);
+        }
+
+        if (d.pressed.white && d.pressed.black && !d.resolveTime) {
+            localDiceAnimating = true;
+            if (rollInterval) { clearInterval(rollInterval); rollInterval = null; }
+            
+            if (!window.localSincInterval) {
+                window.localSincInterval = setInterval(() => {
+                    const vW = document.getElementById(`dice-val-white`);
+                    const vB = document.getElementById(`dice-val-black`);
+                    if(vW) vW.innerText = DICE_FACES[Math.floor(Math.random() * 6)];
+                    if(vB) vB.innerText = DICE_FACES[Math.floor(Math.random() * 6)];
+                }, 80);
+            
+                if (myColor === 'white') {
+                    setTimeout(() => { update(ref(db, `rooms/${roomID}/duel`), { resolveTime: true }); }, 2000);
+                }
+            }
+            return;
+        }
+
+        if (d.resolveTime) {
+            if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
+            localDiceAnimating = false;
+            
+            container.innerHTML = htmlContent;
+
+            const totW = d.rolls.white + d.wPiece.bonus; const totB = d.rolls.black + d.bPiece.bonus;
+
+            if(totW > totB) { 
+                document.getElementById('duel-status').innerText = "BRANCO VENCEU!"; 
+                document.getElementById(`dice-btn-white`)?.classList.add('winner-pulse'); 
+            }
+            else if(totB > totW) { 
+                document.getElementById('duel-status').innerText = "PRETO VENCEU!"; 
+                document.getElementById(`dice-btn-black`)?.classList.add('winner-pulse'); 
+            }
+            else { 
+                document.getElementById('duel-status').innerText = "EMPATE!"; 
+            }
+
+            document.getElementById('close-duel').style.display = 'block';
+        } else {
+             document.getElementById('close-duel').style.display = 'none';
+        }
+    }
+
+    window.pressRoll = async (colorClicked) => {
+        if(colorClicked !== myColor || localDiceAnimating) return;
+        const roll = Math.floor(Math.random()*6)+1;
+        await update(ref(db, `rooms/${roomID}/duel`), { [`pressed/${myColor}`]: true, [`rolls/${myColor}`]: roll });
+    };
+
+    window.finishDuel = async () => {
+        const d = state.duel;
+        if (!d || !d.resolveTime) return;
+
+        if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
+        
+        if (myColor === 'black') {
+            document.getElementById('duel-modal').style.display = 'none';
+            return;
+        }
+
+        let army = [...state.army];
+        const totW = d.rolls.white + d.wPiece.bonus; const totB = d.rolls.black + d.bPiece.bonus;
+        const idxW = army.findIndex(a => a.id === d.wPiece.id); const idxB = army.findIndex(a => a.id === d.bPiece.id);
+
+        if(totW > totB) { 
+            if(idxB > -1) army.splice(idxB, 1);
+            if (d.type === 'frontal' || d.type === 'swap' || d.attackerColor === 'white') {
+                let wAlive = army.find(a => a.id === d.wPiece.id);
+                if(wAlive) { wAlive.x = d.txW; wAlive.y = d.tyW; }
+            }
+        } else if (totB > totW) { 
+            if(idxW > -1) army.splice(idxW, 1);
+            if (d.type === 'frontal' || d.type === 'swap' || d.attackerColor === 'black') {
+                let bAlive = army.find(a => a.id === d.bPiece.id);
+                if(bAlive) { bAlive.x = d.txB; bAlive.y = d.tyB; }
+            }
+        } else { 
+            army = army.filter(a => a.id !== d.wPiece.id && a.id !== d.bPiece.id); 
+        }
+
+        const wk = army.find(p => p.type === 'K' && p.color === 'white'); const bk = army.find(p => p.type === 'K' && p.color === 'black');
+        if(!wk || !bk) {
+            await update(gameRef, { army: army, duel: { active: false }, duelQueue: [], phase: 'GAMEOVER' });
+            return;
+        }
+
+        let queue = state.duelQueue || [];
+        while (queue.length > 0) {
+            const nextDuel = queue.shift();
+            const stillHasW = army.find(a => a.id === nextDuel.wPiece.id);
+            const stillHasB = army.find(a => a.id === nextDuel.bPiece.id);
+
+            let duelValid = false;
+            if (stillHasW && stillHasB) {
+                if (nextDuel.type === 'frontal' || nextDuel.type === 'swap') {
+                    duelValid = true;
+                } else if (nextDuel.type === 'attack') {
+                    if (nextDuel.attackerColor === 'white' && stillHasB.x === nextDuel.txB && stillHasB.y === nextDuel.tyB) duelValid = true;
+                    if (nextDuel.attackerColor === 'black' && stillHasW.x === nextDuel.txW && stillHasW.y === nextDuel.tyW) duelValid = true;
+                }
+            }
+
+            if (duelValid) {
+                const nextActiveDuel = { ...nextDuel, active: true, resolveTime: false, wPiece: stillHasW, bPiece: stillHasB, pressed: {white: false, black: false}, rolls: {white: 0, black: 0} };
+                await update(gameRef, { army: army, duel: nextActiveDuel, duelQueue: queue });
+                return; 
+            } else {
+                if (stillHasW && nextDuel.type === 'attack' && nextDuel.attackerColor === 'white') { stillHasW.x = nextDuel.txW; stillHasW.y = nextDuel.tyW; }
+                if (stillHasB && nextDuel.type === 'attack' && nextDuel.attackerColor === 'black') { stillHasB.x = nextDuel.txB; stillHasB.y = nextDuel.tyB; }
+            }
+        }
+
+        if (checkFinalDuel(army)) {
+            const kingW = army.find(k => k.color === 'white');
+            const kingB = army.find(k => k.color === 'black');
+            const suddenDeathDuel = { active: true, resolveTime: false, wPiece: kingW, bPiece: kingB, suddenDeath: true, pressed: {white: false, black: false}, rolls: {white: 0, black: 0} };
+            await update(gameRef, { army: army, duel: suddenDeathDuel, duelQueue: [] });
+            return;
+        }
+
+        await update(gameRef, { army: army, duel: { active: false }, duelQueue: [], phase: 'ACTION' });
+    };
+
+    // NOVA FUNÇÃO: REINICIAR PARTIDA
+    window.playAgain = async () => {
+        if (state.phase !== 'GAMEOVER') return;
+        
+        await set(gameRef, {
+            phase: 'DRAFT', p2Connected: true,
+            budget: { white: 5, black: 5 },
+            army: [
+                { id: "wk1", type: 'K', x: 1, y: 0, color: 'white', bonus: 5, buffed: false },
+                { id: "bk1", type: 'K', x: 2, y: 3, color: 'black', bonus: 5, buffed: false }
+            ],
+            inventory: { white: [], black: [] },
+            ready: { white: false, black: false },
+            planning: { white: null, black: null },
+            duel: { active: false, pressed: { white: false, black: false }, rolls: { white: 0, black: 0 }, wPiece: null, bPiece: null, tx: 0, ty: 0, suddenDeath: false },
+            duelQueue: []
+        });
+    };
+
+    initGame();
+</script>
+</body>
+</html>

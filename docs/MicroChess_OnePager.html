@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MicroChess — OnePager</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold: #D4AF37;
+  --gold-dim: #A08828;
+  --white: #F5F0E8;
+  --off-white: #C8C0B0;
+  --black: #0A0A0A;
+  --panel: #111111;
+  --border: #2A2A2A;
+  --red: #C0392B;
+  --green: #27AE60;
+  --blue: #2980B9;
+}
+
+html { background: var(--black); }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--black);
+  color: var(--white);
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+  position: relative;
+}
+
+/* ── BACKGROUND GRID ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(212,175,55,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212,175,55,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+* { position: relative; z-index: 1; }
+
+/* ── CHESS BOARD DECORATION ── */
+.board-deco {
+  position: fixed;
+  top: -60px;
+  right: -60px;
+  width: 320px;
+  height: 320px;
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  grid-template-rows: repeat(4,1fr);
+  opacity: 0.06;
+  transform: rotate(15deg);
+  pointer-events: none;
+  z-index: 0;
+}
+.board-deco div {
+  background: var(--gold);
+}
+.board-deco div:nth-child(odd) { background: transparent; }
+.board-deco div:nth-child(4n+1), .board-deco div:nth-child(4n+4) { }
+
+/* ── HERO ── */
+.hero {
+  padding: 80px 0 60px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 40px;
+  align-items: end;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(72px, 12vw, 128px);
+  line-height: 0.9;
+  letter-spacing: -2px;
+  color: var(--white);
+}
+
+.hero-title span {
+  color: var(--gold);
+}
+
+.hero-tagline {
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--off-white);
+  margin-top: 20px;
+  line-height: 1.5;
+  max-width: 420px;
+}
+
+.hero-badge {
+  text-align: right;
+}
+
+.badge-ring {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  animation: pulse-ring 3s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.3); }
+  50% { box-shadow: 0 0 0 12px rgba(212,175,55,0); }
+}
+
+.badge-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.badge-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--off-white);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ── LOGLINE ── */
+.logline {
+  padding: 40px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.logline-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(20px, 3vw, 28px);
+  line-height: 1.5;
+  color: var(--white);
+}
+
+.logline-text em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 56px 0 28px;
+}
+
+.section-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  color: var(--gold);
+  line-height: 1;
+  opacity: 0.5;
+}
+
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: var(--white);
+}
+
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── CONCEPT GRID ── */
+.concept-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.concept-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  padding: 28px 24px;
+  transition: border-color 0.3s;
+}
+
+.concept-card:hover {
+  border-color: var(--gold);
+  border-top-color: var(--gold);
+}
+
+.concept-icon {
+  font-size: 32px;
+  margin-bottom: 14px;
+  display: block;
+}
+
+.concept-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.concept-desc {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--off-white);
+}
+
+/* ── FLOW DIAGRAM ── */
+.flow {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.flow-step {
+  flex: 1;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flow-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 18px 12px;
+  text-align: center;
+  width: 100%;
+  flex: 1;
+}
+
+.flow-box.active {
+  border-color: var(--gold);
+  background: rgba(212,175,55,0.08);
+}
+
+.flow-phase {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.flow-desc {
+  font-size: 11px;
+  color: var(--off-white);
+  line-height: 1.5;
+}
+
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  color: var(--gold-dim);
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-bottom: 0;
+  align-self: center;
+}
+
+.flow-loop {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--gold-dim);
+  text-align: center;
+  margin-top: 6px;
+  letter-spacing: 1px;
+}
+
+/* ── DUEL MECHANICS ── */
+.duel-block {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+.duel-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.duel-piece {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.piece-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.piece-info { flex: 1; }
+
+.piece-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.piece-bonus {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--gold);
+}
+
+.duel-vs {
+  text-align: center;
+}
+
+.vs-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.vs-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--off-white);
+  letter-spacing: 2px;
+}
+
+.duel-formula {
+  background: rgba(212,175,55,0.1);
+  border: 1px solid var(--gold-dim);
+  padding: 16px 20px;
+  margin-top: 20px;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--gold);
+  letter-spacing: 2px;
+}
+
+/* ── PIECE ECONOMY TABLE ── */
+.economy-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.economy-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 10px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.economy-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(42,42,42,0.5);
+  font-size: 13px;
+  color: var(--off-white);
+}
+
+.economy-table tr:hover td { background: rgba(212,175,55,0.05); }
+
+.piece-sym {
+  font-size: 22px;
+  vertical-align: middle;
+}
+
+.bonus-bar {
+  display: inline-flex;
+  gap: 3px;
+}
+.bonus-pip {
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  border-radius: 1px;
+}
+.bonus-pip.empty {
+  background: var(--border);
+}
+
+/* ── DIFFERENTIATORS ── */
+.diff-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.diff-item {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 16px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.3s;
+}
+
+.diff-item:hover {
+  border-left-color: var(--gold);
+}
+
+.diff-marker {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  color: var(--gold);
+  opacity: 0.4;
+  line-height: 1;
+  text-align: right;
+}
+
+.diff-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: var(--white);
+  margin-bottom: 4px;
+}
+
+.diff-body {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--off-white);
+}
+
+/* ── MARKET ── */
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.market-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 24px;
+  text-align: center;
+}
+
+.market-stat {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.market-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--off-white);
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.market-note {
+  font-size: 11px;
+  color: var(--gold-dim);
+  margin-top: 4px;
+}
+
+/* ── ASK ── */
+.ask-box {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  padding: 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.ask-amount {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 72px;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.ask-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--off-white);
+  text-transform: uppercase;
+  margin-top: 4px;
+  margin-bottom: 16px;
+}
+
+.ask-desc {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--off-white);
+}
+
+.ask-uses {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ask-use {
+  display: flex;
+  gap: 12px;
+  align-items: start;
+}
+
+.use-pct {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  color: var(--gold);
+  line-height: 1;
+  min-width: 60px;
+}
+
+.use-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--off-white);
+  padding-top: 4px;
+}
+
+/* ── VISION ── */
+.vision-block {
+  background: linear-gradient(135deg, rgba(212,175,55,0.05) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-top: 1px solid var(--gold);
+  padding: 40px;
+  text-align: center;
+}
+
+.vision-quote {
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  font-size: clamp(18px, 2.5vw, 24px);
+  line-height: 1.6;
+  color: var(--white);
+  max-width: 700px;
+  margin: 0 auto 24px;
+}
+
+.vision-attrib {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+/* ── FOOTER ── */
+footer {
+  margin-top: 80px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: var(--gold);
+  letter-spacing: 4px;
+}
+
+.footer-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--gold-dim);
+  letter-spacing: 1px;
+}
+
+/* ── PRINT ── */
+@media print {
+  body { max-width: 100%; padding: 20px 40px; }
+  body::before { display: none; }
+  .board-deco { display: none; }
+  .badge-ring { animation: none; }
+}
+
+@media (max-width: 600px) {
+  .concept-grid { grid-template-columns: 1fr; }
+  .market-grid { grid-template-columns: 1fr 1fr; }
+  .ask-box { grid-template-columns: 1fr; }
+  .hero { grid-template-columns: 1fr; }
+  .hero-badge { text-align: left; }
+  .duel-block { grid-template-columns: 1fr; }
+  .flow { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<div class="board-deco">
+  <div></div><div style="background:#D4AF37"></div><div></div><div style="background:#D4AF37"></div>
+  <div style="background:#D4AF37"></div><div></div><div style="background:#D4AF37"></div><div></div>
+  <div></div><div style="background:#D4AF37"></div><div></div><div style="background:#D4AF37"></div>
+  <div style="background:#D4AF37"></div><div></div><div style="background:#D4AF37"></div><div></div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-label">Documento Confidencial · Captação de Recursos · 2025</div>
+    <h1 class="hero-title">MICRO<br><span>CHESS</span></h1>
+    <p class="hero-tagline">Xadrez estratégico em tempo real — <em>reemaginado para mobile</em> com draft, blefe e duelos por dados.</p>
+  </div>
+  <div class="hero-badge">
+    <div class="badge-ring">
+      <div class="badge-num">4×4</div>
+      <div class="badge-label">tabuleiro<br>roguelite</div>
+    </div>
+  </div>
+</section>
+
+<!-- LOGLINE -->
+<section class="logline">
+  <p class="logline-text">
+    Um jogo de estratégia <em>assimétrico e simultâneo</em> onde dois jogadores montam exércitos com orçamento limitado, planejam movimentos ocultos e resolvem conflitos através de duelos com dados — tudo no navegador, <em>sem instalação, em tempo real</em>.
+  </p>
+</section>
+
+<!-- MECÂNICAS CORE -->
+<div class="section-header">
+  <span class="section-num">01</span>
+  <span class="section-title">O Conceito</span>
+  <div class="section-line"></div>
+</div>
+
+<div class="concept-grid">
+  <div class="concept-card">
+    <span class="concept-icon">♟️</span>
+    <div class="concept-name">Draft Econômico</div>
+    <p class="concept-desc">Cada jogador recebe 5 pontos e compra peças com custo variável. Rainha (5 pts) versus um exército de Peões (5×1 pt). Uma decisão estratégica antes do primeiro lance.</p>
+  </div>
+  <div class="concept-card">
+    <span class="concept-icon">🎭</span>
+    <div class="concept-name">Planejamento Oculto</div>
+    <p class="concept-desc">Na fase de Ação, cada jogador escolhe um movimento em segredo. Os movimentos são revelados simultaneamente — colisões viram duelos. Pura tensão psicológica.</p>
+  </div>
+  <div class="concept-card">
+    <span class="concept-icon">🎲</span>
+    <div class="concept-name">Sistema de Duelos</div>
+    <p class="concept-desc">Conflito = dado (1–6) + bônus da peça. Uma Rainha (+5) bate dados melhores. Mas um Peão com sorte elimina a peça mais cara do tabuleiro. Risco calculado, não eliminado.</p>
+  </div>
+  <div class="concept-card">
+    <span class="concept-icon">⚡</span>
+    <div class="concept-name">Sessões Ultra-Curtas</div>
+    <p class="concept-desc">Uma partida completa em 5–10 minutos. Tabuleiro 4×4, regras condensadas do xadrez clássico. Ideal para mobile e públicos casuais sem abrir mão de profundidade estratégica.</p>
+  </div>
+</div>
+
+<!-- LOOP DE JOGO -->
+<div class="section-header">
+  <span class="section-num">02</span>
+  <span class="section-title">Loop de Jogo</span>
+  <div class="section-line"></div>
+</div>
+
+<div class="flow">
+  <div class="flow-step">
+    <div class="flow-box active">
+      <div class="flow-phase">Draft</div>
+      <div class="flow-desc">Compra peças com orçamento de 5 pts</div>
+    </div>
+    <div class="flow-loop">INÍCIO</div>
+  </div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">
+    <div class="flow-box">
+      <div class="flow-phase">Posição</div>
+      <div class="flow-desc">Posiciona peças no próprio lado</div>
+    </div>
+  </div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">
+    <div class="flow-box">
+      <div class="flow-phase">Revelação</div>
+      <div class="flow-desc">Exércitos revelados por 3 segundos</div>
+    </div>
+  </div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">
+    <div class="flow-box active">
+      <div class="flow-phase">Ação</div>
+      <div class="flow-desc">Movimento oculto e simultâneo</div>
+    </div>
+  </div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">
+    <div class="flow-box">
+      <div class="flow-phase">Duelo</div>
+      <div class="flow-desc">Dados + bônus resolvem conflitos</div>
+    </div>
+    <div class="flow-loop">↩ REPETE</div>
+  </div>
+</div>
+
+<!-- SISTEMA DE DUELOS -->
+<div class="section-header">
+  <span class="section-num">03</span>
+  <span class="section-title">Mecânica de Duelo</span>
+  <div class="section-line"></div>
+</div>
+
+<div class="duel-block">
+  <div class="duel-side">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--off-white);margin-bottom:4px;">BRANCO</div>
+    <div class="duel-piece">
+      <span class="piece-icon" style="color:#fff;filter:drop-shadow(0 0 6px rgba(100,180,255,0.8))">♕</span>
+      <div class="piece-info">
+        <div class="piece-name" style="color:var(--white)">Rainha</div>
+        <div class="piece-bonus">Bônus +5 · Custo 5 pts</div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);padding:12px 16px;text-align:center;font-family:'Bebas Neue',sans-serif;">
+      <span style="font-size:32px;color:var(--white)">🎲</span>
+      <span style="font-size:24px;color:var(--gold);margin-left:8px;">+5</span>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--off-white);margin-top:4px;">dado + bônus = total</div>
+    </div>
+  </div>
+
+  <div class="duel-vs">
+    <div class="vs-text">VS</div>
+    <div class="vs-sub">CONFLITO</div>
+  </div>
+
+  <div class="duel-side">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--off-white);margin-bottom:4px;">PRETO</div>
+    <div class="duel-piece">
+      <span class="piece-icon" style="color:#111;background:var(--off-white);border-radius:4px;padding:2px;filter:drop-shadow(0 0 6px rgba(155,89,182,0.8))">♙</span>
+      <div class="piece-info">
+        <div class="piece-name" style="color:var(--off-white)">Peão (buffed)</div>
+        <div class="piece-bonus">Bônus +2 · Custo 1 pt</div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);padding:12px 16px;text-align:center;font-family:'Bebas Neue',sans-serif;">
+      <span style="font-size:32px;color:var(--off-white)">🎲</span>
+      <span style="font-size:24px;color:var(--gold);margin-left:8px;">+2</span>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--off-white);margin-top:4px;">dado + bônus = total</div>
+    </div>
+  </div>
+</div>
+<div class="duel-formula">
+  DADO (1–6) + BÔNUS DA PEÇA = TOTAL · MAIOR TOTAL VENCE · EMPATE = AMBOS ELIMINADOS
+</div>
+
+<!-- ECONOMIA DE PEÇAS -->
+<div class="section-header">
+  <span class="section-num">04</span>
+  <span class="section-title">Economia de Peças</span>
+  <div class="section-line"></div>
+</div>
+
+<table class="economy-table">
+  <thead>
+    <tr>
+      <th>Peça</th>
+      <th>Custo</th>
+      <th>Bônus de Duelo</th>
+      <th>Comportamento Especial</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="piece-sym">♕</span> Rainha</td>
+      <td style="color:var(--gold);font-family:'DM Mono',monospace;font-weight:500;">5 pts</td>
+      <td><span class="bonus-bar"><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip"></span></span> <span style="font-family:'DM Mono',monospace;font-size:11px">+5</span></td>
+      <td>Movimenta qualquer direção, qualquer distância</td>
+    </tr>
+    <tr>
+      <td><span class="piece-sym">♖</span> Torre</td>
+      <td style="color:var(--gold);font-family:'DM Mono',monospace;font-weight:500;">4 pts</td>
+      <td><span class="bonus-bar"><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip empty"></span></span> <span style="font-family:'DM Mono',monospace;font-size:11px">+4</span></td>
+      <td>Linhas retas, poderosa em tabuleiro aberto</td>
+    </tr>
+    <tr>
+      <td><span class="piece-sym">♘</span> Cavalo</td>
+      <td style="color:var(--gold);font-family:'DM Mono',monospace;font-weight:500;">3 pts</td>
+      <td><span class="bonus-bar"><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip empty"></span><span class="bonus-pip empty"></span></span> <span style="font-family:'DM Mono',monospace;font-size:11px">+3</span></td>
+      <td>Salta peças, movimento em L imprevisível</td>
+    </tr>
+    <tr>
+      <td><span class="piece-sym">♗</span> Bispo</td>
+      <td style="color:var(--gold);font-family:'DM Mono',monospace;font-weight:500;">2 pts</td>
+      <td><span class="bonus-bar"><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip empty"></span><span class="bonus-pip empty"></span><span class="bonus-pip empty"></span></span> <span style="font-family:'DM Mono',monospace;font-size:11px">+2</span></td>
+      <td>Diagonais longas, controla flancos</td>
+    </tr>
+    <tr>
+      <td><span class="piece-sym">♙</span> Peão</td>
+      <td style="color:var(--gold);font-family:'DM Mono',monospace;font-weight:500;">1 pt</td>
+      <td><span class="bonus-bar"><span class="bonus-pip"></span><span class="bonus-pip empty"></span><span class="bonus-pip empty"></span><span class="bonus-pip empty"></span><span class="bonus-pip empty"></span></span> <span style="font-family:'DM Mono',monospace;font-size:11px">+1 → +2</span></td>
+      <td><strong style="color:var(--gold)">Promoção automática</strong> ao atingir fileira final · bônus sobe para +2</td>
+    </tr>
+    <tr>
+      <td><span class="piece-sym">♔</span> Rei</td>
+      <td style="color:var(--green);font-family:'DM Mono',monospace;font-weight:500;">0 pts</td>
+      <td><span class="bonus-bar"><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip"></span><span class="bonus-pip"></span></span> <span style="font-family:'DM Mono',monospace;font-size:11px">+5</span></td>
+      <td>Grátis · Se eliminado = <strong style="color:var(--red)">derrota imediata</strong> · Morte Súbita final</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- DIFERENCIAIS -->
+<div class="section-header">
+  <span class="section-num">05</span>
+  <span class="section-title">Por Que É Diferente</span>
+  <div class="section-line"></div>
+</div>
+
+<div class="diff-list">
+  <div class="diff-item">
+    <div class="diff-marker">A</div>
+    <div>
+      <div class="diff-title">Zero Atrito de Entrada</div>
+      <p class="diff-body">Link compartilhável. Nenhum cadastro, nenhum download. P1 cria a sala e envia o URL — P2 entra direto pelo navegador. Tempo entre "quero jogar" e primeiro lance: <strong style="color:var(--gold)">menos de 30 segundos</strong>.</p>
+    </div>
+  </div>
+  <div class="diff-item">
+    <div class="diff-marker">B</div>
+    <div>
+      <div class="diff-title">Profundidade Estratégica em Formato Mobile</div>
+      <p class="diff-body">Não é xadrez casual nem minimalismo vazio. É um jogo com metagame de draft (alocação de recursos), leitura de oponente (planejamento oculto) e gestão de risco (custo vs. bônus de duelo). Profundo em <strong style="color:var(--gold)">sessões de 5 minutos</strong>.</p>
+    </div>
+  </div>
+  <div class="diff-item">
+    <div class="diff-marker">C</div>
+    <div>
+      <div class="diff-title">Assimetria Visual como Identidade</div>
+      <p class="diff-body">Host joga no tema escuro (♟️), oponente no tema claro (♙). A identidade visual do jogador é literal — você é sua cor. Diferenciação única e instantânea de "lado" sem tutorial.</p>
+    </div>
+  </div>
+  <div class="diff-item">
+    <div class="diff-marker">D</div>
+    <div>
+      <div class="diff-title">Tensão Dramática Garantida</div>
+      <p class="diff-body">O sistema de duelos significa que <em>qualquer peça pode derrotar qualquer outra</em>. Um Peão de 1 ponto elimina a Rainha de 5 pontos num bom dado. Isso cria momentos memoráveis, compartilháveis, e vira loop de retenção natural.</p>
+    </div>
+  </div>
+  <div class="diff-item">
+    <div class="diff-marker">E</div>
+    <div>
+      <div class="diff-title">Escalabilidade de Plataforma</div>
+      <p class="diff-body">Roda no navegador hoje. Arquitetura Firebase pronta para escalar. Caminho claro para app nativo, torneiros, modo ranqueado, skins de peças e DLCs de conjuntos temáticos sem redesign de mecânicas.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MERCADO -->
+<div class="section-header">
+  <span class="section-num">06</span>
+  <span class="section-title">Mercado</span>
+  <div class="section-line"></div>
+</div>
+
+<div class="market-grid">
+  <div class="market-card">
+    <div class="market-stat">$13B</div>
+    <div class="market-label">Mercado Global de Jogos Mobile</div>
+    <div class="market-note">segmento de strategy/puzzle (2024)</div>
+  </div>
+  <div class="market-card">
+    <div class="market-stat">605M</div>
+    <div class="market-label">Jogadores de Xadrez Online</div>
+    <div class="market-note">crescimento pós-The Queen's Gambit</div>
+  </div>
+  <div class="market-card">
+    <div class="market-stat">87%</div>
+    <div class="market-label">Preferência por Sessões Curtas</div>
+    <div class="market-note">jogadores mobile, pesquisa Newzoo 2023</div>
+  </div>
+</div>
+
+<div style="background:var(--panel);border:1px solid var(--border);padding:24px;margin-top:16px;">
+  <p style="font-size:13px;line-height:1.8;color:var(--off-white);">
+    <strong style="color:var(--white)">Posicionamento de mercado:</strong> MicroChess ocupa o espaço entre Chess.com (complexo, longo) e jogos casuais (sem profundidade). 
+    É o primeiro jogo a combinar <span style="color:var(--gold)">draft econômico + ação simultânea + duelo probabilístico</span> em formato de browser game instantâneo. 
+    Referências de posicionamento: <em>Clash Royale</em> (draft + PvP), <em>Codenames</em> (tensão de informação oculta), <em>Dicey Dungeons</em> (dados com estratégia).
+  </p>
+</div>
+
+<!-- CAPTAÇÃO -->
+<div class="section-header">
+  <span class="section-num">07</span>
+  <span class="section-title">O Que Estamos Buscando</span>
+  <div class="section-line"></div>
+</div>
+
+<div class="ask-box">
+  <div>
+    <div class="ask-amount">R$ 80K</div>
+    <div class="ask-label">Captação Semente · Fase 1</div>
+    <p class="ask-desc">Protótipo funcional validado. Buscamos capital para transformar o proof-of-concept em produto com app nativo, infraestrutura escalável e lançamento no mercado brasileiro.</p>
+  </div>
+  <div class="ask-uses">
+    <div class="ask-use">
+      <div class="use-pct">45%</div>
+      <div class="use-desc">Desenvolvimento de app nativo iOS/Android com UI polida, matchmaking e modo offline</div>
+    </div>
+    <div class="ask-use">
+      <div class="use-pct">25%</div>
+      <div class="use-desc">Infraestrutura, segurança, backend escalável e planejamento de monetização</div>
+    </div>
+    <div class="ask-use">
+      <div class="use-pct">20%</div>
+      <div class="use-desc">Arte, sound design, identidade visual e assets de lançamento</div>
+    </div>
+    <div class="ask-use">
+      <div class="use-pct">10%</div>
+      <div class="use-desc">Marketing de lançamento, ASO e comunidade inicial</div>
+    </div>
+  </div>
+</div>
+
+<!-- VISÃO -->
+<div class="section-header">
+  <span class="section-num">08</span>
+  <span class="section-title">Visão</span>
+  <div class="section-line"></div>
+</div>
+
+<div class="vision-block">
+  <p class="vision-quote">
+    "O xadrez tem 1.500 anos. O que ainda não existia era uma versão onde qualquer pessoa — em qualquer lugar, em cinco minutos — pudesse montar seu exército, blefar, arriscar e vencer. MicroChess é isso."
+  </p>
+  <div class="vision-attrib">— Proposta Central do Projeto</div>
+</div>
+
+<!-- ROADMAP SIMPLIFICADO -->
+<div class="section-header">
+  <span class="section-num">09</span>
+  <span class="section-title">Próximos Passos</span>
+  <div class="section-line"></div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+  <div style="background:var(--panel);border:1px solid var(--gold);padding:24px;">
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);margin-bottom:12px;">FASE 1 · 0–3 MESES</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:12px;">App Nativo</div>
+    <p style="font-size:12px;color:var(--off-white);line-height:1.6;">iOS + Android. Matchmaking. UI polida. Push notifications. Modo tutorial.</p>
+  </div>
+  <div style="background:var(--panel);border:1px solid var(--border);padding:24px;">
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);margin-bottom:12px;">FASE 2 · 3–6 MESES</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:12px;">Monetização</div>
+    <p style="font-size:12px;color:var(--off-white);line-height:1.6;">Skins de peças. Modo ranqueado. Torneios. Battle Pass sazonal.</p>
+  </div>
+  <div style="background:var(--panel);border:1px solid var(--border);padding:24px;">
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);margin-bottom:12px;">FASE 3 · 6–12 MESES</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:12px;">Expansão</div>
+    <p style="font-size:12px;color:var(--off-white);line-height:1.6;">Modo 1vIA. Novas variantes de tabuleiro. Parcerias esportivas e educacionais.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">MICROCHESS</div>
+  <div class="footer-note">Documento Confidencial · Não Distribuir · 2025</div>
+</footer>
+
+</body>
+</html>

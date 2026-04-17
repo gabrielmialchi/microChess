@@ -1,0 +1,2698 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>microChess</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #080808;
+            --bg2: #0e0e0e;
+            --panel-bg: #111111;
+            --panel-border: rgba(255,255,255,0.07);
+            --text-color: #f0ece4;
+            --text-muted: rgba(240,236,228,0.4);
+            --board-gap: #1e1e1e;
+            --cell-light: #272727;
+            --cell-dark: #141414;
+            --topbar-bg: #181818;
+            --accent: #d4a832;
+            --accent-glow: rgba(212,168,50,0.35);
+            --accent-dim: rgba(212,168,50,0.15);
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --white-p: #f4f0e8;
+            --black-p: #101010;
+            --white-glow: drop-shadow(0 0 8px rgba(82,162,225,0.85)) drop-shadow(0 3px 6px rgba(0,0,0,0.7));
+            --black-glow: drop-shadow(0 0 9px rgba(165,105,210,0.95)) drop-shadow(0 3px 6px rgba(0,0,0,0.7));
+        }
+
+        body.theme-light {
+            --bg: #ede4d6;
+            --bg2: #e5daca;
+            --panel-bg: #f4ede2;
+            --panel-border: rgba(0,0,0,0.10);
+            --text-color: #1a1206;
+            --text-muted: rgba(26,18,6,0.4);
+            --board-gap: #b8a48a;
+            --cell-light: #d9c9ae;
+            --cell-dark: #a08c70;
+            --topbar-bg: #e8ddc8;
+            --accent: #b06a10;
+            --accent-glow: rgba(176,106,16,0.3);
+            --accent-dim: rgba(176,106,16,0.12);
+            --success: #22a85e;
+            --danger: #c0392b;
+            --white-p: #f8f4ee;
+            --black-p: #0d0a06;
+            --white-glow: drop-shadow(0 0 7px rgba(52,130,210,0.9)) drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+            --black-glow: drop-shadow(0 0 8px rgba(140,80,190,0.85)) drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+        }
+
+        /* ── RESET & BASE ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Cinzel', serif;
+            background: var(--bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            transition: background 0.5s, color 0.5s;
+            overflow-x: hidden;
+        }
+
+        /* Subtle vignette + radial light */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212,168,50,0.04) 0%, transparent 70%),
+                radial-gradient(ellipse 100% 100% at 50% 110%, rgba(0,0,0,0.6) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body.theme-light::before {
+            background:
+                radial-gradient(ellipse 80% 50% at 50% 0%, rgba(176,106,16,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 100% 80% at 50% 110%, rgba(0,0,0,0.12) 0%, transparent 60%);
+        }
+
+        @keyframes title-glow {
+            from { text-shadow: 0 0 30px rgba(212,168,50,0.4), 0 0 60px rgba(212,168,50,0.15); }
+            to   { text-shadow: 0 0 50px rgba(212,168,50,0.7), 0 0 100px rgba(212,168,50,0.3); }
+        }
+
+        .btn-large {
+            padding: 14px 30px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            transition: transform 0.15s, box-shadow 0.2s;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .btn-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px var(--accent-glow);
+        }
+
+
+        @keyframes pulse-fade {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ── GAME AREA ── */
+        #game-area {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── TOP BAR ── */
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 12px;
+            background: var(--topbar-bg);
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--panel-border);
+            transition: background 0.4s, border-color 0.4s;
+        }
+
+        #opp-status {
+            font-size: 10px;
+            font-weight: 600;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            transition: color 0.3s;
+        }
+
+        #opp-pts {
+            font-size: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--text-muted);
+        }
+
+        #phase-title {
+            margin: 0;
+            color: var(--accent);
+            text-align: center;
+            width: 100%;
+            letter-spacing: 5px;
+            font-size: 0.85rem;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: color 0.3s;
+        }
+
+        .phase-title-pop {
+            animation: phase-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        @keyframes phase-pop {
+            0%   { transform: scale(2) translateY(-4px); opacity: 0; filter: blur(6px); letter-spacing: 12px; }
+            60%  { opacity: 1; filter: blur(0); }
+            80%  { transform: scale(0.97); }
+            100% { transform: scale(1); letter-spacing: 5px; }
+        }
+
+        /* ── MAIN PANEL ── */
+        .panel {
+            background: var(--panel-bg);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--panel-border);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background 0.4s, border-color 0.4s;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+        }
+
+        body.theme-light .panel {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+
+        /* ── BOARD ── */
+        .board-container {
+            position: relative;
+            margin: 12px 0;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            z-index: 1;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            background: var(--board-gap);
+            border: 3px solid var(--board-gap);
+            border-radius: 6px;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            gap: 1.5px;
+            box-shadow:
+                0 12px 48px rgba(0,0,0,0.5),
+                inset 0 0 0 1px rgba(255,255,255,0.04),
+                0 0 0 1px rgba(0,0,0,0.3);
+            transition: border-color 0.4s, background 0.4s, box-shadow 0.6s;
+        }
+
+        body.theme-light .board {
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.08);
+        }
+
+        /* Board reveal bloom */
+        .board.reveal-bloom {
+            box-shadow:
+                0 12px 48px rgba(0,0,0,0.5),
+                inset 0 0 0 1px rgba(255,255,255,0.04),
+                0 0 0 1px rgba(0,0,0,0.3),
+                0 0 60px var(--accent-glow),
+                0 0 120px var(--accent-dim);
+            transition: box-shadow 0.1s ease;
+        }
+
+        .cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.15s, filter 0.15s;
+        }
+
+        .cell.light { background: var(--cell-light); }
+        .cell.dark  { background: var(--cell-dark); }
+
+        .cell:hover { filter: brightness(1.35); }
+
+        .cell.highlight {
+            background: rgba(46,204,113,0.35) !important;
+            box-shadow: inset 0 0 14px rgba(46,204,113,0.5);
+        }
+
+        .cell.highlight::after {
+            content: '';
+            position: absolute;
+            width: 28%;
+            height: 28%;
+            border-radius: 50%;
+            background: rgba(46,204,113,0.65);
+            box-shadow: 0 0 8px rgba(46,204,113,0.5);
+        }
+
+        .cell.planned {
+            background: rgba(212,168,50,0.28) !important;
+            box-shadow: inset 0 0 14px rgba(212,168,50,0.4);
+        }
+
+        /* ── PIECES LAYER ── */
+        #pieces-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .piece {
+            position: absolute;
+            width: 25%;
+            height: 25%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 11vw;
+            /* LERP: spring easing on position, smooth on everything else */
+            transition:
+                left  0.45s cubic-bezier(0.34, 1.15, 0.64, 1),
+                top   0.45s cubic-bezier(0.34, 1.15, 0.64, 1),
+                transform  0.2s ease,
+                opacity    0.25s ease,
+                filter     0.25s ease;
+            pointer-events: none;
+            will-change: left, top;
+        }
+
+        @media (min-width: 450px) { .piece { font-size: 50px; } }
+
+        .piece.white {
+            color: var(--white-p);
+            filter: var(--white-glow);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .piece.black {
+            color: var(--black-p);
+            filter: var(--black-glow);
+        }
+
+        .piece.ghost {
+            opacity: 0.28;
+            filter: grayscale(1) blur(0.5px) !important;
+        }
+
+        .piece.buffed {
+            filter: drop-shadow(0 0 14px #d4a832) drop-shadow(0 0 7px #d4a832) !important;
+        }
+
+        .piece.selected {
+            transform: scale(1.22) translateY(-6%);
+            z-index: 20;
+        }
+
+        .piece.selected.white {
+            filter: drop-shadow(0 0 14px rgba(82,162,225,1)) drop-shadow(0 5px 10px rgba(0,0,0,0.6)) !important;
+        }
+
+        .piece.selected.black {
+            filter: drop-shadow(0 0 14px rgba(165,105,210,1)) drop-shadow(0 5px 10px rgba(0,0,0,0.6)) !important;
+        }
+
+        /* ── PIECE ENTRANCE ── */
+        @keyframes piece-enter {
+            0%   { transform: scale(0.25) translateY(-15%); opacity: 0; filter: brightness(4); }
+            55%  { transform: scale(1.12) translateY(-2%); opacity: 1; }
+            80%  { transform: scale(0.97) translateY(0); }
+            100% { transform: scale(1)   translateY(0); }
+        }
+
+        .piece-entering {
+            animation: piece-enter 0.42s cubic-bezier(0.34, 1.4, 0.64, 1);
+        }
+
+        /* ── PIECE CAPTURE ── */
+        @keyframes piece-capture {
+            0%   { transform: scale(1) rotate(0deg);     opacity: 1;   filter: brightness(1); }
+            12%  { transform: scale(1.45) rotate(-9deg); opacity: 1;   filter: brightness(4) saturate(0.2); }
+            28%  { transform: scale(0.85) rotate(6deg);  opacity: 0.85; }
+            48%  { transform: scale(1.15) rotate(-4deg); opacity: 0.55; }
+            70%  { transform: scale(0.55) rotate(10deg); opacity: 0.2; }
+            100% { transform: scale(0)   rotate(22deg);  opacity: 0;   }
+        }
+
+        .piece-capturing {
+            animation: piece-capture 0.62s cubic-bezier(0.4, 0, 0.2, 1) both;
+            z-index: 30 !important;
+            pointer-events: none;
+        }
+
+        /* ── SHOP / INVENTORY ── */
+        .inventory-area { width: 100%; text-align: center; position: relative; }
+
+        .shop-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .shop-btns button {
+            padding: 7px 11px;
+            margin: 2px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: -1px;
+            transition: background 0.15s, border-color 0.15s, transform 0.12s;
+        }
+
+        .shop-btns button:hover:not(:disabled) {
+            background: var(--accent-dim);
+            border-color: rgba(212,168,50,0.45);
+            transform: translateY(-1px);
+        }
+
+        body.theme-light .shop-btns button {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.12);
+        }
+
+        body.theme-light .shop-btns button:hover:not(:disabled) {
+            background: var(--accent-dim);
+            border-color: rgba(176,106,16,0.4);
+        }
+
+        .shop-btns button:disabled { opacity: 0.18; cursor: not-allowed; }
+
+        #btn-reset-draft {
+            width: 34px; height: 34px;
+            background: rgba(231,76,60,0.12);
+            border: 1px solid rgba(231,76,60,0.25);
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            color: #e74c3c;
+            font-size: 0.85rem;
+            display: none;
+            line-height: 1;
+            padding: 0;
+            transition: background 0.15s;
+        }
+
+        #btn-reset-draft:hover { background: rgba(231,76,60,0.3); }
+
+        #my-budget {
+            color: var(--accent);
+            margin: 0 0 10px 0;
+            font-weight: 600;
+            font-size: 1rem;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 3px;
+        }
+
+        .inv-piece {
+            display: inline-flex;
+            width: 44px; height: 44px;
+            justify-content: center; align-items: center;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+            text-align: center;
+            cursor: pointer;
+            margin: 3px;
+            font-size: 24px;
+            transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+        }
+
+        body.theme-light .inv-piece { background: rgba(0,0,0,0.04); }
+
+        .inv-piece:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+
+        .inv-piece.selected {
+            border-color: var(--accent);
+            transform: translateY(-3px) scale(1.08);
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+
+        .inv-piece.white { color: var(--white-p); filter: drop-shadow(0 0 3px rgba(82,162,225,0.5)); }
+        .inv-piece.black { color: var(--black-p); filter: drop-shadow(0 0 3px rgba(165,105,210,0.5)); }
+
+        /* ── READY BUTTON ── */
+        .btn-ready {
+            width: 100%;
+            padding: 14px;
+            background: var(--success);
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            font-family: 'Cinzel', serif;
+            color: #000;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            transition: filter 0.15s, transform 0.15s, box-shadow 0.2s, background 0.3s, color 0.3s;
+        }
+
+        .btn-ready:hover:not(:disabled) {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 18px rgba(46,204,113,0.4);
+        }
+
+        .btn-ready:active:not(:disabled) { transform: translateY(0); }
+
+        .btn-ready:disabled {
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.18);
+            cursor: not-allowed;
+        }
+
+        body.theme-light .btn-ready:disabled {
+            background: rgba(0,0,0,0.08);
+            color: rgba(0,0,0,0.22);
+        }
+
+        /* ── PHASE TRANSITION OVERLAY ── */
+        #phase-overlay {
+            position: fixed; inset: 0;
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #phase-overlay .ov-bg {
+            position: absolute; inset: 0;
+            background: #000;
+            animation: ov-bg-flash 0.9s ease both;
+        }
+
+        @keyframes ov-bg-flash {
+            0%   { opacity: 0; }
+            18%  { opacity: 0.92; }
+            72%  { opacity: 0.92; }
+            100% { opacity: 0; }
+        }
+
+        #phase-overlay .ov-content {
+            position: relative; z-index: 1;
+            text-align: center;
+            animation: ov-content-slam 0.9s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+        }
+
+        @keyframes ov-content-slam {
+            0%   { opacity: 0; transform: scale(1.6) translateY(-8px); filter: blur(10px); }
+            30%  { opacity: 1; filter: blur(0); }
+            72%  { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.92); }
+        }
+
+        #phase-overlay .ov-label {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: clamp(1.8rem, 8vw, 2.6rem);
+            color: var(--accent);
+            letter-spacing: 8px;
+            text-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        #phase-overlay .ov-sub {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 6px;
+            color: rgba(255,255,255,0.3);
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        /* ── REVEAL FLASH (board bloom) ── */
+        #reveal-flash {
+            position: fixed; inset: 0;
+            z-index: 1500;
+            pointer-events: none;
+            display: none;
+        }
+
+        #reveal-flash.active {
+            display: block;
+            animation: reveal-bloom 0.7s ease both;
+        }
+
+        @keyframes reveal-bloom {
+            0%   { background: rgba(212,168,50,0); }
+            25%  { background: rgba(212,168,50,0.22); }
+            100% { background: rgba(212,168,50,0); }
+        }
+
+        body.theme-light #reveal-flash.active {
+            animation: reveal-bloom-light 0.7s ease both;
+        }
+
+        @keyframes reveal-bloom-light {
+            0%   { background: rgba(176,106,16,0); }
+            25%  { background: rgba(176,106,16,0.18); }
+            100% { background: rgba(176,106,16,0); }
+        }
+
+        /* ── DUEL MODAL ── */
+        #duel-modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.97);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        #duel-modal.modal-enter {
+            animation: modal-fade-in 0.5s cubic-bezier(0.34, 1.1, 0.64, 1) both;
+        }
+
+        @keyframes modal-fade-in {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        /* Dramatic diagonal lines on duel bg */
+        #duel-modal::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                -45deg,
+                rgba(255,255,255,0.008) 0px,
+                rgba(255,255,255,0.008) 1px,
+                transparent 1px,
+                transparent 20px
+            );
+            pointer-events: none;
+        }
+
+        #duel-status {
+            letter-spacing: 7px;
+            text-align: center;
+            color: white;
+            margin-top: 0;
+            margin-bottom: 28px;
+            font-size: 1.3rem;
+            font-family: 'Cinzel Decorative', serif;
+            text-shadow: 0 0 24px rgba(255,255,255,0.25);
+            transition: color 0.3s;
+            position: relative; z-index: 1;
+        }
+
+        .duel-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            max-width: 320px;
+            position: relative; z-index: 1;
+        }
+
+        .duel-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            transition: 0.3s;
+            animation: card-in 0.4s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+        }
+
+        @keyframes card-in {
+            from { opacity: 0; transform: translateY(12px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .duel-card.opp {
+            border: 1px dashed rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.02);
+            animation-delay: 0.06s;
+        }
+
+        .card-theme-white .duel-name-badge {
+            background: rgba(82,162,225,0.12);
+            color: #ddeeff;
+            border: 1px solid rgba(82,162,225,0.3);
+            padding: 7px 20px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.78rem;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .card-theme-black .duel-name-badge {
+            background: rgba(165,105,210,0.12);
+            color: #e8d8f8;
+            border: 1px solid rgba(165,105,210,0.3);
+            padding: 7px 20px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.78rem;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .dice-interactive {
+            width: 88px; height: 88px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            border: 2px solid rgba(255,255,255,0.18);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
+            color: white;
+            position: relative;
+        }
+
+        .card-theme-white .dice-interactive {
+            border-color: rgba(82,162,225,0.5);
+            box-shadow: 0 0 24px rgba(82,162,225,0.1), inset 0 0 20px rgba(82,162,225,0.05);
+        }
+
+        .card-theme-black .dice-interactive {
+            border-color: rgba(165,105,210,0.5);
+            box-shadow: 0 0 24px rgba(165,105,210,0.1), inset 0 0 20px rgba(165,105,210,0.05);
+        }
+
+        .duel-card.opp .dice-interactive { pointer-events: none; }
+
+        .dice-interactive:hover:not(.duel-card.opp .dice-interactive) {
+            transform: scale(1.06);
+        }
+
+        .dice-interactive:active { transform: scale(0.92); }
+
+        .dice-interactive.winner-pulse {
+            border-color: #d4a832 !important;
+            box-shadow: 0 0 40px rgba(212,168,50,0.6), 0 0 80px rgba(212,168,50,0.25) !important;
+            transform: scale(1.12);
+            animation: winner-radiate 0.9s ease infinite alternate;
+        }
+
+        @keyframes winner-radiate {
+            from { box-shadow: 0 0 30px rgba(212,168,50,0.5), 0 0 60px rgba(212,168,50,0.15); }
+            to   { box-shadow: 0 0 55px rgba(212,168,50,0.85), 0 0 110px rgba(212,168,50,0.35); }
+        }
+
+        .dice-unicode {
+            font-size: 64px;
+            line-height: 1;
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.25));
+            transition: filter 0.2s;
+        }
+
+        .result-box {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 12px;
+            width: 100%;
+            animation: result-pop 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+        }
+
+        @keyframes result-pop {
+            from { opacity: 0; transform: scale(0.6); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .result-box.show { display: flex; }
+
+        .result-total {
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--accent);
+            line-height: 1;
+            font-family: 'IBM Plex Mono', monospace;
+            text-shadow: 0 0 24px var(--accent-glow);
+        }
+
+        .result-math {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.35);
+            margin-top: 7px;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 1px;
+        }
+
+        .opp-label {
+            font-size: 0.62rem;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 3.5px;
+            align-self: flex-start;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-family: 'IBM Plex Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        /* ── GAME OVER ── */
+        #game-over-screen {
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at 50% 50%, #0c0a00 0%, #000 100%);
+            z-index: 6000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            animation: go-in 0.9s ease both;
+        }
+
+        @keyframes go-in {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        #game-over-screen::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                -45deg,
+                rgba(255,255,255,0.006) 0px,
+                rgba(255,255,255,0.006) 1px,
+                transparent 1px,
+                transparent 24px
+            );
+            pointer-events: none;
+        }
+
+        #game-over-screen h1 {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.2);
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 0;
+            position: relative; z-index: 1;
+        }
+
+        .go-divider {
+            width: 48px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin: 20px auto;
+            opacity: 0.5;
+            position: relative; z-index: 1;
+        }
+
+        #game-over-result {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: clamp(2rem, 8vw, 3rem);
+            margin: 0 0 52px 0;
+            text-transform: uppercase;
+            font-weight: 900;
+            line-height: 1.15;
+            animation: go-result 0.75s cubic-bezier(0.34, 1.3, 0.64, 1) 0.3s both;
+            position: relative; z-index: 1;
+        }
+
+        @keyframes go-result {
+            from { transform: scale(0.45); opacity: 0; filter: blur(10px); }
+            to   { transform: scale(1);    opacity: 1; filter: blur(0); }
+        }
+
+        .win-text  { color: #2ecc71; text-shadow: 0 0 40px rgba(46,204,113,0.55); }
+        .lose-text { color: #e74c3c; text-shadow: 0 0 40px rgba(231,76,60,0.55); }
+
+        /* ── DUEL WAITING TEXT ── */
+        .duel-waiting {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 4px;
+            color: rgba(255,255,255,0.2);
+            margin-top: 10px;
+            text-transform: uppercase;
+            animation: pulse-fade 1.6s ease infinite;
+        }
+
+        /* ── GENERAL ANIMATIONS ── */
+        @keyframes fadein {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── SCREENS ── */
+        .screen {
+            position: fixed; inset: 0;
+            z-index: 4000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: radial-gradient(ellipse at 50% 30%, #1a1200 0%, #000 100%);
+            padding: 0;
+            overflow: hidden;
+        }
+        .screen.active { display: flex; }
+
+        body.theme-light .screen {
+            background: radial-gradient(ellipse at 50% 30%, #e8dcc8 0%, #c8b898 100%);
+        }
+
+        /* ── MENU SCREEN ── */
+        #screen-menu {
+            justify-content: space-between;
+        }
+
+        .menu-header {
+            width: 100%; max-width: 420px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 20px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .menu-player-info {
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .menu-avatar-icon {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: rgba(212,168,50,0.12);
+            border: 1px solid rgba(212,168,50,0.35);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            color: var(--accent);
+        }
+
+        .menu-player-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.78rem; font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-color);
+        }
+
+        .menu-rank-badge {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .menu-stats-pill {
+            display: flex; gap: 6px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+        }
+
+        .menu-stats-pill span { color: var(--accent); font-weight: 600; }
+
+        .menu-center {
+            flex: 1;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 0 24px;
+            width: 100%; max-width: 420px;
+            gap: 10px;
+        }
+
+        .menu-logo {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: clamp(2rem, 9vw, 3rem);
+            color: var(--accent);
+            letter-spacing: 8px;
+            text-align: center;
+            text-shadow: 0 0 40px rgba(212,168,50,0.5), 0 0 80px rgba(212,168,50,0.2);
+            animation: title-glow 3s ease infinite alternate;
+            margin-bottom: 2px;
+        }
+
+        .menu-version {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 5px;
+            color: rgba(212,168,50,0.35);
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+
+        .menu-divider {
+            width: 48px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.35; margin-bottom: 20px;
+        }
+
+        .menu-nav { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+
+        .menu-btn {
+            width: 100%; padding: 14px 20px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.82rem; font-weight: 700;
+            letter-spacing: 4px; text-transform: uppercase;
+            border-radius: 8px; cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s, background 0.15s;
+            border: none;
+        }
+
+        .menu-btn-primary {
+            background: var(--accent); color: #000;
+        }
+        .menu-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px var(--accent-glow);
+        }
+
+        .menu-btn-secondary {
+            background: rgba(255,255,255,0.04);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+        }
+        .menu-btn-secondary:hover {
+            background: var(--accent-dim);
+            border-color: rgba(212,168,50,0.35);
+            transform: translateY(-1px);
+        }
+
+        .menu-btn-danger {
+            background: transparent;
+            color: rgba(231,76,60,0.6);
+            border: 1px solid rgba(231,76,60,0.2);
+        }
+        .menu-btn-danger:hover {
+            background: rgba(231,76,60,0.1);
+            border-color: rgba(231,76,60,0.5);
+            color: #e74c3c;
+        }
+
+        .menu-footer {
+            width: 100%; text-align: center;
+            padding: 14px 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 2px;
+            color: rgba(255,255,255,0.15);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .menu-footer a {
+            color: rgba(212,168,50,0.45);
+            text-decoration: none;
+        }
+        .menu-footer a:hover { color: var(--accent); }
+
+        /* ── MATCHMAKING SCREEN ── */
+        #screen-matchmaking { justify-content: center; gap: 0; }
+
+        .mm-back-bar {
+            position: absolute; top: 16px; left: 16px;
+        }
+
+        .mm-back-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--text-muted);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem; letter-spacing: 2px;
+            padding: 8px 14px; border-radius: 6px;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .mm-back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .mm-state { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 380px; padding: 24px; }
+        .mm-state.active { display: flex; }
+
+        .mm-title {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1rem; letter-spacing: 6px;
+            color: var(--accent); text-align: center;
+            margin-bottom: 32px;
+            animation: title-glow 2s ease infinite alternate;
+        }
+
+        .mm-my-card {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 10px; margin-bottom: 40px;
+        }
+
+        .mm-avatar-large {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            background: rgba(212,168,50,0.1);
+            border: 2px solid rgba(212,168,50,0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; color: var(--accent);
+        }
+
+        .mm-nickname {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem; font-weight: 600;
+            color: var(--text-color); letter-spacing: 2px;
+        }
+
+        .mm-searching-text {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem; letter-spacing: 4px;
+            color: #e67e22; text-transform: uppercase;
+            animation: pulse-fade 1.6s ease infinite;
+        }
+
+        .mm-dots {
+            display: flex; gap: 8px; margin: 16px 0;
+        }
+        .mm-dots span {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent); opacity: 0.3;
+            animation: mm-dot-pulse 1.4s ease infinite;
+        }
+        .mm-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .mm-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes mm-dot-pulse {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        .mm-vs-row {
+            display: flex; align-items: center; justify-content: center;
+            gap: 24px; width: 100%; margin-bottom: 32px;
+        }
+
+        .mm-vs-card {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+
+        .mm-vs-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 3px; color: var(--text-muted);
+        }
+
+        .mm-vs-text {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1.4rem; color: rgba(255,255,255,0.2);
+            letter-spacing: 4px;
+        }
+
+        .mm-countdown-num {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: clamp(5rem, 20vw, 8rem);
+            color: var(--accent);
+            text-shadow: 0 0 60px var(--accent-glow);
+            line-height: 1;
+            animation: count-pop 0.4s cubic-bezier(0.34, 1.5, 0.64, 1);
+        }
+        @keyframes count-pop {
+            from { transform: scale(1.8); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+        }
+
+        .mm-countdown-sub {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem; letter-spacing: 6px;
+            color: rgba(255,255,255,0.25); text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        /* ── HOW TO PLAY SCREEN ── */
+        #screen-how-to-play {
+            justify-content: flex-start;
+        }
+
+        .htp-header {
+            width: 100%; max-width: 520px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+
+        .htp-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem; font-weight: 700; letter-spacing: 5px;
+            color: var(--accent);
+        }
+
+        .htp-body {
+            flex: 1; overflow-y: auto;
+            width: 100%; max-width: 520px;
+            padding: 20px 20px 32px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(212,168,50,0.3) transparent;
+        }
+
+        .htp-section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.78rem; font-weight: 700; letter-spacing: 4px;
+            color: var(--accent); text-transform: uppercase;
+            margin: 24px 0 10px; padding-bottom: 6px;
+            border-bottom: 1px solid rgba(212,168,50,0.2);
+        }
+        .htp-section-title:first-child { margin-top: 0; }
+
+        .htp-body p {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.78rem; line-height: 1.7;
+            color: rgba(240,236,228,0.7);
+            margin-bottom: 10px;
+        }
+
+        .htp-rule {
+            display: flex; gap: 10px; margin-bottom: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem; line-height: 1.6;
+            color: rgba(240,236,228,0.65);
+        }
+        .htp-rule-key {
+            flex-shrink: 0;
+            color: var(--accent); font-weight: 600; width: 18px;
+        }
+
+        .htp-back-btn {
+            flex-shrink: 0;
+            padding: 8px 18px;
+            font-family: 'Cinzel', serif; font-size: 0.7rem;
+            font-weight: 700; letter-spacing: 3px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--text-muted);
+            border-radius: 6px; cursor: pointer; transition: all 0.15s;
+        }
+        .htp-back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── CREDITS SCREEN ── */
+        #screen-credits { justify-content: center; }
+
+        .crd-body {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 20px; text-align: center;
+            width: 100%; max-width: 400px;
+        }
+
+        .crd-thanks {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: clamp(1.4rem, 6vw, 2rem);
+            color: var(--accent); letter-spacing: 4px;
+            animation: title-glow 3s ease infinite alternate;
+            margin-bottom: 40px;
+        }
+
+        .crd-section { margin-bottom: 28px; }
+
+        .crd-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 4px;
+            color: var(--text-muted); text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .crd-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem; font-weight: 700; letter-spacing: 2px;
+            color: var(--text-color);
+        }
+
+        .crd-links {
+            display: flex; gap: 12px; justify-content: center;
+            margin-top: 8px; flex-wrap: wrap;
+        }
+
+        .crd-link {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem; letter-spacing: 2px;
+            color: rgba(212,168,50,0.6);
+            text-decoration: none;
+            padding: 5px 12px;
+            border: 1px solid rgba(212,168,50,0.2);
+            border-radius: 100px;
+            transition: all 0.15s;
+        }
+        .crd-link:hover { color: var(--accent); border-color: rgba(212,168,50,0.5); }
+
+        .crd-divider {
+            width: 40px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.3; margin: 20px auto;
+        }
+
+        /* ── SETTINGS SCREEN ── */
+        #screen-settings { justify-content: flex-start; }
+
+        .set-header {
+            width: 100%; max-width: 420px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+
+        .set-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem; font-weight: 700; letter-spacing: 5px;
+            color: var(--accent);
+        }
+
+        .set-body {
+            flex: 1; overflow-y: auto;
+            width: 100%; max-width: 420px;
+            padding: 24px 20px;
+        }
+
+        .set-section-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.62rem; letter-spacing: 4px;
+            color: var(--text-muted); text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .flag-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-bottom: 28px;
+        }
+
+        .flag-btn {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 6px; padding: 14px 8px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px; cursor: pointer;
+            transition: all 0.15s;
+            font-size: 1.8rem;
+        }
+
+        .flag-btn:hover {
+            background: var(--accent-dim);
+            border-color: rgba(212,168,50,0.3);
+            transform: translateY(-2px);
+        }
+
+        .flag-btn.selected {
+            border-color: var(--accent);
+            background: rgba(212,168,50,0.1);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+
+        .flag-lang-code {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 2px;
+            color: var(--text-muted); text-transform: uppercase;
+        }
+
+        .flag-btn.selected .flag-lang-code { color: var(--accent); }
+
+        .set-profile-btn {
+            width: 100%; padding: 14px 20px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.82rem; font-weight: 700; letter-spacing: 4px;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.04);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px; cursor: pointer;
+            transition: all 0.15s; margin-bottom: 10px;
+        }
+        .set-profile-btn:hover {
+            background: var(--accent-dim);
+            border-color: rgba(212,168,50,0.35);
+        }
+
+        /* ── PROFILE SCREEN ── */
+        #screen-profile { justify-content: flex-start; }
+
+        .prof-header {
+            width: 100%; max-width: 420px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+
+        .prof-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem; font-weight: 700; letter-spacing: 5px;
+            color: var(--accent);
+        }
+
+        .prof-body {
+            flex: 1; overflow-y: auto;
+            width: 100%; max-width: 420px;
+            padding: 24px 20px;
+        }
+
+        .prof-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.62rem; letter-spacing: 4px;
+            color: var(--text-muted); text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .avatar-grid {
+            display: flex; gap: 10px;
+            flex-wrap: wrap; margin-bottom: 28px;
+        }
+
+        .avatar-opt {
+            width: 54px; height: 54px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--panel-border);
+            cursor: pointer; transition: all 0.15s;
+        }
+        .avatar-opt:hover { transform: translateY(-2px); border-color: rgba(212,168,50,0.4); }
+        .avatar-opt.selected {
+            border-color: var(--accent);
+            background: rgba(212,168,50,0.12);
+            box-shadow: 0 0 0 1px var(--accent), 0 0 16px rgba(212,168,50,0.25);
+        }
+
+        .nick-input {
+            width: 100%; padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px; color: var(--text-color);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem; letter-spacing: 2px;
+            outline: none; margin-bottom: 28px;
+            transition: border-color 0.15s;
+        }
+        .nick-input:focus { border-color: rgba(212,168,50,0.45); }
+
+        .stats-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; margin-bottom: 28px;
+        }
+
+        .stat-card {
+            padding: 14px; border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--panel-border);
+            text-align: center;
+        }
+
+        .stat-val {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.6rem; font-weight: 600;
+            color: var(--accent); line-height: 1;
+        }
+
+        .stat-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 2px;
+            color: var(--text-muted); text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .prof-save-btn {
+            width: 100%; padding: 14px;
+            font-family: 'Cinzel', serif; font-size: 0.82rem;
+            font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
+            background: var(--accent); color: #000;
+            border: none; border-radius: 8px; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .prof-save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px var(--accent-glow);
+        }
+
+        /* back button reuse */
+        .screen-back-btn {
+            padding: 8px 18px;
+            font-family: 'Cinzel', serif; font-size: 0.7rem;
+            font-weight: 700; letter-spacing: 3px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--text-muted);
+            border-radius: 6px; cursor: pointer; transition: all 0.15s;
+        }
+        .screen-back-btn:hover { border-color: var(--accent); color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<!-- MENU SCREEN -->
+<div id="screen-menu" class="screen">
+    <div class="menu-header">
+        <div class="menu-player-info">
+            <div class="menu-avatar-icon" id="menu-avatar-icon">♔</div>
+            <div>
+                <div class="menu-player-name" id="menu-player-name">Guerreiro</div>
+                <div class="menu-rank-badge" id="menu-rank-badge">RANK —</div>
+            </div>
+        </div>
+        <div class="menu-stats-pill">
+            <span id="menu-stat-w">0</span>W /
+            <span id="menu-stat-l">0</span>L
+        </div>
+    </div>
+    <div class="menu-center">
+        <div class="menu-logo">microChess</div>
+        <div class="menu-version" id="menu-version-sub">v1.0 · ONLINE</div>
+        <div class="menu-divider"></div>
+        <nav class="menu-nav">
+            <button class="menu-btn menu-btn-primary" id="btn-novo-jogo" onclick="window.goMatchmaking()">NOVO JOGO</button>
+            <button class="menu-btn menu-btn-secondary" id="btn-como-jogar" onclick="showScreen('how-to-play')">COMO JOGAR</button>
+            <button class="menu-btn menu-btn-secondary" id="btn-creditos" onclick="showScreen('credits')">CRÉDITOS</button>
+            <button class="menu-btn menu-btn-secondary" id="btn-configuracoes" onclick="showScreen('settings')">CONFIGURAÇÕES</button>
+            <button class="menu-btn menu-btn-danger" id="btn-sair" onclick="window.quitGame()">SAIR</button>
+        </nav>
+    </div>
+    <div class="menu-footer">
+        microChess v1.0 &nbsp;·&nbsp;
+        <a href="#" id="footer-feedback" target="_blank">Dê o seu Feedback. Clique aqui.</a>
+    </div>
+</div>
+
+<!-- MATCHMAKING SCREEN -->
+<div id="screen-matchmaking" class="screen">
+    <div class="mm-back-bar">
+        <button class="mm-back-btn" id="btn-mm-cancel" onclick="window.cancelMatchmaking()">← CANCELAR</button>
+    </div>
+
+    <!-- Sub-state 1: Lobby -->
+    <div class="mm-state active" id="mm-lobby">
+        <div class="mm-title" id="mm-title-searching">PROCURANDO OPONENTE</div>
+        <div class="mm-my-card">
+            <div class="mm-avatar-large" id="mm-my-avatar">♔</div>
+            <div class="mm-nickname" id="mm-my-nick">Guerreiro</div>
+        </div>
+        <div class="mm-dots">
+            <span></span><span></span><span></span>
+        </div>
+        <div class="mm-searching-text" id="mm-searching-text">Aguardando adversário...</div>
+    </div>
+
+    <!-- Sub-state 2: Match Locked -->
+    <div class="mm-state" id="mm-found">
+        <div class="mm-title" id="mm-title-found">PARTIDA ENCONTRADA!</div>
+        <div class="mm-vs-row">
+            <div class="mm-vs-card">
+                <div class="mm-vs-label" id="mm-vs-label-you">VOCÊ</div>
+                <div class="mm-avatar-large" id="mm-found-my-avatar">♔</div>
+                <div class="mm-nickname" id="mm-found-my-nick">—</div>
+            </div>
+            <div class="mm-vs-text">VS</div>
+            <div class="mm-vs-card">
+                <div class="mm-vs-label" id="mm-vs-label-opp">OPONENTE</div>
+                <div class="mm-avatar-large" id="mm-found-opp-avatar">♙</div>
+                <div class="mm-nickname" id="mm-found-opp-nick">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sub-state 3: Countdown -->
+    <div class="mm-state" id="mm-countdown">
+        <div class="mm-countdown-sub" id="mm-countdown-sub">A BATALHA COMEÇA EM...</div>
+        <div class="mm-countdown-num" id="mm-count-num">3</div>
+    </div>
+</div>
+
+<!-- HOW TO PLAY SCREEN -->
+<div id="screen-how-to-play" class="screen">
+    <div class="htp-header">
+        <div class="htp-title" id="htp-title">COMO JOGAR</div>
+        <button class="htp-back-btn" onclick="showScreen('menu')">VOLTAR</button>
+    </div>
+    <div class="htp-body" id="htp-body">
+        <!-- injected by JS -->
+    </div>
+</div>
+
+<!-- CREDITS SCREEN -->
+<div id="screen-credits" class="screen">
+    <div class="crd-body">
+        <div class="crd-thanks" id="crd-thanks">OBRIGADO POR JOGAR!</div>
+        <div class="crd-section">
+            <div class="crd-label">Criado e Desenvolvido por</div>
+            <div class="crd-name">Gabriel "dash_" Mialchi</div>
+            <div class="crd-links">
+                <a class="crd-link" href="#" target="_blank" id="crd-portfolio">Portfólio</a>
+            </div>
+        </div>
+        <div class="crd-divider"></div>
+        <div class="crd-section">
+            <div class="crd-label">Publicado por</div>
+            <div class="crd-name">o6 games</div>
+            <div class="crd-links">
+                <a class="crd-link" href="#" target="_blank" id="crd-site">Site</a>
+                <a class="crd-link" href="#" target="_blank" id="crd-insta">Instagram</a>
+                <a class="crd-link" href="#" target="_blank" id="crd-itch">Itch.io</a>
+            </div>
+        </div>
+        <div class="crd-divider"></div>
+        <button class="menu-btn menu-btn-secondary" style="max-width:240px; margin-top:8px;" onclick="showScreen('menu')" id="crd-back-btn">VOLTAR</button>
+    </div>
+</div>
+
+<!-- SETTINGS SCREEN -->
+<div id="screen-settings" class="screen">
+    <div class="set-header">
+        <div class="set-title" id="set-title">CONFIGURAÇÕES</div>
+        <button class="screen-back-btn" onclick="showScreen('menu')">VOLTAR</button>
+    </div>
+    <div class="set-body">
+        <div class="set-section-label" id="set-lang-label">IDIOMA</div>
+        <div class="flag-grid" id="flag-grid">
+            <button class="flag-btn" data-lang="pt" onclick="selectLanguage('pt')">🇧🇷<span class="flag-lang-code">PT</span></button>
+            <button class="flag-btn" data-lang="es" onclick="selectLanguage('es')">🇪🇸<span class="flag-lang-code">ES</span></button>
+            <button class="flag-btn" data-lang="en" onclick="selectLanguage('en')">🇬🇧<span class="flag-lang-code">EN</span></button>
+            <button class="flag-btn" data-lang="de" onclick="selectLanguage('de')">🇩🇪<span class="flag-lang-code">DE</span></button>
+            <button class="flag-btn" data-lang="it" onclick="selectLanguage('it')">🇮🇹<span class="flag-lang-code">IT</span></button>
+            <button class="flag-btn" data-lang="ru" onclick="selectLanguage('ru')">🇷🇺<span class="flag-lang-code">RU</span></button>
+            <button class="flag-btn" data-lang="ja" onclick="selectLanguage('ja')">🇯🇵<span class="flag-lang-code">JA</span></button>
+            <button class="flag-btn" data-lang="ko" onclick="selectLanguage('ko')">🇰🇷<span class="flag-lang-code">KO</span></button>
+            <button class="flag-btn" data-lang="zh" onclick="selectLanguage('zh')">🇨🇳<span class="flag-lang-code">ZH</span></button>
+        </div>
+        <button class="set-profile-btn" id="set-profile-btn" onclick="showScreen('profile')">PERFIL</button>
+        <button class="menu-btn menu-btn-secondary" style="margin-top:4px;" onclick="showScreen('menu')" id="set-back-btn">VOLTAR</button>
+    </div>
+</div>
+
+<!-- PROFILE SCREEN -->
+<div id="screen-profile" class="screen">
+    <div class="prof-header">
+        <div class="prof-title" id="prof-title">PERFIL</div>
+        <button class="screen-back-btn" onclick="showScreen('settings')">VOLTAR</button>
+    </div>
+    <div class="prof-body">
+        <div class="prof-label" id="prof-avatar-label">AVATAR</div>
+        <div class="avatar-grid" id="avatar-grid">
+            <button class="avatar-opt" data-piece="K" onclick="selectAvatar('K')">♔</button>
+            <button class="avatar-opt" data-piece="Q" onclick="selectAvatar('Q')">♕</button>
+            <button class="avatar-opt" data-piece="R" onclick="selectAvatar('R')">♖</button>
+            <button class="avatar-opt" data-piece="B" onclick="selectAvatar('B')">♗</button>
+            <button class="avatar-opt" data-piece="N" onclick="selectAvatar('N')">♘</button>
+            <button class="avatar-opt" data-piece="P" onclick="selectAvatar('P')">♙</button>
+        </div>
+        <div class="prof-label" id="prof-nick-label">APELIDO</div>
+        <input class="nick-input" type="text" id="nick-input" maxlength="16" placeholder="Guerreiro">
+        <div class="prof-label" id="prof-stats-label">ESTATÍSTICAS</div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-val" id="stat-wins">0</div><div class="stat-name" id="stat-wins-label">Vitórias</div></div>
+            <div class="stat-card"><div class="stat-val" id="stat-losses">0</div><div class="stat-name" id="stat-losses-label">Derrotas</div></div>
+            <div class="stat-card"><div class="stat-val" id="stat-wo-w">0</div><div class="stat-name" id="stat-wo-w-label">W.O. Ganhos</div></div>
+            <div class="stat-card"><div class="stat-val" id="stat-wo-l">0</div><div class="stat-name" id="stat-wo-l-label">W.O. Perdidos</div></div>
+        </div>
+        <button class="prof-save-btn" id="prof-save-btn" onclick="window.saveProfile()">SALVAR</button>
+    </div>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div id="game-over-screen">
+    <h1 id="go-title">Fim de Jogo</h1>
+    <div class="go-divider"></div>
+    <div id="game-over-result">RESULTADO</div>
+    <div style="display:flex; flex-direction:column; gap:10px; width:100%; max-width:300px; position:relative; z-index:1;">
+        <button class="btn-large" id="btn-go-menu" onclick="window.returnToMenu()" style="background:rgba(255,255,255,0.08); color:var(--text-color); border:1px solid rgba(255,255,255,0.12);">MENU</button>
+        <button class="btn-large" id="btn-go-again" onclick="window.returnToMenu()">JOGAR NOVAMENTE</button>
+    </div>
+</div>
+
+<!-- PHASE TRANSITION OVERLAY -->
+<div id="phase-overlay">
+    <div class="ov-bg"></div>
+    <div class="ov-content">
+        <div class="ov-label" id="ov-label-text">—</div>
+        <div class="ov-sub" id="ov-label-sub"></div>
+    </div>
+</div>
+
+<!-- REVEAL FLASH -->
+<div id="reveal-flash"></div>
+
+<!-- GAME AREA -->
+<div id="game-area">
+    <div id="top-bar">
+        <div id="opp-status">Adversário: Conectando...</div>
+        <div id="phase-title">CONECTANDO...</div>
+        <div id="opp-pts">Pts: ?</div>
+    </div>
+
+    <div class="panel" id="my-panel">
+        <div id="my-budget" style="color:var(--accent); margin:0 0 10px; font-weight:600; font-size:1rem; font-family:'IBM Plex Mono',monospace; letter-spacing:3px;">Meus Pts: 5</div>
+
+        <div class="inventory-area">
+            <div class="shop-wrapper">
+                <div class="shop-btns" id="shop-btns-container"></div>
+                <button id="btn-reset-draft" onclick="resetDraft()" title="Limpar">✕</button>
+            </div>
+            <div id="my-inv-stack" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="board-container">
+            <div class="board" id="main-board"></div>
+            <div id="pieces-layer"></div>
+        </div>
+
+        <button id="btn-ready" class="btn-ready" onclick="setReady()">PRONTO</button>
+    </div>
+</div>
+
+<!-- DUEL MODAL -->
+<div id="duel-modal">
+    <h1 id="duel-status">CONFLITO!</h1>
+    <div class="duel-container" id="duel-container"></div>
+    <button id="close-duel" class="btn-ready"
+        style="max-width:300px; margin-top:28px; display:none; background:var(--accent); color:#000; position:relative; z-index:1;"
+        onclick="finishDuel()">RESOLVER JOGADA</button>
+</div>
+
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<script>
+    // ── TRANSLATIONS ─────────────────────────────────────────────
+    const T = {
+        pt: {
+            new_game:'NOVO JOGO', how_to_play:'COMO JOGAR', credits:'CRÉDITOS', settings:'CONFIGURAÇÕES', quit:'SAIR', back:'VOLTAR',
+            searching:'PROCURANDO OPONENTE', waiting_adv:'Aguardando adversário...', match_found:'PARTIDA ENCONTRADA!',
+            battle_begins:'A BATALHA COMEÇA EM...', cancel:'← CANCELAR', prepare:'PREPARE-SE!',
+            ready:'PRONTO', waiting_opp:'Aguardando Oponente...', preparing_action:'Preparando Ação...', revealing:'Revelando...',
+            opp_ready:'Oponente: PRONTO', opp_thinking:'Oponente: pensando...', pts:'Pts', my_pts:'Meus Pts',
+            conflict:'CONFLITO!', sudden_death:'MORTE SÚBITA!', white_wins:'BRANCO VENCE!', black_wins:'PRETO VENCE!', draw:'EMPATE!',
+            tap_roll:'toque para rolar', resolve:'RESOLVER JOGADA', you:'VOCÊ', opponent:'OPONENTE',
+            you_win:'Você Venceu!', you_lose:'Você Perdeu!', game_over_title:'Fim de Jogo', play_again:'JOGAR NOVAMENTE', menu:'MENU',
+            language:'IDIOMA', profile:'PERFIL', nickname:'APELIDO', avatar:'AVATAR',
+            wins:'Vitórias', losses:'Derrotas', wo_wins:'W.O. Ganhos', wo_losses:'W.O. Perdidos', save:'SALVAR',
+            piece_K:'Rei', piece_Q:'Rainha', piece_R:'Torre', piece_B:'Bispo', piece_N:'Cavalo', piece_P:'Peão',
+            recruit_label:'monte seu exército', position_label:'coloque suas peças', reveal_label:'o tabuleiro à mostra', action_label:'planeje seu movimento',
+            phase_draft:'RECRUTAMENTO', phase_position:'POSICIONAMENTO', phase_reveal:'REVELAÇÃO!', phase_action:'AÇÃO',
+            feedback:'Dê o seu Feedback. Clique aqui.',
+            htp_intro:'microChess Online é um duelo tático onde o xadrez clássico encontra a incerteza do campo de batalha. O objetivo é simples: Capture o Rei adversário.',
+            htp_flow_title:'O FLUXO DO JOGO',
+            htp_draft:'Recrutamento (Draft): Você tem 5 pontos para montar seu exército. Escolha entre Rainhas poderosas ou uma massa de Peões e Cavalos.',
+            htp_position:'Posicionamento: Posicione suas peças secretamente nas duas primeiras fileiras. Seu oponente não verá sua estratégia... ainda.',
+            htp_reveal:'Revelação: Os tabuleiros se unem e as formações são reveladas. A guerra começa!',
+            htp_action:'Ação Simultânea: Selecione sua peça e o destino. Aqui não há espera: ambos jogam ao mesmo tempo. Planeje seu movimento prevendo onde o inimigo estará.',
+            htp_capture_title:'REGRAS DE CAPTURA E MOVIMENTO',
+            htp_capture:'Captura Automática: Se você mover para uma casa ocupada por uma peça inimiga que ficou parada, você a captura instantaneamente (exceto o Rei).',
+            htp_escape:'Fuga: Se você atacar uma casa, mas o inimigo se mover para fora dela no mesmo turno, você ocupa o espaço vazio (ele escapou!).',
+            htp_duel:'Combate (Duelo): Se duas peças tentarem ocupar a mesma casa, ou se você atacar o Rei inimigo, um duelo de dados é iniciado.',
+            htp_duel_title:'O SISTEMA DE DUELO',
+            htp_duel_desc:'Quando o conflito é inevitável, a sorte e a força entram em jogo. Role o dado (1D6) e some o Bônus da Peça.\nVitória: Você captura a peça inimiga e domina a casa.\nDerrota: Sua peça é removida e o inimigo conquista o espaço.\nEmpate: Ambas as peças são removidas (vácuo). Exceção: O Rei sempre vence empates.',
+            htp_special_title:'SITUAÇÕES ESPECIAIS (Contra-Ataque)',
+            htp_special:'O MicroChess prioriza a defesa do Rei através da iniciativa. Se um Peão Branco atacar seu Rei, mas seu Cavalo Preto atacar esse mesmo Peão no mesmo turno, o Cavalo intercepta o Peão primeiro. Se o Cavalo vencer o duelo, ele destrói o invasor e salva o seu Rei antes mesmo do ataque inimigo acontecer.',
+        },
+        en: {
+            new_game:'NEW GAME', how_to_play:'HOW TO PLAY', credits:'CREDITS', settings:'SETTINGS', quit:'QUIT', back:'BACK',
+            searching:'SEARCHING FOR OPPONENT', waiting_adv:'Waiting for opponent...', match_found:'MATCH FOUND!',
+            battle_begins:'BATTLE BEGINS IN...', cancel:'← CANCEL', prepare:'GET READY!',
+            ready:'READY', waiting_opp:'Waiting for Opponent...', preparing_action:'Preparing Action...', revealing:'Revealing...',
+            opp_ready:'Opponent: READY', opp_thinking:'Opponent: thinking...', pts:'Pts', my_pts:'My Pts',
+            conflict:'CONFLICT!', sudden_death:'SUDDEN DEATH!', white_wins:'WHITE WINS!', black_wins:'BLACK WINS!', draw:'DRAW!',
+            tap_roll:'tap to roll', resolve:'RESOLVE', you:'YOU', opponent:'OPPONENT',
+            you_win:'You Win!', you_lose:'You Lose!', game_over_title:'Game Over', play_again:'PLAY AGAIN', menu:'MENU',
+            language:'LANGUAGE', profile:'PROFILE', nickname:'NICKNAME', avatar:'AVATAR',
+            wins:'Wins', losses:'Losses', wo_wins:'W.O. Wins', wo_losses:'W.O. Losses', save:'SAVE',
+            piece_K:'King', piece_Q:'Queen', piece_R:'Rook', piece_B:'Bishop', piece_N:'Knight', piece_P:'Pawn',
+            recruit_label:'build your army', position_label:'place your pieces', reveal_label:'the board revealed', action_label:'plan your move',
+            phase_draft:'RECRUITMENT', phase_position:'POSITIONING', phase_reveal:'REVEAL!', phase_action:'ACTION',
+            feedback:'Give us your Feedback. Click here.',
+            htp_intro:'microChess Online is a tactical duel where classic chess meets battlefield uncertainty. The goal is simple: Capture the enemy King.',
+            htp_flow_title:'GAME FLOW',
+            htp_draft:'Recruitment (Draft): You have 5 points to build your army. Choose between powerful Queens or a mass of Pawns and Knights.',
+            htp_position:'Positioning: Place your pieces secretly in the first two rows. Your opponent won\'t see your strategy... yet.',
+            htp_reveal:'Reveal: The boards unite and formations are revealed. The battle begins!',
+            htp_action:'Simultaneous Action: Select your piece and destination. No waiting: both players move at the same time. Plan your move predicting where the enemy will be.',
+            htp_capture_title:'CAPTURE & MOVEMENT RULES',
+            htp_capture:'Auto-Capture: If you move to a square occupied by a stationary enemy piece, you capture it instantly (except the King).',
+            htp_escape:'Escape: If you attack a square but the enemy moves away in the same turn, you occupy the empty space (they escaped!).',
+            htp_duel:'Combat (Duel): If two pieces try to occupy the same square, or if you attack the enemy King, a dice duel begins.',
+            htp_duel_title:'THE DUEL SYSTEM',
+            htp_duel_desc:'When conflict is inevitable, luck and strength come into play. Roll the die (1D6) and add the Piece Bonus.\nVictory: You capture the enemy piece and own the square.\nDefeat: Your piece is removed and the enemy claims the space.\nTie: Both pieces are removed (void). Exception: The King always wins ties.',
+            htp_special_title:'SPECIAL SITUATIONS (Counter-Attack)',
+            htp_special:'MicroChess prioritizes King defense through initiative. If a White Pawn attacks your King, but your Black Knight attacks that same Pawn in the same turn, the Knight intercepts first. If the Knight wins the duel, it destroys the invader and saves your King before the attack happens.',
+        },
+        es: {
+            new_game:'NUEVO JUEGO', how_to_play:'CÓMO JUGAR', credits:'CRÉDITOS', settings:'CONFIGURACIÓN', quit:'SALIR', back:'VOLVER',
+            searching:'BUSCANDO OPONENTE', waiting_adv:'Esperando oponente...', match_found:'¡PARTIDA ENCONTRADA!',
+            battle_begins:'LA BATALLA COMIENZA EN...', cancel:'← CANCELAR', prepare:'¡PREPÁRATE!',
+            ready:'LISTO', waiting_opp:'Esperando Oponente...', preparing_action:'Preparando Acción...', revealing:'Revelando...',
+            opp_ready:'Oponente: LISTO', opp_thinking:'Oponente: pensando...', pts:'Pts', my_pts:'Mis Pts',
+            conflict:'¡CONFLICTO!', sudden_death:'¡MUERTE SÚBITA!', white_wins:'¡BLANCO GANA!', black_wins:'¡NEGRO GANA!', draw:'¡EMPATE!',
+            tap_roll:'toca para tirar', resolve:'RESOLVER', you:'TÚ', opponent:'OPONENTE',
+            you_win:'¡Ganaste!', you_lose:'¡Perdiste!', game_over_title:'Fin del Juego', play_again:'JUGAR DE NUEVO', menu:'MENÚ',
+            language:'IDIOMA', profile:'PERFIL', nickname:'APODO', avatar:'AVATAR',
+            wins:'Victorias', losses:'Derrotas', wo_wins:'W.O. Ganados', wo_losses:'W.O. Perdidos', save:'GUARDAR',
+            piece_K:'Rey', piece_Q:'Reina', piece_R:'Torre', piece_B:'Alfil', piece_N:'Caballo', piece_P:'Peón',
+            recruit_label:'construye tu ejército', position_label:'coloca tus piezas', reveal_label:'el tablero revelado', action_label:'planea tu movimiento',
+            phase_draft:'RECLUTAMIENTO', phase_position:'POSICIONAMIENTO', phase_reveal:'¡REVELACIÓN!', phase_action:'ACCIÓN',
+            feedback:'Danos tu opinión. Haz clic aquí.',
+        },
+        de: {
+            new_game:'NEUES SPIEL', how_to_play:'ANLEITUNG', credits:'DANKSAGUNG', settings:'EINSTELLUNGEN', quit:'BEENDEN', back:'ZURÜCK',
+            searching:'SUCHE NACH GEGNER', waiting_adv:'Warte auf Gegner...', match_found:'MATCH GEFUNDEN!',
+            battle_begins:'KAMPF BEGINNT IN...', cancel:'← ABBRECHEN', prepare:'MACH DICH BEREIT!',
+            ready:'BEREIT', waiting_opp:'Warte auf Gegner...', preparing_action:'Bereite Aktion vor...', revealing:'Enthüllung...',
+            opp_ready:'Gegner: BEREIT', opp_thinking:'Gegner: überlegt...', pts:'Pkt', my_pts:'Meine Pkt',
+            conflict:'KONFLIKT!', sudden_death:'PLÖTZLICHER TOD!', white_wins:'WEISS GEWINNT!', black_wins:'SCHWARZ GEWINNT!', draw:'UNENTSCHIEDEN!',
+            tap_roll:'tippen zum Würfeln', resolve:'AUFLÖSEN', you:'DU', opponent:'GEGNER',
+            you_win:'Du gewinnst!', you_lose:'Du verlierst!', game_over_title:'Spielende', play_again:'NOCHMAL SPIELEN', menu:'MENÜ',
+            language:'SPRACHE', profile:'PROFIL', nickname:'SPITZNAME', avatar:'AVATAR',
+            wins:'Siege', losses:'Niederlagen', wo_wins:'W.O. Siege', wo_losses:'W.O. Niederlagen', save:'SPEICHERN',
+            piece_K:'König', piece_Q:'Dame', piece_R:'Turm', piece_B:'Läufer', piece_N:'Springer', piece_P:'Bauer',
+            recruit_label:'baue dein Heer', position_label:'platziere deine Figuren', reveal_label:'das Brett enthüllt', action_label:'plane deinen Zug',
+            phase_draft:'REKRUTIERUNG', phase_position:'AUFSTELLUNG', phase_reveal:'ENTHÜLLUNG!', phase_action:'AKTION',
+            feedback:'Gib uns dein Feedback. Klick hier.',
+        },
+        it: {
+            new_game:'NUOVA PARTITA', how_to_play:'COME SI GIOCA', credits:'CREDITI', settings:'IMPOSTAZIONI', quit:'ESCI', back:'INDIETRO',
+            searching:'CERCANDO AVVERSARIO', waiting_adv:'Aspettando avversario...', match_found:'PARTITA TROVATA!',
+            battle_begins:'LA BATTAGLIA INIZIA IN...', cancel:'← ANNULLA', prepare:'PREPARATI!',
+            ready:'PRONTO', waiting_opp:'Aspettando Avversario...', preparing_action:'Preparando Azione...', revealing:'Rivelando...',
+            opp_ready:'Avversario: PRONTO', opp_thinking:'Avversario: pensa...', pts:'Pti', my_pts:'I miei Pti',
+            conflict:'CONFLITTO!', sudden_death:'MORTE IMPROVVISA!', white_wins:'BIANCO VINCE!', black_wins:'NERO VINCE!', draw:'PAREGGIO!',
+            tap_roll:'tocca per lanciare', resolve:'RISOLVI', you:'TU', opponent:'AVVERSARIO',
+            you_win:'Hai Vinto!', you_lose:'Hai Perso!', game_over_title:'Fine Partita', play_again:'GIOCA ANCORA', menu:'MENU',
+            language:'LINGUA', profile:'PROFILO', nickname:'SOPRANNOME', avatar:'AVATAR',
+            wins:'Vittorie', losses:'Sconfitte', wo_wins:'W.O. Vinti', wo_losses:'W.O. Persi', save:'SALVA',
+            piece_K:'Re', piece_Q:'Regina', piece_R:'Torre', piece_B:'Alfiere', piece_N:'Cavallo', piece_P:'Pedone',
+            recruit_label:'costruisci il tuo esercito', position_label:'posiziona i pezzi', reveal_label:'la scacchiera svelata', action_label:'pianifica la mossa',
+            phase_draft:'RECLUTAMENTO', phase_position:'POSIZIONAMENTO', phase_reveal:'RIVELAZIONE!', phase_action:'AZIONE',
+            feedback:'Lascia il tuo Feedback. Clicca qui.',
+        },
+        ru: {
+            new_game:'НОВАЯ ИГРА', how_to_play:'КАК ИГРАТЬ', credits:'АВТОРЫ', settings:'НАСТРОЙКИ', quit:'ВЫХОД', back:'НАЗАД',
+            searching:'ПОИСК СОПЕРНИКА', waiting_adv:'Ожидание соперника...', match_found:'ИГРА НАЙДЕНА!',
+            battle_begins:'БОЙ НАЧНЁТСЯ ЧЕРЕЗ...', cancel:'← ОТМЕНА', prepare:'ПРИГОТОВЬСЯ!',
+            ready:'ГОТОВ', waiting_opp:'Ожидание соперника...', preparing_action:'Готовим Ход...', revealing:'Раскрытие...',
+            opp_ready:'Соперник: ГОТОВ', opp_thinking:'Соперник: думает...', pts:'Очк', my_pts:'Мои Очки',
+            conflict:'КОНФЛИКТ!', sudden_death:'ВНЕЗАПНАЯ СМЕРТЬ!', white_wins:'БЕЛЫЕ ПОБЕДИЛИ!', black_wins:'ЧЁРНЫЕ ПОБЕДИЛИ!', draw:'НИЧЬЯ!',
+            tap_roll:'нажмите для броска', resolve:'РАЗРЕШИТЬ', you:'ВЫ', opponent:'СОПЕРНИК',
+            you_win:'Вы победили!', you_lose:'Вы проиграли!', game_over_title:'Конец игры', play_again:'ИГРАТЬ СНОВА', menu:'МЕНЮ',
+            language:'ЯЗЫК', profile:'ПРОФИЛЬ', nickname:'НИК', avatar:'АВАТАР',
+            wins:'Победы', losses:'Поражения', wo_wins:'В.О. Победы', wo_losses:'В.О. Поражения', save:'СОХРАНИТЬ',
+            piece_K:'Король', piece_Q:'Ферзь', piece_R:'Ладья', piece_B:'Слон', piece_N:'Конь', piece_P:'Пешка',
+            recruit_label:'соберите армию', position_label:'расставьте фигуры', reveal_label:'доска открыта', action_label:'планируйте ход',
+            phase_draft:'РЕКРУТИНГ', phase_position:'РАССТАНОВКА', phase_reveal:'РАСКРЫТИЕ!', phase_action:'ДЕЙСТВИЕ',
+            feedback:'Оставьте отзыв. Нажмите здесь.',
+        },
+        ja: {
+            new_game:'新しいゲーム', how_to_play:'ルール', credits:'クレジット', settings:'設定', quit:'終了', back:'戻る',
+            searching:'対戦相手を探しています', waiting_adv:'相手を待っています...', match_found:'対戦相手が見つかりました！',
+            battle_begins:'バトル開始まで...', cancel:'← キャンセル', prepare:'準備して！',
+            ready:'準備完了', waiting_opp:'相手を待っています...', preparing_action:'アクション準備中...', revealing:'公開中...',
+            opp_ready:'相手: 準備完了', opp_thinking:'相手: 考え中...', pts:'Pts', my_pts:'自分のPts',
+            conflict:'衝突！', sudden_death:'サドンデス！', white_wins:'白の勝利！', black_wins:'黒の勝利！', draw:'引き分け！',
+            tap_roll:'タップしてサイコロ', resolve:'解決', you:'あなた', opponent:'相手',
+            you_win:'あなたの勝ち！', you_lose:'あなたの負け！', game_over_title:'ゲームオーバー', play_again:'もう一度', menu:'メニュー',
+            language:'言語', profile:'プロフィール', nickname:'ニックネーム', avatar:'アバター',
+            wins:'勝利', losses:'敗北', wo_wins:'W.O. 勝利', wo_losses:'W.O. 敗北', save:'保存',
+            piece_K:'キング', piece_Q:'クイーン', piece_R:'ルーク', piece_B:'ビショップ', piece_N:'ナイト', piece_P:'ポーン',
+            recruit_label:'軍隊を編成', position_label:'駒を配置', reveal_label:'盤面公開', action_label:'手を計画',
+            phase_draft:'招集', phase_position:'配置', phase_reveal:'公開！', phase_action:'行動',
+            feedback:'フィードバックをください。クリックしてください。',
+        },
+        ko: {
+            new_game:'새 게임', how_to_play:'게임 방법', credits:'크레딧', settings:'설정', quit:'종료', back:'뒤로',
+            searching:'상대방 찾는 중', waiting_adv:'상대방 대기 중...', match_found:'매치 발견!',
+            battle_begins:'전투 시작까지...', cancel:'← 취소', prepare:'준비하세요!',
+            ready:'준비', waiting_opp:'상대방 대기 중...', preparing_action:'행동 준비 중...', revealing:'공개 중...',
+            opp_ready:'상대방: 준비', opp_thinking:'상대방: 생각 중...', pts:'Pts', my_pts:'내 Pts',
+            conflict:'충돌!', sudden_death:'서든데스!', white_wins:'백 승리!', black_wins:'흑 승리!', draw:'무승부!',
+            tap_roll:'탭하여 굴리기', resolve:'해결', you:'나', opponent:'상대방',
+            you_win:'승리!', you_lose:'패배!', game_over_title:'게임 종료', play_again:'다시 플레이', menu:'메뉴',
+            language:'언어', profile:'프로필', nickname:'닉네임', avatar:'아바타',
+            wins:'승리', losses:'패배', wo_wins:'W.O. 승리', wo_losses:'W.O. 패배', save:'저장',
+            piece_K:'킹', piece_Q:'퀸', piece_R:'룩', piece_B:'비숍', piece_N:'나이트', piece_P:'폰',
+            recruit_label:'군대를 구성', position_label:'말을 배치', reveal_label:'보드 공개', action_label:'움직임 계획',
+            phase_draft:'모집', phase_position:'배치', phase_reveal:'공개!', phase_action:'행동',
+            feedback:'피드백을 남겨주세요. 클릭하세요.',
+        },
+        zh: {
+            new_game:'新游戏', how_to_play:'游戏说明', credits:'制作人员', settings:'设置', quit:'退出', back:'返回',
+            searching:'正在寻找对手', waiting_adv:'等待对手...', match_found:'找到对手！',
+            battle_begins:'战斗即将开始...', cancel:'← 取消', prepare:'准备好！',
+            ready:'准备', waiting_opp:'等待对手...', preparing_action:'准备行动...', revealing:'揭示中...',
+            opp_ready:'对手: 已准备', opp_thinking:'对手: 思考中...', pts:'Pts', my_pts:'我的Pts',
+            conflict:'冲突！', sudden_death:'突然死亡！', white_wins:'白方获胜！', black_wins:'黑方获胜！', draw:'平局！',
+            tap_roll:'点击掷骰', resolve:'解决', you:'你', opponent:'对手',
+            you_win:'你赢了！', you_lose:'你输了！', game_over_title:'游戏结束', play_again:'再玩一次', menu:'菜单',
+            language:'语言', profile:'个人资料', nickname:'昵称', avatar:'头像',
+            wins:'胜利', losses:'失败', wo_wins:'W.O. 胜', wo_losses:'W.O. 负', save:'保存',
+            piece_K:'王', piece_Q:'后', piece_R:'车', piece_B:'象', piece_N:'马', piece_P:'兵',
+            recruit_label:'组建军队', position_label:'放置棋子', reveal_label:'棋盘揭示', action_label:'计划走法',
+            phase_draft:'招募', phase_position:'布阵', phase_reveal:'揭示！', phase_action:'行动',
+            feedback:'给我们反馈。点击这里。',
+        },
+    };
+
+    let currentLang = localStorage.getItem('mc_lang') || 'pt';
+    function t(key) { return (T[currentLang] && T[currentLang][key]) || (T['en'] && T['en'][key]) || T['pt'][key] || key; }
+
+    // ── PROFILE ───────────────────────────────────────────────────
+    function getProfile() {
+        let uid = localStorage.getItem('mc_uid');
+        if (!uid) { uid = Math.random().toString(36).substring(2, 14); localStorage.setItem('mc_uid', uid); }
+        return {
+            uid,
+            nickname: localStorage.getItem('mc_nickname') || 'Guerreiro',
+            avatar:   localStorage.getItem('mc_avatar')   || 'K',
+            stats:    JSON.parse(localStorage.getItem('mc_stats') || '{"wins":0,"losses":0,"wo_wins":0,"wo_losses":0}'),
+        };
+    }
+
+    function addStat(key) {
+        const p = getProfile();
+        p.stats[key] = (p.stats[key] || 0) + 1;
+        localStorage.setItem('mc_stats', JSON.stringify(p.stats));
+    }
+
+    const PIECE_ICONS = { K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙' };
+
+    // ── NAVIGATION ────────────────────────────────────────────────
+    let currentScreen = 'menu';
+
+    window.showScreen = function(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const el = document.getElementById(`screen-${id}`);
+        if (el) el.classList.add('active');
+        currentScreen = id;
+        if (id === 'menu')    refreshMenuScreen();
+        if (id === 'profile') refreshProfileScreen();
+        if (id === 'settings') refreshSettingsScreen();
+        if (id === 'how-to-play') renderHowToPlay();
+    };
+
+    function refreshMenuScreen() {
+        const p = getProfile();
+        document.getElementById('menu-avatar-icon').textContent   = PIECE_ICONS[p.avatar] || '♔';
+        document.getElementById('menu-player-name').textContent   = p.nickname;
+        document.getElementById('menu-stat-w').textContent        = p.stats.wins  || 0;
+        document.getElementById('menu-stat-l').textContent        = p.stats.losses || 0;
+        document.getElementById('menu-rank-badge').textContent    = `RANK —`;
+        // apply language to menu buttons
+        document.getElementById('btn-novo-jogo').textContent      = t('new_game');
+        document.getElementById('btn-como-jogar').textContent     = t('how_to_play');
+        document.getElementById('btn-creditos').textContent       = t('credits');
+        document.getElementById('btn-configuracoes').textContent  = t('settings');
+        document.getElementById('btn-sair').textContent           = t('quit');
+        document.getElementById('footer-feedback').textContent    = t('feedback');
+    }
+
+    function refreshProfileScreen() {
+        const p = getProfile();
+        document.getElementById('nick-input').value = p.nickname;
+        document.querySelectorAll('.avatar-opt').forEach(btn => {
+            btn.classList.toggle('selected', btn.dataset.piece === p.avatar);
+        });
+        document.getElementById('stat-wins').textContent   = p.stats.wins    || 0;
+        document.getElementById('stat-losses').textContent = p.stats.losses   || 0;
+        document.getElementById('stat-wo-w').textContent   = p.stats.wo_wins  || 0;
+        document.getElementById('stat-wo-l').textContent   = p.stats.wo_losses || 0;
+        document.getElementById('prof-avatar-label').textContent  = t('avatar');
+        document.getElementById('prof-nick-label').textContent    = t('nickname');
+        document.getElementById('prof-stats-label').textContent   = 'ESTATÍSTICAS';
+        document.getElementById('stat-wins-label').textContent    = t('wins');
+        document.getElementById('stat-losses-label').textContent  = t('losses');
+        document.getElementById('stat-wo-w-label').textContent    = t('wo_wins');
+        document.getElementById('stat-wo-l-label').textContent    = t('wo_losses');
+        document.getElementById('prof-save-btn').textContent      = t('save');
+    }
+
+    function refreshSettingsScreen() {
+        document.getElementById('set-title').textContent     = t('settings');
+        document.getElementById('set-lang-label').textContent = t('language');
+        document.getElementById('set-profile-btn').textContent = t('profile');
+        document.querySelectorAll('.flag-btn').forEach(btn => {
+            btn.classList.toggle('selected', btn.dataset.lang === currentLang);
+        });
+    }
+
+    function renderHowToPlay() {
+        document.getElementById('htp-title').textContent = t('how_to_play');
+        const body = document.getElementById('htp-body');
+        body.innerHTML = `
+            <p>${t('htp_intro')}</p>
+            <div class="htp-section-title">${t('htp_flow_title')}</div>
+            <div class="htp-rule"><span class="htp-rule-key">1.</span><span>${t('htp_draft')}</span></div>
+            <div class="htp-rule"><span class="htp-rule-key">2.</span><span>${t('htp_position')}</span></div>
+            <div class="htp-rule"><span class="htp-rule-key">3.</span><span>${t('htp_reveal')}</span></div>
+            <div class="htp-rule"><span class="htp-rule-key">4.</span><span>${t('htp_action')}</span></div>
+            <div class="htp-section-title">${t('htp_capture_title')}</div>
+            <div class="htp-rule"><span class="htp-rule-key">▸</span><span>${t('htp_capture')}</span></div>
+            <div class="htp-rule"><span class="htp-rule-key">▸</span><span>${t('htp_escape')}</span></div>
+            <div class="htp-rule"><span class="htp-rule-key">▸</span><span>${t('htp_duel')}</span></div>
+            <div class="htp-section-title">${t('htp_duel_title') || '⚔️ O SISTEMA DE DUELO'}</div>
+            <p style="white-space:pre-line">${t('htp_duel_desc')}</p>
+            <div class="htp-section-title">${t('htp_special_title') || '🛡️ SITUAÇÕES ESPECIAIS'}</div>
+            <p>${t('htp_special')}</p>
+        `;
+    }
+
+    window.selectLanguage = function(lang) {
+        currentLang = lang;
+        localStorage.setItem('mc_lang', lang);
+        refreshSettingsScreen();
+    };
+
+    window.selectAvatar = function(piece) {
+        localStorage.setItem('mc_avatar', piece);
+        document.querySelectorAll('.avatar-opt').forEach(btn => {
+            btn.classList.toggle('selected', btn.dataset.piece === piece);
+        });
+    };
+
+    window.saveProfile = function() {
+        const nick = document.getElementById('nick-input').value.trim() || 'Guerreiro';
+        localStorage.setItem('mc_nickname', nick);
+        const btn = document.getElementById('prof-save-btn');
+        btn.textContent = '✓ SALVO';
+        btn.style.background = 'var(--success)';
+        setTimeout(() => { btn.textContent = t('save'); btn.style.background = ''; }, 1500);
+    };
+
+    window.quitGame = function() {
+        if (!window.close() || window.closed === false) {
+            document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:'Cinzel',serif;color:#d4a832;font-size:1.2rem;letter-spacing:4px;">OBRIGADO POR JOGAR</div>`;
+        }
+    };
+
+    // ── SOCKET.IO CONNECTION ──────────────────────────────────────
+    // LOCAL: conecta ao servidor local. PRODUÇÃO: troque pela URL do Railway.
+    const SERVER_URL = window.location.hostname === 'localhost' ? '' : 'COLOQUE_A_URL_DO_RAILWAY_AQUI';
+    const socket = io(SERVER_URL);
+
+    // ── GAME STATE VARS ───────────────────────────────────────────
+    let roomID      = null;
+    let myColor     = 'white';
+    let oppColor    = 'black';
+    let resultSaved = false;
+    let inGame      = false;
+
+    // ── MATCHMAKING ───────────────────────────────────────────────
+    let myUid           = null;
+    let opponentProfile = null;
+
+    window.goMatchmaking = function() {
+        const p = getProfile();
+        myUid = p.uid;
+        document.getElementById('mm-my-avatar').textContent    = PIECE_ICONS[p.avatar] || '♔';
+        document.getElementById('mm-my-nick').textContent      = p.nickname;
+        document.getElementById('mm-found-my-avatar').textContent = PIECE_ICONS[p.avatar] || '♔';
+        document.getElementById('mm-found-my-nick').textContent   = p.nickname;
+        document.getElementById('mm-title-searching').textContent = t('searching');
+        document.getElementById('mm-searching-text').textContent  = t('waiting_adv');
+        document.getElementById('mm-title-found').textContent     = t('match_found');
+        document.getElementById('mm-countdown-sub').textContent   = t('battle_begins');
+        document.getElementById('btn-mm-cancel').textContent      = t('cancel');
+        document.getElementById('mm-vs-label-you').textContent    = t('you');
+        document.getElementById('mm-vs-label-opp').textContent    = t('opponent');
+        setMMState('lobby');
+        showScreen('matchmaking');
+        socket.emit('queue_join', { uid: myUid, nickname: p.nickname, avatar: p.avatar });
+    };
+
+    function setMMState(st) {
+        document.querySelectorAll('.mm-state').forEach(s => s.classList.remove('active'));
+        document.getElementById(`mm-${st}`).classList.add('active');
+    }
+
+    // match_found comes from server
+    socket.on('match_found', ({ myColor: color, oppProfile, roomId }) => {
+        opponentProfile = oppProfile;
+        roomID   = roomId;
+        myColor  = color;
+        oppColor = color === 'white' ? 'black' : 'white';
+        const oppAvatar = PIECE_ICONS[opponentProfile?.avatar] || '♙';
+        document.getElementById('mm-found-opp-avatar').textContent = oppAvatar;
+        document.getElementById('mm-found-opp-nick').textContent   = opponentProfile?.nickname || '???';
+        setMMState('found');
+        setTimeout(startCountdown, 2500);
+    });
+
+    function startCountdown() {
+        setMMState('countdown');
+        let count = 3;
+        const numEl = document.getElementById('mm-count-num');
+        numEl.textContent = count;
+        const iv = setInterval(() => {
+            count--;
+            if (count > 0) {
+                numEl.style.animation = 'none';
+                void numEl.offsetWidth;
+                numEl.style.animation = '';
+                numEl.textContent = count;
+            } else {
+                clearInterval(iv);
+                numEl.textContent = 'GO!';
+                setTimeout(launchGame, 600);
+            }
+        }, 1000);
+    }
+
+    function launchGame() {
+        resultSaved = false;
+        inGame = true;
+        if (myColor !== 'white') document.body.classList.add('theme-light');
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('game-area').style.display = 'flex';
+        socket.emit('game_join', { roomId: roomID, color: myColor });
+    }
+
+    window.cancelMatchmaking = function() {
+        socket.emit('queue_cancel');
+        showScreen('menu');
+    };
+
+    window.returnToMenu = function() {
+        inGame = false;
+        document.getElementById('game-area').style.display = 'none';
+        document.getElementById('game-over-screen').style.display = 'none';
+        document.body.classList.remove('theme-light');
+        pieceElements.forEach(el => el.remove());
+        pieceElements.clear();
+        prevPhase   = null;
+        lastDuelKey = null;
+        state       = null;
+        window.history.replaceState(null, '', window.location.pathname);
+        showScreen('menu');
+    };
+
+    // ── ANIMATION STATE ──────────────────────────────────────────
+    let localSelection    = null;
+    let rollInterval      = null;
+    let state             = null;
+    let localDiceAnimating = false;
+
+    // Keyed piece rendering — persists between syncBoard() calls
+    let pieceElements  = new Map(); // pieceId → DOM element
+    let prevPhase      = null;
+    let lastDuelKey    = null;     // detects new duel in queue
+    let revealBloomed  = false;    // one-shot reveal board bloom
+
+    const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+    const CONFIG = {
+        'Q': { cost: 5, bonus: 5, icon: '♕', get name() { return t('piece_Q'); } },
+        'R': { cost: 4, bonus: 4, icon: '♖', get name() { return t('piece_R'); } },
+        'N': { cost: 3, bonus: 3, icon: '♘', get name() { return t('piece_N'); } },
+        'B': { cost: 2, bonus: 2, icon: '♗', get name() { return t('piece_B'); } },
+        'P': { cost: 1, bonus: 1, icon: '♙', get name() { return t('piece_P'); } },
+        'K': { cost: 0, bonus: 5, icon: '♔', get name() { return t('piece_K'); } },
+    };
+
+    const PHASE_LABELS = () => ({
+        DRAFT:    { label: t('phase_draft'),    sub: t('recruit_label')  },
+        POSITION: { label: t('phase_position'), sub: t('position_label') },
+        REVEAL:   { label: t('phase_reveal'),   sub: t('reveal_label')   },
+        ACTION:   { label: t('phase_action'),   sub: t('action_label')   },
+    });
+
+    // ── PHASE TRANSITION ─────────────────────────────────────────
+    function handlePhaseChange(newPhase) {
+        if (prevPhase !== null && prevPhase !== newPhase) {
+            triggerPhaseOverlay(newPhase);
+            if (newPhase === 'REVEAL') triggerReveal();
+            if (newPhase === 'ACTION') revealBloomed = false;
+        }
+        prevPhase = newPhase;
+    }
+
+    function triggerPhaseOverlay(phase) {
+        if (phase === 'GAMEOVER') return;
+        const overlay  = document.getElementById('phase-overlay');
+        const labelEl  = document.getElementById('ov-label-text');
+        const subEl    = document.getElementById('ov-label-sub');
+        const info     = PHASE_LABELS()[phase] || { label: phase, sub: '' };
+
+        labelEl.innerText = info.label.toUpperCase();
+        subEl.innerText   = info.sub.toUpperCase();
+
+        overlay.style.display = 'flex';
+        // Force reflow to restart animation
+        const bg      = overlay.querySelector('.ov-bg');
+        const content = overlay.querySelector('.ov-content');
+        bg.style.animation      = 'none';
+        content.style.animation = 'none';
+        void bg.offsetWidth;
+        bg.style.animation      = '';
+        content.style.animation = '';
+
+        setTimeout(() => { overlay.style.display = 'none'; }, 950);
+
+        // Also animate the phase title text
+        const titleEl = document.getElementById('phase-title');
+        titleEl.classList.remove('phase-title-pop');
+        void titleEl.offsetWidth;
+        titleEl.classList.add('phase-title-pop');
+        setTimeout(() => titleEl.classList.remove('phase-title-pop'), 700);
+    }
+
+    function triggerReveal() {
+        if (revealBloomed) return;
+        revealBloomed = true;
+
+        // Flash overlay
+        const flash = document.getElementById('reveal-flash');
+        flash.style.display = 'block';
+        flash.classList.remove('active');
+        void flash.offsetWidth;
+        flash.classList.add('active');
+        setTimeout(() => { flash.style.display = 'none'; flash.classList.remove('active'); }, 800);
+
+        // Board bloom
+        const board = document.getElementById('main-board');
+        board.classList.add('reveal-bloom');
+        setTimeout(() => board.classList.remove('reveal-bloom'), 700);
+    }
+
+    // ── SOCKET GAME STATE LISTENER ────────────────────────────────
+    socket.on('game_state', (data) => {
+        if (!inGame || !data) return;
+        state = data;
+
+        // Safe defaults
+        state.phase      = state.phase || 'DRAFT';
+        state.army       = state.army  || [];
+        state.budget     = state.budget || { white: 5, black: 5 };
+        state.inventory  = state.inventory || { white: [], black: [] };
+        state.inventory.white = state.inventory.white || [];
+        state.inventory.black = state.inventory.black || [];
+        state.ready      = state.ready || { white: false, black: false };
+        state.planning   = state.planning || { white: null, black: null };
+        state.duel       = state.duel || { active: false };
+        state.duel.pressed = state.duel.pressed || { white: false, black: false };
+        state.duel.rolls   = state.duel.rolls   || { white: 0, black: 0 };
+        state.duelQueue  = state.duelQueue || [];
+
+        handlePhaseChange(state.phase);
+        updateUI();
+    });
+
+    // ── UPDATE UI ─────────────────────────────────────────────────
+    function updateUI() {
+        // GAME OVER
+        if (state.phase === 'GAMEOVER') {
+            const wk = state.army.find(p => p.type === 'K' && p.color === 'white');
+            const bk = state.army.find(p => p.type === 'K' && p.color === 'black');
+            const winnerColor = wk ? 'white' : (bk ? 'black' : 'draw');
+
+            const goScreen = document.getElementById('game-over-screen');
+            const goResult = document.getElementById('game-over-result');
+            goScreen.style.display = 'flex';
+            document.getElementById('duel-modal').style.display = 'none';
+            document.getElementById('go-title').innerText   = t('game_over_title');
+            document.getElementById('btn-go-menu').innerText  = t('menu');
+            document.getElementById('btn-go-again').innerText = t('play_again');
+
+            const isWO = state.wo || false;
+            if (winnerColor === myColor) {
+                goResult.innerText = t('you_win');
+                goResult.className = "win-text";
+                if (!resultSaved) { addStat(isWO ? 'wo_wins' : 'wins'); resultSaved = true; }
+            } else if (winnerColor !== 'draw') {
+                goResult.innerText = t('you_lose');
+                goResult.className = "lose-text";
+                if (!resultSaved) { addStat(isWO ? 'wo_losses' : 'losses'); resultSaved = true; }
+            } else {
+                goResult.innerText = t('draw');
+                goResult.className = "";
+            }
+            return;
+        } else {
+            document.getElementById('game-over-screen').style.display = 'none';
+        }
+
+        // Phase title
+        const phaseMap = {
+            REVEAL:   t('phase_reveal'),
+            DRAFT:    t('phase_draft'),
+            POSITION: t('phase_position'),
+            ACTION:   t('phase_action')
+        };
+        document.getElementById('phase-title').innerText = phaseMap[state.phase] || state.phase;
+
+        // Opponent status
+        const oppReady = state.ready[oppColor];
+        if (state.phase === 'REVEAL') {
+            document.getElementById('opp-status').innerText = t('revealing');
+            document.getElementById('opp-status').style.color = "var(--accent)";
+        } else {
+            document.getElementById('opp-status').innerText = oppReady ? t('opp_ready') : t('opp_thinking');
+            document.getElementById('opp-status').style.color = oppReady ? "var(--success)" : "#e67e22";
+        }
+        document.getElementById('opp-pts').innerText = `${t('pts')}: ${state.budget[oppColor]}`;
+
+        // Ready button
+        const btnReady = document.getElementById('btn-ready');
+        btnReady.disabled = state.ready[myColor] || state.phase === 'REVEAL';
+
+        if (state.phase === 'REVEAL') {
+            btnReady.innerText = t('preparing_action');
+        } else if (state.ready[myColor]) {
+            btnReady.innerText = t('waiting_opp');
+        } else {
+            btnReady.innerText = t('ready');
+        }
+
+        document.getElementById('btn-reset-draft').style.display =
+            (state.phase === 'DRAFT' && !state.ready[myColor]) ? 'block' : 'none';
+
+        renderShopAndInventory();
+        syncBoard();
+        handleDuelUI();
+    }
+
+    // ── SHOP & INVENTORY ──────────────────────────────────────────
+    function renderShopAndInventory() {
+        const invStack     = document.getElementById('my-inv-stack');
+        const shopContainer = document.getElementById('shop-btns-container');
+        invStack.innerHTML = '';
+        shopContainer.innerHTML = '';
+
+        document.getElementById('my-budget').innerText = `${t('my_pts')}: ${state.budget[myColor]}`;
+
+        ['Q','R','N','B','P'].forEach(type => {
+            const btn = document.createElement('button');
+            btn.innerText = `${CONFIG[type].icon}(${CONFIG[type].cost})`;
+            btn.disabled  = state.budget[myColor] < CONFIG[type].cost || state.phase !== 'DRAFT' || state.ready[myColor];
+            btn.onclick   = () => buyPiece(type);
+            shopContainer.appendChild(btn);
+        });
+
+        state.inventory[myColor].forEach((item, idx) => {
+            const span = document.createElement('span');
+            span.className = `inv-piece ${myColor}`;
+            if (localSelection?.idx === idx && localSelection?.fromInv) span.classList.add('selected');
+            span.innerText = CONFIG[item.type].icon;
+            span.onclick = () => {
+                if (state.phase === 'POSITION' && !state.ready[myColor]) {
+                    if (localSelection?.idx === idx && localSelection?.fromInv) localSelection = null;
+                    else localSelection = { ...item, idx, fromInv: true };
+                    updateUI();
+                }
+            };
+            invStack.appendChild(span);
+        });
+    }
+
+    // ── SYNC BOARD (keyed piece rendering) ───────────────────────
+    function syncBoard() {
+        const boardEl = document.getElementById('main-board');
+        const layerEl = document.getElementById('pieces-layer');
+
+        // Rebuild cells (no animation needed for cells)
+        boardEl.innerHTML = '';
+        for (let r = 0; r < 4; r++) {
+            for (let c = 0; c < 4; c++) {
+                const logicalX = myColor === 'white' ? c : 3 - c;
+                const logicalY = myColor === 'white' ? 3 - r : r;
+
+                const cell = document.createElement('div');
+                const isDark = ((logicalX + logicalY) % 2) === 0;
+                cell.className = `cell ${isDark ? 'dark' : 'light'}`;
+
+                if (state.phase !== 'REVEAL' && localSelection && !localSelection.fromInv && isValidMove(localSelection, logicalX, logicalY))
+                    cell.classList.add('highlight');
+
+                if (state.planning[myColor] && state.planning[myColor].tx === logicalX && state.planning[myColor].ty === logicalY)
+                    cell.classList.add('planned');
+
+                cell.onclick = () => handleCellClick(logicalX, logicalY);
+                boardEl.appendChild(cell);
+            }
+        }
+
+        // Determine which pieces to display
+        const armyIds = new Set(state.army.map(p => p.id));
+
+        const piecesToDraw = state.army.filter(p => {
+            if (state.phase === 'POSITION' && p.color !== myColor && p.type !== 'K') return false;
+            return true;
+        });
+        const displayedIds = new Set(piecesToDraw.map(p => p.id));
+
+        // Handle removed / phase-hidden pieces
+        pieceElements.forEach((el, id) => {
+            if (el.classList.contains('piece-capturing')) return; // already animating out
+
+            if (!armyIds.has(id)) {
+                // Piece was captured → dramatic exit
+                el.classList.add('piece-capturing');
+                el.style.zIndex = '30';
+                setTimeout(() => { el.remove(); pieceElements.delete(id); }, 680);
+
+            } else if (!displayedIds.has(id)) {
+                // Phase-hidden (opponent non-king in POSITION)
+                el.style.opacity = '0';
+                el.style.pointerEvents = 'none';
+                el.style.transform = 'scale(0.4)';
+            }
+        });
+
+        // Update or create displayed pieces
+        let enteringIndex = 0;
+        piecesToDraw.forEach(p => {
+            if (pieceElements.get(p.id)?.classList.contains('piece-capturing')) return;
+
+            const visualX = myColor === 'white' ? p.x : 3 - p.x;
+            const visualY = myColor === 'white' ? 3 - p.y : p.y;
+
+            let el = pieceElements.get(p.id);
+
+            if (!el) {
+                // New piece — create with entrance animation
+                el = document.createElement('div');
+                el.dataset.id = p.id;
+                el.style.left = `${visualX * 25}%`;
+                el.style.top  = `${visualY * 25}%`;
+                layerEl.appendChild(el);
+                pieceElements.set(p.id, el);
+
+                const delay = enteringIndex * 75;
+                enteringIndex++;
+                setTimeout(() => {
+                    el.classList.add('piece-entering');
+                    setTimeout(() => el.classList.remove('piece-entering'), 500);
+                }, delay);
+
+            } else {
+                // Restore from phase-hidden state
+                if (el.style.opacity === '0') {
+                    el.style.opacity = '';
+                    el.style.pointerEvents = '';
+                    el.style.transform = '';
+                    el.classList.add('piece-entering');
+                    setTimeout(() => el.classList.remove('piece-entering'), 500);
+                }
+                // LERP: update position, CSS transition handles the spring animation
+                el.style.left = `${visualX * 25}%`;
+                el.style.top  = `${visualY * 25}%`;
+            }
+
+            el.innerText = CONFIG[p.type].icon;
+
+            // Reset classes, then apply current state
+            el.className = `piece ${p.color}`;
+
+            if (p.buffed) el.classList.add('buffed');
+
+            if (localSelection && !localSelection.fromInv && localSelection.id === p.id && p.color === myColor)
+                el.classList.add('selected');
+
+            // Ghost: own planned piece
+            if (state.planning[myColor] && state.planning[myColor].pieceId === p.id && p.color === myColor)
+                el.classList.add('ghost');
+
+            // Ghost: opponent planned piece in REVEAL
+            if (state.phase === 'REVEAL') {
+                const oppPlan = state.planning[oppColor];
+                if (oppPlan && oppPlan.pieceId === p.id && p.color === oppColor)
+                    el.classList.add('ghost');
+            }
+        });
+    }
+
+    // ── GAME ACTIONS ──────────────────────────────────────────────
+    window.resetDraft = () => {
+        if (state.phase !== 'DRAFT' || state.ready[myColor]) return;
+        localSelection = null;
+        socket.emit('draft_reset');
+    };
+
+    window.buyPiece = (type) => {
+        socket.emit('draft_buy', type);
+    };
+
+    window.handleCellClick = (logicalX, logicalY) => {
+        if (state.ready[myColor] || state.phase === 'REVEAL') return;
+
+        if (state.phase === 'POSITION') {
+            const pAt = state.army.find(p => p.x === logicalX && p.y === logicalY);
+            if (pAt && pAt.color === myColor && pAt.type !== 'K') {
+                if (localSelection?.id === pAt.id) localSelection = null;
+                socket.emit('position_return', pAt.id);
+                return;
+            }
+            if (localSelection?.fromInv && !pAt &&
+                ((myColor === 'white' && logicalY < 2) || (myColor === 'black' && logicalY > 1))) {
+                socket.emit('position_place', { pieceId: localSelection.id, x: logicalX, y: logicalY });
+                localSelection = null;
+            }
+        } else if (state.phase === 'ACTION') {
+            const pAt = state.army.find(p => p.x === logicalX && p.y === logicalY);
+            if (pAt?.color === myColor) {
+                if (localSelection && localSelection.id === pAt.id) localSelection = null;
+                else localSelection = pAt;
+                updateUI();
+            } else if (localSelection && isValidMove(localSelection, logicalX, logicalY)) {
+                socket.emit('action_plan', { pieceId: localSelection.id, tx: logicalX, ty: logicalY });
+                localSelection = null;
+            }
+        }
+    };
+
+    window.setReady = () => {
+        if (state.phase === 'DRAFT')     socket.emit('draft_ready');
+        else if (state.phase === 'POSITION') socket.emit('position_ready');
+        else if (state.phase === 'ACTION')   socket.emit('action_ready');
+    };
+
+    // ── MOVEMENT VALIDATION ───────────────────────────────────────
+    function isPathClear(p, tx, ty) {
+        let dx = Math.sign(tx - p.x), dy = Math.sign(ty - p.y);
+        let currX = p.x + dx, currY = p.y + dy, limit = 0;
+        while ((currX !== tx || currY !== ty) && limit < 10) {
+            if (state.army.some(a => a.x === currX && a.y === currY)) return false;
+            currX += dx; currY += dy; limit++;
+        }
+        return true;
+    }
+
+    function isValidMove(p, tx, ty) {
+        const dx = Math.abs(tx - p.x), dy = Math.abs(ty - p.y);
+        if (dx === 0 && dy === 0) return false;
+
+        const targetPiece = state.army.find(a => a.x === tx && a.y === ty);
+        if (targetPiece && targetPiece.color === p.color) return false;
+
+        let ok = false;
+        switch (p.type) {
+            case 'K': ok = (dx <= 1 && dy <= 1); break;
+            case 'Q': ok = (dx === dy || dx === 0 || dy === 0); break;
+            case 'R': ok = (dx === 0 || dy === 0); break;
+            case 'B': ok = (dx === dy); break;
+            case 'N': ok = ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)); break;
+            case 'P': {
+                const isEnemy = targetPiece && targetPiece.color !== p.color;
+                const fwd     = p.color === 'white' ? 1 : -1;
+                const diffY   = ty - p.y;
+                if (p.buffed) {
+                    if (isEnemy  && dx === 1 && Math.abs(dy) === 1) ok = true;
+                    if (!isEnemy && ((dx === 0 && Math.abs(dy) === 1) || (dx === 1 && dy === 0))) ok = true;
+                } else {
+                    if (isEnemy  && dx === 1 && diffY === fwd) ok = true;
+                    if (!isEnemy && dx === 0 && Math.abs(dy) === 1) ok = true;
+                }
+                break;
+            }
+        }
+
+        if (!ok) return false;
+        if (['Q','R','B'].includes(p.type) && !isPathClear(p, tx, ty)) return false;
+        return true;
+    }
+
+    // ── DUEL UI ───────────────────────────────────────────────────
+    function buildDuelCard(isOpponent, pieceData, rollData, pressedState) {
+        const themeClass = pieceData.color === 'white' ? 'card-theme-white' : 'card-theme-black';
+        const nameText   = `${CONFIG[pieceData.type].name} +${pieceData.bonus}`;
+
+        let diceContent  = '🎲';
+        let resultHTML   = '';
+
+        if (state.duel.resolveTime) {
+            diceContent = DICE_FACES[rollData - 1];
+            const total = rollData + pieceData.bonus;
+            resultHTML  = `
+                <div class="result-box show">
+                    <div class="result-total">${total}</div>
+                    <div class="result-math">${t('pts')} (${rollData}) + Bônus (${pieceData.bonus})</div>
+                </div>`;
+        } else if (pressedState) {
+            diceContent = '⏳';
+        }
+
+        const clickAttr = (!isOpponent && !pressedState)
+            ? `onclick="pressRoll('${pieceData.color}')"` : '';
+
+        return `
+            <div class="opp-label">${isOpponent ? t('opponent') : t('you')}</div>
+            <div class="duel-card ${isOpponent ? 'opp' : ''} ${themeClass}">
+                <div class="duel-name-badge">${nameText}</div>
+                <div class="dice-interactive" id="dice-btn-${pieceData.color}" ${clickAttr}>
+                    <div class="dice-unicode" id="dice-val-${pieceData.color}">${diceContent}</div>
+                </div>
+                ${resultHTML}
+                ${(!pressedState && !isOpponent && !state.duel.resolveTime)
+                    ? `<div class="duel-waiting">${t('tap_roll')}</div>` : ''}
+            </div>`;
+    }
+
+    function handleDuelUI() {
+        const modal = document.getElementById('duel-modal');
+        const d     = state.duel;
+        const container = document.getElementById('duel-container');
+
+        if (!d || !d.active) {
+            modal.style.display = 'none';
+            if (rollInterval) { clearInterval(rollInterval); rollInterval = null; }
+            localDiceAnimating = false;
+            lastDuelKey = null;
+            return;
+        }
+
+        // Detect new duel in queue → brief pause before showing
+        const duelKey = `${d.wPiece?.id}_${d.bPiece?.id}`;
+        if (modal.style.display === 'flex' && lastDuelKey !== null && lastDuelKey !== duelKey) {
+            // Brief black-out between consecutive duels
+            modal.style.display = 'none';
+            setTimeout(() => {
+                lastDuelKey = duelKey;
+                modal.style.display = 'flex';
+                modal.classList.remove('modal-enter');
+                void modal.offsetWidth;
+                modal.classList.add('modal-enter');
+                renderDuelContent(modal, d, container);
+            }, 550);
+            return;
+        }
+
+        if (lastDuelKey !== duelKey) {
+            lastDuelKey = duelKey;
+            modal.style.display = 'flex';
+            modal.classList.remove('modal-enter');
+            void modal.offsetWidth;
+            modal.classList.add('modal-enter');
+        }
+
+        renderDuelContent(modal, d, container);
+    }
+
+    function renderDuelContent(modal, d, container) {
+        // Sudden death bg tint
+        modal.style.background = d.suddenDeath
+            ? 'radial-gradient(ellipse at 50% 50%, rgba(80,0,0,0.97) 0%, rgba(0,0,0,0.97) 100%)'
+            : 'rgba(0,0,0,0.97)';
+
+        const statusEl = document.getElementById('duel-status');
+        statusEl.innerText = d.suddenDeath ? t('sudden_death') : t('conflict');
+        statusEl.style.color = d.suddenDeath ? "#e74c3c" : "white";
+
+        let html = '';
+        if (myColor === 'white') {
+            html += buildDuelCard(false, d.wPiece, d.rolls.white, d.pressed.white);
+            html += buildDuelCard(true,  d.bPiece, d.rolls.black, d.pressed.black);
+        } else {
+            html += buildDuelCard(false, d.bPiece, d.rolls.black, d.pressed.black);
+            html += buildDuelCard(true,  d.wPiece, d.rolls.white, d.pressed.white);
+        }
+
+        if (!localDiceAnimating && !d.resolveTime) {
+            container.innerHTML = html;
+        }
+
+        // Sudden death: manual roll (same as normal duel — no auto-roll)
+
+        // Waiting animation for my roll
+        if (d.pressed[myColor] && !d.pressed[oppColor] && !rollInterval) {
+            rollInterval = setInterval(() => {
+                const dVal = document.getElementById(`dice-val-${myColor}`);
+                if (dVal) dVal.innerText = DICE_FACES[Math.floor(Math.random() * 6)];
+            }, 90);
+        }
+
+        // Both pressed → animate both dice, then resolve
+        if (d.pressed.white && d.pressed.black && !d.resolveTime) {
+            localDiceAnimating = true;
+            if (rollInterval) { clearInterval(rollInterval); rollInterval = null; }
+
+            if (!window.localSincInterval) {
+                window.localSincInterval = setInterval(() => {
+                    const vW = document.getElementById('dice-val-white');
+                    const vB = document.getElementById('dice-val-black');
+                    if (vW) vW.innerText = DICE_FACES[Math.floor(Math.random() * 6)];
+                    if (vB) vB.innerText = DICE_FACES[Math.floor(Math.random() * 6)];
+                }, 85);
+
+                // resolveTime is set by server — animation auto-clears when state updates
+            }
+            return;
+        }
+
+        // Show result
+        if (d.resolveTime) {
+            if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
+            localDiceAnimating = false;
+
+            container.innerHTML = html;
+
+            const totW = d.rolls.white + d.wPiece.bonus;
+            const totB = d.rolls.black + d.bPiece.bonus;
+
+            if (totW > totB) {
+                statusEl.innerText = t('white_wins');
+                document.getElementById('dice-btn-white')?.classList.add('winner-pulse');
+            } else if (totB > totW) {
+                statusEl.innerText = t('black_wins');
+                document.getElementById('dice-btn-black')?.classList.add('winner-pulse');
+            } else {
+                statusEl.innerText = t('draw');
+            }
+
+            document.getElementById('close-duel').innerText = t('resolve');
+            document.getElementById('close-duel').style.display = 'block';
+        } else {
+            document.getElementById('close-duel').style.display = 'none';
+        }
+    }
+
+    window.pressRoll = (colorClicked) => {
+        if (colorClicked !== myColor || localDiceAnimating) return;
+        socket.emit('roll_dice');
+    };
+
+    window.finishDuel = () => {
+        const d = state.duel;
+        if (!d || !d.resolveTime) return;
+        if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
+        document.getElementById('duel-modal').style.display = 'none';
+        socket.emit('duel_resolve');
+    };
+
+    // ── STARTUP ───────────────────────────────────────────────────
+    showScreen('menu');
+</script>
+</body>
+</html>
