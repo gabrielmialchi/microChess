@@ -245,9 +245,9 @@ curl http://localhost:3000/health
 | 0 | Planejamento e organização | ✅ Completo |
 | 1 | Database SQLite | ✅ Completo |
 | 2 | Autenticação JWT | ✅ Completo |
-| 3 | MMR + WO/Ban + AFK | ⏳ Pendente |
-| 4 | Replay Recording | ⏳ Pendente |
-| 5 | Frontend Auth + Ban | ⏳ Pendente |
+| 3 | MMR + WO/Ban + AFK | ✅ Completo |
+| 4 | Replay Recording | ✅ Completo |
+| 5 | Frontend Auth + Ban | ✅ Completo |
 | 6 | Frontend Leaderboard + Replay | ⏳ Pendente |
 
 *(Atualizar este arquivo ao concluir cada sessão)*

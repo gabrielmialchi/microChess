@@ -7,6 +7,8 @@ const path    = require('path');
 
 const { hashPassword, checkPassword, signToken, verifyToken } = require('./auth');
 const db = require('./db/database');
+const { calculate: calcMMR, getRank, getBanDuration } = require('./mmr');
+const { createReplayBuffer, recordTurn, buildTurnSnapshot, buildDuelSnapshot } = require('./replay');
 
 const app    = express();
 const server = http.createServer(app);
@@ -53,6 +55,146 @@ app.post('/auth/login', async (req, res) => {
     const token = signToken({ id: player.id, username: player.username });
     res.json({ token, id: player.id, username: player.username, mmr: player.mmr });
 });
+
+// ── LEADERBOARD / PLAYER ENDPOINTS ───────────────────────────
+app.get('/leaderboard', (_, res) => {
+    const rows = db.prepare(
+        'SELECT id, username, mmr, wins, losses, draws, wo_count FROM players ORDER BY mmr DESC LIMIT 50'
+    ).all();
+    res.json(rows.map((p, i) => ({ rank: i + 1, ...p, ...getRank(p.mmr) })));
+});
+
+app.get('/player/:id', (req, res) => {
+    const p = db.prepare(
+        'SELECT id, username, mmr, wins, losses, draws, wo_count, wo_against, ban_until FROM players WHERE id=?'
+    ).get(req.params.id);
+    if (!p) return res.status(404).json({ error: 'Não encontrado' });
+    const banned = !!(p.ban_until && new Date(p.ban_until) > new Date());
+    res.json({ ...p, ...getRank(p.mmr), banned, banUntil: p.ban_until });
+});
+
+app.get('/match/:id/replay', (req, res) => {
+    const replay = db.prepare('SELECT * FROM replays WHERE match_id = ?').get(req.params.id);
+    if (!replay) return res.status(404).json({ error: 'Replay não encontrado' });
+    if (new Date(replay.expires_at) < new Date())
+        return res.status(410).json({ error: 'Replay expirado' });
+    res.json({ ...replay, turns: JSON.parse(replay.turns_json) });
+});
+
+app.get('/player/:id/matches', (req, res) => {
+    const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+    const matches = db.prepare(`
+        SELECT m.*, r.id as replay_id
+        FROM matches m
+        LEFT JOIN replays r ON r.match_id = m.id
+        WHERE m.player_white_id = ? OR m.player_black_id = ?
+        ORDER BY m.created_at DESC LIMIT ?
+    `).all(req.params.id, req.params.id, limit);
+    res.json(matches);
+});
+
+// ── MMR / BAN / AFK ───────────────────────────────────────────
+const K_WO_BONUS     = 8;
+const AFK_ACTION_MS  = 45_000;
+const AFK_PREPARE_MS = 120_000;
+
+function applyBan(playerId, newWoCount) {
+    const minutes = getBanDuration(newWoCount);
+    if (minutes > 0) {
+        const banUntil = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+        db.prepare('UPDATE players SET ban_until=? WHERE id=?').run(banUntil, playerId);
+        console.log(`[BAN] ${playerId} banido por ${minutes} minutos.`);
+    }
+}
+
+function persistMatchResult(room, winnerColor, isWO = false) {
+    try {
+        const wp = room.players.white;
+        const bp = room.players.black;
+        if (!wp?.uid || !bp?.uid) return;
+
+        const wRec = db.prepare('SELECT mmr, wo_count FROM players WHERE id=?').get(wp.uid);
+        const bRec = db.prepare('SELECT mmr, wo_count FROM players WHERE id=?').get(bp.uid);
+        if (!wRec || !bRec) return;
+
+        let wDelta = 0, bDelta = 0, result;
+
+        if (isWO) {
+            if (winnerColor === 'white') {
+                result = 'wo_black';
+                wDelta = K_WO_BONUS;
+                db.prepare('UPDATE players SET wo_count=wo_count+1 WHERE id=?').run(bp.uid);
+                db.prepare('UPDATE players SET wo_against=wo_against+1 WHERE id=?').run(wp.uid);
+                applyBan(bp.uid, bRec.wo_count + 1);
+            } else {
+                result = 'wo_white';
+                bDelta = K_WO_BONUS;
+                db.prepare('UPDATE players SET wo_count=wo_count+1 WHERE id=?').run(wp.uid);
+                db.prepare('UPDATE players SET wo_against=wo_against+1 WHERE id=?').run(bp.uid);
+                applyBan(wp.uid, wRec.wo_count + 1);
+            }
+        } else {
+            if (winnerColor === 'white') {
+                ({ winnerDelta: wDelta, loserDelta: bDelta } = calcMMR(wRec.mmr, bRec.mmr));
+                result = 'white';
+            } else if (winnerColor === 'black') {
+                ({ winnerDelta: bDelta, loserDelta: wDelta } = calcMMR(bRec.mmr, wRec.mmr));
+                result = 'black';
+            } else {
+                result = 'draw';
+            }
+        }
+
+        db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+? WHERE id=?')
+          .run(wDelta, result === 'white' ? 1 : 0, result === 'black' || result === 'wo_black' ? 1 : 0, wp.uid);
+        db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+? WHERE id=?')
+          .run(bDelta, result === 'black' ? 1 : 0, result === 'white' || result === 'wo_white' ? 1 : 0, bp.uid);
+
+        const matchId = crypto.randomUUID();
+        room._matchId = matchId;
+        db.prepare('INSERT INTO matches (id,player_white_id,player_black_id,result,mmr_change_white,mmr_change_black) VALUES (?,?,?,?,?,?)')
+          .run(matchId, wp.uid, bp.uid, result, wDelta, bDelta);
+
+        if (room._replay) {
+            const replayId = crypto.randomUUID();
+            db.prepare('INSERT INTO replays (id, match_id, turns_json) VALUES (?, ?, ?)')
+              .run(replayId, matchId, JSON.stringify(room._replay.turns));
+        }
+
+        db.prepare("UPDATE players SET last_seen=datetime('now') WHERE id IN (?,?)").run(wp.uid, bp.uid);
+
+        const wNew = wRec.mmr + wDelta;
+        const bNew = bRec.mmr + bDelta;
+        io.to(wp.socketId).emit('mmr_update', { delta: wDelta, newMMR: wNew, rank: getRank(wNew), isWO });
+        io.to(bp.socketId).emit('mmr_update', { delta: bDelta, newMMR: bNew, rank: getRank(bNew), isWO });
+    } catch (e) {
+        console.error('[MMR] Erro ao persistir:', e.message);
+    }
+}
+
+function clearAFKTimer(room, color) {
+    if (room.timeouts?.[color]) {
+        clearTimeout(room.timeouts[color]);
+        room.timeouts[color] = null;
+    }
+}
+
+function startAFKTimer(room, color, ms, reason) {
+    clearAFKTimer(room, color);
+    room.timeouts[color] = setTimeout(() => {
+        const roomNow = rooms.get(room.id);
+        if (!roomNow || roomNow.state.phase === 'GAMEOVER') return;
+        console.log(`[AFK] ${color} inativo (${reason}). WO decretado.`);
+        const oppColor = color === 'white' ? 'black' : 'white';
+        clearAFKTimer(roomNow, color === 'white' ? 'black' : 'white');
+        roomNow.state.phase = 'GAMEOVER';
+        roomNow.state.wo    = true;
+        roomNow.state.afk   = color;
+        persistMatchResult(roomNow, oppColor, true);
+        broadcast(roomNow);
+        setTimeout(() => rooms.delete(room.id), 60_000);
+    }, ms);
+}
 
 // ── GAME CONFIG (mirrors client) ──────────────────────────────
 const CONFIG = {
@@ -287,6 +429,11 @@ function finishDuel(room) {
     const idxW = army.findIndex(a => a.id === d.wPiece.id);
     const idxB = army.findIndex(a => a.id === d.bPiece.id);
 
+    if (room._replay) {
+        const duelResult = totW > totB ? 'white_wins' : totB > totW ? 'black_wins' : 'tie';
+        recordTurn(room._replay, { type: 'duel', ...buildDuelSnapshot(d, duelResult) });
+    }
+
     if (totW > totB) {
         if (idxB > -1) army.splice(idxB, 1);
         const wAlive = army.find(a => a.id === d.wPiece.id);
@@ -318,7 +465,11 @@ function finishDuel(room) {
         state.duelQueue = [];
         state.phase     = 'GAMEOVER';
         room.resolving  = false;
+        clearAFKTimer(room, 'white');
+        clearAFKTimer(room, 'black');
+        persistMatchResult(room, !wk ? 'black' : 'white', false);
         broadcast(room);
+        setTimeout(() => rooms.delete(room.id), 60_000);
         return;
     }
 
@@ -374,13 +525,16 @@ function finishDuel(room) {
     state.duelQueue = [];
     state.phase     = 'ACTION';
     room.resolving  = false;
+    startAFKTimer(room, 'white', AFK_ACTION_MS, 'action');
+    startAFKTimer(room, 'black', AFK_ACTION_MS, 'action');
     broadcast(room);
 }
 
 // ── SOCKET.IO ─────────────────────────────────────────────────
 io.on('connection', (socket) => {
-    let playerRoom  = null;
-    let playerColor = null;
+    let playerRoom       = null;
+    let playerColor      = null;
+    let invalidMoveCount = 0;
 
     const getRoom = () => playerRoom ? rooms.get(playerRoom) : null;
 
@@ -397,7 +551,15 @@ io.on('connection', (socket) => {
                 if (rec) {
                     playerId  = decoded.id;
                     playerMMR = rec.mmr;
-                    // Ban check completo implementado na Sessão 3
+                    if (rec.ban_until) {
+                        const banDate = new Date(rec.ban_until);
+                        if (banDate > new Date()) {
+                            socket.emit('banned', { until: rec.ban_until, remainMs: banDate - Date.now() });
+                            return;
+                        } else {
+                            db.prepare('UPDATE players SET ban_until=NULL WHERE id=?').run(decoded.id);
+                        }
+                    }
                 }
             }
         }
@@ -415,12 +577,17 @@ io.on('connection', (socket) => {
             const p2 = queue.shift();
             const roomId = crypto.randomBytes(3).toString('hex');
 
-            rooms.set(roomId, {
+            const newRoom = {
                 id:        roomId,
                 players:   { white: p1, black: p2 },
                 state:     createState(),
                 resolving: false,
-            });
+                timeouts:  {},
+                _replay:   createReplayBuffer(),
+            };
+            rooms.set(roomId, newRoom);
+            startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
+            startAFKTimer(newRoom, 'black', AFK_PREPARE_MS, 'draft');
 
             io.to(p1.socketId).emit('match_found', { myColor: 'white', oppProfile: { nickname: p2.nickname, avatar: p2.avatar }, roomId });
             io.to(p2.socketId).emit('match_found', { myColor: 'black', oppProfile: { nickname: p1.nickname, avatar: p1.avatar }, roomId });
@@ -451,11 +618,13 @@ io.on('connection', (socket) => {
         const s   = room.state;
         const cfg = CONFIG[type];
         if (!cfg || !cfg.cost || s.ready[playerColor] || s.budget[playerColor] < cfg.cost) return;
+        clearAFKTimer(room, playerColor);
         s.budget[playerColor] -= cfg.cost;
         s.inventory[playerColor].push({
             type, color: playerColor,
             id: `p_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`,
         });
+        startAFKTimer(room, playerColor, AFK_PREPARE_MS, 'draft');
         broadcast(room);
     });
 
@@ -464,8 +633,10 @@ io.on('connection', (socket) => {
         if (!room || room.state.phase !== 'DRAFT' || !playerColor) return;
         const s = room.state;
         if (s.ready[playerColor]) return;
+        clearAFKTimer(room, playerColor);
         s.budget[playerColor]    = 5;
         s.inventory[playerColor] = [];
+        startAFKTimer(room, playerColor, AFK_PREPARE_MS, 'draft');
         broadcast(room);
     });
 
@@ -474,10 +645,13 @@ io.on('connection', (socket) => {
         if (!room || room.state.phase !== 'DRAFT' || !playerColor) return;
         const s = room.state;
         if (s.ready[playerColor]) return;
+        clearAFKTimer(room, playerColor);
         s.ready[playerColor] = true;
         if (s.ready.white && s.ready.black) {
             s.phase = 'POSITION';
             s.ready = { white: false, black: false };
+            startAFKTimer(room, 'white', AFK_PREPARE_MS, 'position');
+            startAFKTimer(room, 'black', AFK_PREPARE_MS, 'position');
         }
         broadcast(room);
     });
@@ -494,8 +668,10 @@ io.on('connection', (socket) => {
         if (s.army.some(p => p.x === x && p.y === y)) return;
         const invIdx = s.inventory[playerColor].findIndex(p => p.id === pieceId);
         if (invIdx === -1) return;
+        clearAFKTimer(room, playerColor);
         const piece = s.inventory[playerColor].splice(invIdx, 1)[0];
         s.army.push({ id: piece.id, type: piece.type, color: playerColor, x, y, bonus: CONFIG[piece.type].bonus, buffed: false });
+        startAFKTimer(room, playerColor, AFK_PREPARE_MS, 'position');
         broadcast(room);
     });
 
@@ -506,8 +682,10 @@ io.on('connection', (socket) => {
         if (s.ready[playerColor]) return;
         const idx = s.army.findIndex(p => p.id === pieceId && p.color === playerColor && p.type !== 'K');
         if (idx === -1) return;
+        clearAFKTimer(room, playerColor);
         const piece = s.army.splice(idx, 1)[0];
         s.inventory[playerColor].push({ type: piece.type, color: playerColor, id: piece.id });
+        startAFKTimer(room, playerColor, AFK_PREPARE_MS, 'position');
         broadcast(room);
     });
 
@@ -516,6 +694,7 @@ io.on('connection', (socket) => {
         if (!room || room.state.phase !== 'POSITION' || !playerColor) return;
         const s = room.state;
         if (s.ready[playerColor]) return;
+        clearAFKTimer(room, playerColor);
         s.ready[playerColor] = true;
         if (s.ready.white && s.ready.black) {
             s.phase = 'REVEAL';
@@ -524,6 +703,8 @@ io.on('connection', (socket) => {
                 const r = rooms.get(room.id);
                 if (r && r.state.phase === 'REVEAL') {
                     r.state.phase = 'ACTION';
+                    startAFKTimer(r, 'white', AFK_ACTION_MS, 'action');
+                    startAFKTimer(r, 'black', AFK_ACTION_MS, 'action');
                     broadcast(r);
                 }
             }, 3000);
@@ -538,8 +719,14 @@ io.on('connection', (socket) => {
         const s = room.state;
         if (s.ready[playerColor] || s.duel.active) return;
         const piece = s.army.find(p => p.id === pieceId && p.color === playerColor);
-        if (!piece || !isValidMove(piece, tx, ty, s.army)) return;
+        if (!piece || !isValidMove(piece, tx, ty, s.army)) {
+            invalidMoveCount++;
+            if (invalidMoveCount > 15) console.warn(`[ANTICHEAT] Socket ${socket.id} — ${invalidMoveCount} tentativas inválidas.`);
+            return;
+        }
+        clearAFKTimer(room, playerColor);
         s.planning[playerColor] = { pieceId, tx, ty };
+        startAFKTimer(room, playerColor, AFK_ACTION_MS, 'action');
         broadcast(room);
     });
 
@@ -548,9 +735,19 @@ io.on('connection', (socket) => {
         if (!room || room.state.phase !== 'ACTION' || !playerColor) return;
         const s = room.state;
         if (s.ready[playerColor] || s.duel.active) return;
+        clearAFKTimer(room, playerColor);
         s.ready[playerColor] = true;
         if (s.ready.white && s.ready.black) {
+            clearAFKTimer(room, 'white');
+            clearAFKTimer(room, 'black');
+            const planningSnap = {
+                white: s.planning.white ? { ...s.planning.white } : null,
+                black: s.planning.black ? { ...s.planning.black } : null,
+            };
             resolveAction(s);
+            if (room._replay) {
+                recordTurn(room._replay, { type: 'action', planning: planningSnap, ...buildTurnSnapshot(s) });
+            }
         }
         broadcast(room);
     });
@@ -584,12 +781,14 @@ io.on('connection', (socket) => {
             const room = rooms.get(playerRoom);
             if (room && room.state.phase !== 'GAMEOVER') {
                 const oppColor = playerColor === 'white' ? 'black' : 'white';
+                clearAFKTimer(room, 'white');
+                clearAFKTimer(room, 'black');
                 room.state.phase = 'GAMEOVER';
                 room.state.wo    = true;
                 room.state.army  = room.state.army.filter(p => !(p.type === 'K' && p.color === playerColor));
+                persistMatchResult(room, oppColor, true);
                 const opp = room.players[oppColor];
                 if (opp) io.to(opp.socketId).emit('game_state', room.state);
-                // Clean up room after delay
                 setTimeout(() => rooms.delete(playerRoom), 60000);
             }
         }

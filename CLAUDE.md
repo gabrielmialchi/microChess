@@ -15,6 +15,13 @@ Execute automaticamente estes passos, sem pedir confirmação adicional:
 5. Ao concluir, preencha o template correspondente em `docs/ACTIVITY_LOG.md`
 6. Atualize a tabela de progresso em `docs/PROJECT_CONTEXT.md` (marcar sessão como ✅)
 
+## Regras sobre testes automatizados durante implementação
+
+- **NUNCA subir o servidor em background** durante testes internos (`node server.js &`) — isso deixa processos órfãos na porta 3000
+- Para validar sintaxe, usar `node --check server.js` (não executa, só valida)
+- Para testar endpoints sem subir servidor persistente, usar scripts isolados que fazem `require` do módulo específico (não do server.js inteiro)
+- Se for necessário subir o servidor para testar, **sempre matar o processo** antes de encerrar o teste
+
 ## Regras que nunca devem ser violadas
 
 - **NUNCA reescrever** `server/server.js` ou `html/index.html` — apenas inserir blocos novos
@@ -61,17 +68,32 @@ Só produzir texto nas seguintes situações:
 ```
 
 ### 4. Testes necessários — ao final da sessão ou de um bloco
+
+Sempre que houver testes a realizar, produzir um bloco ToDo detalhado para que o usuário possa executar o protocolo completo sem ambiguidade. Incluir:
+- Pré-requisito: o que deve estar rodando antes de testar
+- Comando exato para cada plataforma (Windows CMD / PowerShell quando relevante)
+- Resultado esperado em linguagem humana (não só código HTTP)
+- O que fazer se o resultado for diferente do esperado
+
 ```
 🧪 TESTAR:
-   1. [comando ou ação]  → esperado: [resultado]
-   2. [comando ou ação]  → esperado: [resultado]
+
+PRÉ-REQUISITO: [ex: servidor rodando — `cd server && npm run dev`]
+
+   1. [comando exato]
+      → esperado: [resultado em linguagem humana]
+      → se falhar: [diagnóstico ou ação]
+
+   2. [comando exato]
+      → esperado: [resultado em linguagem humana]
+      → se falhar: [diagnóstico ou ação]
 ```
 
 ### 5. Conclusão da sessão
 ```
 ✅ SESSÃO X CONCLUÍDA
 ⚠️ DEPENDÊNCIAS: [lista ou "nenhuma"]
-🧪 TESTAR: [lista resumida]
+🧪 TESTAR: [bloco detalhado conforme regra 4 acima]
 ```
 
 ---

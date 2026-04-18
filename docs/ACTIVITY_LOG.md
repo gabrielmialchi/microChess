@@ -139,46 +139,89 @@ para entender o estado atual antes de implementar qualquer coisa.
 - Ban check no queue_join (já tem hook, só adicionar lógica)
 - GET /leaderboard e GET /player/:id
 
-<!--
-## [DATA] Sessão 3 — MMR + WO/Ban + AFK
-**Status:** [ Completo / Interrompido em X ]
-**Branch:** sessao-3
+## [2026-04-18] Sessão 3 — MMR + WO/Ban + AFK
+
+**Status:** Completo
+**Branch:** main
 
 ### Feito
--
-
-### Pendente
--
+- `server/mmr.js` criado — calculate (K=32), getRank (6 tiers), getBanDuration
+- `server.js`: require mmr adicionado no topo
+- `server.js`: GET /leaderboard (top 50 por MMR) e GET /player/:id
+- `server.js`: constantes K_WO_BONUS=8, AFK_ACTION_MS=45s, AFK_PREPARE_MS=120s
+- `server.js`: funções applyBan, persistMatchResult, clearAFKTimer, startAFKTimer
+- `server.js`: timeouts:{} adicionado à criação da sala
+- `server.js`: AFK timers iniciados ao criar sala (DRAFT 120s ambos)
+- `server.js`: clearAFKTimer/startAFKTimer em draft_buy, draft_reset, draft_ready
+- `server.js`: clearAFKTimer/startAFKTimer em position_place, position_return, position_ready
+- `server.js`: AFK timers ACTION iniciados no callback REVEAL→ACTION
+- `server.js`: clearAFKTimer em action_plan, action_ready
+- `server.js`: AFK timers ACTION reiniciados em finishDuel ao retornar para ACTION
+- `server.js`: persistMatchResult no GAMEOVER de finishDuel (vitória normal)
+- `server.js`: persistMatchResult no disconnect (WO)
+- `server.js`: ban check no queue_join — emite 'banned' se ban_until ativo
+- Sintaxe verificada com node --check
 
 ### Bugs / Bloqueios Conhecidos
--
+- Nenhum
 
 ### Notas para Sessão 4
--
--->
+- Criar `server/replay.js` (createReplayBuffer, recordTurn, buildTurnSnapshot, buildDuelSnapshot)
+- room._replay inicializado ao criar sala
+- Gravar turnos em resolveAction e finishDuel
+- Salvar replay no banco em persistMatchResult
+- GET /match/:id/replay e GET /player/:id/matches
 
-<!--
-## [DATA] Sessão 4 — Replay Recording + Anti-cheat
-**Status:** [ Completo / Interrompido em X ]
-**Branch:** sessao-4
+## [2026-04-18] Sessão 4 — Replay Recording + Anti-cheat
+
+**Status:** Completo
+**Branch:** main
 
 ### Feito
--
-
-### Pendente
--
+- `server/replay.js` criado — createReplayBuffer, recordTurn, buildTurnSnapshot, buildDuelSnapshot
+- `server.js`: require replay adicionado no topo
+- `server.js`: room._replay = createReplayBuffer() na criação da sala
+- `server.js`: gravação de planning snapshot antes de resolveAction (em action_ready)
+- `server.js`: gravação de duel snapshot em finishDuel (após calcular totW/totB)
+- `server.js`: replay salvo no banco dentro de persistMatchResult (após INSERT matches)
+- `server.js`: GET /match/:id/replay — retorna turns como array, verifica expiração
+- `server.js`: GET /player/:id/matches — histórico com LEFT JOIN replays (replay_id)
+- `server.js`: anti-cheat — invalidMoveCount por socket, log após 15 tentativas inválidas em action_plan
+- Sintaxe verificada com node --check
 
 ### Bugs / Bloqueios Conhecidos
--
+- Nenhum
 
 ### Notas para Sessão 5
--
--->
+- Criar `html/auth-frontend.js` com Session, AuthUI, MenuPopulator, BanOverlay, showMMRToast, getQueueProfile, listenGameEvents
+- Ler index.html em partes para localizar os 5 pontos de inserção
+- CSS inline nos novos divs — não alterar <style>
+
+## [2026-04-18] Sessão 5 — Frontend Auth + Ban
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `html/auth-frontend.js` criado — Session, MenuPopulator, AuthUI, BanOverlay, showMMRToast, getQueueProfile, listenGameEvents
+- `html/index.html`: auth-overlay inserido após `<body>` — login/register toggle + "Jogar sem conta"
+- `html/index.html`: ban-overlay inserido após auth-overlay — countdown em tempo real
+- `html/index.html`: `listenGameEvents(socket)` chamado após `const socket = io(...)`
+- `html/index.html`: `queue_join` usa `getQueueProfile()` — injeta token se autenticado
+- `html/index.html`: `<script src="auth-frontend.js">` adicionado antes de `</body>`
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para Sessão 6
+- Criar `html/rank-ui.js` — Leaderboard overlay + MatchHistory no screen-profile
+- Criar `html/replay-ui.js` — ReplayViewer com board 4x4 e controles prev/next/play
+- Adicionar telas screen-replay e screen-leaderboard ao index.html
+- Adicionar botão RANKING no screen-menu
 
 <!--
-## [DATA] Sessão 5 — Frontend Auth + Ban
-**Status:** [ Completo / Interrompido em X ]
-**Branch:** sessao-5
+## [DATA] Sessão 5 — Frontend Auth + Ban (template original)
+-->
 
 ### Feito
 -

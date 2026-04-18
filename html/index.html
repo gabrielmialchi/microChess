@@ -1468,6 +1468,43 @@
 </head>
 <body>
 
+<!-- AUTH OVERLAY -->
+<div id="auth-overlay" style="display:flex;position:fixed;inset:0;background:rgba(8,8,8,0.97);z-index:10000;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
+  <div style="background:#111;border:1px solid rgba(212,168,50,0.3);border-radius:8px;padding:40px 32px;width:360px;max-width:90vw;display:flex;flex-direction:column;gap:16px;">
+    <div style="text-align:center;color:#d4a832;font-size:22px;font-weight:700;letter-spacing:2px;margin-bottom:4px;">microChess</div>
+    <div id="auth-form-login" style="display:flex;flex-direction:column;gap:12px;">
+      <div style="color:#f0ece4;font-size:12px;letter-spacing:1px;text-align:center;">ENTRAR</div>
+      <input id="login-email" type="email" placeholder="Email" style="background:#0e0e0e;border:1px solid rgba(255,255,255,0.12);color:#f0ece4;padding:10px 14px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;outline:none;width:100%;">
+      <input id="login-password" type="password" placeholder="Senha" style="background:#0e0e0e;border:1px solid rgba(255,255,255,0.12);color:#f0ece4;padding:10px 14px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;outline:none;width:100%;">
+      <button onclick="AuthUI.handleSubmit('login')" style="background:#d4a832;color:#080808;border:none;padding:11px;border-radius:4px;font-family:'Cinzel',serif;font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;">ENTRAR</button>
+      <div style="text-align:center;font-size:11px;color:rgba(240,236,228,0.4);cursor:pointer;" onclick="AuthUI.toggle('register')">Não tem conta? <span style="color:#d4a832;">Cadastrar</span></div>
+    </div>
+    <div id="auth-form-register" style="display:none;flex-direction:column;gap:12px;">
+      <div style="color:#f0ece4;font-size:12px;letter-spacing:1px;text-align:center;">CRIAR CONTA</div>
+      <input id="reg-username" type="text" placeholder="Apelido (máx. 16 chars)" maxlength="16" style="background:#0e0e0e;border:1px solid rgba(255,255,255,0.12);color:#f0ece4;padding:10px 14px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;outline:none;width:100%;">
+      <input id="reg-email" type="email" placeholder="Email" style="background:#0e0e0e;border:1px solid rgba(255,255,255,0.12);color:#f0ece4;padding:10px 14px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;outline:none;width:100%;">
+      <input id="reg-password" type="password" placeholder="Senha (mín. 6 chars)" style="background:#0e0e0e;border:1px solid rgba(255,255,255,0.12);color:#f0ece4;padding:10px 14px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;outline:none;width:100%;">
+      <button onclick="AuthUI.handleSubmit('register')" style="background:#d4a832;color:#080808;border:none;padding:11px;border-radius:4px;font-family:'Cinzel',serif;font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;">CRIAR CONTA</button>
+      <div style="text-align:center;font-size:11px;color:rgba(240,236,228,0.4);cursor:pointer;" onclick="AuthUI.toggle('login')">Já tem conta? <span style="color:#d4a832;">Entrar</span></div>
+    </div>
+    <div id="auth-error" style="color:#e74c3c;font-size:11px;text-align:center;font-family:'IBM Plex Mono',monospace;min-height:14px;"></div>
+    <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:12px;text-align:center;">
+      <button onclick="AuthUI.playAsGuest()" style="background:transparent;color:rgba(240,236,228,0.4);border:1px solid rgba(255,255,255,0.1);padding:8px 20px;border-radius:4px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;cursor:pointer;">JOGAR SEM CONTA</button>
+    </div>
+  </div>
+</div>
+
+<!-- BAN OVERLAY -->
+<div id="ban-overlay" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.97);z-index:9999;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
+  <div style="background:#111;border:1px solid rgba(231,76,60,0.4);border-radius:8px;padding:40px 32px;width:360px;max-width:90vw;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center;">
+    <div style="color:#e74c3c;font-size:18px;font-weight:700;letter-spacing:2px;">BANIMENTO TEMPORÁRIO</div>
+    <div style="color:rgba(240,236,228,0.6);font-size:12px;line-height:1.6;">Você recebeu muitos W.O.s e foi banido temporariamente do matchmaking.</div>
+    <div style="color:#f0ece4;font-size:12px;">Tempo restante:</div>
+    <div id="ban-countdown" style="color:#e74c3c;font-size:36px;font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:4px;">00:00:00</div>
+    <button onclick="BanOverlay.hide()" style="background:transparent;color:rgba(240,236,228,0.5);border:1px solid rgba(255,255,255,0.1);padding:8px 20px;border-radius:4px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;cursor:pointer;margin-top:8px;">FECHAR</button>
+  </div>
+</div>
+
 <!-- MENU SCREEN -->
 <div id="screen-menu" class="screen">
     <div class="menu-header">
@@ -2109,6 +2146,7 @@
     // LOCAL: conecta ao servidor local. PRODUÇÃO: troque pela URL do Railway.
     const SERVER_URL = window.location.hostname === 'localhost' ? '' : 'microchess-production.up.railway.app';
     const socket = io(SERVER_URL);
+    listenGameEvents(socket);
 
     // ── GAME STATE VARS ───────────────────────────────────────────
     let roomID      = null;
@@ -2137,7 +2175,7 @@
         document.getElementById('mm-vs-label-opp').textContent    = t('opponent');
         setMMState('lobby');
         showScreen('matchmaking');
-        socket.emit('queue_join', { uid: myUid, nickname: p.nickname, avatar: p.avatar });
+        socket.emit('queue_join', getQueueProfile({ uid: myUid, nickname: p.nickname, avatar: p.avatar }));
     };
 
     function setMMState(st) {
@@ -2800,5 +2838,6 @@
     // ── STARTUP ───────────────────────────────────────────────────
     showScreen('menu');
 </script>
+<script src="auth-frontend.js"></script>
 </body>
 </html>
