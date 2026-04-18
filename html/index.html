@@ -2001,7 +2001,7 @@
 
     // ── SOCKET.IO CONNECTION ──────────────────────────────────────
     // LOCAL: conecta ao servidor local. PRODUÇÃO: troque pela URL do Railway.
-    const SERVER_URL = window.location.hostname === 'localhost' ? '' : 'COLOQUE_A_URL_DO_RAILWAY_AQUI';
+    const SERVER_URL = window.location.hostname === 'localhost' ? '' : 'microchess-production.up.railway.app';
     const socket = io(SERVER_URL);
 
     // ── GAME STATE VARS ───────────────────────────────────────────
