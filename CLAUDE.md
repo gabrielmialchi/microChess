@@ -1,0 +1,120 @@
+# microChess — Instruções Automáticas para Claude Code
+
+## Ao abrir qualquer conversa neste projeto
+
+Leia os seguintes documentos antes de qualquer ação:
+
+1. `docs/CLAUDE.md` — arquitetura, telas, regras de negócio, stack
+2. `docs/ACTIVITY_LOG.md` — status atual de cada sessão
+3. `docs/SESSAO_POR_SESSAO_PLANNING.md` — plano detalhado com checklists
+
+## Quando o usuário disser "iniciar sessão"
+
+Execute automaticamente estes passos, sem pedir confirmação adicional:
+
+1. Leia `docs/ACTIVITY_LOG.md` e identifique a primeira sessão com status ⏳ Pendente
+2. Leia a seção dessa sessão em `docs/SESSAO_POR_SESSAO_PLANNING.md`
+3. Execute TUDO que a sessão pede, seguindo o checklist na ordem exata
+4. Ao concluir, preencha o template correspondente em `docs/ACTIVITY_LOG.md`
+5. Atualize a tabela de progresso em `docs/CLAUDE.md` (marcar sessão como ✅)
+
+## Regras que nunca devem ser violadas
+
+- **NUNCA reescrever** `server/server.js` ou `html/index.html` — apenas inserir blocos novos
+- **Toda lógica nova** vai em arquivos separados (auth.js, mmr.js, replay.js, auth-frontend.js, etc.)
+- **CSS novo** sempre inline nos divs criados — nunca alterar o `<style>` existente
+- **Retrocompatibilidade**: o jogo deve funcionar sem conta criada
+- **Verificar** `docs/ACTIVITY_LOG.md` para saber o que JÁ foi feito antes de implementar
+
+## Quando o usuário disser "status do projeto"
+
+Leia `docs/ACTIVITY_LOG.md` e `docs/CLAUDE.md` e responda:
+- Qual sessão está em andamento ou é a próxima
+- Quais arquivos já existem
+- Quais bugs ou bloqueios estão registrados
+
+---
+
+## Comunicação durante a implementação
+
+**Não explicar o que está sendo feito.** Código fala por si mesmo.
+
+Só produzir texto nas seguintes situações:
+
+### 1. Ao iniciar a sessão — plano em uma linha por item
+```
+▶ SESSÃO X — [TEMA]
+[x] item já feito (se retomando sessão interrompida)
+[ ] item a fazer
+[ ] item a fazer
+```
+
+### 2. Bloqueio — quando algo impede continuar
+```
+🚫 BLOQUEIO: [descrição em uma linha]
+   Causa: [causa]
+   Ação necessária: [o que o usuário precisa fazer manualmente]
+   Continuando com: [próximo item não bloqueado, se houver]
+```
+
+### 3. Dependência — algo que Claude não pode resolver sozinho
+```
+⚠️ DEPENDÊNCIA: [descrição]
+   Requer: [o que o usuário precisa fazer antes da próxima sessão]
+```
+
+### 4. Testes necessários — ao final da sessão ou de um bloco
+```
+🧪 TESTAR:
+   1. [comando ou ação]  → esperado: [resultado]
+   2. [comando ou ação]  → esperado: [resultado]
+```
+
+### 5. Conclusão da sessão
+```
+✅ SESSÃO X CONCLUÍDA
+⚠️ DEPENDÊNCIAS: [lista ou "nenhuma"]
+🧪 TESTAR: [lista resumida]
+```
+
+---
+
+## Protocolo de encerramento antecipado (contexto longo)
+
+Quando perceber que o contexto da conversa está ficando muito extenso e ainda há itens do checklist por fazer, encerrar proativamente seguindo estes passos:
+
+1. **Garantir que o código atual não quebra nada:**
+   - Qualquer arquivo aberto deve estar sintaticamente completo
+   - Nenhuma função pela metade, nenhum `require` sem o arquivo existir
+   - Se um arquivo foi parcialmente editado, reverter para o estado anterior ou completar o mínimo funcional
+
+2. **Registrar no `docs/ACTIVITY_LOG.md`:**
+```
+## [DATA] Sessão X — [TEMA] — ENCERRAMENTO ANTECIPADO
+**Status:** Interrompido — contexto extenso
+**Branch:** sessao-X
+
+### Feito
+- [listar o que foi concluído]
+
+### Pendente (retomar aqui na próxima sessão)
+- [ ] [próximo item do checklist]
+- [ ] [e os seguintes]
+
+### Estado do código ao encerrar
+- Último arquivo criado/editado: [arquivo]
+- Código está funcional: Sim / Parcialmente (descrever)
+
+### Como retomar
+Cole "iniciar sessão" para continuar — o log acima será detectado automaticamente.
+```
+
+3. **Emitir ao usuário:**
+```
+⏸ ENCERRAMENTO ANTECIPADO — contexto extenso
+   Feito: [N de M itens do checklist]
+   Pendente: [itens restantes]
+   Código está: [funcional / revertido para estado seguro]
+   → Log atualizado em docs/ACTIVITY_LOG.md
+   → Cole "iniciar sessão" para continuar na próxima janela
+```
