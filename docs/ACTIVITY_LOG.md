@@ -476,7 +476,83 @@ para entender o estado atual antes de implementar qualquer coisa.
 - `server/server.js`: `scheduleRoomCleanup(roomId)` — substitui todos os 4 `setTimeout(() => rooms.delete(...), 60_000)` no código; além de deletar a sala, limpa entradas órfãs em `pendingReconnects` que apontam para aquela sala
 - `server/server.js`: `/health` — expandido com DB ping (SELECT 1 FROM players) + `rooms.size` + `queue.length`; retorna 500 se DB falhar
 
-### Status final — Sessões 11, 12, 13 (Ciclo de Segurança)
+---
+
+## [2026-04-18] Sessão 14 — Integridade Competitiva + Perfil
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/server.js`: `stateView(state, color)` — mascara `planning[opponentColor]` enquanto oponente não confirmou; `broadcast()` agora envia view personalizada por cor
+- `server/server.js`: `PATCH /auth/profile` — atualiza username no DB, valida USERNAME_RE, trata UNIQUE conflict, retorna novo token
+- `server/server.js`: `DELETE /auth/account` — transação que deleta replays, matches e player; requer JWT válido
+- `html/index.html`: `saveProfile` — reescrito para fazer `fetch PATCH /auth/profile` quando autenticado; atualiza Session + MenuPopulator; fallback para localStorage se guest
+- `html/index.html`: botão "EXCLUIR CONTA" adicionado no screen-profile (visual discreto, abaixo de "SAIR DA CONTA")
+- `html/index.html`: popup `#delete-account-confirm` com aviso de ação irreversível + botões EXCLUIR/CANCELAR
+- `html/auth-frontend.js`: `window.confirmDeleteAccount`, `window.hideDeleteConfirm`, `window.doDeleteAccount` (fetch DELETE + Session.clear + AuthUI.show)
+
+### Notas para Sessão 15
+- PWA manifest.json + service worker + Helmet.js + Privacy Policy page
+
+---
+
+## [2026-04-18] Sessão 15 — Play Store Pré-Requisitos
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/package.json`: helmet instalado
+- `server/server.js`: `require('helmet')` + `app.use(helmet({ contentSecurityPolicy: false }))` — ativa X-Frame-Options, HSTS, X-Content-Type-Options, Referrer-Policy automaticamente
+- `server/server.js`: `GET /privacy-policy` — HTML inline com política de privacidade em PT completa
+- `server/server.js`: `GET /.well-known/assetlinks.json` — retorna `[]` por padrão; preencher com env var `ASSET_LINKS` após gerar keystore do APK
+- `html/manifest.json`: criado — name, short_name, start_url, display: standalone, orientation: portrait, theme_color: #d4a832, icons placeholders 192/512
+- `html/sw.js`: criado — service worker com cache de shell + fallback offline; bypassa socket.io e endpoints de API
+- `html/index.html`: `<meta name="theme-color">`, `<meta mobile-web-app-capable>`, `<link rel="manifest">` adicionados ao `<head>`
+- `html/index.html`: registro do service worker (`navigator.serviceWorker.register('/sw.js')`) adicionado antes do `</body>`
+
+### Dependências Manuais (fora do escopo do Claude Code)
+- Criar ícones PNG: `html/icons/icon-192.png` e `html/icons/icon-512.png` (design do ícone do app)
+- Após gerar keystore Android via Android Studio / bubblewrap: preencher `ASSET_LINKS` env var no Railway com o JSON do assetlinks
+- Preencher Data Safety Form e IARC no Google Play Console
+- Tirar screenshots do app para a Play Store listing
+
+### Notas para Sessão 16
+- Troca de senha (PATCH /auth/password)
+- Loading states nas telas assíncronas
+- Disconnect banner
+- Fix botão Sair para WebView
+
+---
+
+## [2026-04-18] Sessão 16 — Qualidade UX + Password Change
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server.js`: `PATCH /auth/password` — valida senha atual (bcrypt), exige mín. 6 chars, atualiza hash
+- `index.html`: botão "ALTERAR SENHA" no screen-profile
+- `index.html`: modal `#change-password-modal` (senha atual + nova + confirmar + erro inline)
+- `index.html`: `window.quitGame()` — substituído `window.close()` por `showScreen('menu')` com hook Android.closeApp() para TWA
+- `html/auth-frontend.js`: `showChangePassword`, `hideChangePassword`, `doChangePassword` (fetch PATCH /auth/password)
+- `html/auth-frontend.js`: `showDisconnectBanner()` — banner vermelho fixo no topo
+- `html/auth-frontend.js`: `socket.on('disconnect', showDisconnectBanner)` + `socket.on('connect', remove banner)`
+- `html/rank-ui.js`: spinner dourado animado substituindo "Carregando..." em leaderboard e match-history
+- `html/rank-ui.js`: `Leaderboard.load()` agora mostra a tela antes do fetch (com spinner imediato)
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para Sessão 17
+- Sala privada com código de 4 caracteres (P-08)
+- Novos eventos socket: `private_room_create`, `private_room_join`
+- Nova tela `screen-private-room`
+
+---
+
+## [REFERÊNCIA] Status final — Sessões 11, 12, 13 (Ciclo de Segurança)
 Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 - 8 críticas/altas: Sessão 11 ✅
 - 6 médias/baixas: Sessões 12 e 13 ✅

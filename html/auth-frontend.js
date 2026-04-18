@@ -147,6 +147,101 @@ window.doLogout = function () {
     AuthUI.show();
 };
 
+// ── ACCOUNT DELETION ─────────────────────────────────────────
+window.confirmDeleteAccount = function () {
+    const m = document.getElementById('delete-account-confirm');
+    if (m) m.style.display = 'flex';
+};
+
+window.hideDeleteConfirm = function () {
+    const m = document.getElementById('delete-account-confirm');
+    if (m) m.style.display = 'none';
+};
+
+window.doDeleteAccount = async function () {
+    const btn = document.getElementById('btn-delete-confirm');
+    if (btn) { btn.textContent = '...'; btn.disabled = true; }
+    const session = Session.get();
+    if (!session?.token) { window.hideDeleteConfirm(); AuthUI.show(); return; }
+    try {
+        const res = await fetch('/auth/account', {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + session.token },
+        });
+        if (!res.ok) {
+            if (btn) { btn.textContent = 'EXCLUIR'; btn.disabled = false; }
+            return;
+        }
+    } catch {
+        if (btn) { btn.textContent = 'EXCLUIR'; btn.disabled = false; }
+        return;
+    }
+    window.hideDeleteConfirm();
+    Session.clear();
+    localStorage.removeItem('mc_uid');
+    localStorage.removeItem('mc_nickname');
+    localStorage.removeItem('mc_stats');
+    AuthUI.show();
+};
+
+// ── CHANGE PASSWORD ───────────────────────────────────────────
+window.showChangePassword = function () {
+    const m = document.getElementById('change-password-modal');
+    if (m) {
+        m.style.display = 'flex';
+        ['cp-current', 'cp-new', 'cp-confirm'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const err = document.getElementById('cp-error');
+        if (err) err.textContent = '';
+    }
+};
+
+window.hideChangePassword = function () {
+    const m = document.getElementById('change-password-modal');
+    if (m) m.style.display = 'none';
+};
+
+window.doChangePassword = async function () {
+    const err = document.getElementById('cp-error');
+    if (err) err.textContent = '';
+    const current  = document.getElementById('cp-current')?.value  || '';
+    const newPwd   = document.getElementById('cp-new')?.value      || '';
+    const confirm  = document.getElementById('cp-confirm')?.value  || '';
+    if (!current || !newPwd || !confirm) {
+        if (err) err.textContent = 'Preencha todos os campos.';
+        return;
+    }
+    if (newPwd !== confirm) {
+        if (err) err.textContent = 'As senhas não coincidem.';
+        return;
+    }
+    const btn = document.getElementById('btn-cp-confirm');
+    if (btn) { btn.textContent = '...'; btn.disabled = true; }
+    const session = Session.get();
+    if (!session?.token) { window.hideChangePassword(); AuthUI.show(); return; }
+    try {
+        const res = await fetch('/auth/password', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.token },
+            body: JSON.stringify({ currentPassword: current, newPassword: newPwd }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            if (err) err.textContent = data.error || 'Erro ao alterar senha.';
+            if (btn) { btn.textContent = 'SALVAR'; btn.disabled = false; }
+            return;
+        }
+    } catch {
+        if (err) err.textContent = 'Erro de conexão.';
+        if (btn) { btn.textContent = 'SALVAR'; btn.disabled = false; }
+        return;
+    }
+    window.hideChangePassword();
+    if (btn) { btn.textContent = 'SALVAR'; btn.disabled = false; }
+};
+
 // ── BAN OVERLAY ───────────────────────────────────────────────
 const BanOverlay = {
     _timer: null,
@@ -260,8 +355,21 @@ function tryRejoinIfPending(socket) {
     socket.emit('rejoin_game', { token: session.token });
 }
 
+// ── DISCONNECT BANNER ─────────────────────────────────────────
+function showDisconnectBanner() {
+    if (document.getElementById('_dc-banner')) return;
+    const b = document.createElement('div');
+    b.id = '_dc-banner';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#e74c3c;color:#fff;text-align:center;padding:8px;font-family:Cinzel,serif;font-size:12px;z-index:99999;letter-spacing:2px;';
+    b.textContent = 'SEM CONEXÃO COM O SERVIDOR';
+    document.body.prepend(b);
+}
+
 // ── SOCKET GAME EVENTS ────────────────────────────────────────
 function listenGameEvents(socket) {
+    socket.on('disconnect', showDisconnectBanner);
+    socket.on('connect',    () => document.getElementById('_dc-banner')?.remove());
+
     socket.on('mmr_update', async ({ delta, newMMR, rank, isWO, lpDelta, elo, promoted, demoted }) => {
         const session = Session.get();
         if (!session) return;

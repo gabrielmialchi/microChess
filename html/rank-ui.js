@@ -6,13 +6,17 @@ function escapeHTML(str) {
 }
 
 // ── LEADERBOARD ───────────────────────────────────────────────
+const _spinner = '<div style="display:flex;justify-content:center;align-items:center;padding:48px 0;"><div style="width:28px;height:28px;border:3px solid rgba(212,168,50,0.2);border-top-color:#d4a832;border-radius:50%;animation:_spin 0.8s linear infinite;"></div></div><style>@keyframes _spin{to{transform:rotate(360deg)}}</style>';
+
 const Leaderboard = {
     async load() {
+        showScreen('leaderboard');
+        const table = document.getElementById('leaderboard-table');
+        if (table) table.innerHTML = _spinner;
         try {
             const res = await fetch('/leaderboard');
-            if (!res.ok) return;
+            if (!res.ok) { if (table) table.innerHTML = ''; return; }
             this.render(await res.json());
-            showScreen('leaderboard');
         } catch { console.error('[Leaderboard] Erro ao carregar.'); }
     },
 
@@ -47,7 +51,7 @@ const MatchHistory = {
         if (!playerId) return;
         showScreen('match-history');
         const container = document.getElementById('match-history-list');
-        if (container) container.innerHTML = '<div style="color:rgba(240,236,228,0.3);font-size:11px;padding:16px 0;text-align:center;">Carregando...</div>';
+        if (container) container.innerHTML = _spinner;
         this._load(playerId);
     },
 

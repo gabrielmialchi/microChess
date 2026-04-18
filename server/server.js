@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const crypto     = require('crypto');
 const path       = require('path');
 const rateLimit  = require('express-rate-limit');
+const helmet     = require('helmet');
 
 const { hashPassword, checkPassword, signToken, verifyToken } = require('./auth');
 const db = require('./db/database');
@@ -17,6 +18,7 @@ const server = http.createServer(app);
 const io     = new Server(server, { cors: { origin: process.env.ALLOWED_ORIGIN || '*' } });
 const PORT   = process.env.PORT || 3000;
 
+app.use(helmet({ contentSecurityPolicy: false })); // CSP off: Google Fonts CDN + Socket.io inline
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../html')));
 app.get('/health', (_, res) => {
@@ -26,6 +28,39 @@ app.get('/health', (_, res) => {
     } catch {
         res.status(500).json({ ok: false, db: 'error' });
     }
+});
+
+app.get('/privacy-policy', (_, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(`<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>microChess — Política de Privacidade</title>
+<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;color:#222;line-height:1.7}h1{color:#8b6914}h2{color:#555;font-size:1rem;margin-top:2em}a{color:#8b6914}</style>
+</head><body>
+<h1>microChess — Política de Privacidade</h1>
+<p><em>Última atualização: ${new Date().toLocaleDateString('pt-BR')}</em></p>
+<h2>1. Dados Coletados</h2>
+<p>Ao criar uma conta, coletamos: <strong>endereço de e-mail</strong> (armazenado de forma criptografada), <strong>nome de usuário</strong> e dados de partidas jogadas (resultados, ranking, histórico de replays).</p>
+<h2>2. Uso dos Dados</h2>
+<p>Os dados são utilizados exclusivamente para: autenticação na plataforma, exibição de ranking e histórico de partidas, e prevenção de abusos (sistema de ban temporário).</p>
+<h2>3. Compartilhamento</h2>
+<p>Não compartilhamos dados pessoais com terceiros. O nome de usuário e estatísticas de jogo são públicos no leaderboard.</p>
+<h2>4. Retenção</h2>
+<p>Os dados da conta são mantidos enquanto a conta estiver ativa. Replays de partidas são excluídos automaticamente após 30 dias. Você pode excluir sua conta a qualquer momento pelo menu <em>Perfil → Excluir Conta</em>.</p>
+<h2>5. Direitos do Usuário</h2>
+<p>Você tem o direito de acessar, corrigir ou excluir seus dados. Para exercer esses direitos, use a opção <em>Excluir Conta</em> no aplicativo ou entre em contato pelo e-mail abaixo.</p>
+<h2>6. Segurança</h2>
+<p>Senhas são armazenadas com hash bcrypt. E-mails são criptografados com AES-256-GCM em repouso.</p>
+<h2>7. Contato</h2>
+<p>Dúvidas: <a href="mailto:contato@o6games.com">contato@o6games.com</a></p>
+<p>Desenvolvido por <strong>o6 games</strong> — Gabriel Mialchi</p>
+</body></html>`);
+});
+
+app.get('/.well-known/assetlinks.json', (_, res) => {
+    // Preencher após gerar o keystore do APK na Play Store
+    const links = process.env.ASSET_LINKS ? JSON.parse(process.env.ASSET_LINKS) : [];
+    res.json(links);
 });
 
 // ── STARTUP SECURITY CHECKS ───────────────────────────────────
@@ -115,6 +150,61 @@ app.post('/auth/login', authLimiter, async (req, res) => {
     db.prepare("UPDATE players SET last_seen = datetime('now') WHERE id = ?").run(player.id);
     const token = signToken({ id: player.id, username: player.username });
     res.json({ token, id: player.id, username: player.username, mmr: player.mmr });
+});
+
+// ── PROFILE / ACCOUNT ENDPOINTS ──────────────────────────────
+app.patch('/auth/profile', async (req, res) => {
+    const auth    = (req.headers.authorization || '').split(' ')[1];
+    const decoded = auth ? verifyToken(auth) : null;
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    const uname = String(req.body?.username || '').trim();
+    if (!USERNAME_RE.test(uname))
+        return res.status(400).json({ error: 'Username deve ter 3-16 caracteres: letras, números, _ - .' });
+    try {
+        db.prepare('UPDATE players SET username=? WHERE id=?').run(uname, decoded.id);
+        const newToken = signToken({ id: decoded.id, username: uname });
+        res.json({ token: newToken, username: uname });
+    } catch (e) {
+        if (e.message.includes('UNIQUE'))
+            return res.status(409).json({ error: 'Username já em uso' });
+        res.status(500).json({ error: 'Erro interno' });
+    }
+});
+
+app.patch('/auth/password', async (req, res) => {
+    const auth    = (req.headers.authorization || '').split(' ')[1];
+    const decoded = auth ? verifyToken(auth) : null;
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    const { currentPassword, newPassword } = req.body || {};
+    if (!currentPassword || !newPassword)
+        return res.status(400).json({ error: 'Campos obrigatórios ausentes' });
+    if (newPassword.length < 6)
+        return res.status(400).json({ error: 'Senha deve ter ao menos 6 caracteres' });
+    const player = db.prepare('SELECT password_hash FROM players WHERE id=?').get(decoded.id);
+    if (!player) return res.status(404).json({ error: 'Usuário não encontrado' });
+    const ok = await checkPassword(currentPassword, player.password_hash);
+    if (!ok) return res.status(401).json({ error: 'Senha atual incorreta' });
+    const newHash = await hashPassword(newPassword);
+    db.prepare('UPDATE players SET password_hash=? WHERE id=?').run(newHash, decoded.id);
+    res.json({ ok: true });
+});
+
+const _deleteAccount = db.transaction((playerId) => {
+    db.prepare('DELETE FROM replays WHERE match_id IN (SELECT id FROM matches WHERE player_white_id=? OR player_black_id=?)').run(playerId, playerId);
+    db.prepare('DELETE FROM matches WHERE player_white_id=? OR player_black_id=?').run(playerId, playerId);
+    db.prepare('DELETE FROM players WHERE id=?').run(playerId);
+});
+
+app.delete('/auth/account', (req, res) => {
+    const auth    = (req.headers.authorization || '').split(' ')[1];
+    const decoded = auth ? verifyToken(auth) : null;
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    try {
+        _deleteAccount(decoded.id);
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro interno' });
+    }
 });
 
 // ── LEADERBOARD / PLAYER ENDPOINTS ───────────────────────────
@@ -346,10 +436,17 @@ function createState() {
     };
 }
 
+function stateView(state, color) {
+    const opp = color === 'white' ? 'black' : 'white';
+    // Hide opponent's planning until they have confirmed (ready), preventing WebSocket snooping
+    if (state.ready[opp]) return state;
+    return { ...state, planning: { ...state.planning, [opp]: null } };
+}
+
 function broadcast(room) {
     const { white, black } = room.players;
-    io.to(white.socketId).emit('game_state', room.state);
-    io.to(black.socketId).emit('game_state', room.state);
+    io.to(white.socketId).emit('game_state', stateView(room.state, 'white'));
+    io.to(black.socketId).emit('game_state', stateView(room.state, 'black'));
 }
 
 // ── MOVE VALIDATION (server-side) ─────────────────────────────

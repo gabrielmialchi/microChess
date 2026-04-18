@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#d4a832">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>microChess</title>
+    <link rel="manifest" href="/manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -1517,6 +1522,33 @@
   </div>
 </div>
 
+<!-- DELETE ACCOUNT CONFIRM -->
+<div id="delete-account-confirm" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.95);z-index:9999;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
+  <div style="background:#111;border:1px solid rgba(231,76,60,0.35);border-radius:8px;padding:36px 32px;width:320px;max-width:90vw;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center;">
+    <div style="color:#e74c3c;font-size:14px;font-weight:700;letter-spacing:1.5px;">EXCLUIR CONTA?</div>
+    <div style="color:rgba(240,236,228,0.55);font-size:11px;line-height:1.8;">Esta ação é <strong style="color:#f0ece4;">permanente e irreversível</strong>.<br>Todo o seu histórico e ranking serão apagados.</div>
+    <div style="display:flex;gap:12px;width:100%;">
+      <button id="btn-delete-confirm" onclick="window.doDeleteAccount && window.doDeleteAccount()" style="flex:1;padding:11px;background:#e74c3c;border:none;border-radius:4px;color:#fff;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;font-weight:700;">EXCLUIR</button>
+      <button onclick="window.hideDeleteConfirm && window.hideDeleteConfirm()" style="flex:1;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div id="change-password-modal" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.95);z-index:9999;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
+  <div style="background:#111;border:1px solid rgba(212,168,50,0.25);border-radius:8px;padding:36px 32px;width:320px;max-width:90vw;display:flex;flex-direction:column;gap:14px;align-items:center;">
+    <div style="color:#d4a832;font-size:13px;font-weight:700;letter-spacing:1.5px;">ALTERAR SENHA</div>
+    <input id="cp-current" type="password" placeholder="Senha atual" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#f0ece4;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;">
+    <input id="cp-new"     type="password" placeholder="Nova senha (mín. 6 caracteres)" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#f0ece4;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;">
+    <input id="cp-confirm" type="password" placeholder="Confirmar nova senha" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#f0ece4;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;">
+    <div id="cp-error" style="color:#e74c3c;font-size:10px;letter-spacing:1px;min-height:14px;text-align:center;"></div>
+    <div style="display:flex;gap:12px;width:100%;">
+      <button id="btn-cp-confirm" onclick="window.doChangePassword && window.doChangePassword()" style="flex:1;padding:11px;background:#d4a832;border:none;border-radius:4px;color:#080808;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;font-weight:700;">SALVAR</button>
+      <button onclick="window.hideChangePassword && window.hideChangePassword()" style="flex:1;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
 <!-- RECONNECT OVERLAY -->
 <div id="reconnect-overlay" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.94);z-index:9990;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
   <div style="background:#111;border:1px solid rgba(212,168,50,0.2);border-radius:8px;padding:36px 32px;width:320px;max-width:90vw;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center;">
@@ -1699,7 +1731,9 @@
             <div class="stat-card"><div class="stat-val" id="stat-wo-l">0</div><div class="stat-name" id="stat-wo-l-label">W.O. Perdidos</div></div>
         </div>
         <button class="prof-save-btn" id="prof-save-btn" onclick="window.saveProfile()">SALVAR</button>
-        <button onclick="window.confirmLogout && window.confirmLogout()" style="margin-top:12px;width:100%;padding:10px;background:transparent;border:1px solid rgba(231,76,60,0.45);border-radius:4px;color:#e74c3c;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">SAIR DA CONTA</button>
+        <button onclick="window.showChangePassword && window.showChangePassword()" style="margin-top:12px;width:100%;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;" id="btn-change-password">ALTERAR SENHA</button>
+        <button onclick="window.confirmLogout && window.confirmLogout()" style="margin-top:6px;width:100%;padding:10px;background:transparent;border:1px solid rgba(231,76,60,0.45);border-radius:4px;color:#e74c3c;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">SAIR DA CONTA</button>
+        <button onclick="window.confirmDeleteAccount && window.confirmDeleteAccount()" style="margin-top:6px;width:100%;padding:8px;background:transparent;border:1px solid rgba(231,76,60,0.2);border-radius:4px;color:rgba(231,76,60,0.45);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1.5px;cursor:pointer;">EXCLUIR CONTA</button>
         <button onclick="typeof MatchHistory!=='undefined' && MatchHistory.open((typeof Session!=='undefined'?Session.get():null)?.id)" style="margin-top:8px;width:100%;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">HISTÓRICO DE PARTIDAS</button>
     </div>
 </div>
@@ -2289,18 +2323,52 @@
         });
     };
 
-    window.saveProfile = function() {
+    window.saveProfile = async function() {
         const nick = document.getElementById('nick-input').value.trim() || 'Guerreiro';
-        localStorage.setItem('mc_nickname', nick);
-        const btn = document.getElementById('prof-save-btn');
+        const btn  = document.getElementById('prof-save-btn');
+        const session = (typeof Session !== 'undefined') ? Session.get() : null;
+
+        if (session && session.token) {
+            btn.textContent = '...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/auth/profile', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.token },
+                    body: JSON.stringify({ username: nick }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    btn.textContent = data.error || 'ERRO';
+                    btn.style.background = 'var(--danger)';
+                    setTimeout(() => { btn.textContent = t('save'); btn.style.background = ''; btn.disabled = false; }, 2000);
+                    return;
+                }
+                const updated = { ...session, token: data.token, username: data.username };
+                Session.save(updated);
+                localStorage.setItem('mc_nickname', data.username);
+                if (typeof MenuPopulator !== 'undefined') MenuPopulator.populate(updated);
+            } catch {
+                btn.textContent = 'ERRO';
+                btn.style.background = 'var(--danger)';
+                setTimeout(() => { btn.textContent = t('save'); btn.style.background = ''; btn.disabled = false; }, 2000);
+                return;
+            }
+        } else {
+            localStorage.setItem('mc_nickname', nick);
+        }
+
+        btn.disabled = false;
         btn.textContent = '✓ SALVO';
         btn.style.background = 'var(--success)';
         setTimeout(() => { btn.textContent = t('save'); btn.style.background = ''; }, 1500);
     };
 
     window.quitGame = function() {
-        if (!window.close() || window.closed === false) {
-            document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:'Cinzel',serif;color:#d4a832;font-size:1.2rem;letter-spacing:4px;">OBRIGADO POR JOGAR</div>`;
+        if (typeof Android !== 'undefined' && Android.closeApp) {
+            Android.closeApp();
+        } else {
+            showScreen('menu');
         }
     };
 
@@ -3003,5 +3071,12 @@
 <script src="auth-frontend.js"></script>
 <script src="rank-ui.js"></script>
 <script src="replay-ui.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+}
+</script>
 </body>
 </html>
