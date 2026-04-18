@@ -9,6 +9,7 @@ const { hashPassword, checkPassword, signToken, verifyToken } = require('./auth'
 const db = require('./db/database');
 const { calculate: calcMMR, getRank, getBanDuration } = require('./mmr');
 const { createReplayBuffer, recordTurn, buildTurnSnapshot, buildDuelSnapshot } = require('./replay');
+const { applyLPChange, getEloDisplay } = require('./elo');
 
 const app    = express();
 const server = http.createServer(app);
@@ -19,6 +20,23 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../html')));
 app.get('/health', (_, res) => res.json({ ok: true }));
 
+// ── EMAIL CRYPTO ──────────────────────────────────────────────
+const HMAC_SECRET = process.env.HMAC_SECRET || 'mc-hmac-dev-secret-key';
+const _AES_KEY    = Buffer.from(
+    (process.env.AES_KEY || 'mc-aes-key-dev-000000000000000').padEnd(32, '0').slice(0, 32)
+);
+function hashEmail(email) {
+    return crypto.createHmac('sha256', HMAC_SECRET).update(email).digest('hex');
+}
+function encryptEmail(email) {
+    const iv     = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', _AES_KEY, iv);
+    const enc    = Buffer.concat([cipher.update(email, 'utf8'), cipher.final()]);
+    const tag    = cipher.getAuthTag();
+    return `${iv.toString('hex')}:${enc.toString('hex')}:${tag.toString('hex')}`;
+}
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 // ── AUTH ENDPOINTS ────────────────────────────────────────────
 app.post('/auth/register', async (req, res) => {
     const { username, email, password } = req.body || {};
@@ -26,17 +44,25 @@ app.post('/auth/register', async (req, res) => {
         return res.status(400).json({ error: 'username, email e password são obrigatórios' });
     if (password.length < 6)
         return res.status(400).json({ error: 'Senha deve ter ao menos 6 caracteres' });
+    const emailNorm = String(email).toLowerCase().trim();
+    if (!EMAIL_RE.test(emailNorm))
+        return res.status(400).json({ error: 'Formato de email inválido' });
     try {
-        const id           = crypto.randomUUID();
+        const id            = crypto.randomUUID();
+        const uname         = String(username).trim().slice(0, 16);
         const password_hash = await hashPassword(password);
+        const email_hash    = hashEmail(emailNorm);
+        const email_enc     = encryptEmail(emailNorm);
+        if (db.prepare('SELECT id FROM players WHERE email_hash = ?').get(email_hash))
+            return res.status(409).json({ error: 'Email já cadastrado' });
         db.prepare(
-            'INSERT INTO players (id, username, email, password_hash) VALUES (?, ?, ?, ?)'
-        ).run(id, String(username).slice(0, 16), email, password_hash);
-        const token = signToken({ id, username });
-        res.json({ token, id, username, mmr: 1500 });
+            'INSERT INTO players (id, username, email, email_hash, email_enc, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
+        ).run(id, uname, email_enc, email_hash, email_enc, password_hash);
+        const token = signToken({ id, username: uname });
+        res.json({ token, id, username: uname, mmr: 1500 });
     } catch (e) {
         if (e.message.includes('UNIQUE'))
-            return res.status(409).json({ error: 'Email ou username já cadastrado' });
+            return res.status(409).json({ error: 'Username já cadastrado' });
         res.status(500).json({ error: 'Erro interno' });
     }
 });
@@ -45,9 +71,11 @@ app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body || {};
     if (!email || !password)
         return res.status(400).json({ error: 'email e password são obrigatórios' });
+    const emailNorm  = String(email).toLowerCase().trim();
+    const email_hash = hashEmail(emailNorm);
     const player = db.prepare(
-        'SELECT id, username, email, password_hash, mmr FROM players WHERE email = ?'
-    ).get(email);
+        'SELECT id, username, password_hash, mmr FROM players WHERE email_hash = ?'
+    ).get(email_hash);
     if (!player) return res.status(401).json({ error: 'Credenciais inválidas' });
     const ok = await checkPassword(password, player.password_hash);
     if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' });
@@ -59,18 +87,23 @@ app.post('/auth/login', async (req, res) => {
 // ── LEADERBOARD / PLAYER ENDPOINTS ───────────────────────────
 app.get('/leaderboard', (_, res) => {
     const rows = db.prepare(
-        'SELECT id, username, mmr, wins, losses, draws, wo_count FROM players ORDER BY mmr DESC LIMIT 50'
+        'SELECT id, username, mmr, wins, losses, draws, wo_count, elo_rank, elo_lp FROM players ORDER BY elo_rank DESC, elo_lp DESC LIMIT 50'
     ).all();
-    res.json(rows.map((p, i) => ({ rank: i + 1, ...p, ...getRank(p.mmr) })));
+    res.json(rows.map((p, i) => ({
+        rank: i + 1, ...p,
+        ...getRank(p.mmr),
+        elo: getEloDisplay(p.elo_rank ?? 0, p.elo_lp ?? 0),
+    })));
 });
 
 app.get('/player/:id', (req, res) => {
     const p = db.prepare(
-        'SELECT id, username, mmr, wins, losses, draws, wo_count, wo_against, ban_until FROM players WHERE id=?'
+        'SELECT id, username, mmr, wins, losses, draws, wo_count, wo_against, ban_until, elo_rank, elo_lp, elo_shield FROM players WHERE id=?'
     ).get(req.params.id);
     if (!p) return res.status(404).json({ error: 'Não encontrado' });
     const banned = !!(p.ban_until && new Date(p.ban_until) > new Date());
-    res.json({ ...p, ...getRank(p.mmr), banned, banUntil: p.ban_until });
+    const elo = getEloDisplay(p.elo_rank ?? 0, p.elo_lp ?? 0);
+    res.json({ ...p, ...getRank(p.mmr), elo, banned, banUntil: p.ban_until });
 });
 
 app.get('/match/:id/replay', (req, res) => {
@@ -113,8 +146,8 @@ function persistMatchResult(room, winnerColor, isWO = false) {
         const bp = room.players.black;
         if (!wp?.uid || !bp?.uid) return;
 
-        const wRec = db.prepare('SELECT mmr, wo_count FROM players WHERE id=?').get(wp.uid);
-        const bRec = db.prepare('SELECT mmr, wo_count FROM players WHERE id=?').get(bp.uid);
+        const wRec = db.prepare('SELECT mmr, wo_count, elo_rank, elo_lp, elo_shield FROM players WHERE id=?').get(wp.uid);
+        const bRec = db.prepare('SELECT mmr, wo_count, elo_rank, elo_lp, elo_shield FROM players WHERE id=?').get(bp.uid);
         if (!wRec || !bRec) return;
 
         let wDelta = 0, bDelta = 0, result;
@@ -145,10 +178,15 @@ function persistMatchResult(room, winnerColor, isWO = false) {
             }
         }
 
-        db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+? WHERE id=?')
-          .run(wDelta, result === 'white' ? 1 : 0, result === 'black' || result === 'wo_black' ? 1 : 0, wp.uid);
-        db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+? WHERE id=?')
-          .run(bDelta, result === 'black' ? 1 : 0, result === 'white' || result === 'wo_white' ? 1 : 0, bp.uid);
+        const wLP = applyLPChange(wRec.elo_rank ?? 0, wRec.elo_lp ?? 0, wRec.elo_shield ?? 0, wDelta);
+        const bLP = applyLPChange(bRec.elo_rank ?? 0, bRec.elo_lp ?? 0, bRec.elo_shield ?? 0, bDelta);
+
+        db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
+          .run(wDelta, result === 'white' ? 1 : 0, result === 'black' || result === 'wo_black' ? 1 : 0,
+               wLP.elo_rank, wLP.elo_lp, wLP.elo_shield, wp.uid);
+        db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
+          .run(bDelta, result === 'black' ? 1 : 0, result === 'white' || result === 'wo_white' ? 1 : 0,
+               bLP.elo_rank, bLP.elo_lp, bLP.elo_shield, bp.uid);
 
         const matchId = crypto.randomUUID();
         room._matchId = matchId;
@@ -165,8 +203,16 @@ function persistMatchResult(room, winnerColor, isWO = false) {
 
         const wNew = wRec.mmr + wDelta;
         const bNew = bRec.mmr + bDelta;
-        io.to(wp.socketId).emit('mmr_update', { delta: wDelta, newMMR: wNew, rank: getRank(wNew), isWO });
-        io.to(bp.socketId).emit('mmr_update', { delta: bDelta, newMMR: bNew, rank: getRank(bNew), isWO });
+        io.to(wp.socketId).emit('mmr_update', {
+            delta: wDelta, newMMR: wNew, rank: getRank(wNew), isWO,
+            lpDelta: wLP.lpDelta, elo: getEloDisplay(wLP.elo_rank, wLP.elo_lp),
+            promoted: wLP.promoted, demoted: wLP.demoted,
+        });
+        io.to(bp.socketId).emit('mmr_update', {
+            delta: bDelta, newMMR: bNew, rank: getRank(bNew), isWO,
+            lpDelta: bLP.lpDelta, elo: getEloDisplay(bLP.elo_rank, bLP.elo_lp),
+            promoted: bLP.promoted, demoted: bLP.demoted,
+        });
     } catch (e) {
         console.error('[MMR] Erro ao persistir:', e.message);
     }

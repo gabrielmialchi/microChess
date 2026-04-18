@@ -10,6 +10,11 @@ CREATE TABLE IF NOT EXISTS players (
     wo_count        INTEGER DEFAULT 0,
     wo_against      INTEGER DEFAULT 0,
     ban_until       TEXT DEFAULT NULL,
+    email_hash      TEXT,
+    email_enc       TEXT,
+    elo_rank        INTEGER DEFAULT 0,
+    elo_lp          INTEGER DEFAULT 0,
+    elo_shield      INTEGER DEFAULT 0,
     created_at      TEXT DEFAULT (datetime('now')),
     last_seen       TEXT DEFAULT (datetime('now'))
 );
@@ -37,7 +42,8 @@ CREATE TABLE IF NOT EXISTS replays (
     FOREIGN KEY (match_id) REFERENCES matches(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_players_mmr      ON players(mmr DESC);
+CREATE INDEX IF NOT EXISTS idx_players_mmr        ON players(mmr DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_players_email_hash ON players(email_hash);
 CREATE INDEX IF NOT EXISTS idx_players_ban      ON players(ban_until);
 CREATE INDEX IF NOT EXISTS idx_matches_created  ON matches(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_replays_match    ON replays(match_id);

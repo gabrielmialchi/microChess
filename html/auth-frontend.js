@@ -41,6 +41,9 @@ const MenuPopulator = {
             if (el('stat-losses'))  el('stat-losses').textContent  = p.losses || 0;
             if (el('stat-wo-w'))    el('stat-wo-w').textContent    = p.wo_against || 0;
             if (el('stat-wo-l'))    el('stat-wo-l').textContent    = p.wo_count || 0;
+            // ELO badge (uses visible Liga rank, not hidden MMR)
+            if (p.elo && el('menu-rank-badge'))
+                el('menu-rank-badge').textContent = `${p.elo.icon} ${p.elo.name} · ${p.elo.lp} PdL`;
             localStorage.setItem('mc_stats', JSON.stringify({
                 wins: p.wins, losses: p.losses,
                 wo_wins: p.wo_against, wo_losses: p.wo_count,
@@ -116,6 +119,19 @@ const AuthUI = {
     playAsGuest() { this.hide(); },
 };
 
+// ── LOGOUT ────────────────────────────────────────────────────
+window.doLogout = function () {
+    Session.clear();
+    localStorage.removeItem('mc_uid');
+    localStorage.removeItem('mc_nickname');
+    localStorage.removeItem('mc_stats');
+    const badge = document.getElementById('menu-rank-badge');
+    if (badge) badge.textContent = '';
+    const name = document.getElementById('menu-player-name');
+    if (name) name.textContent = 'Guerreiro';
+    AuthUI.show();
+};
+
 // ── BAN OVERLAY ───────────────────────────────────────────────
 const BanOverlay = {
     _timer: null,
@@ -151,20 +167,35 @@ const BanOverlay = {
     },
 };
 
-// ── MMR TOAST ─────────────────────────────────────────────────
-function showMMRToast(delta, isWO) {
+// ── MMR / LP TOAST ────────────────────────────────────────────
+function showMMRToast(delta, isWO, lpDelta, elo, promoted, demoted) {
     if (!document.getElementById('_mmr-toast-css')) {
         const st = document.createElement('style');
         st.id = '_mmr-toast-css';
         st.textContent = '@keyframes _mmrFade{0%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-24px)}}';
         document.head.appendChild(st);
     }
-    const sign  = delta >= 0 ? '+' : '';
+    let text, positive;
+    if (promoted) {
+        text = `↑ PROMOÇÃO — ${elo?.icon || ''} ${elo?.name || ''}`;
+        positive = true;
+    } else if (demoted) {
+        text = `↓ REBAIXAMENTO — ${elo?.icon || ''} ${elo?.name || ''}`;
+        positive = false;
+    } else if (elo && lpDelta != null) {
+        const sign = lpDelta >= 0 ? '+' : '';
+        text = isWO ? `W.O. — ${sign}${lpDelta} PdL` : `${sign}${lpDelta} PdL`;
+        positive = lpDelta >= 0;
+    } else {
+        const sign = delta >= 0 ? '+' : '';
+        text = isWO ? `W.O. — ${sign}${delta} MMR` : `${sign}${delta} MMR`;
+        positive = delta >= 0;
+    }
     const toast = document.createElement('div');
-    toast.textContent = isWO ? `W.O. — ${sign}${delta} MMR` : `${sign}${delta} MMR`;
+    toast.textContent = text;
     toast.style.cssText = [
         'position:fixed', 'bottom:80px', 'left:50%', 'transform:translateX(-50%)',
-        `background:${delta >= 0 ? '#2ecc71' : '#e74c3c'}`,
+        `background:${positive ? '#2ecc71' : '#e74c3c'}`,
         'color:#fff', "font-family:'Cinzel',serif", 'font-size:14px', 'font-weight:700',
         'padding:10px 24px', 'border-radius:4px', 'z-index:9998',
         'box-shadow:0 4px 16px rgba(0,0,0,0.5)',
@@ -184,12 +215,12 @@ function getQueueProfile(base) {
 
 // ── SOCKET GAME EVENTS ────────────────────────────────────────
 function listenGameEvents(socket) {
-    socket.on('mmr_update', async ({ delta, newMMR, rank, isWO }) => {
+    socket.on('mmr_update', async ({ delta, newMMR, rank, isWO, lpDelta, elo, promoted, demoted }) => {
         const session = Session.get();
         if (!session) return;
         const updated = { ...session, mmr: newMMR, rank };
         Session.save(updated);
-        showMMRToast(delta, isWO);
+        showMMRToast(delta, isWO, lpDelta, elo, promoted, demoted);
         await MenuPopulator.populate(updated);
     });
 

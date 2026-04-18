@@ -248,6 +248,6 @@ curl http://localhost:3000/health
 | 3 | MMR + WO/Ban + AFK | ✅ Completo |
 | 4 | Replay Recording | ✅ Completo |
 | 5 | Frontend Auth + Ban | ✅ Completo |
-| 6 | Frontend Leaderboard + Replay | ⏳ Pendente |
+| 6 | Frontend Leaderboard + Replay | ✅ Completo |
 
 *(Atualizar este arquivo ao concluir cada sessão)*

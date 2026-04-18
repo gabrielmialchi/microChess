@@ -236,20 +236,48 @@ para entender o estado atual antes de implementar qualquer coisa.
 -
 -->
 
-<!--
-## [DATA] Sessão 6 — Frontend Leaderboard + Replay
-**Status:** [ Completo / Interrompido em X ]
-**Branch:** sessao-6
+## [2026-04-18] Sessão 6 — Frontend Leaderboard + Replay
+
+**Status:** Completo
+**Branch:** main
 
 ### Feito
--
-
-### Pendente
--
-
-### Bugs / Bloqueios Conhecidos
--
+- `html/rank-ui.js` criado — Leaderboard (load/render/show), MatchHistory (load/render), hook em showScreen('profile')
+- `html/replay-ui.js` criado — ReplayViewer (load, open, renderTurn, prev, next, play, close), window.watchReplay
+- `html/index.html`: tela `screen-replay` inserida com board 4x4 + controles ⏮ ▶ ⏭
+- `html/index.html`: tela `screen-leaderboard` inserida com tabela scrollável
+- `html/index.html`: container `#profile-match-history` inserido no screen-profile
+- `html/index.html`: botão RANKING adicionado ao screen-menu
+- `html/index.html`: scripts rank-ui.js e replay-ui.js adicionados antes de </body>
 
 ### Status final do projeto
--
--->
+- Todas as 6 sessões de backend e frontend concluídas
+- Backend: SQLite, Auth JWT, MMR/ELO, WO/Ban, AFK timers, Replay recording, Leaderboard, Anti-cheat
+- Frontend: Auth overlay, Ban overlay com countdown, MMR toast, Leaderboard, Replay viewer, Histórico de partidas
+
+---
+
+## [2026-04-18] Polimento — ELO visível, Email seguro, Logout
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/elo.js` criado — 14 ranks (Peão/Bispo/Cavalo/Torre/Rainha/Rei), applyLPChange com escudo, getEloDisplay
+- `server/db/schema.sql` atualizado — colunas elo_rank, elo_lp, elo_shield, email_hash, email_enc + índice UNIQUE em email_hash
+- `server/db/database.js` atualizado — migrations automáticas de colunas + migração de emails existentes (HMAC-SHA256 hash + AES-256-GCM encrypt)
+- `server/server.js`:
+  - require('./elo') adicionado
+  - Email crypto helpers (hashEmail, encryptEmail) com HMAC_SECRET + AES_KEY de env vars
+  - POST /auth/register: validação de formato (regex), normalização (lowercase+trim), hash + encrypt; lookup por email_hash antes de INSERT
+  - POST /auth/login: lookup por email_hash (email nunca exposto em resposta)
+  - persistMatchResult: applyLPChange para ambos os jogadores; UPDATE inclui elo_rank/elo_lp/elo_shield; mmr_update emite lpDelta + elo + promoted/demoted
+  - GET /leaderboard: ORDER BY elo_rank DESC, elo_lp DESC; inclui elo display
+  - GET /player/:id: inclui elo display
+- `html/auth-frontend.js`:
+  - MenuPopulator.populate: badge usa p.elo.icon/name/lp (PdL) do /player/:id
+  - showMMRToast: exibe LP delta, promoção ou rebaixamento com nome do rank
+  - listenGameEvents: mmr_update desestrutura lpDelta, elo, promoted, demoted
+  - window.doLogout: limpa Session + localStorage, exibe AuthUI
+- `html/index.html`: botão "SAIR DA CONTA" adicionado ao screen-profile
+- `html/rank-ui.js`: leaderboard usa elo.icon/name/lp ao invés de MMR raw

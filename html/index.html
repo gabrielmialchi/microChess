@@ -1527,6 +1527,7 @@
         <nav class="menu-nav">
             <button class="menu-btn menu-btn-primary" id="btn-novo-jogo" onclick="window.goMatchmaking()">NOVO JOGO</button>
             <button class="menu-btn menu-btn-secondary" id="btn-como-jogar" onclick="showScreen('how-to-play')">COMO JOGAR</button>
+            <button class="menu-btn menu-btn-secondary" id="btn-ranking" onclick="window.showLeaderboard()">RANKING</button>
             <button class="menu-btn menu-btn-secondary" id="btn-creditos" onclick="showScreen('credits')">CRÉDITOS</button>
             <button class="menu-btn menu-btn-secondary" id="btn-configuracoes" onclick="showScreen('settings')">CONFIGURAÇÕES</button>
             <button class="menu-btn menu-btn-danger" id="btn-sair" onclick="window.quitGame()">SAIR</button>
@@ -1669,7 +1670,40 @@
             <div class="stat-card"><div class="stat-val" id="stat-wo-l">0</div><div class="stat-name" id="stat-wo-l-label">W.O. Perdidos</div></div>
         </div>
         <button class="prof-save-btn" id="prof-save-btn" onclick="window.saveProfile()">SALVAR</button>
+        <button onclick="window.doLogout && window.doLogout()" style="margin-top:12px;width:100%;padding:10px;background:transparent;border:1px solid rgba(231,76,60,0.45);border-radius:4px;color:#e74c3c;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">SAIR DA CONTA</button>
+        <div style="width:100%;margin-top:18px;">
+            <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:rgba(240,236,228,0.4);margin-bottom:8px;">HISTÓRICO</div>
+            <div id="profile-match-history" style="width:100%;"></div>
+        </div>
     </div>
+</div>
+
+<!-- REPLAY SCREEN -->
+<div id="screen-replay" class="screen" style="justify-content:flex-start;padding:20px 16px;gap:16px;align-items:center;">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px;">
+        <button class="screen-back-btn" onclick="ReplayViewer.close()">VOLTAR</button>
+        <div style="color:#d4a832;font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;">REPLAY</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(240,236,228,0.5);">
+            Turno <span id="replay-current">0</span> / <span id="replay-total">0</span>
+        </div>
+    </div>
+    <div id="replay-board" style="display:grid;grid-template-columns:repeat(4,1fr);width:min(300px,78vw);height:min(300px,78vw);border:2px solid rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;"></div>
+    <div id="replay-duel-info" style="min-height:18px;width:100%;max-width:480px;"></div>
+    <div style="display:flex;gap:10px;">
+        <button id="btn-replay-prev" onclick="ReplayViewer.prev()" style="background:rgba(255,255,255,0.06);color:#f0ece4;border:1px solid rgba(255,255,255,0.12);padding:10px 18px;border-radius:4px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;cursor:pointer;">⏮ ANTERIOR</button>
+        <button id="btn-replay-play" onclick="ReplayViewer.play()" style="background:rgba(212,168,50,0.15);color:#d4a832;border:1px solid rgba(212,168,50,0.3);padding:10px 18px;border-radius:4px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;cursor:pointer;">▶ AUTO</button>
+        <button id="btn-replay-next" onclick="ReplayViewer.next()" style="background:rgba(255,255,255,0.06);color:#f0ece4;border:1px solid rgba(255,255,255,0.12);padding:10px 18px;border-radius:4px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;cursor:pointer;">PRÓXIMO ⏭</button>
+    </div>
+</div>
+
+<!-- LEADERBOARD SCREEN -->
+<div id="screen-leaderboard" class="screen" style="justify-content:flex-start;padding:20px 16px;align-items:center;gap:0;">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px;padding-bottom:16px;">
+        <button class="screen-back-btn" onclick="showScreen('menu')">VOLTAR</button>
+        <div style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">RANKING</div>
+        <div style="width:60px;"></div>
+    </div>
+    <div id="leaderboard-table" style="width:100%;max-width:480px;overflow-y:auto;max-height:72vh;"></div>
 </div>
 
 <!-- GAME OVER SCREEN -->
@@ -2839,5 +2873,7 @@
     showScreen('menu');
 </script>
 <script src="auth-frontend.js"></script>
+<script src="rank-ui.js"></script>
+<script src="replay-ui.js"></script>
 </body>
 </html>
