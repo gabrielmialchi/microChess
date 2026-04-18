@@ -1,7 +1,7 @@
 # microChess — Activity Log
 
-Log de atividades do desenvolvimento do sistema de MMR + Autenticação + Leaderboard.
-Atualizar ao início e fim de cada sessão. Usado para retomada após interrupção de tokens.
+Atualizar ao fim de cada sessão. Claude deve ler este arquivo no início de cada sessão
+para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
@@ -9,64 +9,88 @@ Atualizar ao início e fim de cada sessão. Usado para retomada após interrupç
 
 ```
 ## [DATA] Sessão X — [TEMA]
-**Status:** Em andamento / Completo / Interrompido
+**Status:** Completo | Em andamento | Interrompido em [arquivo]
 **Branch:** sessao-X
 
 ### Feito
-- Item 1
-- Item 2
+- item
 
-### Pendente
-- Item ainda não feito
+### Pendente (se Interrompido)
+- item
 
-### Bugs / Bloqueios
-- (vazio se nenhum)
+### Bugs / Bloqueios Conhecidos
+- item
 
-### Próxima sessão começa em
-- Arquivo: X | Ponto: Y
+### Notas para próxima sessão
+- item
 ```
 
 ---
 
-## [2026-04-17] Planejamento — Revisão do MD
+## [2026-04-17] Sessão 0 — Planejamento e Organização
 
 **Status:** Completo
 **Branch:** main
 
-### Feito
-- Leitura completa do server.js existente (544 linhas, Socket.io funcional)
-- Leitura parcial do index.html (~1.200 linhas, frontend funcional)
-- Identificação do que já existe: matchmaking, lógica 4x4, fases DRAFT→GAMEOVER
-- Identificação do que falta: auth, MMR, persistência, leaderboard
-- Reescrita completa do SESSAO_POR_SESSAO_PLANNING.md (de 8 sessões genéricas para 5 focadas no projeto real)
-- Criação deste ACTIVITY_LOG.md
-- Decisão: SQLite (não PostgreSQL) — zero configuração, suficiente para o projeto
+### O que foi feito
+- Leitura completa de `server/server.js` (544 linhas) — lógica de jogo inteira mapeada
+- Leitura parcial de `html/index.html` (~1.200 linhas) — todas as telas mapeadas
+- Identificação de telas existentes vs. telas a criar (ver CLAUDE.md)
+- Decisão: SQLite (sem PostgreSQL) — zero configuração adicional
+- Decisão: não reescrever arquivos existentes — apenas inserir blocos
+- Decisão: toda lógica nova vai em arquivos JS separados
+- Reescrita completa de `SESSAO_POR_SESSAO_PLANNING.md` — 6 sessões
+- Criação de `CLAUDE.md` — documento de contexto do projeto
+- Criação deste `ACTIVITY_LOG.md`
 
-### Arquivos do Projeto (estado atual)
+### Sistemas mapeados e considerados
+| Sistema | Planejado em |
+|---------|-------------|
+| Banco de dados SQLite | Sessão 1 |
+| Autenticação JWT | Sessão 2 |
+| MMR / ELO (K=32, 6 tiers) | Sessão 3 |
+| WO + Ban progressivo (30min/2h/24h) | Sessão 3 |
+| AFK Timeout (45s ACTION, 120s DRAFT/POSITION) | Sessão 3 |
+| Replay recording (turno a turno) | Sessão 4 |
+| Leaderboard endpoint | Sessão 4 |
+| Anti-cheat básico (log de tentativas inválidas) | Sessão 4 |
+| Frontend auth (login/registro overlay) | Sessão 5 |
+| Frontend ban overlay com countdown | Sessão 5 |
+| Frontend MMR badge + populate menu/profile | Sessão 5 |
+| Frontend leaderboard screen | Sessão 6 |
+| Frontend replay viewer (turno a turno) | Sessão 6 |
+
+### Estado dos arquivos do projeto
 | Arquivo | Linhas | Status |
 |---------|--------|--------|
-| `server/server.js` | 544 | ✅ Funcional — não alterar sem necessidade |
-| `html/index.html` | ~1.200 | ✅ Funcional — alterar só em pontos específicos |
+| `server/server.js` | 544 | ✅ Funcional — base intocável |
+| `html/index.html` | ~1.200 | ✅ Funcional — base intocável |
 | `server/package.json` | 17 | ✅ express + socket.io |
-| `server/db/` | — | ❌ Não existe ainda (Sessão 1) |
-| `server/auth.js` | — | ❌ Não existe ainda (Sessão 2) |
-| `server/mmr.js` | — | ❌ Não existe ainda (Sessão 3) |
-| `html/auth-frontend.js` | — | ❌ Não existe ainda (Sessão 4) |
-| `html/rank-ui.js` | — | ❌ Não existe ainda (Sessão 5) |
+| `server/db/schema.sql` | — | ❌ Criar na Sessão 1 |
+| `server/db/database.js` | — | ❌ Criar na Sessão 1 |
+| `server/auth.js` | — | ❌ Criar na Sessão 2 |
+| `server/mmr.js` | — | ❌ Criar na Sessão 3 |
+| `server/replay.js` | — | ❌ Criar na Sessão 4 |
+| `html/auth-frontend.js` | — | ❌ Criar na Sessão 5 |
+| `html/rank-ui.js` | — | ❌ Criar na Sessão 6 |
+| `html/replay-ui.js` | — | ❌ Criar na Sessão 6 |
 
-### Pendente
-- Executar as 5 sessões de implementação
-
-### Bugs / Bloqueios
+### Bugs / Bloqueios Conhecidos
 - Nenhum
+
+### Notas para Sessão 1
+- Ler CLAUDE.md antes de qualquer coisa
+- NÃO tocar em server.js nem index.html
+- Instalar: `npm install better-sqlite3`
+- Criar pasta `server/db/` com 3 arquivos
 
 ---
 
-<!-- TEMPLATE PARA PRÓXIMAS SESSÕES — copiar e preencher -->
+<!-- TEMPLATE — copiar e preencher ao fim de cada sessão -->
 
 <!--
 ## [DATA] Sessão 1 — Database SQLite
-**Status:** [ Em andamento / Completo / Interrompido ]
+**Status:** [ Completo / Interrompido em X ]
 **Branch:** sessao-1
 
 ### Feito
@@ -75,16 +99,16 @@ Atualizar ao início e fim de cada sessão. Usado para retomada após interrupç
 ### Pendente
 -
 
-### Bugs / Bloqueios
+### Bugs / Bloqueios Conhecidos
 -
 
-### Próxima sessão começa em
-- Arquivo: | Ponto:
+### Notas para Sessão 2
+-
 -->
 
 <!--
 ## [DATA] Sessão 2 — Autenticação JWT
-**Status:** [ Em andamento / Completo / Interrompido ]
+**Status:** [ Completo / Interrompido em X ]
 **Branch:** sessao-2
 
 ### Feito
@@ -93,16 +117,16 @@ Atualizar ao início e fim de cada sessão. Usado para retomada após interrupç
 ### Pendente
 -
 
-### Bugs / Bloqueios
+### Bugs / Bloqueios Conhecidos
 -
 
-### Próxima sessão começa em
-- Arquivo: | Ponto:
+### Notas para Sessão 3
+-
 -->
 
 <!--
-## [DATA] Sessão 3 — MMR + Persistência
-**Status:** [ Em andamento / Completo / Interrompido ]
+## [DATA] Sessão 3 — MMR + WO/Ban + AFK
+**Status:** [ Completo / Interrompido em X ]
 **Branch:** sessao-3
 
 ### Feito
@@ -111,16 +135,16 @@ Atualizar ao início e fim de cada sessão. Usado para retomada após interrupç
 ### Pendente
 -
 
-### Bugs / Bloqueios
+### Bugs / Bloqueios Conhecidos
 -
 
-### Próxima sessão começa em
-- Arquivo: | Ponto:
+### Notas para Sessão 4
+-
 -->
 
 <!--
-## [DATA] Sessão 4 — Frontend Auth
-**Status:** [ Em andamento / Completo / Interrompido ]
+## [DATA] Sessão 4 — Replay Recording + Anti-cheat
+**Status:** [ Completo / Interrompido em X ]
 **Branch:** sessao-4
 
 ### Feito
@@ -129,16 +153,16 @@ Atualizar ao início e fim de cada sessão. Usado para retomada após interrupç
 ### Pendente
 -
 
-### Bugs / Bloqueios
+### Bugs / Bloqueios Conhecidos
 -
 
-### Próxima sessão começa em
-- Arquivo: | Ponto:
+### Notas para Sessão 5
+-
 -->
 
 <!--
-## [DATA] Sessão 5 — Leaderboard + Polish
-**Status:** [ Em andamento / Completo / Interrompido ]
+## [DATA] Sessão 5 — Frontend Auth + Ban
+**Status:** [ Completo / Interrompido em X ]
 **Branch:** sessao-5
 
 ### Feito
@@ -147,9 +171,27 @@ Atualizar ao início e fim de cada sessão. Usado para retomada após interrupç
 ### Pendente
 -
 
-### Bugs / Bloqueios
+### Bugs / Bloqueios Conhecidos
 -
 
-### Sistema completo em:
+### Notas para Sessão 6
+-
+-->
+
+<!--
+## [DATA] Sessão 6 — Frontend Leaderboard + Replay
+**Status:** [ Completo / Interrompido em X ]
+**Branch:** sessao-6
+
+### Feito
+-
+
+### Pendente
+-
+
+### Bugs / Bloqueios Conhecidos
+-
+
+### Status final do projeto
 -
 -->
