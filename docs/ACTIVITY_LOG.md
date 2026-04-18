@@ -250,7 +250,7 @@ para entender o estado atual antes de implementar qualquer coisa.
 - `html/index.html`: botão RANKING adicionado ao screen-menu
 - `html/index.html`: scripts rank-ui.js e replay-ui.js adicionados antes de </body>
 
-### Status final do projeto
+### Status final do projeto (pré-polimento)
 - Todas as 6 sessões de backend e frontend concluídas
 - Backend: SQLite, Auth JWT, MMR/ELO, WO/Ban, AFK timers, Replay recording, Leaderboard, Anti-cheat
 - Frontend: Auth overlay, Ban overlay com countdown, MMR toast, Leaderboard, Replay viewer, Histórico de partidas
@@ -281,3 +281,22 @@ para entender o estado atual antes de implementar qualquer coisa.
   - window.doLogout: limpa Session + localStorage, exibe AuthUI
 - `html/index.html`: botão "SAIR DA CONTA" adicionado ao screen-profile
 - `html/rank-ui.js`: leaderboard usa elo.icon/name/lp ao invés de MMR raw
+
+### Notas para Sessão 7
+- Novo fluxo de UI definido (PDF aprovado pelo usuário)
+- Menu: apenas NOVO JOGO / RANKING / CONFIGURAÇÕES
+- Configurações: adicionar COMO JOGAR + CRÉDITOS
+- Header do menu reestruturado: avatar+nick+rank+W/L (esq) + btn SAIR (dir)
+- Popup de confirmação de logout
+- SAIR DA CONTA no perfil deve abrir popup (não fazer logout direto)
+- Sessões 7–10 planejadas em SESSAO_POR_SESSAO_PLANNING.md
+
+---
+
+## [⏳] Sessão 7 — Reorganização Navegação + Header + Logout
+
+**Status:** ⏳ Pendente
+**Branch:** main
+
+### O que fazer
+- Ver checklist completo em SESSAO_POR_SESSAO_PLANNING.md # SESSÃO 7

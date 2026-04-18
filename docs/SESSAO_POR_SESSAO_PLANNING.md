@@ -929,6 +929,362 @@ Atualizar ACTIVITY_LOG.md com status final.
 
 ---
 
+---
+
+# SESSÃO 7: REORGANIZAÇÃO DE NAVEGAÇÃO + HEADER + LOGOUT
+
+## Objetivo
+Reestruturar o menu principal conforme novo fluxo de UI: remover botões do lugar errado, reorganizar header do menu com dados do jogador e botão de logout, adicionar COMO JOGAR e CRÉDITOS ao Configurações, popup de confirmação de logout.
+
+## Risco: 🟡 Médio — index.html em ~6 pontos, auth-frontend.js
+
+## Arquivos
+```
+html/index.html         ← ~6 pontos de edição
+html/auth-frontend.js   ← atualizar doLogout + MenuPopulator
+```
+
+## O que fazer
+
+### 1. Menu Principal — reorganizar botões
+- **Remover**: btn-como-jogar e btn-creditos do screen-menu
+- **Manter**: btn-novo-jogo
+- **Alterar**: btn-ranking agora chama `showScreen('ranking')` (não mais `showLeaderboard()`)
+- **Manter**: btn-configuracoes
+
+### 2. Menu Principal — novo header com dados do jogador
+Substituir o header atual por layout de duas colunas:
+```
+[ avatar | apelido | rank | W/L ]      [ SAIR ↯ ]
+```
+IDs necessários no header:
+- `#menu-avatar-icon` — ícone unicode da peça
+- `#menu-player-name` — apelido
+- `#menu-rank-badge` — "♟ Peão Aprendiz · 0 PdL"
+- `#menu-stat-w` / `#menu-stat-l` — vitórias / derrotas
+- `#btn-logout` — botão pequeno SAIR, chama `window.confirmLogout()`
+
+### 3. Configurações — adicionar COMO JOGAR e CRÉDITOS
+Inserir 2 botões com o mesmo estilo dos botões existentes, após o botão PERFIL:
+- COMO JOGAR → `showScreen('how-to-play')`
+- CRÉDITOS → `showScreen('credits')`
+
+### 4. Popup de confirmação de logout
+Inserir div modal oculto (display:none) no index.html:
+```html
+<div id="logout-confirm" style="...overlay fixo, fundo escuro...">
+  <div style="...card central...">
+    <p>Tem certeza que quer trocar de conta?</p>
+    <button onclick="window.doLogout()">SIM</button>
+    <button onclick="window.hideLogoutConfirm()">NÃO</button>
+  </div>
+</div>
+```
+`window.confirmLogout()` — exibe o popup
+`window.hideLogoutConfirm()` — fecha o popup
+
+### 5. auth-frontend.js — atualizar doLogout e helpers
+```javascript
+window.confirmLogout = function () {
+    const m = document.getElementById('logout-confirm');
+    if (m) m.style.display = 'flex';
+};
+window.hideLogoutConfirm = function () {
+    const m = document.getElementById('logout-confirm');
+    if (m) m.style.display = 'none';
+};
+// window.doLogout — já existe, apenas garantir que fecha o popup antes de redirecionar
+```
+
+MenuPopulator.populate: garantir que preenche `#menu-stat-w` e `#menu-stat-l` no header além dos existentes.
+
+### 6. Perfil — manter SAIR DA CONTA
+O botão "SAIR DA CONTA" já existe no screen-profile (adicionado no polimento). Deve chamar `window.confirmLogout()` em vez de `window.doLogout()` diretamente.
+
+## Checklist
+```
+[ ] btn-como-jogar e btn-creditos removidos do screen-menu
+[ ] btn-ranking chama showScreen('ranking')
+[ ] Header do menu: avatar + apelido + rank + W/L + btn logout
+[ ] Configurações: botões COMO JOGAR e CRÉDITOS adicionados
+[ ] Popup de logout com Sim/Não funcional
+[ ] SAIR DA CONTA no perfil abre popup (não logout direto)
+[ ] auth-frontend.js: confirmLogout / hideLogoutConfirm / doLogout atualizado
+[ ] node --check server.js → OK (sem alteração no backend)
+```
+
+---
+
+# SESSÃO 8: TELA RANKING EXPLICATIVA + LEADERBOARD
+
+## Objetivo
+Criar a tela `screen-ranking` que explica visualmente o sistema de 14 ranks e PdL, com botão para o Leaderboard global. Corrigir o back do Leaderboard para voltar a essa tela.
+
+## Risco: 🟡 Médio — index.html em 2 pontos, rank-ui.js
+
+## Arquivos
+```
+html/index.html     ← 2 pontos: nova tela + back do leaderboard
+html/rank-ui.js     ← adicionar renderRankScreen()
+```
+
+## O que fazer
+
+### 1. Nova tela `screen-ranking` no index.html
+Inserir após screen-leaderboard. Conteúdo:
+- Título "RANKING"
+- Botão "LEADERBOARD GLOBAL" em destaque no topo → chama `showLeaderboard()` (que carrega e vai para screen-leaderboard)
+- Botão VOLTAR → `showScreen('menu')`
+- Grid visual dos 14 ranks agrupados por tier:
+  ```
+  ♟ Peão:   Aprendiz | Esforçado | Elite
+  ♝ Bispo:  Aprendiz | Esforçado | Elite
+  ♞ Cavalo: Aprendiz | Esforçado | Elite
+  ♜ Torre:  Aprendiz | Esforçado | Elite
+  ♛ Rainha
+  ♚ Rei
+  ```
+- Breve explicação do sistema PdL (0–100 por divisão, promoção ao atingir 100, escudo ao subir de grupo)
+
+### 2. Leaderboard — corrigir back button
+Alterar o back button do screen-leaderboard para `showScreen('ranking')` em vez de qualquer tela que esteja hoje.
+
+### 3. rank-ui.js — renderizar screen-ranking
+```javascript
+function renderRankScreen() {
+    // popula o grid de ranks dinamicamente a partir do array RANKS (importado via window ou hardcoded)
+    // cada grupo tem 3 cards (ou 1 para Rainha/Rei)
+    // card: ícone grande + nome da divisão + barra de PdL decorativa
+}
+// Chamar renderRankScreen() quando showScreen('ranking') for ativado
+// Ou renderizar diretamente no HTML estático (preferível para economizar tokens)
+```
+
+### 4. window.showLeaderboard
+Já existe. Garantir que continua funcionando (load + showScreen('leaderboard')).
+
+## Checklist
+```
+[ ] screen-ranking criada com grid de 14 ranks
+[ ] Botão LEADERBOARD GLOBAL no topo da tela ranking
+[ ] Back em screen-ranking → menu
+[ ] Back em screen-leaderboard → screen-ranking
+[ ] RANKING no menu → showScreen('ranking')
+[ ] Texto explicativo do sistema PdL na tela ranking
+[ ] rank-ui.js atualizado se necessário
+```
+
+---
+
+# SESSÃO 9: HISTÓRICO DE PARTIDAS (TELA PRÓPRIA) + REPLAY MELHORADO
+
+## Objetivo
+Mover o histórico de partidas do perfil para uma tela dedicada. Melhorar o Replay com header de resumo da partida.
+
+## Risco: 🟠 Médio-alto — index.html 3 pontos, rank-ui.js, replay-ui.js
+
+## Arquivos
+```
+html/index.html     ← 3 pontos: nova tela + botão no perfil + back no replay
+html/rank-ui.js     ← MatchHistory agora controla screen-match-history
+html/replay-ui.js   ← adicionar header de resumo, corrigir back
+```
+
+## O que fazer
+
+### 1. Nova tela `screen-match-history` no index.html
+```html
+<div id="screen-match-history" class="screen">
+  <div>
+    <button onclick="showScreen('profile')">VOLTAR</button>
+    <span>HISTÓRICO</span>
+  </div>
+  <div id="match-history-list" style="overflow-y:auto;width:100%;max-width:480px;">
+    <!-- populado por MatchHistory.render() -->
+  </div>
+</div>
+```
+
+### 2. Perfil — substituir histórico embutido por botão
+- Remover `<div id="profile-match-history">` do screen-profile
+- Adicionar botão "HISTÓRICO DE PARTIDAS" → `MatchHistory.open(session.id)`
+
+### 3. rank-ui.js — MatchHistory passa a controlar screen-match-history
+```javascript
+MatchHistory = {
+    open(playerId) {
+        showScreen('match-history');
+        this.load(playerId);
+    },
+    async load(playerId) { /* fetch /player/:id/matches */ },
+    render(matches, playerId) {
+        // popula #match-history-list
+        // cada item: resultado, PdL delta, data, botão REPLAY
+        // ao clicar REPLAY: ReplayViewer.loadWithContext(matchId, matchMeta)
+    },
+};
+```
+Remover o hook de showScreen('profile') que carregava o histórico automaticamente.
+
+### 4. replay-ui.js — header de resumo + back correto
+Adicionar ao `open(data, meta)`:
+```javascript
+// meta = { opponentName, opponentElo, date, lpDelta, result }
+// Preencher header no screen-replay:
+// "vs [opponentName] · [opponentElo.name] · [date] · [+/-lpDelta] PdL"
+```
+Back button do replay → `showScreen('match-history')` em vez de `showScreen('menu')`.
+
+`window.watchReplay` atualizar para aceitar meta opcionalmente:
+```javascript
+window.watchReplay = (matchId, meta) => ReplayViewer.loadWithContext(matchId, meta);
+```
+
+### 5. Passar contexto da partida ao abrir replay
+No MatchHistory.render, ao criar o botão REPLAY:
+```javascript
+const meta = {
+    opponentName: isWhite ? m.player_black_name : m.player_white_name, // endpoint precisa retornar nomes
+    date: new Date(m.created_at).toLocaleDateString('pt-BR'),
+    lpDelta: isWhite ? m.mmr_change_white : m.mmr_change_black,
+    result: label,
+};
+// <button onclick="window.watchReplay('${m.id}', ${JSON.stringify(meta)})">
+```
+
+**Nota:** GET /player/:id/matches precisa retornar os usernames do oponente. Verificar se o JOIN atual retorna isso; se não, adicionar JOIN com players.
+
+## Checklist
+```
+[ ] screen-match-history criada com layout scrollável
+[ ] Botão HISTÓRICO no perfil → screen-match-history
+[ ] Histórico embutido removido do perfil
+[ ] MatchHistory.render popula #match-history-list
+[ ] Back do histórico → perfil
+[ ] Replay header mostra: oponente + data + PdL delta
+[ ] Back do replay → screen-match-history
+[ ] GET /player/:id/matches retorna nomes dos jogadores (verificar/corrigir)
+```
+
+---
+
+# SESSÃO 10: RECONEXÃO COM TOLERÂNCIA DE 60 SEGUNDOS
+
+## Objetivo
+Quando um jogador desconecta durante uma partida, dar 60 segundos para reconexão antes de decretar WO. O oponente vê countdown. O jogador que perdeu conexão, ao reconectar, retoma a partida de onde parou.
+
+## Risco: 🟠 Médio-alto — server.js (lógica de reconexão), index.html, auth-frontend.js
+
+## Arquivos
+```
+server/server.js        ← timer de reconexão + rejoin_game handler
+html/index.html         ← overlay de "aguardando reconexão"
+html/auth-frontend.js   ← lógica de rejoin ao reconectar
+```
+
+## O que fazer
+
+### 1. server.js — Map de reconexões pendentes
+```javascript
+const pendingReconnects = new Map(); // uid → { roomId, color, timer }
+```
+
+### 2. server.js — Modificar handler disconnect
+Ao detectar disconnect durante partida ativa, em vez de WO imediato:
+```javascript
+// Se o jogador tem uid (autenticado), aguardar 60s
+const RECONNECT_MS = 60_000;
+const reconnectTimer = setTimeout(() => {
+    pendingReconnects.delete(playerUid);
+    const roomNow = rooms.get(roomId);
+    if (!roomNow || roomNow.state.phase === 'GAMEOVER') return;
+    // WO normal
+    persistMatchResult(roomNow, oppColor, true);
+    roomNow.state.phase = 'GAMEOVER';
+    roomNow.state.wo = true;
+    broadcast(roomNow);
+    setTimeout(() => rooms.delete(roomId), 60_000);
+}, RECONNECT_MS);
+
+pendingReconnects.set(playerUid, { roomId, color: playerColor, timer: reconnectTimer });
+
+// Notificar oponente
+io.to(oppSocket.socketId).emit('opponent_reconnecting', { remainMs: RECONNECT_MS });
+```
+
+### 3. server.js — Novo evento `rejoin_game`
+```javascript
+socket.on('rejoin_game', ({ token }) => {
+    const decoded = verifyToken(token);
+    if (!decoded) return;
+    const pending = pendingReconnects.get(decoded.id);
+    if (!pending) return socket.emit('rejoin_failed', { reason: 'Partida não encontrada ou expirada' });
+
+    clearTimeout(pending.timer);
+    pendingReconnects.delete(decoded.id);
+
+    const room = rooms.get(pending.roomId);
+    if (!room || room.state.phase === 'GAMEOVER') return socket.emit('rejoin_failed', { reason: 'Partida encerrada' });
+
+    // Atualizar socketId do jogador na sala
+    room.players[pending.color].socketId = socket.id;
+    socket.join(room.id);
+
+    // Notificar oponente que jogador voltou
+    const oppColor = pending.color === 'white' ? 'black' : 'white';
+    io.to(room.players[oppColor].socketId).emit('opponent_reconnected');
+
+    // Enviar estado atual ao jogador reconectado
+    socket.emit('game_state', room.state);
+    socket.emit('rejoin_success', { roomId: room.id, color: pending.color });
+});
+```
+
+### 4. index.html — overlay de reconexão
+```html
+<div id="reconnect-overlay" style="display:none; ...overlay fixo...">
+  <div>
+    <p id="reconnect-msg">Aguardando reconexão do oponente...</p>
+    <p id="reconnect-countdown">60</p>
+  </div>
+</div>
+```
+
+### 5. auth-frontend.js — lógica de rejoin
+```javascript
+// Ao inicializar socket: verificar se há partida pendente de reconexão
+function tryRejoinIfPending(socket) {
+    const session = Session.get();
+    if (!session?.token) return;
+    socket.emit('rejoin_game', { token: session.token });
+}
+
+// Ouvir eventos de reconexão
+socket.on('opponent_reconnecting', ({ remainMs }) => { /* mostrar countdown */ });
+socket.on('opponent_reconnected', () => { /* esconder overlay */ });
+socket.on('rejoin_success', ({ roomId, color }) => { /* restaurar tela de jogo */ });
+socket.on('rejoin_failed', () => { /* apenas ignorar, seguir fluxo normal */ });
+```
+
+### Tolerância de 60s (padrão de mercado)
+- Jogos browser competitive: 30–90s
+- Escolhemos 60s como equilíbrio entre UX e penalidade justa
+
+## Checklist
+```
+[ ] pendingReconnects Map no server.js
+[ ] disconnect: inicia 60s timer em vez de WO imediato (para jogadores autenticados)
+[ ] opponent_reconnecting emitido com remainMs
+[ ] rejoin_game handler: cancela timer, restaura socketId, emite game_state
+[ ] opponent_reconnected emitido ao oponente
+[ ] Overlay de countdown no frontend
+[ ] tryRejoinIfPending chamado no init do socket
+[ ] node --check server.js → OK
+[ ] Convidados (sem token) ainda recebem WO imediato no disconnect
+```
+
+---
+
 ## Riscos Consolidados
 
 | Sessão | Arquivo mais pesado lido | Custo estimado | Risco |
@@ -939,6 +1295,10 @@ Atualizar ACTIVITY_LOG.md com status final.
 | 4 | server.js ~660L | Médio | 🟡 |
 | 5 | index.html (parcial) | Médio-alto | 🟠 |
 | 6 | index.html (parcial) | Médio-alto | 🟠 |
+| 7 | index.html (parcial) | Médio | 🟡 |
+| 8 | index.html (parcial) | Médio | 🟡 |
+| 9 | index.html + rank-ui.js + replay-ui.js | Médio-alto | 🟠 |
+| 10 | server.js ~800L | Médio-alto | 🟠 |
 
 ---
 

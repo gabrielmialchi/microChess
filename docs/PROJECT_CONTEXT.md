@@ -109,6 +109,30 @@ microChess/
 - `html/rank-ui.js`: leaderboard, profile expandido
 - `html/replay-ui.js`: reprodução turno a turno com controles
 
+#### Sessão 7 — Reorganização de Navegação + Header + Logout
+- Menu: apenas NOVO JOGO / RANKING / CONFIGURAÇÕES
+- Header do menu: avatar + apelido + rank + W/L (esquerda) + btn SAIR (direita)
+- Configurações: adicionar COMO JOGAR e CRÉDITOS
+- Popup de confirmação de logout (Sim/Não)
+- Logout também disponível na tela de Perfil
+
+#### Sessão 8 — Tela RANKING Explicativa + Leaderboard
+- Nova tela `screen-ranking`: grid visual dos 14 ranks + explicação do PdL
+- Botão LEADERBOARD GLOBAL na tela ranking → screen-leaderboard
+- Back do leaderboard → screen-ranking
+
+#### Sessão 9 — Histórico de Partidas (tela própria) + Replay melhorado
+- Nova tela `screen-match-history`: lista separada do perfil
+- Perfil: botão HISTÓRICO → screen-match-history
+- Replay: header com resumo (oponente, rank, data, PdL delta)
+- Back do replay → screen-match-history
+
+#### Sessão 10 — Reconexão com tolerância de 60s
+- Disconnect durante partida: aguarda 60s antes de WO
+- `rejoin_game` event: restaura sala e socketId ao reconectar
+- Frontend: countdown "aguardando reconexão" para o oponente
+- Convidados: WO imediato (sem token, sem reconexão)
+
 ---
 
 ## Definições de Regras de Negócio
@@ -249,5 +273,10 @@ curl http://localhost:3000/health
 | 4 | Replay Recording | ✅ Completo |
 | 5 | Frontend Auth + Ban | ✅ Completo |
 | 6 | Frontend Leaderboard + Replay | ✅ Completo |
+| P | Polimento: ELO visível, email seguro, logout | ✅ Completo |
+| 7 | Reorganização navegação + header + logout | ⏳ Pendente |
+| 8 | Tela RANKING explicativa + Leaderboard | ⏳ Pendente |
+| 9 | Histórico separado + Replay melhorado | ⏳ Pendente |
+| 10 | Reconexão 60s | ⏳ Pendente |
 
 *(Atualizar este arquivo ao concluir cada sessão)*
