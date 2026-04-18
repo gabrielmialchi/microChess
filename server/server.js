@@ -1,9 +1,10 @@
 'use strict';
-const express = require('express');
-const http    = require('http');
+const express    = require('express');
+const http       = require('http');
 const { Server } = require('socket.io');
-const crypto  = require('crypto');
-const path    = require('path');
+const crypto     = require('crypto');
+const path       = require('path');
+const rateLimit  = require('express-rate-limit');
 
 const { hashPassword, checkPassword, signToken, verifyToken } = require('./auth');
 const db = require('./db/database');
@@ -13,12 +14,34 @@ const { applyLPChange, getEloDisplay } = require('./elo');
 
 const app    = express();
 const server = http.createServer(app);
-const io     = new Server(server, { cors: { origin: '*' } });
+const io     = new Server(server, { cors: { origin: process.env.ALLOWED_ORIGIN || '*' } });
 const PORT   = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../html')));
-app.get('/health', (_, res) => res.json({ ok: true }));
+app.get('/health', (_, res) => {
+    try {
+        db.prepare('SELECT 1 FROM players LIMIT 1').get();
+        res.json({ ok: true, rooms: rooms?.size ?? 0, queue: queue?.length ?? 0, db: 'ok' });
+    } catch {
+        res.status(500).json({ ok: false, db: 'error' });
+    }
+});
+
+// ── STARTUP SECURITY CHECKS ───────────────────────────────────
+if (process.env.NODE_ENV === 'production') {
+    if (!process.env.HMAC_SECRET) console.error('[SECURITY] CRÍTICO: HMAC_SECRET não definido. Emails não estão protegidos!');
+    if (!process.env.AES_KEY)     console.error('[SECURITY] CRÍTICO: AES_KEY não definida. Emails não estão criptografados corretamente!');
+}
+
+// ── RATE LIMITING ─────────────────────────────────────────────
+const authLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Muitas tentativas. Aguarde 1 minuto.' },
+});
 
 // ── EMAIL CRYPTO ──────────────────────────────────────────────
 const HMAC_SECRET = process.env.HMAC_SECRET || 'mc-hmac-dev-secret-key';
@@ -38,10 +61,15 @@ function encryptEmail(email) {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // ── AUTH ENDPOINTS ────────────────────────────────────────────
-app.post('/auth/register', async (req, res) => {
+const USERNAME_RE = /^[a-zA-Z0-9_\-\.]{3,16}$/;
+
+app.post('/auth/register', authLimiter, async (req, res) => {
     const { username, email, password } = req.body || {};
     if (!username || !email || !password)
         return res.status(400).json({ error: 'username, email e password são obrigatórios' });
+    const uname = String(username).trim();
+    if (!USERNAME_RE.test(uname))
+        return res.status(400).json({ error: 'Username deve ter 3-16 caracteres: letras, números, _ - .' });
     if (password.length < 6)
         return res.status(400).json({ error: 'Senha deve ter ao menos 6 caracteres' });
     const emailNorm = String(email).toLowerCase().trim();
@@ -49,7 +77,6 @@ app.post('/auth/register', async (req, res) => {
         return res.status(400).json({ error: 'Formato de email inválido' });
     try {
         const id            = crypto.randomUUID();
-        const uname         = String(username).trim().slice(0, 16);
         const password_hash = await hashPassword(password);
         const email_hash    = hashEmail(emailNorm);
         const email_enc     = encryptEmail(emailNorm);
@@ -67,7 +94,10 @@ app.post('/auth/register', async (req, res) => {
     }
 });
 
-app.post('/auth/login', async (req, res) => {
+// Dummy hash prevents timing oracle: same ~100ms response whether email exists or not
+const _DUMMY_HASH = '$2b$10$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+
+app.post('/auth/login', authLimiter, async (req, res) => {
     const { email, password } = req.body || {};
     if (!email || !password)
         return res.status(400).json({ error: 'email e password são obrigatórios' });
@@ -76,7 +106,10 @@ app.post('/auth/login', async (req, res) => {
     const player = db.prepare(
         'SELECT id, username, password_hash, mmr FROM players WHERE email_hash = ?'
     ).get(email_hash);
-    if (!player) return res.status(401).json({ error: 'Credenciais inválidas' });
+    if (!player) {
+        await checkPassword(password, _DUMMY_HASH);
+        return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
     const ok = await checkPassword(password, player.password_hash);
     if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' });
     db.prepare("UPDATE players SET last_seen = datetime('now') WHERE id = ?").run(player.id);
@@ -111,15 +144,23 @@ app.get('/match/:id/replay', (req, res) => {
     if (!replay) return res.status(404).json({ error: 'Replay não encontrado' });
     if (new Date(replay.expires_at) < new Date())
         return res.status(410).json({ error: 'Replay expirado' });
-    res.json({ ...replay, turns: JSON.parse(replay.turns_json) });
+    try {
+        res.json({ ...replay, turns: JSON.parse(replay.turns_json) });
+    } catch {
+        res.status(500).json({ error: 'Replay corrompido' });
+    }
 });
 
 app.get('/player/:id/matches', (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
     const matches = db.prepare(`
-        SELECT m.*, r.id as replay_id
+        SELECT m.*, r.id as replay_id,
+            pw.username as white_username,
+            pb.username as black_username
         FROM matches m
         LEFT JOIN replays r ON r.match_id = m.id
+        LEFT JOIN players pw ON pw.id = m.player_white_id
+        LEFT JOIN players pb ON pb.id = m.player_black_id
         WHERE m.player_white_id = ? OR m.player_black_id = ?
         ORDER BY m.created_at DESC LIMIT ?
     `).all(req.params.id, req.params.id, limit);
@@ -140,82 +181,91 @@ function applyBan(playerId, newWoCount) {
     }
 }
 
-function persistMatchResult(room, winnerColor, isWO = false) {
-    try {
-        const wp = room.players.white;
-        const bp = room.players.black;
-        if (!wp?.uid || !bp?.uid) return;
+const _persistDB = db.transaction((room, winnerColor, isWO) => {
+    const wp = room.players.white;
+    const bp = room.players.black;
+    if (!wp?.uid || !bp?.uid) return null;
 
-        const wRec = db.prepare('SELECT mmr, wo_count, elo_rank, elo_lp, elo_shield FROM players WHERE id=?').get(wp.uid);
-        const bRec = db.prepare('SELECT mmr, wo_count, elo_rank, elo_lp, elo_shield FROM players WHERE id=?').get(bp.uid);
-        if (!wRec || !bRec) return;
+    const wRec = db.prepare('SELECT mmr, wo_count, elo_rank, elo_lp, elo_shield FROM players WHERE id=?').get(wp.uid);
+    const bRec = db.prepare('SELECT mmr, wo_count, elo_rank, elo_lp, elo_shield FROM players WHERE id=?').get(bp.uid);
+    if (!wRec || !bRec) return null;
 
-        let wDelta = 0, bDelta = 0, result;
+    let wDelta = 0, bDelta = 0, result;
 
-        if (isWO) {
-            if (winnerColor === 'white') {
-                result = 'wo_black';
-                wDelta = K_WO_BONUS;
-                db.prepare('UPDATE players SET wo_count=wo_count+1 WHERE id=?').run(bp.uid);
-                db.prepare('UPDATE players SET wo_against=wo_against+1 WHERE id=?').run(wp.uid);
-                applyBan(bp.uid, bRec.wo_count + 1);
-            } else {
-                result = 'wo_white';
-                bDelta = K_WO_BONUS;
-                db.prepare('UPDATE players SET wo_count=wo_count+1 WHERE id=?').run(wp.uid);
-                db.prepare('UPDATE players SET wo_against=wo_against+1 WHERE id=?').run(bp.uid);
-                applyBan(wp.uid, wRec.wo_count + 1);
-            }
+    if (isWO) {
+        if (winnerColor === 'white') {
+            result = 'wo_black';
+            wDelta = K_WO_BONUS;
+            db.prepare('UPDATE players SET wo_count=wo_count+1 WHERE id=?').run(bp.uid);
+            db.prepare('UPDATE players SET wo_against=wo_against+1 WHERE id=?').run(wp.uid);
+            applyBan(bp.uid, bRec.wo_count + 1);
         } else {
-            if (winnerColor === 'white') {
-                ({ winnerDelta: wDelta, loserDelta: bDelta } = calcMMR(wRec.mmr, bRec.mmr));
-                result = 'white';
-            } else if (winnerColor === 'black') {
-                ({ winnerDelta: bDelta, loserDelta: wDelta } = calcMMR(bRec.mmr, wRec.mmr));
-                result = 'black';
-            } else {
-                result = 'draw';
-            }
+            result = 'wo_white';
+            bDelta = K_WO_BONUS;
+            db.prepare('UPDATE players SET wo_count=wo_count+1 WHERE id=?').run(wp.uid);
+            db.prepare('UPDATE players SET wo_against=wo_against+1 WHERE id=?').run(bp.uid);
+            applyBan(wp.uid, wRec.wo_count + 1);
         }
-
-        const wLP = applyLPChange(wRec.elo_rank ?? 0, wRec.elo_lp ?? 0, wRec.elo_shield ?? 0, wDelta);
-        const bLP = applyLPChange(bRec.elo_rank ?? 0, bRec.elo_lp ?? 0, bRec.elo_shield ?? 0, bDelta);
-
-        db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
-          .run(wDelta, result === 'white' ? 1 : 0, result === 'black' || result === 'wo_black' ? 1 : 0,
-               wLP.elo_rank, wLP.elo_lp, wLP.elo_shield, wp.uid);
-        db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
-          .run(bDelta, result === 'black' ? 1 : 0, result === 'white' || result === 'wo_white' ? 1 : 0,
-               bLP.elo_rank, bLP.elo_lp, bLP.elo_shield, bp.uid);
-
-        const matchId = crypto.randomUUID();
-        room._matchId = matchId;
-        db.prepare('INSERT INTO matches (id,player_white_id,player_black_id,result,mmr_change_white,mmr_change_black) VALUES (?,?,?,?,?,?)')
-          .run(matchId, wp.uid, bp.uid, result, wDelta, bDelta);
-
-        if (room._replay) {
-            const replayId = crypto.randomUUID();
-            db.prepare('INSERT INTO replays (id, match_id, turns_json) VALUES (?, ?, ?)')
-              .run(replayId, matchId, JSON.stringify(room._replay.turns));
+    } else {
+        if (winnerColor === 'white') {
+            ({ winnerDelta: wDelta, loserDelta: bDelta } = calcMMR(wRec.mmr, bRec.mmr));
+            result = 'white';
+        } else if (winnerColor === 'black') {
+            ({ winnerDelta: bDelta, loserDelta: wDelta } = calcMMR(bRec.mmr, wRec.mmr));
+            result = 'black';
+        } else {
+            result = 'draw';
         }
+    }
 
-        db.prepare("UPDATE players SET last_seen=datetime('now') WHERE id IN (?,?)").run(wp.uid, bp.uid);
+    const wLP = applyLPChange(wRec.elo_rank ?? 0, wRec.elo_lp ?? 0, wRec.elo_shield ?? 0, wDelta);
+    const bLP = applyLPChange(bRec.elo_rank ?? 0, bRec.elo_lp ?? 0, bRec.elo_shield ?? 0, bDelta);
 
-        const wNew = wRec.mmr + wDelta;
-        const bNew = bRec.mmr + bDelta;
-        io.to(wp.socketId).emit('mmr_update', {
-            delta: wDelta, newMMR: wNew, rank: getRank(wNew), isWO,
-            lpDelta: wLP.lpDelta, elo: getEloDisplay(wLP.elo_rank, wLP.elo_lp),
-            promoted: wLP.promoted, demoted: wLP.demoted,
-        });
-        io.to(bp.socketId).emit('mmr_update', {
-            delta: bDelta, newMMR: bNew, rank: getRank(bNew), isWO,
-            lpDelta: bLP.lpDelta, elo: getEloDisplay(bLP.elo_rank, bLP.elo_lp),
-            promoted: bLP.promoted, demoted: bLP.demoted,
-        });
+    db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
+      .run(wDelta, result === 'white' ? 1 : 0, result === 'black' || result === 'wo_black' ? 1 : 0,
+           wLP.elo_rank, wLP.elo_lp, wLP.elo_shield, wp.uid);
+    db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
+      .run(bDelta, result === 'black' ? 1 : 0, result === 'white' || result === 'wo_white' ? 1 : 0,
+           bLP.elo_rank, bLP.elo_lp, bLP.elo_shield, bp.uid);
+
+    const matchId = crypto.randomUUID();
+    room._matchId = matchId;
+    db.prepare('INSERT INTO matches (id,player_white_id,player_black_id,result,mmr_change_white,mmr_change_black,lp_change_white,lp_change_black) VALUES (?,?,?,?,?,?,?,?)')
+      .run(matchId, wp.uid, bp.uid, result, wDelta, bDelta, wLP.lpDelta ?? 0, bLP.lpDelta ?? 0);
+
+    if (room._replay) {
+        const replayId = crypto.randomUUID();
+        db.prepare('INSERT INTO replays (id, match_id, turns_json) VALUES (?, ?, ?)')
+          .run(replayId, matchId, JSON.stringify(room._replay.turns));
+    }
+
+    db.prepare("UPDATE players SET last_seen=datetime('now') WHERE id IN (?,?)").run(wp.uid, bp.uid);
+
+    return { wp, bp, wDelta, bDelta, wRec, bRec, wLP, bLP };
+});
+
+function persistMatchResult(room, winnerColor, isWO = false) {
+    let data;
+    try {
+        data = _persistDB(room, winnerColor, isWO);
     } catch (e) {
         console.error('[MMR] Erro ao persistir:', e.message);
+        return;
     }
+    if (!data) return;
+    const { wp, bp, wDelta, bDelta, wRec, bRec, wLP, bLP } = data;
+    const wNew = wRec.mmr + wDelta;
+    const bNew = bRec.mmr + bDelta;
+    io.to(wp.socketId).emit('mmr_update', {
+        delta: wDelta, newMMR: wNew, rank: getRank(wNew), isWO,
+        lpDelta: wLP.lpDelta, elo: getEloDisplay(wLP.elo_rank, wLP.elo_lp),
+        promoted: wLP.promoted, demoted: wLP.demoted,
+    });
+    io.to(bp.socketId).emit('mmr_update', {
+        delta: bDelta, newMMR: bNew, rank: getRank(bNew), isWO,
+        lpDelta: bLP.lpDelta, elo: getEloDisplay(bLP.elo_rank, bLP.elo_lp),
+        promoted: bLP.promoted, demoted: bLP.demoted,
+    });
 }
 
 function clearAFKTimer(room, color) {
@@ -238,7 +288,7 @@ function startAFKTimer(room, color, ms, reason) {
         roomNow.state.afk   = color;
         persistMatchResult(roomNow, oppColor, true);
         broadcast(roomNow);
-        setTimeout(() => rooms.delete(room.id), 60_000);
+        scheduleRoomCleanup(room.id);
     }, ms);
 }
 
@@ -253,8 +303,27 @@ const CONFIG = {
 };
 
 // ── IN-MEMORY STATE ───────────────────────────────────────────
-const queue = [];      // { uid, nickname, avatar, timestamp, socketId }
-const rooms = new Map(); // roomId → { id, players, state, resolving }
+const queue            = [];         // { uid, nickname, avatar, timestamp, socketId }
+const rooms            = new Map();  // roomId → { id, players, state, resolving }
+const pendingReconnects = new Map(); // uid → { roomId, color, timer }
+const RECONNECT_MS     = 60_000;
+
+// ── MAINTENANCE ───────────────────────────────────────────────
+function cleanExpiredReplays() {
+    const result = db.prepare("DELETE FROM replays WHERE expires_at < datetime('now')").run();
+    if (result.changes > 0) console.log(`[CLEANUP] ${result.changes} replay(s) expirado(s) removido(s).`);
+}
+cleanExpiredReplays();
+setInterval(cleanExpiredReplays, 24 * 60 * 60 * 1000);
+
+function scheduleRoomCleanup(roomId) {
+    setTimeout(() => {
+        rooms.delete(roomId);
+        for (const [uid, entry] of pendingReconnects.entries()) {
+            if (entry.roomId === roomId) pendingReconnects.delete(uid);
+        }
+    }, 60_000);
+}
 
 function createState() {
     return {
@@ -515,7 +584,7 @@ function finishDuel(room) {
         clearAFKTimer(room, 'black');
         persistMatchResult(room, !wk ? 'black' : 'white', false);
         broadcast(room);
-        setTimeout(() => rooms.delete(room.id), 60_000);
+        scheduleRoomCleanup(room.id);
         return;
     }
 
@@ -593,10 +662,11 @@ io.on('connection', (socket) => {
         if (token) {
             const decoded = verifyToken(token);
             if (decoded) {
-                const rec = db.prepare('SELECT mmr, ban_until FROM players WHERE id = ?').get(decoded.id);
+                const rec = db.prepare('SELECT mmr, ban_until, username FROM players WHERE id = ?').get(decoded.id);
                 if (rec) {
                     playerId  = decoded.id;
                     playerMMR = rec.mmr;
+                    nickname  = rec.username; // always use DB username for authenticated players
                     if (rec.ban_until) {
                         const banDate = new Date(rec.ban_until);
                         if (banDate > new Date()) {
@@ -612,11 +682,14 @@ io.on('connection', (socket) => {
 
         if (!playerId) return;
 
+        const VALID_AVATARS = new Set(['K', 'Q', 'R', 'B', 'N', 'P']);
+        const safeAvatar    = VALID_AVATARS.has(avatar) ? avatar : 'K';
+
         // Remove duplicate entry
         const existing = queue.findIndex(p => p.uid === playerId);
         if (existing > -1) queue.splice(existing, 1);
 
-        queue.push({ uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: avatar || 'K', timestamp: Date.now(), socketId: socket.id });
+        queue.push({ uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: safeAvatar, timestamp: Date.now(), socketId: socket.id });
 
         if (queue.length >= 2) {
             const p1 = queue.shift();
@@ -646,15 +719,14 @@ io.on('connection', (socket) => {
     });
 
     socket.on('game_join', ({ roomId, color }) => {
+        const room = rooms.get(roomId);
+        if (!room) return;
+        // Only accept if this socket was the one matched into this color
+        if (room.players[color]?.socketId !== socket.id) return;
         playerRoom  = roomId;
         playerColor = color;
         socket.join(roomId);
-        const room = rooms.get(roomId);
-        if (room) {
-            // Update socket id in players (handle reconnect)
-            if (room.players[color]) room.players[color].socketId = socket.id;
-            broadcast(room);
-        }
+        broadcast(room);
     });
 
     // ── DRAFT ────────────────────────────────────────────────────
@@ -814,6 +886,8 @@ io.on('connection', (socket) => {
     socket.on('duel_resolve', () => {
         const room = getRoom();
         if (!room || room.resolving) return;
+        const d = room.state?.duel;
+        if (!d?.resolveTime) return;
         room.resolving = true;
         finishDuel(room);
     });
@@ -823,21 +897,85 @@ io.on('connection', (socket) => {
         const qi = queue.findIndex(p => p.socketId === socket.id);
         if (qi > -1) queue.splice(qi, 1);
 
-        if (playerRoom && playerColor) {
-            const room = rooms.get(playerRoom);
-            if (room && room.state.phase !== 'GAMEOVER') {
-                const oppColor = playerColor === 'white' ? 'black' : 'white';
-                clearAFKTimer(room, 'white');
-                clearAFKTimer(room, 'black');
-                room.state.phase = 'GAMEOVER';
-                room.state.wo    = true;
-                room.state.army  = room.state.army.filter(p => !(p.type === 'K' && p.color === playerColor));
-                persistMatchResult(room, oppColor, true);
-                const opp = room.players[oppColor];
-                if (opp) io.to(opp.socketId).emit('game_state', room.state);
-                setTimeout(() => rooms.delete(playerRoom), 60000);
-            }
+        if (!playerRoom || !playerColor) return;
+        const room = rooms.get(playerRoom);
+        if (!room || room.state.phase === 'GAMEOVER') return;
+
+        const oppColor  = playerColor === 'white' ? 'black' : 'white';
+        const playerUid = room.players[playerColor]?.uid;
+        const isAuth    = !!(playerUid && db.prepare('SELECT id FROM players WHERE id=?').get(playerUid));
+
+        clearAFKTimer(room, 'white');
+        clearAFKTimer(room, 'black');
+
+        if (isAuth) {
+            // Authenticated: 60s reconnection window
+            const reconnectTimer = setTimeout(() => {
+                pendingReconnects.delete(playerUid);
+                const roomNow = rooms.get(playerRoom);
+                if (!roomNow || roomNow.state.phase === 'GAMEOVER') return;
+                roomNow.state.phase = 'GAMEOVER';
+                roomNow.state.wo    = true;
+                roomNow.state.army  = roomNow.state.army.filter(p => !(p.type === 'K' && p.color === playerColor));
+                persistMatchResult(roomNow, oppColor, true);
+                const opp = roomNow.players[oppColor];
+                if (opp) io.to(opp.socketId).emit('game_state', roomNow.state);
+                scheduleRoomCleanup(playerRoom);
+            }, RECONNECT_MS);
+
+            pendingReconnects.set(playerUid, { roomId: playerRoom, color: playerColor, timer: reconnectTimer });
+            const opp = room.players[oppColor];
+            if (opp) io.to(opp.socketId).emit('opponent_reconnecting', { remainMs: RECONNECT_MS });
+            console.log(`[RECONNECT] ${playerUid} desconectou — aguardando 60s`);
+        } else {
+            // Guest: WO imediato
+            room.state.phase = 'GAMEOVER';
+            room.state.wo    = true;
+            room.state.army  = room.state.army.filter(p => !(p.type === 'K' && p.color === playerColor));
+            persistMatchResult(room, oppColor, true);
+            const opp = room.players[oppColor];
+            if (opp) io.to(opp.socketId).emit('game_state', room.state);
+            scheduleRoomCleanup(playerRoom);
         }
+    });
+
+    // ── REJOIN ───────────────────────────────────────────────────
+    socket.on('rejoin_game', ({ token } = {}) => {
+        if (!token) return;
+        const decoded = verifyToken(token);
+        if (!decoded) return;
+
+        const pending = pendingReconnects.get(decoded.id);
+        if (!pending) { socket.emit('rejoin_failed', { reason: 'no_pending' }); return; }
+
+        clearTimeout(pending.timer);
+        pendingReconnects.delete(decoded.id);
+
+        const room = rooms.get(pending.roomId);
+        if (!room || room.state.phase === 'GAMEOVER') {
+            socket.emit('rejoin_failed', { reason: 'game_over' }); return;
+        }
+
+        room.players[pending.color].socketId = socket.id;
+        playerRoom  = pending.roomId;
+        playerColor = pending.color;
+        socket.join(pending.roomId);
+
+        // Restaurar AFK timer da fase atual
+        const phase = room.state.phase;
+        if (phase === 'DRAFT' || phase === 'POSITION') {
+            startAFKTimer(room, pending.color, AFK_PREPARE_MS, phase.toLowerCase());
+        } else if (phase === 'ACTION') {
+            startAFKTimer(room, pending.color, AFK_ACTION_MS, 'action');
+        }
+
+        const oppColor = pending.color === 'white' ? 'black' : 'white';
+        const opp = room.players[oppColor];
+        if (opp) io.to(opp.socketId).emit('opponent_reconnected');
+
+        socket.emit('game_state', room.state);
+        socket.emit('rejoin_success', { roomId: pending.roomId, color: pending.color });
+        console.log(`[RECONNECT] ${decoded.id} reconectado à sala ${pending.roomId}`);
     });
 });
 

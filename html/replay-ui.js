@@ -9,6 +9,7 @@ const ReplayViewer = {
     data:       null,
     turnIndex:  0,
     _autoTimer: null,
+    _meta:      null,
 
     async load(matchId) {
         try {
@@ -23,6 +24,23 @@ const ReplayViewer = {
         this.data      = data;
         this.turnIndex = 0;
         showScreen('replay');
+
+        // Preencher header de resumo
+        const summaryEl = document.getElementById('replay-summary');
+        if (summaryEl) {
+            const m = this._meta;
+            if (m) {
+                const sign    = (m.lpDelta >= 0) ? '+' : '';
+                const lpColor = m.lpDelta >= 0 ? '#2ecc71' : '#e74c3c';
+                summaryEl.innerHTML =
+                    `<span>vs <strong style="color:#f0ece4;">${m.opponentName || '?'}</strong></span>` +
+                    `<span>${m.date || ''}</span>` +
+                    `<span style="color:${lpColor};font-weight:700;">${sign}${m.lpDelta} PdL</span>`;
+            } else {
+                summaryEl.innerHTML = '';
+            }
+        }
+
         const actions = this._actions();
         const total   = document.getElementById('replay-total');
         if (total) total.textContent = actions.length;
@@ -70,7 +88,7 @@ const ReplayViewer = {
             }
         }
 
-        // Duel info: find duels that occurred after the PREVIOUS action turn
+        // Duel info
         const allTurns   = this.data?.turns || [];
         const actionIdxs = allTurns.reduce((acc, t, i) => { if (t.type === 'action') acc.push(i); return acc; }, []);
         const thisActionGlobalIdx = actionIdxs[this.turnIndex] ?? -1;
@@ -119,8 +137,13 @@ const ReplayViewer = {
 
     close() {
         if (this._autoTimer) { clearInterval(this._autoTimer); this._autoTimer = null; }
-        showScreen('menu');
+        showScreen('match-history');
     },
 };
 
-window.watchReplay = (matchId) => ReplayViewer.load(matchId);
+window.watchReplay = (matchId, meta) => {
+    ReplayViewer._meta = meta
+        ? (typeof meta === 'string' ? JSON.parse(meta) : meta)
+        : null;
+    ReplayViewer.load(matchId);
+};

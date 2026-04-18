@@ -293,10 +293,190 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
-## [⏳] Sessão 7 — Reorganização Navegação + Header + Logout
+## [2026-04-18] Sessão 7 — Reorganização Navegação + Header + Logout
 
-**Status:** ⏳ Pendente
+**Status:** Completo
 **Branch:** main
 
-### O que fazer
-- Ver checklist completo em SESSAO_POR_SESSAO_PLANNING.md # SESSÃO 7
+### Feito
+- `html/index.html`: btn-como-jogar e btn-creditos removidos do screen-menu
+- `html/index.html`: btn-ranking agora chama showScreen('ranking')
+- `html/index.html`: header do menu reestruturado — stats-pill + botão ⏻ SAIR (logout) no lado direito
+- `html/index.html`: Configurações — botões COMO JOGAR e CRÉDITOS adicionados
+- `html/index.html`: SAIR DA CONTA no perfil agora chama confirmLogout() em vez de doLogout()
+- `html/index.html`: popup #logout-confirm inserido — "TROCAR DE CONTA? SIM/NÃO"
+- `html/index.html`: refreshMenuScreen limpo — removidas referências a btn-como-jogar e btn-creditos
+- `html/auth-frontend.js`: window.confirmLogout, window.hideLogoutConfirm adicionados
+- `html/auth-frontend.js`: window.doLogout atualizado — fecha popup + reseta campos do header
+
+### Notas para Sessão 8
+- Criar tela screen-ranking com grid dos 14 ranks e botão LEADERBOARD GLOBAL
+- Back do leaderboard deve ir para screen-ranking
+- showLeaderboard() continua funcionando para o botão dentro de screen-ranking
+
+---
+
+## [2026-04-18] Sessão 8 — Tela RANKING Explicativa + Leaderboard
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `html/index.html`: tela `screen-ranking` inserida antes de screen-leaderboard
+  - Header: VOLTAR → menu, título RANKING
+  - Botão LEADERBOARD GLOBAL em destaque → window.showLeaderboard()
+  - Card "COMO FUNCIONA" com explicação de PdL, promoção e escudo
+  - 6 cards de grupos: Peão/Bispo/Cavalo/Torre (3 divisões cada) + Rainha/Rei (divisão única)
+- `html/index.html`: screen-leaderboard — back agora vai para screen-ranking (antes ia para menu)
+- `html/index.html`: screen-leaderboard — título alterado de "RANKING" para "LEADERBOARD"
+
+### Notas para Sessão 9
+- Criar screen-match-history (tela dedicada de histórico)
+- Perfil: remover histórico embutido (#profile-match-history), adicionar botão HISTÓRICO
+- Replay: adicionar header com resumo da partida, back → screen-match-history
+- GET /player/:id/matches precisa retornar usernames do oponente (verificar JOIN)
+
+---
+
+## [2026-04-18] Sessão 9 — Histórico de Partidas + Replay Melhorado
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/server.js`: GET /player/:id/matches — JOIN com players para retornar white_username e black_username
+- `html/index.html`: screen-match-history inserida antes do screen-replay
+- `html/index.html`: screen-profile — histórico embutido removido; botão HISTÓRICO DE PARTIDAS adicionado
+- `html/index.html`: screen-replay — div #replay-summary inserido acima do board
+- `html/rank-ui.js`: MatchHistory.open(playerId) → showScreen('match-history'); render usa white/black_username; watchReplay recebe meta (opponentName, date, lpDelta)
+- `html/replay-ui.js`: _meta; open() popula #replay-summary; close() → screen-match-history; window.watchReplay aceita meta como 2º argumento
+
+### Notas para Sessão 10
+- pendingReconnects Map no server.js
+- disconnect: inicia 60s timer antes do WO (autenticados); WO imediato para convidados
+- Evento rejoin_game: restaura socketId na sala, cancela timer
+- Overlay frontend: countdown "aguardando reconexão" para o oponente
+
+---
+
+## [2026-04-18] Sessão 10 — Reconexão com tolerância de 60s
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/server.js`: `pendingReconnects = new Map()` e `RECONNECT_MS = 60_000` adicionados
+- `server/server.js`: disconnect handler refatorado — autenticados entram em pendingReconnects com timer 60s; convidados recebem WO imediato; oponente recebe `opponent_reconnecting` com remainMs
+- `server/server.js`: evento `rejoin_game` — verifica token, cancela timer, restaura socketId, reinicia AFK timer da fase atual, emite `opponent_reconnected` ao oponente e `game_state` + `rejoin_success` ao reconectado
+- `html/index.html`: overlay `#reconnect-overlay` com countdown e mensagem "AGUARDANDO RECONEXÃO"
+- `html/auth-frontend.js`: `ReconnectOverlay` (show/hide com countdown), `tryRejoinIfPending(socket)`, listeners `opponent_reconnecting` / `opponent_reconnected` / `rejoin_success` / `rejoin_failed` adicionados ao `listenGameEvents`
+- `html/auth-frontend.js`: init() chama `tryRejoinIfPending` ao conectar com sessão válida
+
+### Status final do projeto — Sessões 7-10
+- Navegação reestruturada conforme novo fluxo de UI
+- Header do menu com logout
+- Tela de ranks explicativa
+- Histórico de partidas em tela dedicada
+- Replay com resumo da partida
+- Reconexão de 60s para jogadores autenticados
+
+---
+
+## [2026-04-18] Revisão de Segurança — Análise de Vulnerabilidades
+
+**Status:** Completo (análise)
+**Branch:** main
+
+### O que foi feito
+- Leitura completa de server.js (~915L), auth.js, rank-ui.js, replay-ui.js, auth-frontend.js e index.html (seletivo)
+- Mapeamento de 14 vulnerabilidades por severidade
+- Planejamento de Sessões 11, 12 e 13 em SESSAO_POR_SESSAO_PLANNING.md
+
+### Vulnerabilidades Encontradas
+
+| # | Descrição | Severidade | Sessão |
+|---|-----------|-----------|--------|
+| 1 | Sem rate limit em /auth/login e /auth/register | CRÍTICO | 11 |
+| 2 | Username sem validação de conteúdo — XSS stored possível | CRÍTICO | 11 |
+| 3 | innerHTML com username sem escaping em leaderboard/histórico | CRÍTICO | 11 |
+| 4 | watchReplay injeta JSON em atributo onclick — XSS via username | CRÍTICO | 11 |
+| 5 | JWT_SECRET / HMAC_SECRET com defaults de dev — sem aviso em prod | ALTO | 11 |
+| 6 | game_join aceita qualquer cor — adversário pode sequestrar lado | ALTO | 11 |
+| 7 | persistMatchResult sem transação — DB inconsistente em crash | ALTO | 11 |
+| 8 | duel_resolve sem verificar d.resolveTime — resolve antes de ambos rolarem | ALTO | 11 |
+| 9 | LP delta no histórico usa coluna mmr_change (valor errado) | MÉDIO | 12 |
+| 10 | queue_join aceita nickname falso para jogadores autenticados | MÉDIO | 12 |
+| 11 | JSON.parse sem try/catch no endpoint /match/:id/replay | MÉDIO | 12 |
+| 12 | Timing oracle no login — revela existência de email | MÉDIO | 12 |
+| 13 | Avatar não validado em queue_join | BAIXO | 12 |
+| 14 | Replays expirados nunca deletados do banco | BAIXO | 13 |
+
+### Notas
+- CORS origin:'*' é baixo risco dado que JWT está em localStorage (não cookies)
+- Sessão 11 é prioritária: contém os 4 vetores de XSS + 2 game integrity bugs
+- Sessão 12 corrige valores errados visíveis ao usuário (LP delta) + segurança média
+- Sessão 13 é puramente manutenção, pode ser adiada
+
+---
+
+## [2026-04-18] Sessão 11 — Segurança Crítica
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/package.json`: express-rate-limit ^7.5.1 adicionado + npm install executado
+- `server/server.js`: `const rateLimit = require('express-rate-limit')` adicionado
+- `server/server.js`: `authLimiter` — 5 req/min por IP, aplicado em POST /auth/register e POST /auth/login
+- `server/server.js`: startup warnings para HMAC_SECRET e AES_KEY em NODE_ENV=production
+- `server/server.js`: `USERNAME_RE = /^[a-zA-Z0-9_\-\.]{3,16}$/` — validação de username no register
+- `server/auth.js`: startup warning para JWT_SECRET em NODE_ENV=production
+- `server/server.js`: `game_join` — verifica `room.players[color]?.socketId === socket.id` antes de aceitar
+- `server/server.js`: `persistMatchResult` — DB operations envolvidas em `db.transaction()`, socket emits fora
+- `server/server.js`: `duel_resolve` — guard `if (!d?.resolveTime) return` adicionado
+- `html/rank-ui.js`: helper `escapeHTML()` adicionado no topo
+- `html/rank-ui.js`: leaderboard render — `escapeHTML()` aplicado em username, elo.icon, elo.name
+- `html/rank-ui.js`: match history render — `escapeHTML()` em opponentName, onclick substituído por `data-match-id` + `data-meta` + `addEventListener`
+
+### Notas para Sessão 12
+- LP delta no histórico ainda usa mmr_change_white/black (valor errado) — Sessão 12 adiciona colunas lp_change_white/black
+- queue_join ainda aceita nickname do cliente para auth players — Sessão 12 corrige
+- Timing oracle no login ainda existe — Sessão 12 adiciona dummy bcrypt
+
+---
+
+## [2026-04-18] Sessão 12 — Integridade de Dados
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/db/database.js`: migração — `ALTER TABLE matches ADD COLUMN lp_change_white INTEGER DEFAULT 0` e `lp_change_black` (try/catch, seguro para DBs existentes)
+- `server/server.js`: `_persistDB` — INSERT de matches agora inclui `lp_change_white` e `lp_change_black` (valores de `wLP.lpDelta` e `bLP.lpDelta`)
+- `html/rank-ui.js`: `lpDelta` no match history usa `lp_change_white/black` com fallback para `mmr_change` (retrocompatível com partidas antigas)
+- `server/server.js`: `queue_join` — query expandida para incluir `username`; nickname é sobrescrito com `rec.username` para auth players
+- `server/server.js`: `queue_join` — avatar validado contra `Set(['K','Q','R','B','N','P'])`, default `'K'` se inválido
+- `server/server.js`: `/match/:id/replay` — `JSON.parse(replay.turns_json)` envolvido em `try/catch`, retorna 500 gracioso
+- `server/server.js`: `/auth/login` — dummy bcrypt (`_DUMMY_HASH`) executado quando email não encontrado para normalizar tempo de resposta
+- `server/server.js`: CORS origin — `process.env.ALLOWED_ORIGIN || '*'` (configurável por env var)
+
+### Notas para Sessão 13
+- Replays expirados nunca deletados — Sessão 13 adiciona cleanup job
+- `/health` endpoint pode ser melhorado com DB ping + room stats
+
+---
+
+## [2026-04-18] Sessão 13 — Manutenção e Limpeza
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/server.js`: `cleanExpiredReplays()` — DELETE FROM replays WHERE expires_at < datetime('now'), chamada na startup + setInterval 24h
+- `server/server.js`: `scheduleRoomCleanup(roomId)` — substitui todos os 4 `setTimeout(() => rooms.delete(...), 60_000)` no código; além de deletar a sala, limpa entradas órfãs em `pendingReconnects` que apontam para aquela sala
+- `server/server.js`: `/health` — expandido com DB ping (SELECT 1 FROM players) + `rooms.size` + `queue.length`; retorna 500 se DB falhar
+
+### Status final — Sessões 11, 12, 13 (Ciclo de Segurança)
+Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
+- 8 críticas/altas: Sessão 11 ✅
+- 6 médias/baixas: Sessões 12 e 13 ✅

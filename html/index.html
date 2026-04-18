@@ -1505,6 +1505,29 @@
   </div>
 </div>
 
+<!-- LOGOUT CONFIRM POPUP -->
+<div id="logout-confirm" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.92);z-index:9999;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
+  <div style="background:#111;border:1px solid rgba(212,168,50,0.25);border-radius:8px;padding:36px 32px;width:320px;max-width:90vw;text-align:center;display:flex;flex-direction:column;gap:20px;align-items:center;">
+    <div style="color:#f0ece4;font-size:14px;font-weight:700;letter-spacing:1.5px;">TROCAR DE CONTA?</div>
+    <div style="color:rgba(240,236,228,0.55);font-size:11px;line-height:1.7;">Tem certeza que quer sair?<br>Seu progresso local será mantido.</div>
+    <div style="display:flex;gap:12px;width:100%;">
+      <button onclick="window.doLogout && window.doLogout()" style="flex:1;padding:11px;background:#e74c3c;border:none;border-radius:4px;color:#fff;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;font-weight:700;">SIM</button>
+      <button onclick="window.hideLogoutConfirm && window.hideLogoutConfirm()" style="flex:1;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">NÃO</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECONNECT OVERLAY -->
+<div id="reconnect-overlay" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.94);z-index:9990;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
+  <div style="background:#111;border:1px solid rgba(212,168,50,0.2);border-radius:8px;padding:36px 32px;width:320px;max-width:90vw;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center;">
+    <div style="color:#d4a832;font-size:32px;">⚡</div>
+    <div id="reconnect-msg" style="color:#f0ece4;font-size:13px;font-weight:700;letter-spacing:1.5px;">AGUARDANDO RECONEXÃO</div>
+    <div style="color:rgba(240,236,228,0.5);font-size:11px;line-height:1.7;">Seu oponente perdeu a conexão.<br>A partida continua se ele voltar.</div>
+    <div id="reconnect-countdown" style="color:#d4a832;font-size:40px;font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:4px;">60</div>
+    <div style="color:rgba(240,236,228,0.35);font-size:10px;letter-spacing:1px;">W.O. automático ao zerar</div>
+  </div>
+</div>
+
 <!-- MENU SCREEN -->
 <div id="screen-menu" class="screen">
     <div class="menu-header">
@@ -1515,9 +1538,15 @@
                 <div class="menu-rank-badge" id="menu-rank-badge">RANK —</div>
             </div>
         </div>
-        <div class="menu-stats-pill">
-            <span id="menu-stat-w">0</span>W /
-            <span id="menu-stat-l">0</span>L
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <div class="menu-stats-pill">
+                <span id="menu-stat-w">0</span>W /
+                <span id="menu-stat-l">0</span>L
+            </div>
+            <button id="btn-logout-header" onclick="window.confirmLogout && window.confirmLogout()"
+                style="background:transparent;border:1px solid rgba(231,76,60,0.4);border-radius:3px;
+                color:rgba(231,76,60,0.75);font-family:'Cinzel',serif;font-size:9px;letter-spacing:1.5px;
+                padding:3px 8px;cursor:pointer;line-height:1.4;">⏻ SAIR</button>
         </div>
     </div>
     <div class="menu-center">
@@ -1526,9 +1555,7 @@
         <div class="menu-divider"></div>
         <nav class="menu-nav">
             <button class="menu-btn menu-btn-primary" id="btn-novo-jogo" onclick="window.goMatchmaking()">NOVO JOGO</button>
-            <button class="menu-btn menu-btn-secondary" id="btn-como-jogar" onclick="showScreen('how-to-play')">COMO JOGAR</button>
-            <button class="menu-btn menu-btn-secondary" id="btn-ranking" onclick="window.showLeaderboard()">RANKING</button>
-            <button class="menu-btn menu-btn-secondary" id="btn-creditos" onclick="showScreen('credits')">CRÉDITOS</button>
+            <button class="menu-btn menu-btn-secondary" id="btn-ranking" onclick="showScreen('ranking')">RANKING</button>
             <button class="menu-btn menu-btn-secondary" id="btn-configuracoes" onclick="showScreen('settings')">CONFIGURAÇÕES</button>
             <button class="menu-btn menu-btn-danger" id="btn-sair" onclick="window.quitGame()">SAIR</button>
         </nav>
@@ -1640,7 +1667,9 @@
             <button class="flag-btn" data-lang="zh" onclick="selectLanguage('zh')">🇨🇳<span class="flag-lang-code">ZH</span></button>
         </div>
         <button class="set-profile-btn" id="set-profile-btn" onclick="showScreen('profile')">PERFIL</button>
-        <button class="menu-btn menu-btn-secondary" style="margin-top:4px;" onclick="showScreen('menu')" id="set-back-btn">VOLTAR</button>
+        <button class="set-profile-btn" style="margin-top:4px;background:rgba(255,255,255,0.04);" onclick="showScreen('how-to-play')" id="set-howtoplay-btn">COMO JOGAR</button>
+        <button class="set-profile-btn" style="margin-top:4px;background:rgba(255,255,255,0.04);" onclick="showScreen('credits')" id="set-credits-btn">CRÉDITOS</button>
+        <button class="menu-btn menu-btn-secondary" style="margin-top:12px;" onclick="showScreen('menu')" id="set-back-btn">VOLTAR</button>
     </div>
 </div>
 
@@ -1670,12 +1699,19 @@
             <div class="stat-card"><div class="stat-val" id="stat-wo-l">0</div><div class="stat-name" id="stat-wo-l-label">W.O. Perdidos</div></div>
         </div>
         <button class="prof-save-btn" id="prof-save-btn" onclick="window.saveProfile()">SALVAR</button>
-        <button onclick="window.doLogout && window.doLogout()" style="margin-top:12px;width:100%;padding:10px;background:transparent;border:1px solid rgba(231,76,60,0.45);border-radius:4px;color:#e74c3c;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">SAIR DA CONTA</button>
-        <div style="width:100%;margin-top:18px;">
-            <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:rgba(240,236,228,0.4);margin-bottom:8px;">HISTÓRICO</div>
-            <div id="profile-match-history" style="width:100%;"></div>
-        </div>
+        <button onclick="window.confirmLogout && window.confirmLogout()" style="margin-top:12px;width:100%;padding:10px;background:transparent;border:1px solid rgba(231,76,60,0.45);border-radius:4px;color:#e74c3c;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">SAIR DA CONTA</button>
+        <button onclick="typeof MatchHistory!=='undefined' && MatchHistory.open((typeof Session!=='undefined'?Session.get():null)?.id)" style="margin-top:8px;width:100%;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">HISTÓRICO DE PARTIDAS</button>
     </div>
+</div>
+
+<!-- MATCH HISTORY SCREEN -->
+<div id="screen-match-history" class="screen" style="justify-content:flex-start;padding:20px 16px;align-items:center;gap:0;">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px;padding-bottom:16px;">
+        <button class="screen-back-btn" onclick="showScreen('profile')">VOLTAR</button>
+        <div style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">HISTÓRICO</div>
+        <div style="width:60px;"></div>
+    </div>
+    <div id="match-history-list" style="width:100%;max-width:480px;overflow-y:auto;max-height:80vh;"></div>
 </div>
 
 <!-- REPLAY SCREEN -->
@@ -1687,6 +1723,7 @@
             Turno <span id="replay-current">0</span> / <span id="replay-total">0</span>
         </div>
     </div>
+    <div id="replay-summary" style="width:100%;max-width:480px;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(240,236,228,0.5);min-height:34px;"></div>
     <div id="replay-board" style="display:grid;grid-template-columns:repeat(4,1fr);width:min(300px,78vw);height:min(300px,78vw);border:2px solid rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;"></div>
     <div id="replay-duel-info" style="min-height:18px;width:100%;max-width:480px;"></div>
     <div style="display:flex;gap:10px;">
@@ -1696,11 +1733,104 @@
     </div>
 </div>
 
+<!-- RANKING SCREEN (explicação dos ranks + acesso ao leaderboard) -->
+<div id="screen-ranking" class="screen" style="justify-content:flex-start;padding:20px 16px;align-items:center;gap:0;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px;padding-bottom:12px;">
+        <button class="screen-back-btn" onclick="showScreen('menu')">VOLTAR</button>
+        <div style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">RANKING</div>
+        <div style="width:60px;"></div>
+    </div>
+    <div style="width:100%;max-width:480px;margin-bottom:20px;">
+        <button onclick="window.showLeaderboard()"
+            style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(212,168,50,0.18),rgba(212,168,50,0.08));
+            border:1px solid rgba(212,168,50,0.45);border-radius:6px;color:#d4a832;
+            font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;">
+            🏆 LEADERBOARD GLOBAL
+        </button>
+    </div>
+    <div style="width:100%;max-width:480px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:14px 16px;margin-bottom:20px;">
+        <div style="color:#d4a832;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;margin-bottom:8px;">COMO FUNCIONA</div>
+        <div style="color:rgba(240,236,228,0.6);font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.8;">
+            Cada divisão tem <span style="color:#d4a832;">0–100 Pontos de Liga (PdL)</span>.<br>
+            Vença partidas para acumular PdL e subir de divisão.<br>
+            Ao atingir 100 PdL, você é <span style="color:#2ecc71;">promovido</span> automaticamente.<br>
+            Ao subir de <em>grupo</em>, você recebe um <span style="color:#d4a832;">Escudo ×3</span> que absorve rebaixamentos.
+        </div>
+    </div>
+    <div style="width:100%;max-width:480px;display:flex;flex-direction:column;gap:6px;">
+        <div style="color:rgba(240,236,228,0.35);font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;margin-bottom:4px;">DIVISÕES</div>
+        <!-- Peão -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;">
+            <span style="font-size:28px;line-height:1;">♟</span>
+            <div style="flex:1;">
+                <div style="color:#f0ece4;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;">PEÃO</div>
+                <div style="display:flex;gap:6px;">
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Aprendiz</span>
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Esforçado</span>
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Elite</span>
+                </div>
+            </div>
+        </div>
+        <!-- Bispo -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;">
+            <span style="font-size:28px;line-height:1;">♝</span>
+            <div style="flex:1;">
+                <div style="color:#f0ece4;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;">BISPO</div>
+                <div style="display:flex;gap:6px;">
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Aprendiz</span>
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Esforçado</span>
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Elite</span>
+                </div>
+            </div>
+        </div>
+        <!-- Cavalo -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;">
+            <span style="font-size:28px;line-height:1;">♞</span>
+            <div style="flex:1;">
+                <div style="color:#f0ece4;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;">CAVALO</div>
+                <div style="display:flex;gap:6px;">
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Aprendiz</span>
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Esforçado</span>
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Elite</span>
+                </div>
+            </div>
+        </div>
+        <!-- Torre -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;">
+            <span style="font-size:28px;line-height:1;">♜</span>
+            <div style="flex:1;">
+                <div style="color:#f0ece4;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;">TORRE</div>
+                <div style="display:flex;gap:6px;">
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Aprendiz</span>
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Esforçado</span>
+                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Elite</span>
+                </div>
+            </div>
+        </div>
+        <!-- Rainha -->
+        <div style="background:rgba(212,168,50,0.06);border:1px solid rgba(212,168,50,0.2);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;">
+            <span style="font-size:28px;line-height:1;">♛</span>
+            <div style="flex:1;">
+                <div style="color:#d4a832;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:1px;">RAINHA</div>
+                <div style="color:rgba(212,168,50,0.5);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:4px;">Divisão única</div>
+            </div>
+        </div>
+        <!-- Rei -->
+        <div style="background:rgba(212,168,50,0.1);border:1px solid rgba(212,168,50,0.35);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+            <span style="font-size:28px;line-height:1;">♚</span>
+            <div style="flex:1;">
+                <div style="color:#d4a832;font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;">REI</div>
+                <div style="color:rgba(212,168,50,0.5);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:4px;">Rank máximo · Divisão única</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- LEADERBOARD SCREEN -->
 <div id="screen-leaderboard" class="screen" style="justify-content:flex-start;padding:20px 16px;align-items:center;gap:0;">
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px;padding-bottom:16px;">
-        <button class="screen-back-btn" onclick="showScreen('menu')">VOLTAR</button>
-        <div style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">RANKING</div>
+        <button class="screen-back-btn" onclick="showScreen('ranking')">VOLTAR</button>
+        <div style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">LEADERBOARD</div>
         <div style="width:60px;"></div>
     </div>
     <div id="leaderboard-table" style="width:100%;max-width:480px;overflow-y:auto;max-height:72vh;"></div>
@@ -2088,8 +2218,6 @@
         document.getElementById('menu-rank-badge').textContent    = `RANK —`;
         // apply language to menu buttons
         document.getElementById('btn-novo-jogo').textContent      = t('new_game');
-        document.getElementById('btn-como-jogar').textContent     = t('how_to_play');
-        document.getElementById('btn-creditos').textContent       = t('credits');
         document.getElementById('btn-configuracoes').textContent  = t('settings');
         document.getElementById('btn-sair').textContent           = t('quit');
         document.getElementById('footer-feedback').textContent    = t('feedback');

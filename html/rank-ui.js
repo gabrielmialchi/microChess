@@ -1,5 +1,10 @@
 'use strict';
 
+function escapeHTML(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 // ── LEADERBOARD ───────────────────────────────────────────────
 const Leaderboard = {
     async load() {
@@ -25,9 +30,9 @@ const Leaderboard = {
                 border-bottom:1px solid rgba(255,255,255,0.06);
                 background:${isMe ? 'rgba(212,168,50,0.06)' : 'transparent'};color:${col};">
               <span style="width:28px;text-align:right;opacity:0.5;font-family:'IBM Plex Mono',monospace;font-size:12px;">${p.rank}</span>
-              <span style="font-size:20px;">${p.elo?.icon || p.icon}</span>
-              <span style="flex:1;font-family:'Cinzel',serif;font-size:13px;">${p.username}</span>
-              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;opacity:0.75;">${p.elo?.name || p.name} · ${p.elo?.lp ?? 0} PdL</span>
+              <span style="font-size:20px;">${escapeHTML(p.elo?.icon || p.icon)}</span>
+              <span style="flex:1;font-family:'Cinzel',serif;font-size:13px;">${escapeHTML(p.username)}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;opacity:0.75;">${escapeHTML(p.elo?.name || p.name)} · ${p.elo?.lp ?? 0} PdL</span>
               <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.45;min-width:60px;text-align:right;">${p.wins}W ${p.losses}L</span>
             </div>`;
         }).join('') || '<div style="color:rgba(240,236,228,0.3);text-align:center;padding:32px;font-size:12px;">Nenhum jogador ainda.</div>';
@@ -38,60 +43,70 @@ window.showLeaderboard = () => Leaderboard.load();
 
 // ── MATCH HISTORY ─────────────────────────────────────────────
 const MatchHistory = {
-    async load(playerId) {
-        const container = document.getElementById('profile-match-history');
-        if (!container) return;
-        container.innerHTML = '<div style="color:rgba(240,236,228,0.3);font-size:11px;padding:8px 0;">Carregando...</div>';
+    open(playerId) {
+        if (!playerId) return;
+        showScreen('match-history');
+        const container = document.getElementById('match-history-list');
+        if (container) container.innerHTML = '<div style="color:rgba(240,236,228,0.3);font-size:11px;padding:16px 0;text-align:center;">Carregando...</div>';
+        this._load(playerId);
+    },
+
+    async _load(playerId) {
+        const container = document.getElementById('match-history-list');
         try {
             const res = await fetch(`/player/${playerId}/matches`);
-            if (!res.ok) { container.innerHTML = ''; return; }
+            if (!res.ok) { if (container) container.innerHTML = ''; return; }
             this.render(await res.json(), playerId);
-        } catch { container.innerHTML = ''; }
+        } catch { if (container) container.innerHTML = ''; }
     },
 
     render(matches, playerId) {
-        const container = document.getElementById('profile-match-history');
+        const container = document.getElementById('match-history-list');
         if (!container) return;
         if (!matches.length) {
-            container.innerHTML = '<div style="color:rgba(240,236,228,0.3);font-size:11px;text-align:center;padding:12px 0;">Nenhuma partida registrada.</div>';
+            container.innerHTML = '<div style="color:rgba(240,236,228,0.3);font-size:11px;text-align:center;padding:32px 0;">Nenhuma partida registrada.</div>';
             return;
         }
         container.innerHTML = matches.map(m => {
-            const isWhite = m.player_white_id === playerId;
-            const delta   = isWhite ? m.mmr_change_white : m.mmr_change_black;
-            const sign    = delta >= 0 ? '+' : '';
+            const isWhite       = m.player_white_id === playerId;
+            const lpDelta       = isWhite
+                ? (m.lp_change_white ?? m.mmr_change_white)
+                : (m.lp_change_black ?? m.mmr_change_black);
+            const sign          = lpDelta >= 0 ? '+' : '';
+            const opponentName  = isWhite ? (m.black_username || '?') : (m.white_username || '?');
             const resultMap = {
-                white:    isWhite ? 'VITÓRIA'       : 'DERROTA',
-                black:    isWhite ? 'DERROTA'       : 'VITÓRIA',
+                white:    isWhite ? 'VITÓRIA'        : 'DERROTA',
+                black:    isWhite ? 'DERROTA'        : 'VITÓRIA',
                 draw:     'EMPATE',
-                wo_white: isWhite ? 'DERROTA (W.O.)': 'VITÓRIA (W.O.)',
-                wo_black: isWhite ? 'VITÓRIA (W.O.)': 'DERROTA (W.O.)',
+                wo_white: isWhite ? 'DERROTA (W.O.)' : 'VITÓRIA (W.O.)',
+                wo_black: isWhite ? 'VITÓRIA (W.O.)' : 'DERROTA (W.O.)',
             };
             const label  = resultMap[m.result] || m.result;
             const isWin  = label.startsWith('VITÓRIA');
             const date   = new Date(m.created_at).toLocaleDateString('pt-BR');
             const replayBtn = m.replay_id
-                ? `<button onclick="window.watchReplay('${m.id}')" style="background:rgba(212,168,50,0.12);color:#d4a832;border:1px solid rgba(212,168,50,0.25);padding:3px 10px;border-radius:3px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;cursor:pointer;">REPLAY</button>`
+                ? `<button class="_replay-btn"
+                    data-match-id="${escapeHTML(String(m.id))}"
+                    data-meta="${escapeHTML(JSON.stringify({ opponentName, date, lpDelta, result: label }))}"
+                    style="background:rgba(212,168,50,0.12);color:#d4a832;border:1px solid rgba(212,168,50,0.25);
+                    padding:4px 10px;border-radius:3px;font-family:'Cinzel',serif;font-size:10px;
+                    letter-spacing:1px;cursor:pointer;white-space:nowrap;">▶ REPLAY</button>`
                 : '';
-            return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-              <span style="color:${isWin ? '#2ecc71' : '#e74c3c'};font-family:'Cinzel',serif;font-size:11px;min-width:120px;">${label}</span>
-              <span style="color:${delta >= 0 ? '#2ecc71' : '#e74c3c'};font-family:'IBM Plex Mono',monospace;font-size:11px;min-width:56px;">${sign}${delta} MMR</span>
-              <span style="color:rgba(240,236,228,0.3);font-family:'IBM Plex Mono',monospace;font-size:10px;flex:1;">${date}</span>
+            return `<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+                  <span style="color:${isWin ? '#2ecc71' : '#e74c3c'};font-family:'Cinzel',serif;font-size:11px;font-weight:700;">${label}</span>
+                  <span style="color:${lpDelta >= 0 ? '#2ecc71' : '#e74c3c'};font-family:'IBM Plex Mono',monospace;font-size:11px;">${sign}${lpDelta} PdL</span>
+                </div>
+                <div style="color:rgba(240,236,228,0.4);font-family:'IBM Plex Mono',monospace;font-size:10px;">vs ${escapeHTML(opponentName)} · ${date}</div>
+              </div>
               ${replayBtn}
             </div>`;
         }).join('');
+        container.querySelectorAll('._replay-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                try { window.watchReplay(btn.dataset.matchId, JSON.parse(btn.dataset.meta)); } catch {}
+            });
+        });
     },
 };
-
-// Intercepta showScreen para carregar histórico ao abrir perfil
-(function hookProfile() {
-    const orig = window.showScreen;
-    if (!orig) return;
-    window.showScreen = function(id) {
-        orig(id);
-        if (id === 'profile') {
-            const session = (typeof Session !== 'undefined') ? Session.get() : null;
-            if (session?.id) MatchHistory.load(session.id);
-        }
-    };
-})();

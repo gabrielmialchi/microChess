@@ -7,6 +7,10 @@ const JWT_SECRET  = process.env.JWT_SECRET || 'microchess-secret-dev-key';
 const SALT_ROUNDS = 10;
 const JWT_EXPIRES = '30d';
 
+if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'microchess-secret-dev-key') {
+    console.error('[SECURITY] CRÍTICO: JWT_SECRET é o valor padrão de desenvolvimento. Defina JWT_SECRET no ambiente de produção!');
+}
+
 async function hashPassword(plain) {
     return bcrypt.hash(plain, SALT_ROUNDS);
 }

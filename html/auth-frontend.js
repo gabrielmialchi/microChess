@@ -120,15 +120,30 @@ const AuthUI = {
 };
 
 // ── LOGOUT ────────────────────────────────────────────────────
+window.confirmLogout = function () {
+    const m = document.getElementById('logout-confirm');
+    if (m) m.style.display = 'flex';
+};
+
+window.hideLogoutConfirm = function () {
+    const m = document.getElementById('logout-confirm');
+    if (m) m.style.display = 'none';
+};
+
 window.doLogout = function () {
+    window.hideLogoutConfirm();
     Session.clear();
     localStorage.removeItem('mc_uid');
     localStorage.removeItem('mc_nickname');
     localStorage.removeItem('mc_stats');
     const badge = document.getElementById('menu-rank-badge');
-    if (badge) badge.textContent = '';
+    if (badge) badge.textContent = 'RANK —';
     const name = document.getElementById('menu-player-name');
     if (name) name.textContent = 'Guerreiro';
+    const statW = document.getElementById('menu-stat-w');
+    const statL = document.getElementById('menu-stat-l');
+    if (statW) statW.textContent = '0';
+    if (statL) statL.textContent = '0';
     AuthUI.show();
 };
 
@@ -213,6 +228,38 @@ function getQueueProfile(base) {
     return base;
 }
 
+// ── RECONNECT ─────────────────────────────────────────────────
+const ReconnectOverlay = {
+    _timer: null,
+
+    show(remainMs) {
+        const overlay = document.getElementById('reconnect-overlay');
+        if (overlay) overlay.style.display = 'flex';
+        const countEl = document.getElementById('reconnect-countdown');
+        let remaining = Math.max(0, remainMs);
+        const tick = () => {
+            const secs = Math.ceil(remaining / 1_000);
+            if (countEl) countEl.textContent = secs;
+            if (remaining <= 0) { clearInterval(this._timer); }
+            remaining -= 1_000;
+        };
+        tick();
+        this._timer = setInterval(tick, 1_000);
+    },
+
+    hide() {
+        const overlay = document.getElementById('reconnect-overlay');
+        if (overlay) overlay.style.display = 'none';
+        if (this._timer) { clearInterval(this._timer); this._timer = null; }
+    },
+};
+
+function tryRejoinIfPending(socket) {
+    const session = Session.get();
+    if (!session?.token) return;
+    socket.emit('rejoin_game', { token: session.token });
+}
+
 // ── SOCKET GAME EVENTS ────────────────────────────────────────
 function listenGameEvents(socket) {
     socket.on('mmr_update', async ({ delta, newMMR, rank, isWO, lpDelta, elo, promoted, demoted }) => {
@@ -225,11 +272,23 @@ function listenGameEvents(socket) {
     });
 
     socket.on('banned', (data) => BanOverlay.show(data));
+
+    socket.on('opponent_reconnecting', ({ remainMs }) => ReconnectOverlay.show(remainMs));
+    socket.on('opponent_reconnected',  ()             => ReconnectOverlay.hide());
+
+    socket.on('rejoin_success', ({ color }) => {
+        ReconnectOverlay.hide();
+        console.log(`[REJOIN] Reconectado como ${color}`);
+    });
+    socket.on('rejoin_failed', () => { /* ignora — segue fluxo normal */ });
 }
 
 // ── INIT ──────────────────────────────────────────────────────
 (async function init() {
-    if (window._mcSocket) listenGameEvents(window._mcSocket);
+    if (window._mcSocket) {
+        listenGameEvents(window._mcSocket);
+        tryRejoinIfPending(window._mcSocket);
+    }
 
     const session = Session.get();
     if (session && session.token) {

@@ -1299,6 +1299,9 @@ socket.on('rejoin_failed', () => { /* apenas ignorar, seguir fluxo normal */ });
 | 8 | index.html (parcial) | Médio | 🟡 |
 | 9 | index.html + rank-ui.js + replay-ui.js | Médio-alto | 🟠 |
 | 10 | server.js ~800L | Médio-alto | 🟠 |
+| 11 | server.js + auth.js + package.json + rank-ui.js | Alto | 🔴 |
+| 12 | server.js + database.js + rank-ui.js | Médio | 🟡 |
+| 13 | server.js | Baixo | 🟢 |
 
 ---
 
@@ -1315,6 +1318,309 @@ git add . && git commit -m "WIP Sessão X — [arquivo que estava editando]"
 
 ---
 
+# SESSÃO 11: SEGURANÇA CRÍTICA
+
+## Objetivo
+Corrigir as vulnerabilidades de maior impacto: XSS persistente, ausência de rate limiting, secrets fracos em prod, race condition no duel, integridade transacional do banco e bypass de cor no game_join.
+
+## Risco: 🔴 Alto — edições em server.js, auth.js, rank-ui.js
+
+## Arquivos
+```
+server/server.js        ← game_join fix + duel_resolve fix + persistMatchResult transação + username validation
+server/auth.js          ← dev secret enforcement
+server/package.json     ← +express-rate-limit
+html/rank-ui.js         ← escaping HTML + watchReplay data-attrs fix
+```
+
+## Vulnerabilidades Endereçadas
+
+| # | Vuln | Severidade | Fix |
+|---|------|-----------|-----|
+| 1 | Sem rate limit em /auth/login e /auth/register | CRÍTICO | express-rate-limit 5 req/min |
+| 2 | Username sem validação de conteúdo (XSS stored) | CRÍTICO | regex allowlist no register |
+| 3 | innerHTML com username/opponentName sem escape | CRÍTICO | helper escapeHTML() em rank-ui.js |
+| 4 | watchReplay injeta JSON em atributo onclick | CRÍTICO | substituir por data-match-id + addEventListener |
+| 5 | JWT_SECRET / HMAC_SECRET com defaults de dev | ALTO | warn/throw em NODE_ENV=production |
+| 6 | game_join aceita qualquer cor sem verificar | ALTO | validar socket.id === room.players[color].socketId |
+| 7 | persistMatchResult sem transação DB | ALTO | db.transaction() |
+| 8 | duel_resolve sem verificar d.resolveTime | ALTO | guard if (!d.resolveTime) return |
+
+## Checklist
+
+```
+[ ] 1. npm install express-rate-limit em server/package.json
+[ ] 2. Importar e aplicar limiter em /auth/register e /auth/login (5 req/min por IP)
+[ ] 3. Adicionar validação de username no register: /^[a-zA-Z0-9_\-\.]{3,16}$/ com mensagem clara
+[ ] 4. Adicionar alerta de startup em auth.js: se NODE_ENV==='production' e secret é o padrão, logar WARN crítico
+[ ] 5. Em server.js, adicionar alerta de startup para HMAC_SECRET e AES_KEY também
+[ ] 6. Corrigir game_join: verificar room.players[color]?.socketId === socket.id antes de aceitar
+[ ] 7. Envolver persistMatchResult em db.transaction()(function() { ... })
+[ ] 8. Em duel_resolve handler: adicionar guard const d = s?.duel; if (!d?.resolveTime) return;
+[ ] 9. Adicionar escapeHTML helper em rank-ui.js (escapa <>&"')
+[ ] 10. Aplicar escapeHTML em todos os ${p.username}, ${opponentName} do render do leaderboard e match history
+[ ] 11. Substituir inline onclick com JSON em watchReplay por data-match-id + data-meta attrs + addEventListener após render
+```
+
+## Detalhes Técnicos
+
+### 1. Rate limiting (server.js — inserir antes das rotas auth)
+```javascript
+const rateLimit = require('express-rate-limit');
+const authLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Muitas tentativas. Aguarde 1 minuto.' },
+});
+app.use('/auth', authLimiter);
+```
+
+### 2. Username validation (server.js — register endpoint)
+```javascript
+const uname = String(username).trim().slice(0, 16);
+if (!/^[a-zA-Z0-9_\-\.]{3,16}$/.test(uname))
+    return res.status(400).json({ error: 'Username deve ter 3-16 caracteres: letras, números, _ - .' });
+```
+
+### 3. Startup secret check (auth.js)
+```javascript
+if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'microchess-secret-dev-key') {
+    console.error('[SECURITY] JWT_SECRET é o valor padrão de desenvolvimento. Defina JWT_SECRET no ambiente!');
+}
+```
+Mesma verificação para HMAC_SECRET e AES_KEY em server.js.
+
+### 4. game_join fix (server.js)
+```javascript
+socket.on('game_join', ({ roomId, color }) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
+    if (room.players[color]?.socketId !== socket.id) return;  // ← ADD
+    playerRoom  = roomId;
+    playerColor = color;
+    ...
+});
+```
+
+### 5. persistMatchResult transação
+```javascript
+const _persist = db.transaction((room, winner, isWO) => {
+    // todo o corpo atual de persistMatchResult aqui dentro
+});
+function persistMatchResult(room, winner, isWO) {
+    _persist(room, winner, isWO);
+    // emissões de socket FORA da transação (não-bloqueante)
+}
+```
+Nota: Socket.io emits ficam fora da transação (callbacks são síncronos no better-sqlite3 mas emits não devem estar dentro de transação).
+
+### 6. duel_resolve guard (server.js)
+```javascript
+socket.on('duel_resolve', () => {
+    const room = getRoom();
+    if (!room || room.resolving) return;
+    const d = room.state?.duel;
+    if (!d?.resolveTime) return;   // ← ADD: só resolve quando ambos rolaram
+    room.resolving = true;
+    finishDuel(room);
+});
+```
+
+### 7. escapeHTML + render fix (rank-ui.js)
+```javascript
+function escapeHTML(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+```
+Aplicar em todas as interpolações de username, opponentName no innerHTML.
+
+### 8. watchReplay — substituir onclick por data-attrs
+```javascript
+// Em render(), no botão de replay:
+const replayBtn = m.replay_id
+    ? `<button class="_replay-btn" data-match-id="${m.id}"
+        data-meta="${escapeHTML(JSON.stringify({opponentName, date, lpDelta, result: label}))}"
+        style="...">▶ REPLAY</button>`
+    : '';
+// Após container.innerHTML = ...:
+container.querySelectorAll('._replay-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const meta = JSON.parse(btn.dataset.meta);
+        window.watchReplay(btn.dataset.matchId, meta);
+    });
+});
+```
+
+---
+
+# SESSÃO 12: INTEGRIDADE DE DADOS
+
+## Objetivo
+Corrigir inconsistências de dados (LP delta errado no histórico), melhorar segurança média (timing oracle, CORS, avatar) e estabilidade (JSON.parse sem try/catch).
+
+## Risco: 🟡 Médio — migração DB + edições em server.js e rank-ui.js
+
+## Arquivos
+```
+server/server.js        ← queue_join nickname, JSON.parse fix, CORS env var, avatar validation
+server/db/database.js   ← migração: lp_change_white/black na tabela matches
+```
+
+## Vulnerabilidades Endereçadas
+
+| # | Vuln | Severidade | Fix |
+|---|------|-----------|-----|
+| 9 | LP delta exibido no histórico é MMR delta (valor errado) | MÉDIO | colunas lp_change_white/black na tabela matches |
+| 10 | Auth player pode enviar nickname falso em queue_join | MÉDIO | substituir por username do DB para auth players |
+| 11 | JSON.parse sem try/catch no endpoint /match/:id/replay | MÉDIO | try/catch → 500 gracioso |
+| 12 | Timing oracle: login revela se email existe por tempo de resposta | MÉDIO | dummy bcrypt.compare quando player não encontrado |
+| 13 | Avatar não validado em queue_join | BAIXO | allowlist ['K','Q','R','B','N','P'] |
+| 14 | CORS origin: '*' | BAIXO | env var ALLOWED_ORIGIN, default '*' em dev |
+
+## Checklist
+
+```
+[ ] 1. database.js: migração ALTER TABLE matches ADD COLUMN lp_change_white INT DEFAULT 0 (try/catch para DBs existentes)
+[ ] 2. database.js: migração ALTER TABLE matches ADD COLUMN lp_change_black INT DEFAULT 0
+[ ] 3. server.js persistMatchResult: receber lpWhite e lpBlack, incluir nas colunas do INSERT de matches
+[ ] 4. server.js persistMatchResult: calcular lpWhite/lpBlack com applyLPChange para ambos os lados (vencedor e perdedor)
+[ ] 5. server.js /player/:id/matches: incluir lp_change_white e lp_change_black na query/resposta
+[ ] 6. rank-ui.js: usar lp_change_white/black em vez de mmr_change_white/black para o lpDelta
+[ ] 7. server.js queue_join: se token válido, sobrescrever nickname com username do banco (db.prepare SELECT username)
+[ ] 8. server.js /match/:id/replay: envolver JSON.parse em try/catch, retornar 500 com mensagem se falhar
+[ ] 9. server.js /auth/login: se player não encontrado, executar bcrypt.compare com hash falso para normalizar tempo
+[ ] 10. server.js queue_join: validar avatar contra ['K','Q','R','B','N','P'], default 'K' se inválido
+[ ] 11. server.js: substituir cors: { origin: '*' } por cors: { origin: process.env.ALLOWED_ORIGIN || '*' }
+```
+
+## Detalhes Técnicos
+
+### 9. LP delta correto em persistMatchResult
+A função `applyLPChange` já é chamada para o vencedor e perdedor. Os valores `lpDelta` resultantes devem ser salvos nas novas colunas:
+```javascript
+// Dentro de persistMatchResult, após applyLPChange para white e black:
+db.prepare(`
+    INSERT INTO matches (id, player_white_id, player_black_id, result,
+        mmr_change_white, mmr_change_black,
+        lp_change_white, lp_change_black,  -- ← colunas novas
+        total_turns, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+`).run(matchId, whiteId, blackId, result,
+    mmrDeltaWhite, mmrDeltaBlack,
+    lpDeltaWhite, lpDeltaBlack,            // ← valores novos
+    totalTurns);
+```
+
+### 10. Nickname from DB (server.js queue_join)
+```javascript
+if (token) {
+    const decoded = verifyToken(token);
+    if (decoded) {
+        const rec = db.prepare('SELECT mmr, ban_until, username FROM players WHERE id = ?').get(decoded.id);
+        if (rec) {
+            playerId   = decoded.id;
+            playerMMR  = rec.mmr;
+            // Override client-supplied nickname with DB username
+            nickname   = rec.username;   // ← ADD
+            ...
+        }
+    }
+}
+```
+
+### 11. JSON.parse try/catch (server.js replay endpoint)
+```javascript
+app.get('/match/:id/replay', (req, res) => {
+    const replay = db.prepare('SELECT * FROM replays WHERE match_id = ?').get(req.params.id);
+    if (!replay) return res.status(404).json({ error: 'Replay não encontrado' });
+    if (new Date(replay.expires_at) < new Date())
+        return res.status(410).json({ error: 'Replay expirado' });
+    try {
+        res.json({ ...replay, turns: JSON.parse(replay.turns_json) });
+    } catch {
+        res.status(500).json({ error: 'Replay corrompido' });
+    }
+});
+```
+
+### 12. Timing oracle mitigation (server.js login)
+```javascript
+const DUMMY_HASH = '$2b$10$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+app.post('/auth/login', async (req, res) => {
+    ...
+    const player = db.prepare('SELECT ... WHERE email_hash = ?').get(email_hash);
+    if (!player) {
+        await checkPassword('dummy', DUMMY_HASH); // normaliza tempo de resposta
+        return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+    ...
+});
+```
+
+---
+
+# SESSÃO 13: MANUTENÇÃO E LIMPEZA
+
+## Objetivo
+Tarefas de manutenção de baixo risco: limpeza automática de replays expirados, remoção de pendingReconnects órfãos e melhoria do endpoint /health.
+
+## Risco: 🟢 Baixo — apenas adições em server.js
+
+## Arquivos
+```
+server/server.js        ← replay cleanup job + pendingReconnects cleanup + /health melhorado
+```
+
+## Checklist
+
+```
+[ ] 1. server.js: função cleanExpiredReplays() — DELETE FROM replays WHERE expires_at < datetime('now')
+[ ] 2. server.js: chamar cleanExpiredReplays() na startup + setInterval(cleanExpiredReplays, 24 * 60 * 60 * 1000)
+[ ] 3. server.js: no setTimeout de rooms.delete(roomId), também deletar entradas de pendingReconnects que apontam para aquela sala
+[ ] 4. server.js: /health endpoint — adicionar contagem de rooms ativas, fila length e resultado de SELECT 1 FROM players LIMIT 1
+```
+
+## Detalhes Técnicos
+
+### 1-2. Replay cleanup
+```javascript
+function cleanExpiredReplays() {
+    const result = db.prepare("DELETE FROM replays WHERE expires_at < datetime('now')").run();
+    if (result.changes > 0) console.log(`[CLEANUP] ${result.changes} replays expirados removidos.`);
+}
+cleanExpiredReplays(); // na startup
+setInterval(cleanExpiredReplays, 24 * 60 * 60 * 1000);
+```
+
+### 3. pendingReconnects cleanup
+Nos dois `setTimeout(() => rooms.delete(roomId), 60_000)` existentes, adicionar:
+```javascript
+setTimeout(() => {
+    rooms.delete(roomId);
+    // Limpar qualquer pendingReconnect órfão desta sala
+    for (const [uid, entry] of pendingReconnects.entries()) {
+        if (entry.roomId === roomId) pendingReconnects.delete(uid);
+    }
+}, 60_000);
+```
+
+### 4. /health melhorado
+```javascript
+app.get('/health', (_, res) => {
+    try {
+        db.prepare('SELECT 1 FROM players LIMIT 1').get();
+        res.json({ ok: true, rooms: rooms.size, queue: queue.length, db: 'ok' });
+    } catch {
+        res.status(500).json({ ok: false, db: 'error' });
+    }
+});
+```
+
+---
+
 *Ver CLAUDE.md para contexto completo do projeto.*
 *Ver ACTIVITY_LOG.md para status atual de cada sessão.*
-*Última atualização: 2026-04-17 (Sessão 0)*
+*Última atualização: 2026-04-18 (Sessões 11-13 planejadas)*

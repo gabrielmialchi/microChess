@@ -39,6 +39,8 @@ const newCols = [
     'ALTER TABLE players ADD COLUMN elo_rank   INTEGER DEFAULT 0',
     'ALTER TABLE players ADD COLUMN elo_lp     INTEGER DEFAULT 0',
     'ALTER TABLE players ADD COLUMN elo_shield INTEGER DEFAULT 0',
+    'ALTER TABLE matches ADD COLUMN lp_change_white INTEGER DEFAULT 0',
+    'ALTER TABLE matches ADD COLUMN lp_change_black INTEGER DEFAULT 0',
 ];
 for (const sql of newCols) {
     try { db.exec(sql); } catch (_) {}

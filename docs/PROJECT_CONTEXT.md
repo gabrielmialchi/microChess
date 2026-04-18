@@ -274,9 +274,13 @@ curl http://localhost:3000/health
 | 5 | Frontend Auth + Ban | ✅ Completo |
 | 6 | Frontend Leaderboard + Replay | ✅ Completo |
 | P | Polimento: ELO visível, email seguro, logout | ✅ Completo |
-| 7 | Reorganização navegação + header + logout | ⏳ Pendente |
-| 8 | Tela RANKING explicativa + Leaderboard | ⏳ Pendente |
-| 9 | Histórico separado + Replay melhorado | ⏳ Pendente |
-| 10 | Reconexão 60s | ⏳ Pendente |
+| 7 | Reorganização navegação + header + logout | ✅ Completo |
+| 8 | Tela RANKING explicativa + Leaderboard | ✅ Completo |
+| 9 | Histórico separado + Replay melhorado | ✅ Completo |
+| 10 | Reconexão 60s | ✅ Completo |
+| R | Revisão de segurança — análise e plano | ✅ Completo |
+| 11 | Segurança crítica: rate limit, XSS, transação, game integrity | ✅ Completo |
+| 12 | Integridade de dados: LP delta, nickname, timing oracle | ✅ Completo |
+| 13 | Manutenção: replay cleanup, health endpoint | ✅ Completo |
 
 *(Atualizar este arquivo ao concluir cada sessão)*
