@@ -282,5 +282,9 @@ curl http://localhost:3000/health
 | 11 | Segurança crítica: rate limit, XSS, transação, game integrity | ✅ Completo |
 | 12 | Integridade de dados: LP delta, nickname, timing oracle | ✅ Completo |
 | 13 | Manutenção: replay cleanup, health endpoint | ✅ Completo |
+| R2 | 2ª revisão: planning leak + viabilidade Play Store | ✅ Completo |
+| 14 | Integridade competitiva + exclusão de conta + sync nickname | ⏳ Pendente |
+| 15 | Play Store pré-requisitos: PWA, manifest, Helmet, Privacy Policy | ⏳ Pendente |
+| 16 | Qualidade UX: troca de senha, loading states, disconnect banner | ⏳ Pendente |
 
 *(Atualizar este arquivo ao concluir cada sessão)*

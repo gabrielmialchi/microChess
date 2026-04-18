@@ -1623,4 +1623,262 @@ app.get('/health', (_, res) => {
 
 *Ver CLAUDE.md para contexto completo do projeto.*
 *Ver ACTIVITY_LOG.md para status atual de cada sessão.*
-*Última atualização: 2026-04-18 (Sessões 11-13 planejadas)*
+*Última atualização: 2026-04-18 (Sessões 14-16 planejadas)*
+
+---
+
+# SESSÃO 14: INTEGRIDADE COMPETITIVA + PERFIL
+
+## Objetivo
+Corrigir o vazamento de planejamento (maior bug de integridade do jogo), sincronizar nickname com o servidor, e implementar exclusão de conta (bloqueador da Play Store).
+
+## Risco: 🟠 Médio-alto — edições em server.js e index.html
+
+## Arquivos
+```
+server/server.js        ← broadcast() por-player + DELETE /auth/account + PATCH /auth/profile
+html/index.html         ← saveProfile → PATCH /auth/profile; botão "EXCLUIR CONTA" no perfil
+```
+
+## Pontos Endereçados
+
+| # | Ponto | Severidade | Fix |
+|---|-------|-----------|-----|
+| 1 | Planejamento do oponente visível via WebSocket antes da revelação | CRÍTICO | broadcast() envia view personalizada por cor |
+| 2 | Nickname salvo só em localStorage — não sincroniza com DB | ALTO | PATCH /auth/profile + saveProfile faz fetch |
+| 3 | Sem exclusão de conta in-app (bloqueador Play Store) | ALTO | DELETE /auth/account + botão no perfil com confirmação |
+
+## Checklist
+
+```
+[ ] 1. server.js: refatorar broadcast() — criar stateView(state, color) que mascara planning do oponente
+[ ] 2. server.js: stateView retorna state com planning[opponentColor] = null se !state.ready[opponentColor]
+[ ] 3. server.js: PATCH /auth/profile (auth required) — atualiza username no DB; validar USERNAME_RE; checar UNIQUE
+[ ] 4. server.js: DELETE /auth/account (auth required) — deleta player, matches e replays associados
+[ ] 5. index.html: saveProfile — fazer fetch PATCH /auth/profile com token; mostrar erro se username já existe
+[ ] 6. index.html: adicionar botão "EXCLUIR CONTA" no screen-profile com popup de confirmação dupla ("EXCLUIR DEFINITIVAMENTE?")
+[ ] 7. index.html: handler de confirmação de exclusão — fetch DELETE /auth/account, limpar session, mostrar AuthUI
+```
+
+## Detalhes Técnicos
+
+### 1-2. broadcast() por-player (server.js)
+```javascript
+function stateView(state, color) {
+    const opp = color === 'white' ? 'black' : 'white';
+    if (state.ready[opp]) return state; // oponente confirmou — mostrar planejamento
+    return {
+        ...state,
+        planning: { ...state.planning, [opp]: null },
+    };
+}
+
+function broadcast(room) {
+    const { white, black } = room.players;
+    io.to(white.socketId).emit('game_state', stateView(room.state, 'white'));
+    io.to(black.socketId).emit('game_state', stateView(room.state, 'black'));
+}
+```
+Nota: quando `state.ready[opp]` é `true`, o oponente já confirmou — revelar o plano é intencional (fase de resolução).
+
+### 3. PATCH /auth/profile (server.js)
+```javascript
+app.patch('/auth/profile', async (req, res) => {
+    const auth = req.headers.authorization?.split(' ')[1];
+    const decoded = auth ? verifyToken(auth) : null;
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    const { username } = req.body || {};
+    const uname = String(username || '').trim();
+    if (!USERNAME_RE.test(uname))
+        return res.status(400).json({ error: 'Username deve ter 3-16 caracteres: letras, números, _ - .' });
+    try {
+        db.prepare('UPDATE players SET username=? WHERE id=?').run(uname, decoded.id);
+        const newToken = signToken({ id: decoded.id, username: uname });
+        res.json({ token: newToken, username: uname });
+    } catch (e) {
+        if (e.message.includes('UNIQUE'))
+            return res.status(409).json({ error: 'Username já em uso' });
+        res.status(500).json({ error: 'Erro interno' });
+    }
+});
+```
+
+### 4. DELETE /auth/account (server.js)
+```javascript
+const _deleteAccount = db.transaction((playerId) => {
+    db.prepare('DELETE FROM replays WHERE match_id IN (SELECT id FROM matches WHERE player_white_id=? OR player_black_id=?)').run(playerId, playerId);
+    db.prepare('DELETE FROM matches WHERE player_white_id=? OR player_black_id=?').run(playerId, playerId);
+    db.prepare('DELETE FROM players WHERE id=?').run(playerId);
+});
+
+app.delete('/auth/account', (req, res) => {
+    const auth = req.headers.authorization?.split(' ')[1];
+    const decoded = auth ? verifyToken(auth) : null;
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    try {
+        _deleteAccount(decoded.id);
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro interno' });
+    }
+});
+```
+
+### 5-7. saveProfile + exclusão (index.html)
+Em `saveProfile`: substituir o `localStorage.setItem` por um `fetch PATCH /auth/profile` autenticado com o token da sessão. Ao receber o novo token, atualizar `Session.save()`.
+
+Botão "EXCLUIR CONTA": popup com campo de confirmação manual (digitar "EXCLUIR") ou duplo clique de confirmação. Ao confirmar: `fetch DELETE /auth/account`, `Session.clear()`, `AuthUI.show()`.
+
+---
+
+# SESSÃO 15: PLAY STORE PRÉ-REQUISITOS
+
+## Objetivo
+Implementar os pré-requisitos técnicos e legais para submissão na Play Store via TWA: privacy policy, PWA manifest, service worker básico e security headers.
+
+## Risco: 🟡 Médio — arquivos novos + pequenas inserções no server.js e index.html
+
+## Arquivos
+```
+server/server.js            ← Helmet.js + rota /privacy-policy + rota /.well-known/assetlinks.json
+server/package.json         ← +helmet
+html/manifest.json          ← NOVO — PWA manifest
+html/sw.js                  ← NOVO — Service Worker (cache shell)
+html/index.html             ← <link rel="manifest"> + <meta theme-color> + SW registration
+```
+
+## Checklist
+
+```
+[ ] 1. npm install helmet em server/package.json
+[ ] 2. server.js: const helmet = require('helmet'); app.use(helmet({ contentSecurityPolicy: false }))
+[ ] 3. server.js: rota GET /privacy-policy — servir HTML estático inline com política de privacidade
+[ ] 4. server.js: rota GET /.well-known/assetlinks.json — placeholder [] (preencher após gerar keystore)
+[ ] 5. html/manifest.json: criar com name, short_name, start_url, display, theme_color, icons (placeholders)
+[ ] 6. html/sw.js: criar service worker mínimo — cache do shell (index.html, CSS, JS) + fallback offline
+[ ] 7. html/index.html: adicionar <link rel="manifest"> e <meta name="theme-color"> no <head>
+[ ] 8. html/index.html: registrar service worker em <script> no final do body
+[ ] 9. server.js: adicionar ALLOWED_ORIGIN ao CORS do Socket.io também para o servidor HTTP
+```
+
+## Detalhes Técnicos
+
+### 2. Helmet (server.js)
+```javascript
+const helmet = require('helmet');
+// CSP false: o jogo usa fontes externas (Google Fonts) e Socket.io inline
+app.use(helmet({ contentSecurityPolicy: false }));
+```
+Helmet ativa automaticamente: `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`,
+`Strict-Transport-Security` (HSTS), `Referrer-Policy`, `X-DNS-Prefetch-Control`.
+
+### 5. manifest.json
+```json
+{
+  "name": "microChess",
+  "short_name": "microChess",
+  "description": "Xadrez 4x4 para 2 jogadores online",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080808",
+  "theme_color": "#d4a832",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+```
+Nota: ícones precisam ser criados manualmente (fora do escopo do Claude Code — asset design).
+
+### 6. Service Worker mínimo (sw.js)
+```javascript
+const CACHE = 'mc-v1';
+const SHELL = ['/', '/auth-frontend.js', '/rank-ui.js', '/replay-ui.js', '/manifest.json'];
+
+self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))));
+self.addEventListener('fetch', e => {
+    if (e.request.method !== 'GET') return;
+    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+});
+```
+
+### 3. Privacy Policy (server.js)
+Texto da política deve cobrir: quais dados são coletados (email hash, username, histórico de partidas), como são usados, período de retenção, direitos do usuário (exclusão via botão in-app), contato. Deve estar em português (público alvo principal) e inglês.
+
+---
+
+# SESSÃO 16: QUALIDADE UX + PASSWORD CHANGE
+
+## Objetivo
+Fechar os gaps de qualidade que causariam avaliações negativas: troca de senha, loading states, feedback de desconexão e botão Sair funcional em WebView.
+
+## Risco: 🟡 Médio — edições em server.js e index.html / auth-frontend.js
+
+## Arquivos
+```
+server/server.js        ← PATCH /auth/password
+html/index.html         ← loading states, quit fix, disconnect banner
+html/auth-frontend.js   ← disconnect event handler
+```
+
+## Checklist
+
+```
+[ ] 1. server.js: PATCH /auth/password (auth required) — verifica senha atual, valida nova, salva hash
+[ ] 2. index.html: screen-settings — adicionar botão "ALTERAR SENHA" → modal inline (senha atual + nova + confirmar)
+[ ] 3. index.html: leaderboard e match-history — adicionar spinner de loading enquanto fetch estiver pendente
+[ ] 4. index.html: botão SAIR — substituir window.close() por showScreen('menu') ou bloco de confirmação sem close()
+[ ] 5. auth-frontend.js: socket.on('disconnect') → mostrar banner "Sem conexão com o servidor" (div fixo, vermelho)
+[ ] 6. auth-frontend.js: socket.on('connect') → remover banner se existir
+```
+
+## Detalhes Técnicos
+
+### 1. PATCH /auth/password (server.js)
+```javascript
+app.patch('/auth/password', async (req, res) => {
+    const auth = req.headers.authorization?.split(' ')[1];
+    const decoded = auth ? verifyToken(auth) : null;
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    const { currentPassword, newPassword } = req.body || {};
+    if (!currentPassword || !newPassword)
+        return res.status(400).json({ error: 'Campos obrigatórios ausentes' });
+    if (newPassword.length < 6)
+        return res.status(400).json({ error: 'Senha deve ter ao menos 6 caracteres' });
+    const player = db.prepare('SELECT password_hash FROM players WHERE id=?').get(decoded.id);
+    if (!player) return res.status(404).json({ error: 'Usuário não encontrado' });
+    const ok = await checkPassword(currentPassword, player.password_hash);
+    if (!ok) return res.status(401).json({ error: 'Senha atual incorreta' });
+    const newHash = await hashPassword(newPassword);
+    db.prepare('UPDATE players SET password_hash=? WHERE id=?').run(newHash, decoded.id);
+    res.json({ ok: true });
+});
+```
+
+### 4. Botão Sair fix (index.html)
+```javascript
+window.quitGame = function() {
+    // Em WebView, window.close() não funciona. Fallback: voltar ao menu ou mostrar tela de agradecimento.
+    if (typeof Android !== 'undefined' && Android.closeApp) {
+        Android.closeApp(); // hook para TWA nativo opcional
+    } else {
+        showScreen('menu');
+    }
+};
+```
+
+### 5-6. Disconnect banner (auth-frontend.js)
+```javascript
+function showDisconnectBanner() {
+    if (document.getElementById('_dc-banner')) return;
+    const b = document.createElement('div');
+    b.id = '_dc-banner';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#e74c3c;color:#fff;text-align:center;padding:8px;font-family:Cinzel,serif;font-size:12px;z-index:99999;letter-spacing:2px;';
+    b.textContent = 'SEM CONEXÃO COM O SERVIDOR';
+    document.body.prepend(b);
+}
+// No listenGameEvents:
+socket.on('disconnect', showDisconnectBanner);
+socket.on('connect',    () => document.getElementById('_dc-banner')?.remove());
+```

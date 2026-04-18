@@ -480,3 +480,33 @@ para entender o estado atual antes de implementar qualquer coisa.
 Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 - 8 críticas/altas: Sessão 11 ✅
 - 6 médias/baixas: Sessões 12 e 13 ✅
+
+---
+
+## [2026-04-18] Segunda Revisão de Segurança + Avaliação Play Store
+
+**Status:** Completo (análise e planejamento)
+**Branch:** main
+
+### Novos pontos encontrados
+
+| # | Descrição | Severidade | Sessão |
+|---|-----------|-----------|--------|
+| 1 | `broadcast()` envia planning do oponente antes da revelação — vazamento competitivo via WebSocket | CRÍTICO | 14 |
+| 2 | Nickname salvo apenas em localStorage — `saveProfile` não sincroniza com DB | ALTO | 14 |
+| 3 | Sem exclusão de conta in-app — bloqueador obrigatório da Play Store | ALTO | 14 |
+| 4 | JWT 30 dias sem revogação server-side — token roubado fica válido por 30 dias | ALTO | 15 |
+| 5 | Sem security headers (Helmet.js) — X-Frame-Options, HSTS, CSP, X-Content-Type-Options | MÉDIO | 15 |
+| 6 | Sem página de Privacy Policy — obrigatório para Play Store | MÉDIO | 15 |
+| 7 | Sem PWA manifest — necessário para TWA (abordagem de publicação recomendada) | MÉDIO | 15 |
+| 8 | `window.close()` não funciona em WebView Android | BAIXO | 16 |
+| 9 | Sem loading states em telas assíncronas | BAIXO | 16 |
+| 10 | Sem feedback visual de desconexão do servidor | BAIXO | 16 |
+| 11 | Sem troca de senha | BAIXO | 16 |
+
+### Avaliação Play Store
+- **Abordagem**: TWA (Trusted Web Activity) — mais econômica, sem reescrita nativa
+- **Bloqueadores absolutos**: exclusão de conta (#3) e Privacy Policy (#6)
+- **Bloqueadores técnicos**: manifest.json, assetlinks.json, ícones 192px e 512px
+- **Distância estimada**: 3 sessões de implementação + criação manual de ícones e preenchimento de formulários no Play Console
+- Sessões 14, 15 e 16 adicionadas ao SESSAO_POR_SESSAO_PLANNING.md
