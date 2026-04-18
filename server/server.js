@@ -5,13 +5,54 @@ const { Server } = require('socket.io');
 const crypto  = require('crypto');
 const path    = require('path');
 
+const { hashPassword, checkPassword, signToken, verifyToken } = require('./auth');
+const db = require('./db/database');
+
 const app    = express();
 const server = http.createServer(app);
 const io     = new Server(server, { cors: { origin: '*' } });
 const PORT   = process.env.PORT || 3000;
 
+app.use(express.json());
 app.use(express.static(path.join(__dirname, '../html')));
 app.get('/health', (_, res) => res.json({ ok: true }));
+
+// ── AUTH ENDPOINTS ────────────────────────────────────────────
+app.post('/auth/register', async (req, res) => {
+    const { username, email, password } = req.body || {};
+    if (!username || !email || !password)
+        return res.status(400).json({ error: 'username, email e password são obrigatórios' });
+    if (password.length < 6)
+        return res.status(400).json({ error: 'Senha deve ter ao menos 6 caracteres' });
+    try {
+        const id           = crypto.randomUUID();
+        const password_hash = await hashPassword(password);
+        db.prepare(
+            'INSERT INTO players (id, username, email, password_hash) VALUES (?, ?, ?, ?)'
+        ).run(id, String(username).slice(0, 16), email, password_hash);
+        const token = signToken({ id, username });
+        res.json({ token, id, username, mmr: 1500 });
+    } catch (e) {
+        if (e.message.includes('UNIQUE'))
+            return res.status(409).json({ error: 'Email ou username já cadastrado' });
+        res.status(500).json({ error: 'Erro interno' });
+    }
+});
+
+app.post('/auth/login', async (req, res) => {
+    const { email, password } = req.body || {};
+    if (!email || !password)
+        return res.status(400).json({ error: 'email e password são obrigatórios' });
+    const player = db.prepare(
+        'SELECT id, username, email, password_hash, mmr FROM players WHERE email = ?'
+    ).get(email);
+    if (!player) return res.status(401).json({ error: 'Credenciais inválidas' });
+    const ok = await checkPassword(password, player.password_hash);
+    if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' });
+    db.prepare("UPDATE players SET last_seen = datetime('now') WHERE id = ?").run(player.id);
+    const token = signToken({ id: player.id, username: player.username });
+    res.json({ token, id: player.id, username: player.username, mmr: player.mmr });
+});
 
 // ── GAME CONFIG (mirrors client) ──────────────────────────────
 const CONFIG = {
@@ -345,14 +386,29 @@ io.on('connection', (socket) => {
 
     // ── MATCHMAKING ──────────────────────────────────────────────
     socket.on('queue_join', (profile) => {
-        const { uid, nickname, avatar } = profile || {};
-        if (!uid) return;
+        const { uid, nickname, avatar, token, mmr: clientMMR } = profile || {};
+        let playerId  = uid;
+        let playerMMR = clientMMR || 1500;
+
+        if (token) {
+            const decoded = verifyToken(token);
+            if (decoded) {
+                const rec = db.prepare('SELECT mmr, ban_until FROM players WHERE id = ?').get(decoded.id);
+                if (rec) {
+                    playerId  = decoded.id;
+                    playerMMR = rec.mmr;
+                    // Ban check completo implementado na Sessão 3
+                }
+            }
+        }
+
+        if (!playerId) return;
 
         // Remove duplicate entry
-        const existing = queue.findIndex(p => p.uid === uid);
+        const existing = queue.findIndex(p => p.uid === playerId);
         if (existing > -1) queue.splice(existing, 1);
 
-        queue.push({ uid, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: avatar || 'K', timestamp: Date.now(), socketId: socket.id });
+        queue.push({ uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: avatar || 'K', timestamp: Date.now(), socketId: socket.id });
 
         if (queue.length >= 2) {
             const p1 = queue.shift();

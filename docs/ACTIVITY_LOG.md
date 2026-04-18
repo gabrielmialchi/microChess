@@ -86,43 +86,58 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-04-18] Sessão 1 — Database SQLite
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `better-sqlite3` instalado via npm
+- `server/db/schema.sql` criado — tabelas `players`, `matches`, `replays` + 4 índices
+- `server/db/database.js` criado — singleton com WAL mode e foreign_keys ON
+- `server/db/seed.js` criado — verifica 3 tabelas + índices, process.exit(0)
+- `server/package.json` atualizado — script `db:setup` adicionado
+- `npm run db:setup` executado com sucesso — todas tabelas e índices OK
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para Sessão 2
+- Instalar: `npm install bcrypt jsonwebtoken`
+- Criar `server/auth.js` com hashPassword, checkPassword, signToken, verifyToken
+- Adicionar POST /auth/register e POST /auth/login ao server.js
+- Modificar queue_join para aceitar token opcional
+
 <!-- TEMPLATE — copiar e preencher ao fim de cada sessão -->
 
 <!--
-## [DATA] Sessão 1 — Database SQLite
-**Status:** [ Completo / Interrompido em X ]
-**Branch:** sessao-1
-
-### Feito
--
-
-### Pendente
--
-
-### Bugs / Bloqueios Conhecidos
--
-
-### Notas para Sessão 2
--
+## [DATA] Sessão 1 — Database SQLite (template original)
 -->
 
-<!--
-## [DATA] Sessão 2 — Autenticação JWT
-**Status:** [ Completo / Interrompido em X ]
-**Branch:** sessao-2
+## [2026-04-18] Sessão 2 — Autenticação JWT
+
+**Status:** Completo
+**Branch:** main
 
 ### Feito
--
-
-### Pendente
--
+- `bcrypt` e `jsonwebtoken` instalados via npm
+- `server/auth.js` criado — hashPassword, checkPassword, signToken, verifyToken
+- `server.js`: requires adicionados (auth.js, db/database.js)
+- `server.js`: `express.json()` middleware adicionado
+- `server.js`: POST /auth/register — valida, hash, INSERT players, retorna token
+- `server.js`: POST /auth/login — SELECT, bcrypt.compare, UPDATE last_seen, retorna token
+- `server.js`: queue_join modificado — aceita token opcional; fallback sem token mantido
+- Testado: register retorna JWT; login com credenciais corretas retorna JWT
 
 ### Bugs / Bloqueios Conhecidos
--
+- Nenhum
 
 ### Notas para Sessão 3
--
--->
+- Criar `server/mmr.js` (calculate, getRank, getBanDuration)
+- Adicionar persistMatchResult, applyBan, startAFKTimer, clearAFKTimer ao server.js
+- Chamar persistMatchResult nos 2 pontos de GAMEOVER (finishDuel + disconnect)
+- Ban check no queue_join (já tem hook, só adicionar lógica)
+- GET /leaderboard e GET /player/:id
 
 <!--
 ## [DATA] Sessão 3 — MMR + WO/Ban + AFK

@@ -243,8 +243,8 @@ curl http://localhost:3000/health
 | Sessão | Tema | Status |
 |--------|------|--------|
 | 0 | Planejamento e organização | ✅ Completo |
-| 1 | Database SQLite | ⏳ Pendente |
-| 2 | Autenticação JWT | ⏳ Pendente |
+| 1 | Database SQLite | ✅ Completo |
+| 2 | Autenticação JWT | ✅ Completo |
 | 3 | MMR + WO/Ban + AFK | ⏳ Pendente |
 | 4 | Replay Recording | ⏳ Pendente |
 | 5 | Frontend Auth + Ban | ⏳ Pendente |

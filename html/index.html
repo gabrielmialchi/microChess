@@ -1459,7 +1459,12 @@
             border-radius: 6px; cursor: pointer; transition: all 0.15s;
         }
         .screen-back-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .flag-btn img.emoji {
+            width: 2rem; height: 2rem;
+            display: block; pointer-events: none;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -1769,6 +1774,20 @@
             recruit_label:'construye tu ejército', position_label:'coloca tus piezas', reveal_label:'el tablero revelado', action_label:'planea tu movimiento',
             phase_draft:'RECLUTAMIENTO', phase_position:'POSICIONAMIENTO', phase_reveal:'¡REVELACIÓN!', phase_action:'ACCIÓN',
             feedback:'Danos tu opinión. Haz clic aquí.',
+            htp_intro:'microChess Online es un duelo táctico donde el ajedrez clásico se encuentra con la incertidumbre del campo de batalla. El objetivo es simple: Captura al Rey enemigo.',
+            htp_flow_title:'FLUJO DEL JUEGO',
+            htp_draft:'Reclutamiento (Draft): Tienes 5 puntos para formar tu ejército. Elige entre Reinas poderosas o una masa de Peones y Caballos.',
+            htp_position:'Posicionamiento: Coloca tus piezas en secreto en las dos primeras filas. Tu oponente no verá tu estrategia... todavía.',
+            htp_reveal:'Revelación: Los tableros se unen y las formaciones se revelan. ¡Comienza la guerra!',
+            htp_action:'Acción Simultánea: Selecciona tu pieza y el destino. Sin esperas: ambos jugadores mueven al mismo tiempo. Planea tu movimiento prediciendo dónde estará el enemigo.',
+            htp_capture_title:'REGLAS DE CAPTURA Y MOVIMIENTO',
+            htp_capture:'Captura Automática: Si mueves a una casilla ocupada por una pieza enemiga quieta, la capturas instantáneamente (excepto el Rey).',
+            htp_escape:'Escape: Si atacas una casilla pero el enemigo se mueve en el mismo turno, ocupas el espacio vacío (¡escapó!).',
+            htp_duel:'Combate (Duelo): Si dos piezas intentan ocupar la misma casilla, o atacas al Rey enemigo, comienza un duelo de dados.',
+            htp_duel_title:'EL SISTEMA DE DUELO',
+            htp_duel_desc:'Cuando el conflicto es inevitable, la suerte y la fuerza entran en juego. Lanza el dado (1D6) y suma el Bono de Pieza.\nVictoria: Capturas la pieza enemiga y dominas la casilla.\nDerrota: Tu pieza es eliminada y el enemigo conquista el espacio.\nEmpate: Ambas piezas son eliminadas (vacío). Excepción: El Rey siempre gana empates.',
+            htp_special_title:'SITUACIONES ESPECIALES (Contraataque)',
+            htp_special:'MicroChess prioriza la defensa del Rey mediante la iniciativa. Si un Peón Blanco ataca a tu Rey, pero tu Caballo Negro ataca ese mismo Peón en el mismo turno, el Caballo intercepta primero. Si el Caballo gana el duelo, destruye al invasor y salva a tu Rey antes de que ocurra el ataque enemigo.',
         },
         de: {
             new_game:'NEUES SPIEL', how_to_play:'ANLEITUNG', credits:'DANKSAGUNG', settings:'EINSTELLUNGEN', quit:'BEENDEN', back:'ZURÜCK',
@@ -1785,6 +1804,20 @@
             recruit_label:'baue dein Heer', position_label:'platziere deine Figuren', reveal_label:'das Brett enthüllt', action_label:'plane deinen Zug',
             phase_draft:'REKRUTIERUNG', phase_position:'AUFSTELLUNG', phase_reveal:'ENTHÜLLUNG!', phase_action:'AKTION',
             feedback:'Gib uns dein Feedback. Klick hier.',
+            htp_intro:'microChess Online ist ein taktisches Duell, bei dem klassisches Schach auf die Ungewissheit des Schlachtfelds trifft. Das Ziel ist einfach: Capture den feindlichen König.',
+            htp_flow_title:'SPIELABLAUF',
+            htp_draft:'Rekrutierung (Draft): Du hast 5 Punkte, um deine Armee aufzubauen. Wähle zwischen mächtigen Damen oder einer Masse an Bauern und Springern.',
+            htp_position:'Aufstellung: Platziere deine Figuren heimlich in den ersten zwei Reihen. Dein Gegner sieht deine Strategie nicht... noch nicht.',
+            htp_reveal:'Enthüllung: Die Bretter vereinen sich und die Formationen werden enthüllt. Der Krieg beginnt!',
+            htp_action:'Simultaner Zug: Wähle deine Figur und das Zielfeld. Kein Warten: Beide Spieler ziehen gleichzeitig. Plane deinen Zug und sage voraus, wo der Feind sein wird.',
+            htp_capture_title:'SCHLAG- UND BEWEGUNGSREGELN',
+            htp_capture:'Automatischer Schlag: Ziehst du auf ein Feld mit einer unbewegten feindlichen Figur, schlägst du sie sofort (außer dem König).',
+            htp_escape:'Flucht: Greifst du ein Feld an, bewegt sich der Feind aber im gleichen Zug weg, besetzt du das leere Feld (er entkam!).',
+            htp_duel:'Kampf (Duell): Versuchen zwei Figuren dasselbe Feld zu besetzen oder greifst du den feindlichen König an, beginnt ein Würfelduell.',
+            htp_duel_title:'DAS DUELL-SYSTEM',
+            htp_duel_desc:'Wenn der Konflikt unvermeidlich ist, kommen Glück und Stärke ins Spiel. Würfle (1W6) und addiere den Figurenbonus.\nSieg: Du schlägst die feindliche Figur und beherrschst das Feld.\nNiederlage: Deine Figur wird entfernt und der Feind übernimmt den Platz.\nUnentschieden: Beide Figuren werden entfernt (Vakuum). Ausnahme: Der König gewinnt immer bei Unentschieden.',
+            htp_special_title:'BESONDERE SITUATIONEN (Gegenangriff)',
+            htp_special:'MicroChess priorisiert die Königsverteidigung durch Initiative. Greift ein weißer Bauer deinen König an, aber dein schwarzer Springer greift denselben Bauern im gleichen Zug an, fängt der Springer zuerst ab. Gewinnt der Springer das Duell, vernichtet er den Eindringling und rettet deinen König, bevor der feindliche Angriff stattfindet.',
         },
         it: {
             new_game:'NUOVA PARTITA', how_to_play:'COME SI GIOCA', credits:'CREDITI', settings:'IMPOSTAZIONI', quit:'ESCI', back:'INDIETRO',
@@ -1801,6 +1834,20 @@
             recruit_label:'costruisci il tuo esercito', position_label:'posiziona i pezzi', reveal_label:'la scacchiera svelata', action_label:'pianifica la mossa',
             phase_draft:'RECLUTAMENTO', phase_position:'POSIZIONAMENTO', phase_reveal:'RIVELAZIONE!', phase_action:'AZIONE',
             feedback:'Lascia il tuo Feedback. Clicca qui.',
+            htp_intro:'microChess Online è un duello tattico dove gli scacchi classici incontrano l\'incertezza del campo di battaglia. L\'obiettivo è semplice: Cattura il Re nemico.',
+            htp_flow_title:'FLUSSO DI GIOCO',
+            htp_draft:'Reclutamento (Draft): Hai 5 punti per costruire il tuo esercito. Scegli tra potenti Regine o una massa di Pedoni e Cavalieri.',
+            htp_position:'Posizionamento: Posiziona i tuoi pezzi segretamente nelle prime due righe. Il tuo avversario non vedrà la tua strategia... ancora.',
+            htp_reveal:'Rivelazione: I tabelloni si uniscono e le formazioni vengono rivelate. La guerra ha inizio!',
+            htp_action:'Azione Simultanea: Seleziona il tuo pezzo e la destinazione. Nessuna attesa: entrambi i giocatori muovono allo stesso tempo. Pianifica la mossa prevedendo dove sarà il nemico.',
+            htp_capture_title:'REGOLE DI CATTURA E MOVIMENTO',
+            htp_capture:'Cattura Automatica: Se ti muovi su una casella occupata da un pezzo nemico fermo, lo catturi istantaneamente (tranne il Re).',
+            htp_escape:'Fuga: Se attacchi una casella ma il nemico si muove nello stesso turno, occupi lo spazio vuoto (è fuggito!).',
+            htp_duel:'Combattimento (Duello): Se due pezzi tentano di occupare la stessa casella, o se attacchi il Re nemico, inizia un duello a dadi.',
+            htp_duel_title:'IL SISTEMA DI DUELLO',
+            htp_duel_desc:'Quando il conflitto è inevitabile, fortuna e forza entrano in gioco. Lancia il dado (1D6) e aggiungi il Bonus Pezzo.\nVittoria: Catturi il pezzo nemico e controlli la casella.\nSconfitta: Il tuo pezzo viene rimosso e il nemico conquista lo spazio.\nPareggio: Entrambi i pezzi vengono rimossi (vuoto). Eccezione: Il Re vince sempre i pareggi.',
+            htp_special_title:'SITUAZIONI SPECIALI (Contrattacco)',
+            htp_special:'MicroChess dà priorità alla difesa del Re attraverso l\'iniziativa. Se un Pedone Bianco attacca il tuo Re, ma il tuo Cavallo Nero attacca quello stesso Pedone nello stesso turno, il Cavallo intercetta per primo. Se il Cavallo vince il duello, distrugge l\'invasore e salva il tuo Re prima che l\'attacco nemico avvenga.',
         },
         ru: {
             new_game:'НОВАЯ ИГРА', how_to_play:'КАК ИГРАТЬ', credits:'АВТОРЫ', settings:'НАСТРОЙКИ', quit:'ВЫХОД', back:'НАЗАД',
@@ -1817,6 +1864,20 @@
             recruit_label:'соберите армию', position_label:'расставьте фигуры', reveal_label:'доска открыта', action_label:'планируйте ход',
             phase_draft:'РЕКРУТИНГ', phase_position:'РАССТАНОВКА', phase_reveal:'РАСКРЫТИЕ!', phase_action:'ДЕЙСТВИЕ',
             feedback:'Оставьте отзыв. Нажмите здесь.',
+            htp_intro:'microChess Online — это тактический дуэль, где классические шахматы встречаются с непредсказуемостью поля боя. Цель проста: захватите Короля противника.',
+            htp_flow_title:'ИГРОВОЙ ПРОЦЕСС',
+            htp_draft:'Рекрутинг (Draft): У вас 5 очков для формирования армии. Выбирайте между мощными Ферзями или массой Пешек и Коней.',
+            htp_position:'Расстановка: Расставьте фигуры скрытно в первых двух рядах. Противник не увидит вашу стратегию... пока.',
+            htp_reveal:'Раскрытие: Доски объединяются и формации раскрываются. Война начинается!',
+            htp_action:'Одновременный ход: Выберите фигуру и цель. Никакого ожидания: оба игрока ходят одновременно. Планируйте ход, предугадывая позицию врага.',
+            htp_capture_title:'ПРАВИЛА ЗАХВАТА И ДВИЖЕНИЯ',
+            htp_capture:'Автозахват: Если вы ходите на клетку с неподвижной вражеской фигурой, вы захватываете её мгновенно (кроме Короля).',
+            htp_escape:'Побег: Если вы атакуете клетку, но враг уходит с неё в том же ходу, вы занимаете пустое место (он сбежал!).',
+            htp_duel:'Бой (Дуэль): Если две фигуры пытаются занять одну клетку или вы атакуете вражеского Короля, начинается дуэль на кубиках.',
+            htp_duel_title:'СИСТЕМА ДУЭЛЕЙ',
+            htp_duel_desc:'Когда конфликт неизбежен, вступают в игру удача и сила. Бросьте кубик (1D6) и добавьте Бонус Фигуры.\nПобеда: Вы захватываете вражескую фигуру и занимаете клетку.\nПоражение: Ваша фигура удаляется, враг занимает место.\nНичья: Обе фигуры удаляются (пустота). Исключение: Король всегда побеждает при ничьей.',
+            htp_special_title:'ОСОБЫЕ СИТУАЦИИ (Контратака)',
+            htp_special:'MicroChess приоритизирует защиту Короля через инициативу. Если Белая Пешка атакует вашего Короля, но ваш Чёрный Конь атакует ту же Пешку в том же ходу, Конь перехватывает первым. Если Конь выигрывает дуэль, он уничтожает захватчика и спасает вашего Короля до того, как произойдёт вражеская атака.',
         },
         ja: {
             new_game:'新しいゲーム', how_to_play:'ルール', credits:'クレジット', settings:'設定', quit:'終了', back:'戻る',
@@ -1833,6 +1894,20 @@
             recruit_label:'軍隊を編成', position_label:'駒を配置', reveal_label:'盤面公開', action_label:'手を計画',
             phase_draft:'招集', phase_position:'配置', phase_reveal:'公開！', phase_action:'行動',
             feedback:'フィードバックをください。クリックしてください。',
+            htp_intro:'microChess Onlineは、クラシックなチェスと戦場の不確実性が融合した戦術的決闘です。目標はシンプル：敵のキングを捕獲せよ。',
+            htp_flow_title:'ゲームの流れ',
+            htp_draft:'募集（ドラフト）：5ポイントで軍隊を編成します。強力なクイーンか、ポーンとナイトの大群を選んでください。',
+            htp_position:'配置：最初の2列に駒を秘密裏に配置します。対戦相手はあなたの戦略を見ることができません…まだ。',
+            htp_reveal:'公開：ボードが合体し、陣形が明かされます。戦争が始まる！',
+            htp_action:'同時行動：駒と目的地を選択します。待ち時間なし：両プレイヤーが同時に動きます。敵がどこにいるかを予測して動きを計画してください。',
+            htp_capture_title:'捕獲と移動のルール',
+            htp_capture:'自動捕獲：静止している敵の駒のいるマスに移動すると、即座に捕獲します（キングを除く）。',
+            htp_escape:'逃走：マスを攻撃しても、同じターンに敵が移動した場合、空のスペースを占有します（逃げられた！）。',
+            htp_duel:'戦闘（デュエル）：2つの駒が同じマスを占有しようとする場合、または敵のキングを攻撃する場合、サイコロ決闘が始まります。',
+            htp_duel_title:'デュエルシステム',
+            htp_duel_desc:'衝突が避けられないとき、運と力が登場します。サイコロ（1D6）を振り、駒のボーナスを加算します。\n勝利：敵の駒を捕獲してマスを支配します。\n敗北：あなたの駒が除去され、敵がスペースを占領します。\n引き分け：両方の駒が除去されます（空白）。例外：キングは常に引き分けに勝ちます。',
+            htp_special_title:'特殊状況（カウンターアタック）',
+            htp_special:'MicroChessはイニシアチブによってキングの防御を優先します。白のポーンがあなたのキングを攻撃しても、あなたの黒のナイトが同じターンにそのポーンを攻撃すれば、ナイトが先に介入します。ナイトがデュエルに勝てば、敵の攻撃が起きる前に侵入者を倒してキングを救います。',
         },
         ko: {
             new_game:'새 게임', how_to_play:'게임 방법', credits:'크레딧', settings:'설정', quit:'종료', back:'뒤로',
@@ -1849,6 +1924,20 @@
             recruit_label:'군대를 구성', position_label:'말을 배치', reveal_label:'보드 공개', action_label:'움직임 계획',
             phase_draft:'모집', phase_position:'배치', phase_reveal:'공개!', phase_action:'행동',
             feedback:'피드백을 남겨주세요. 클릭하세요.',
+            htp_intro:'microChess Online은 클래식 체스와 전쟁터의 불확실성이 만나는 전술적 결투입니다. 목표는 간단합니다: 적의 킹을 잡아라.',
+            htp_flow_title:'게임 흐름',
+            htp_draft:'모집 (드래프트): 5포인트로 군대를 구성합니다. 강력한 퀸 또는 폰과 나이트의 대군 중 선택하세요.',
+            htp_position:'배치: 첫 두 줄에 비밀리에 말을 배치합니다. 상대방은 당신의 전략을 볼 수 없습니다... 아직은요.',
+            htp_reveal:'공개: 보드가 합쳐지고 진형이 드러납니다. 전쟁이 시작됩니다!',
+            htp_action:'동시 행동: 말과 목적지를 선택합니다. 기다림 없이: 두 플레이어가 동시에 움직입니다. 적이 어디에 있을지 예측하며 움직임을 계획하세요.',
+            htp_capture_title:'포획 및 이동 규칙',
+            htp_capture:'자동 포획: 정지해 있는 적의 말이 있는 칸으로 이동하면 즉시 포획합니다 (킹 제외).',
+            htp_escape:'탈출: 칸을 공격했지만 같은 턴에 적이 이동하면, 빈 공간을 차지합니다 (도망쳤습니다!).',
+            htp_duel:'전투 (결투): 두 말이 같은 칸을 차지하려 하거나 적의 킹을 공격하면 주사위 결투가 시작됩니다.',
+            htp_duel_title:'결투 시스템',
+            htp_duel_desc:'충돌이 불가피할 때, 운과 힘이 등장합니다. 주사위(1D6)를 굴리고 말 보너스를 더합니다.\n승리: 적의 말을 포획하고 칸을 지배합니다.\n패배: 당신의 말이 제거되고 적이 공간을 차지합니다.\n무승부: 두 말 모두 제거됩니다 (공백). 예외: 킹은 항상 무승부에서 이깁니다.',
+            htp_special_title:'특수 상황 (역습)',
+            htp_special:'MicroChess는 주도권을 통해 킹 방어를 우선시합니다. 백의 폰이 당신의 킹을 공격하더라도, 당신의 흑 나이트가 같은 턴에 그 폰을 공격하면 나이트가 먼저 개입합니다. 나이트가 결투에서 이기면 적의 공격이 일어나기 전에 침략자를 제거하고 킹을 구합니다.',
         },
         zh: {
             new_game:'新游戏', how_to_play:'游戏说明', credits:'制作人员', settings:'设置', quit:'退出', back:'返回',
@@ -1865,6 +1954,20 @@
             recruit_label:'组建军队', position_label:'放置棋子', reveal_label:'棋盘揭示', action_label:'计划走法',
             phase_draft:'招募', phase_position:'布阵', phase_reveal:'揭示！', phase_action:'行动',
             feedback:'给我们反馈。点击这里。',
+            htp_intro:'microChess Online是一场战术决斗，经典国际象棋与战场的不确定性相遇。目标很简单：捕获敌方国王。',
+            htp_flow_title:'游戏流程',
+            htp_draft:'招募（选秀）：你有5点来组建军队。在强大的后或大量兵和马之间做出选择。',
+            htp_position:'布阵：秘密地将棋子放置在前两行。你的对手还看不到你的策略……还没有。',
+            htp_reveal:'揭示：棋盘合并，阵型揭晓。战争开始！',
+            htp_action:'同步行动：选择你的棋子和目的地。无需等待：双方同时行动。预测敌人的位置来规划你的走法。',
+            htp_capture_title:'捕获与移动规则',
+            htp_capture:'自动捕获：如果你移动到一个被静止的敌方棋子占据的格子，你将立即捕获它（国王除外）。',
+            htp_escape:'逃脱：如果你攻击一个格子，但敌人在同一回合移走，你占据空格（它逃脱了！）。',
+            htp_duel:'战斗（决斗）：如果两个棋子试图占据同一格子，或者你攻击敌方国王，骰子决斗开始。',
+            htp_duel_title:'决斗系统',
+            htp_duel_desc:'当冲突不可避免时，运气和力量进入游戏。掷骰子（1D6）并加上棋子加成。\n胜利：你捕获敌方棋子并控制格子。\n失败：你的棋子被移除，敌人占领空间。\n平局：两个棋子都被移除（真空）。例外：国王在平局中始终获胜。',
+            htp_special_title:'特殊情况（反击）',
+            htp_special:'MicroChess通过主动权优先保护国王。如果白兵攻击你的国王，但你的黑马在同一回合攻击那匹兵，马会先行拦截。如果马赢得决斗，它在敌方攻击发生之前消灭入侵者并拯救你的国王。',
         },
     };
 
@@ -1948,6 +2051,9 @@
         document.querySelectorAll('.flag-btn').forEach(btn => {
             btn.classList.toggle('selected', btn.dataset.lang === currentLang);
         });
+        if (typeof twemoji !== 'undefined') {
+            twemoji.parse(document.getElementById('flag-grid'), { folder: 'svg', ext: '.svg' });
+        }
     }
 
     function renderHowToPlay() {
