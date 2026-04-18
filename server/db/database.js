@@ -34,11 +34,12 @@ function _encryptEmail(email) {
 
 // ── MIGRATIONS ────────────────────────────────────────────────
 const newCols = [
-    'ALTER TABLE players ADD COLUMN email_hash TEXT',
-    'ALTER TABLE players ADD COLUMN email_enc  TEXT',
-    'ALTER TABLE players ADD COLUMN elo_rank   INTEGER DEFAULT 0',
-    'ALTER TABLE players ADD COLUMN elo_lp     INTEGER DEFAULT 0',
-    'ALTER TABLE players ADD COLUMN elo_shield INTEGER DEFAULT 0',
+    'ALTER TABLE players ADD COLUMN email_hash  TEXT',
+    'ALTER TABLE players ADD COLUMN email_enc   TEXT',
+    'ALTER TABLE players ADD COLUMN elo_rank    INTEGER DEFAULT 0',
+    'ALTER TABLE players ADD COLUMN elo_lp      INTEGER DEFAULT 0',
+    'ALTER TABLE players ADD COLUMN elo_shield  INTEGER DEFAULT 0',
+    'ALTER TABLE players ADD COLUMN pw_version  INTEGER DEFAULT 0',
     'ALTER TABLE matches ADD COLUMN lp_change_white INTEGER DEFAULT 0',
     'ALTER TABLE matches ADD COLUMN lp_change_black INTEGER DEFAULT 0',
 ];

@@ -552,6 +552,60 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-04-18] Sessão 17 — Sala Privada com Código
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server.js`: `privateRooms` Map + `PRIVATE_ROOM_MS = 5min`
+- `server.js`: evento `private_room_create` — gera código 4 chars (charset sem ambíguos), timer expiry, valida ban, retorna `private_room_created`
+- `server.js`: evento `private_room_join` — valida código, cria sala com cores aleatórias, emite `match_found` para ambos
+- `server.js`: evento `private_room_cancel` — limpa sala do socket
+- `server.js`: disconnect handler — limpa private rooms do socket desconectado
+- `index.html`: tela `screen-private-room` — CRIAR SALA (mostra código + spinner aguardando) + ENTRAR COM CÓDIGO (input 4 chars) + VOLTAR
+- `index.html`: botão "SALA PRIVADA" no menu principal (entre NOVO JOGO e RANKING)
+- `index.html`: `window.privateRoom` — objeto com `open`, `cancel`, `create`, `join`, `copyCode`, `_onCreated`, `_onExpired`, `_onError`
+- `index.html`: `socket.on('private_room_created/expired/error')` handlers
+- `index.html`: `match_found` handler atualizado para popular e mostrar tela de matchmaking mesmo quando vindo da sala privada
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próximas sessões: polimentos P-A (localização), P-B (juicy combate), P-C (transições + UX info)
+- P-07: badge "partida não ranqueada" quando Logado×Anônimo ainda pendente
+
+---
+
+## [2026-04-18] Sessão 18 — Hardening Final + P-07
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/db/schema.sql`: coluna `pw_version INTEGER DEFAULT 0` adicionada à tabela players
+- `server/db/database.js`: migration `ALTER TABLE players ADD COLUMN pw_version INTEGER DEFAULT 0`
+- `server/server.js`: helper `requireAuth()` — verifica token + pw_version (invalida tokens de antes da troca de senha)
+- `server/server.js`: `PATCH /auth/profile` e `DELETE /auth/account` usam `requireAuth`
+- `server/server.js`: login e register incluem `pv` no payload do JWT
+- `server/server.js`: `PATCH /auth/password` — incrementa `pw_version`, retorna novo token com `pv` atualizado; rate limiter adicionado (V-04)
+- `server/server.js`: startup warning `ALLOWED_ORIGIN` em produção (V-02)
+- `server/server.js`: try/catch no `JSON.parse(ASSET_LINKS)` (V-03)
+- `server/server.js`: `/player/:id` — campos sensíveis (`wo_count`, `elo_shield`, `ban_until`, `banned`) apenas quando `isSelf` (V-05)
+- `server/server.js`: INSERT players grava `null` na coluna `email` legada em vez de `email_enc` (V-06)
+- `server/server.js`: `match_found` inclui `isRanked` — false quando qualquer lado é guest (uid começa com `g_`)
+- `html/auth-frontend.js`: `doChangePassword` salva novo token retornado pelo servidor
+- `html/index.html`: badge "PARTIDA NÃO RANQUEADA" na tela de matchmaking (mm-found) e game-over quando `isRanked === false`
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Iniciar polimentos: P-A (localização), P-B (juicy combate), P-C (transições + links)
+
+---
+
 ## [REFERÊNCIA] Status final — Sessões 11, 12, 13 (Ciclo de Segurança)
 Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 - 8 críticas/altas: Sessão 11 ✅

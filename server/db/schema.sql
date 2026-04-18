@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS players (
     elo_rank        INTEGER DEFAULT 0,
     elo_lp          INTEGER DEFAULT 0,
     elo_shield      INTEGER DEFAULT 0,
+    pw_version      INTEGER DEFAULT 0,
     created_at      TEXT DEFAULT (datetime('now')),
     last_seen       TEXT DEFAULT (datetime('now'))
 );

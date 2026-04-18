@@ -58,15 +58,17 @@ app.get('/privacy-policy', (_, res) => {
 });
 
 app.get('/.well-known/assetlinks.json', (_, res) => {
-    // Preencher após gerar o keystore do APK na Play Store
-    const links = process.env.ASSET_LINKS ? JSON.parse(process.env.ASSET_LINKS) : [];
+    let links = [];
+    try { links = process.env.ASSET_LINKS ? JSON.parse(process.env.ASSET_LINKS) : []; }
+    catch { console.error('[CONFIG] ASSET_LINKS inválido — usando []'); }
     res.json(links);
 });
 
 // ── STARTUP SECURITY CHECKS ───────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
-    if (!process.env.HMAC_SECRET) console.error('[SECURITY] CRÍTICO: HMAC_SECRET não definido. Emails não estão protegidos!');
-    if (!process.env.AES_KEY)     console.error('[SECURITY] CRÍTICO: AES_KEY não definida. Emails não estão criptografados corretamente!');
+    if (!process.env.HMAC_SECRET)     console.error('[SECURITY] CRÍTICO: HMAC_SECRET não definido. Emails não estão protegidos!');
+    if (!process.env.AES_KEY)         console.error('[SECURITY] CRÍTICO: AES_KEY não definida. Emails não estão criptografados corretamente!');
+    if (!process.env.ALLOWED_ORIGIN)  console.error('[SECURITY] AVISO: ALLOWED_ORIGIN não definido — Socket.IO aceitando conexões de qualquer origem.');
 }
 
 // ── RATE LIMITING ─────────────────────────────────────────────
@@ -95,8 +97,21 @@ function encryptEmail(email) {
 }
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// ── AUTH ENDPOINTS ────────────────────────────────────────────
+// ── AUTH HELPERS ─────────────────────────────────────────────
 const USERNAME_RE = /^[a-zA-Z0-9_\-\.]{3,16}$/;
+
+// Verifies token AND checks pw_version — invalidates tokens issued before last password change
+function requireAuth(authHeader) {
+    const token   = (authHeader || '').split(' ')[1];
+    const decoded = token ? verifyToken(token) : null;
+    if (!decoded) return null;
+    const player = db.prepare('SELECT pw_version FROM players WHERE id=?').get(decoded.id);
+    if (!player) return null;
+    if ((decoded.pv ?? 0) !== (player.pw_version ?? 0)) return null;
+    return decoded;
+}
+
+// ── AUTH ENDPOINTS ────────────────────────────────────────────
 
 app.post('/auth/register', authLimiter, async (req, res) => {
     const { username, email, password } = req.body || {};
@@ -119,8 +134,8 @@ app.post('/auth/register', authLimiter, async (req, res) => {
             return res.status(409).json({ error: 'Email já cadastrado' });
         db.prepare(
             'INSERT INTO players (id, username, email, email_hash, email_enc, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
-        ).run(id, uname, email_enc, email_hash, email_enc, password_hash);
-        const token = signToken({ id, username: uname });
+        ).run(id, uname, null, email_hash, email_enc, password_hash);
+        const token = signToken({ id, username: uname, pv: 0 });
         res.json({ token, id, username: uname, mmr: 1500 });
     } catch (e) {
         if (e.message.includes('UNIQUE'))
@@ -139,7 +154,7 @@ app.post('/auth/login', authLimiter, async (req, res) => {
     const emailNorm  = String(email).toLowerCase().trim();
     const email_hash = hashEmail(emailNorm);
     const player = db.prepare(
-        'SELECT id, username, password_hash, mmr FROM players WHERE email_hash = ?'
+        'SELECT id, username, password_hash, mmr, pw_version FROM players WHERE email_hash = ?'
     ).get(email_hash);
     if (!player) {
         await checkPassword(password, _DUMMY_HASH);
@@ -148,21 +163,21 @@ app.post('/auth/login', authLimiter, async (req, res) => {
     const ok = await checkPassword(password, player.password_hash);
     if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' });
     db.prepare("UPDATE players SET last_seen = datetime('now') WHERE id = ?").run(player.id);
-    const token = signToken({ id: player.id, username: player.username });
+    const token = signToken({ id: player.id, username: player.username, pv: player.pw_version ?? 0 });
     res.json({ token, id: player.id, username: player.username, mmr: player.mmr });
 });
 
 // ── PROFILE / ACCOUNT ENDPOINTS ──────────────────────────────
 app.patch('/auth/profile', async (req, res) => {
-    const auth    = (req.headers.authorization || '').split(' ')[1];
-    const decoded = auth ? verifyToken(auth) : null;
+    const decoded = requireAuth(req.headers.authorization);
     if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
     const uname = String(req.body?.username || '').trim();
     if (!USERNAME_RE.test(uname))
         return res.status(400).json({ error: 'Username deve ter 3-16 caracteres: letras, números, _ - .' });
     try {
         db.prepare('UPDATE players SET username=? WHERE id=?').run(uname, decoded.id);
-        const newToken = signToken({ id: decoded.id, username: uname });
+        const pv = decoded.pv ?? 0;
+        const newToken = signToken({ id: decoded.id, username: uname, pv });
         res.json({ token: newToken, username: uname });
     } catch (e) {
         if (e.message.includes('UNIQUE'))
@@ -171,9 +186,8 @@ app.patch('/auth/profile', async (req, res) => {
     }
 });
 
-app.patch('/auth/password', async (req, res) => {
-    const auth    = (req.headers.authorization || '').split(' ')[1];
-    const decoded = auth ? verifyToken(auth) : null;
+app.patch('/auth/password', authLimiter, async (req, res) => {
+    const decoded = requireAuth(req.headers.authorization);
     if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
     const { currentPassword, newPassword } = req.body || {};
     if (!currentPassword || !newPassword)
@@ -185,8 +199,10 @@ app.patch('/auth/password', async (req, res) => {
     const ok = await checkPassword(currentPassword, player.password_hash);
     if (!ok) return res.status(401).json({ error: 'Senha atual incorreta' });
     const newHash = await hashPassword(newPassword);
-    db.prepare('UPDATE players SET password_hash=? WHERE id=?').run(newHash, decoded.id);
-    res.json({ ok: true });
+    db.prepare('UPDATE players SET password_hash=?, pw_version=pw_version+1 WHERE id=?').run(newHash, decoded.id);
+    const updated  = db.prepare('SELECT username, pw_version FROM players WHERE id=?').get(decoded.id);
+    const newToken = signToken({ id: decoded.id, username: updated.username, pv: updated.pw_version });
+    res.json({ ok: true, token: newToken });
 });
 
 const _deleteAccount = db.transaction((playerId) => {
@@ -196,8 +212,7 @@ const _deleteAccount = db.transaction((playerId) => {
 });
 
 app.delete('/auth/account', (req, res) => {
-    const auth    = (req.headers.authorization || '').split(' ')[1];
-    const decoded = auth ? verifyToken(auth) : null;
+    const decoded = requireAuth(req.headers.authorization);
     if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
     try {
         _deleteAccount(decoded.id);
@@ -220,13 +235,22 @@ app.get('/leaderboard', (_, res) => {
 });
 
 app.get('/player/:id', (req, res) => {
+    const auth    = (req.headers.authorization || '').split(' ')[1];
+    const decoded = auth ? verifyToken(auth) : null;
+    const isSelf  = decoded?.id === req.params.id;
     const p = db.prepare(
         'SELECT id, username, mmr, wins, losses, draws, wo_count, wo_against, ban_until, elo_rank, elo_lp, elo_shield FROM players WHERE id=?'
     ).get(req.params.id);
     if (!p) return res.status(404).json({ error: 'Não encontrado' });
-    const banned = !!(p.ban_until && new Date(p.ban_until) > new Date());
     const elo = getEloDisplay(p.elo_rank ?? 0, p.elo_lp ?? 0);
-    res.json({ ...p, ...getRank(p.mmr), elo, banned, banUntil: p.ban_until });
+    const pub = { id: p.id, username: p.username, mmr: p.mmr, wins: p.wins, losses: p.losses, draws: p.draws, wo_against: p.wo_against, elo_rank: p.elo_rank, elo_lp: p.elo_lp, ...getRank(p.mmr), elo };
+    if (isSelf) {
+        pub.wo_count   = p.wo_count;
+        pub.elo_shield = p.elo_shield;
+        pub.banned     = !!(p.ban_until && new Date(p.ban_until) > new Date());
+        pub.banUntil   = p.ban_until;
+    }
+    res.json(pub);
 });
 
 app.get('/match/:id/replay', (req, res) => {
@@ -396,7 +420,9 @@ const CONFIG = {
 const queue            = [];         // { uid, nickname, avatar, timestamp, socketId }
 const rooms            = new Map();  // roomId → { id, players, state, resolving }
 const pendingReconnects = new Map(); // uid → { roomId, color, timer }
+const privateRooms     = new Map();  // code → { profile, socketId, timer }
 const RECONNECT_MS     = 60_000;
+const PRIVATE_ROOM_MS  = 5 * 60_000; // 5 minutes expiry
 
 // ── MAINTENANCE ───────────────────────────────────────────────
 function cleanExpiredReplays() {
@@ -805,14 +831,128 @@ io.on('connection', (socket) => {
             startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
             startAFKTimer(newRoom, 'black', AFK_PREPARE_MS, 'draft');
 
-            io.to(p1.socketId).emit('match_found', { myColor: 'white', oppProfile: { nickname: p2.nickname, avatar: p2.avatar }, roomId });
-            io.to(p2.socketId).emit('match_found', { myColor: 'black', oppProfile: { nickname: p1.nickname, avatar: p1.avatar }, roomId });
+            const isRanked = !p1.uid.startsWith('g_') && !p2.uid.startsWith('g_');
+            io.to(p1.socketId).emit('match_found', { myColor: 'white', oppProfile: { nickname: p2.nickname, avatar: p2.avatar }, roomId, isRanked });
+            io.to(p2.socketId).emit('match_found', { myColor: 'black', oppProfile: { nickname: p1.nickname, avatar: p1.avatar }, roomId, isRanked });
         }
     });
 
     socket.on('queue_cancel', () => {
         const idx = queue.findIndex(p => p.socketId === socket.id);
         if (idx > -1) queue.splice(idx, 1);
+    });
+
+    // ── PRIVATE ROOM ─────────────────────────────────────────────
+    socket.on('private_room_create', (profile) => {
+        // Cancel any existing room created by this socket
+        for (const [code, entry] of privateRooms.entries()) {
+            if (entry.socketId === socket.id) {
+                clearTimeout(entry.timer);
+                privateRooms.delete(code);
+            }
+        }
+
+        let { uid, nickname, avatar, token, mmr: clientMMR } = profile || {};
+        let playerId = uid, playerMMR = clientMMR || 1500;
+        if (token) {
+            const decoded = verifyToken(token);
+            if (decoded) {
+                const rec = db.prepare('SELECT mmr, ban_until, username FROM players WHERE id=?').get(decoded.id);
+                if (rec) {
+                    if (rec.ban_until && new Date(rec.ban_until) > new Date()) {
+                        socket.emit('banned', { until: rec.ban_until, remainMs: new Date(rec.ban_until) - Date.now() });
+                        return;
+                    }
+                    playerId = decoded.id;
+                    playerMMR = rec.mmr;
+                    nickname  = rec.username;
+                }
+            }
+        }
+        if (!playerId) return;
+
+        const VALID_AVATARS = new Set(['K', 'Q', 'R', 'B', 'N', 'P']);
+        const safeAvatar    = VALID_AVATARS.has(avatar) ? avatar : 'K';
+
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code;
+        do { code = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join(''); }
+        while (privateRooms.has(code));
+
+        const timer = setTimeout(() => {
+            if (privateRooms.has(code)) {
+                privateRooms.delete(code);
+                socket.emit('private_room_expired', { code });
+            }
+        }, PRIVATE_ROOM_MS);
+
+        privateRooms.set(code, {
+            profile: { uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: safeAvatar, mmr: playerMMR },
+            socketId: socket.id,
+            timer,
+        });
+        socket.emit('private_room_created', { code });
+    });
+
+    socket.on('private_room_join', ({ code, profile } = {}) => {
+        const entry = privateRooms.get((code || '').toUpperCase());
+        if (!entry) { socket.emit('private_room_error', { error: 'Código inválido ou expirado.' }); return; }
+        if (entry.socketId === socket.id) { socket.emit('private_room_error', { error: 'Você não pode entrar na sua própria sala.' }); return; }
+
+        let { uid, nickname, avatar, token, mmr: clientMMR } = profile || {};
+        let playerId = uid, playerMMR = clientMMR || 1500;
+        if (token) {
+            const decoded = verifyToken(token);
+            if (decoded) {
+                const rec = db.prepare('SELECT mmr, ban_until, username FROM players WHERE id=?').get(decoded.id);
+                if (rec) {
+                    if (rec.ban_until && new Date(rec.ban_until) > new Date()) {
+                        socket.emit('banned', { until: rec.ban_until, remainMs: new Date(rec.ban_until) - Date.now() });
+                        return;
+                    }
+                    playerId = decoded.id;
+                    playerMMR = rec.mmr;
+                    nickname  = rec.username;
+                }
+            }
+        }
+        if (!playerId) return;
+
+        clearTimeout(entry.timer);
+        privateRooms.delete(code.toUpperCase());
+
+        const VALID_AVATARS = new Set(['K', 'Q', 'R', 'B', 'N', 'P']);
+        const safeAvatar    = VALID_AVATARS.has(avatar) ? avatar : 'K';
+
+        const p1 = { ...entry.profile, socketId: entry.socketId };
+        const p2 = { uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: safeAvatar, mmr: playerMMR, socketId: socket.id };
+        const [white, black] = Math.random() < 0.5 ? [p1, p2] : [p2, p1];
+
+        const roomId  = crypto.randomBytes(3).toString('hex');
+        const newRoom = {
+            id:        roomId,
+            players:   { white, black },
+            state:     createState(),
+            resolving: false,
+            timeouts:  {},
+            _replay:   createReplayBuffer(),
+        };
+        rooms.set(roomId, newRoom);
+        startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
+        startAFKTimer(newRoom, 'black', AFK_PREPARE_MS, 'draft');
+
+        const isRanked = !white.uid.startsWith('g_') && !black.uid.startsWith('g_');
+        io.to(white.socketId).emit('match_found', { myColor: 'white', oppProfile: { nickname: black.nickname, avatar: black.avatar }, roomId, isRanked });
+        io.to(black.socketId).emit('match_found', { myColor: 'black', oppProfile: { nickname: white.nickname, avatar: white.avatar }, roomId, isRanked });
+    });
+
+    socket.on('private_room_cancel', () => {
+        for (const [code, entry] of privateRooms.entries()) {
+            if (entry.socketId === socket.id) {
+                clearTimeout(entry.timer);
+                privateRooms.delete(code);
+            }
+        }
     });
 
     socket.on('game_join', ({ roomId, color }) => {
@@ -993,6 +1133,13 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         const qi = queue.findIndex(p => p.socketId === socket.id);
         if (qi > -1) queue.splice(qi, 1);
+
+        for (const [code, entry] of privateRooms.entries()) {
+            if (entry.socketId === socket.id) {
+                clearTimeout(entry.timer);
+                privateRooms.delete(code);
+            }
+        }
 
         if (!playerRoom || !playerColor) return;
         const room = rooms.get(playerRoom);

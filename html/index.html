@@ -1587,6 +1587,7 @@
         <div class="menu-divider"></div>
         <nav class="menu-nav">
             <button class="menu-btn menu-btn-primary" id="btn-novo-jogo" onclick="window.goMatchmaking()">NOVO JOGO</button>
+            <button class="menu-btn menu-btn-secondary" id="btn-sala-privada" onclick="window.privateRoom.open()">SALA PRIVADA</button>
             <button class="menu-btn menu-btn-secondary" id="btn-ranking" onclick="showScreen('ranking')">RANKING</button>
             <button class="menu-btn menu-btn-secondary" id="btn-configuracoes" onclick="showScreen('settings')">CONFIGURAÇÕES</button>
             <button class="menu-btn menu-btn-danger" id="btn-sair" onclick="window.quitGame()">SAIR</button>
@@ -1639,6 +1640,46 @@
     <div class="mm-state" id="mm-countdown">
         <div class="mm-countdown-sub" id="mm-countdown-sub">A BATALHA COMEÇA EM...</div>
         <div class="mm-countdown-num" id="mm-count-num">3</div>
+    </div>
+</div>
+
+<!-- PRIVATE ROOM SCREEN -->
+<div id="screen-private-room" class="screen" style="gap:0;justify-content:center;">
+    <div style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:20px;padding:0 24px;">
+        <div style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:18px;letter-spacing:3px;margin-bottom:4px;">SALA PRIVADA</div>
+
+        <!-- CRIAR SALA -->
+        <div id="pr-create-section" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;">
+            <button onclick="window.privateRoom.create()" style="width:100%;padding:14px;background:rgba(212,168,50,0.12);border:1px solid rgba(212,168,50,0.4);border-radius:4px;color:#d4a832;font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;cursor:pointer;" id="btn-pr-create">CRIAR SALA</button>
+            <div id="pr-code-display" style="display:none;flex-direction:column;align-items:center;gap:10px;width:100%;">
+                <div style="color:rgba(240,236,228,0.5);font-size:11px;letter-spacing:1px;">CÓDIGO DA SALA — COMPARTILHE COM SEU AMIGO</div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div id="pr-code-value" style="color:#d4a832;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:700;letter-spacing:8px;">----</div>
+                    <button onclick="window.privateRoom.copyCode()" style="padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;cursor:pointer;" id="btn-pr-copy">COPIAR</button>
+                </div>
+                <div id="pr-waiting" style="color:rgba(240,236,228,0.4);font-size:11px;letter-spacing:1px;display:flex;align-items:center;gap:8px;">
+                    <span style="display:inline-block;width:8px;height:8px;border:2px solid rgba(212,168,50,0.3);border-top-color:#d4a832;border-radius:50%;animation:_spin 0.8s linear infinite;"></span>
+                    AGUARDANDO OPONENTE...
+                </div>
+                <div id="pr-expires" style="color:rgba(240,236,228,0.25);font-size:10px;letter-spacing:1px;">expira em 5 minutos</div>
+            </div>
+        </div>
+
+        <div style="color:rgba(240,236,228,0.2);font-size:11px;letter-spacing:2px;">— OU —</div>
+
+        <!-- ENTRAR COM CÓDIGO -->
+        <div id="pr-join-section" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;">
+            <div style="color:rgba(240,236,228,0.5);font-size:11px;letter-spacing:1px;">ENTRAR COM CÓDIGO</div>
+            <input id="pr-join-input" type="text" maxlength="4" placeholder="EX: K3R7"
+                style="width:100%;box-sizing:border-box;padding:12px;text-align:center;text-transform:uppercase;
+                background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;
+                color:#f0ece4;font-family:'IBM Plex Mono',monospace;font-size:22px;letter-spacing:8px;font-weight:700;"
+                oninput="this.value=this.value.toUpperCase()">
+            <button onclick="window.privateRoom.join()" style="width:100%;padding:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.85);font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;cursor:pointer;" id="btn-pr-join">ENTRAR</button>
+            <div id="pr-join-error" style="color:#e74c3c;font-size:10px;letter-spacing:1px;min-height:14px;text-align:center;"></div>
+        </div>
+
+        <button onclick="window.privateRoom.cancel()" style="margin-top:8px;width:100%;padding:10px;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:4px;color:rgba(240,236,228,0.4);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">VOLTAR AO MENU</button>
     </div>
 </div>
 
@@ -2414,14 +2455,38 @@
     }
 
     // match_found comes from server
-    socket.on('match_found', ({ myColor: color, oppProfile, roomId }) => {
+    let _isRanked = true;
+    socket.on('match_found', ({ myColor: color, oppProfile, roomId, isRanked }) => {
         opponentProfile = oppProfile;
-        roomID   = roomId;
-        myColor  = color;
-        oppColor = color === 'white' ? 'black' : 'white';
+        roomID    = roomId;
+        myColor   = color;
+        oppColor  = color === 'white' ? 'black' : 'white';
+        _isRanked = isRanked !== false;
+        // Populate matchmaking screen (may be coming from private room)
+        const p = getProfile();
+        document.getElementById('mm-found-my-avatar').textContent = PIECE_ICONS[p.avatar] || '♔';
+        document.getElementById('mm-found-my-nick').textContent   = p.nickname;
+        document.getElementById('mm-title-found').textContent     = t('match_found');
+        document.getElementById('mm-vs-label-you').textContent    = t('you');
+        document.getElementById('mm-vs-label-opp').textContent    = t('opponent');
         const oppAvatar = PIECE_ICONS[opponentProfile?.avatar] || '♙';
         document.getElementById('mm-found-opp-avatar').textContent = oppAvatar;
         document.getElementById('mm-found-opp-nick').textContent   = opponentProfile?.nickname || '???';
+        // P-07: unranked badge
+        let badge = document.getElementById('_mm-unranked-badge');
+        if (!_isRanked) {
+            if (!badge) {
+                badge = document.createElement('div');
+                badge.id = '_mm-unranked-badge';
+                badge.style.cssText = 'margin-top:8px;padding:4px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:3px;color:rgba(240,236,228,0.45);font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:2px;';
+                badge.textContent = 'PARTIDA NÃO RANQUEADA';
+                document.getElementById('mm-found')?.appendChild(badge);
+            }
+            badge.style.display = '';
+        } else if (badge) {
+            badge.style.display = 'none';
+        }
+        showScreen('matchmaking');
         setMMState('found');
         setTimeout(startCountdown, 2500);
     });
@@ -2459,6 +2524,109 @@
         socket.emit('queue_cancel');
         showScreen('menu');
     };
+
+    // ── PRIVATE ROOM ─────────────────────────────────────────────
+    window.privateRoom = (function() {
+        let _currentCode = null;
+
+        function _resetUI() {
+            const codeDisplay = document.getElementById('pr-code-display');
+            const createBtn   = document.getElementById('btn-pr-create');
+            if (codeDisplay) codeDisplay.style.display = 'none';
+            if (createBtn)   { createBtn.style.display = ''; createBtn.disabled = false; createBtn.textContent = 'CRIAR SALA'; }
+            const joinInput = document.getElementById('pr-join-input');
+            const joinErr   = document.getElementById('pr-join-error');
+            const joinBtn   = document.getElementById('btn-pr-join');
+            if (joinInput) { joinInput.value = ''; joinInput.disabled = false; }
+            if (joinErr)   joinErr.textContent = '';
+            if (joinBtn)   { joinBtn.disabled = false; joinBtn.textContent = 'ENTRAR'; }
+            _currentCode = null;
+        }
+
+        return {
+            open() {
+                _resetUI();
+                showScreen('private-room');
+            },
+
+            cancel() {
+                if (_currentCode) socket.emit('private_room_cancel');
+                _resetUI();
+                showScreen('menu');
+            },
+
+            create() {
+                const btn = document.getElementById('btn-pr-create');
+                if (btn) { btn.disabled = true; btn.textContent = '...'; }
+                const profile = typeof getQueueProfile === 'function' ? getQueueProfile({
+                    uid: localStorage.getItem('mc_uid') || ('g_' + Math.random().toString(36).slice(2, 8)),
+                    nickname: localStorage.getItem('mc_nickname') || 'Guerreiro',
+                    avatar: localStorage.getItem('mc_avatar') || 'K',
+                }) : {};
+                socket.emit('private_room_create', profile);
+            },
+
+            copyCode() {
+                if (!_currentCode) return;
+                navigator.clipboard?.writeText(_currentCode).catch(() => {});
+                const btn = document.getElementById('btn-pr-copy');
+                if (btn) { btn.textContent = 'COPIADO'; setTimeout(() => { btn.textContent = 'COPIAR'; }, 1500); }
+            },
+
+            join() {
+                const input = document.getElementById('pr-join-input');
+                const err   = document.getElementById('pr-join-error');
+                const btn   = document.getElementById('btn-pr-join');
+                const code  = (input?.value || '').trim().toUpperCase();
+                if (code.length !== 4) { if (err) err.textContent = 'Digite um código de 4 caracteres.'; return; }
+                if (err) err.textContent = '';
+                if (btn) { btn.disabled = true; btn.textContent = '...'; }
+                if (input) input.disabled = true;
+                const profile = typeof getQueueProfile === 'function' ? getQueueProfile({
+                    uid: localStorage.getItem('mc_uid') || ('g_' + Math.random().toString(36).slice(2, 8)),
+                    nickname: localStorage.getItem('mc_nickname') || 'Guerreiro',
+                    avatar: localStorage.getItem('mc_avatar') || 'K',
+                }) : {};
+                socket.emit('private_room_join', { code, profile });
+            },
+
+            _onCreated(code) {
+                _currentCode = code;
+                const codeDisplay = document.getElementById('pr-code-display');
+                const codeValue   = document.getElementById('pr-code-value');
+                const createBtn   = document.getElementById('btn-pr-create');
+                if (codeValue)   codeValue.textContent = code;
+                if (codeDisplay) codeDisplay.style.display = 'flex';
+                if (createBtn)   createBtn.style.display = 'none';
+            },
+
+            _onExpired() {
+                _currentCode = null;
+                const codeDisplay = document.getElementById('pr-code-display');
+                const createBtn   = document.getElementById('btn-pr-create');
+                if (codeDisplay) codeDisplay.style.display = 'none';
+                if (createBtn)   { createBtn.style.display = ''; createBtn.disabled = false; createBtn.textContent = 'CRIAR SALA'; }
+                const expires = document.getElementById('pr-expires');
+                if (expires) expires.textContent = 'Sala expirada. Crie uma nova.';
+                setTimeout(() => { if (expires) expires.textContent = 'expira em 5 minutos'; }, 3000);
+            },
+
+            _onError(msg) {
+                const err = document.getElementById('pr-join-error');
+                const btn = document.getElementById('btn-pr-join');
+                const inp = document.getElementById('pr-join-input');
+                if (err) err.textContent = msg;
+                if (btn) { btn.disabled = false; btn.textContent = 'ENTRAR'; }
+                if (inp) inp.disabled = false;
+            },
+        };
+    })();
+
+    socket.on('private_room_created', ({ code }) => {
+        window.privateRoom._onCreated(code);
+    });
+    socket.on('private_room_expired', () => window.privateRoom._onExpired());
+    socket.on('private_room_error',   ({ error }) => window.privateRoom._onError(error));
 
     window.returnToMenu = function() {
         inGame = false;
@@ -2612,6 +2780,20 @@
             } else {
                 goResult.innerText = t('draw');
                 goResult.className = "";
+            }
+            // P-07: unranked notice on game-over
+            let goBadge = document.getElementById('_go-unranked-badge');
+            if (!_isRanked) {
+                if (!goBadge) {
+                    goBadge = document.createElement('div');
+                    goBadge.id = '_go-unranked-badge';
+                    goBadge.style.cssText = 'margin-top:6px;padding:4px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:rgba(240,236,228,0.35);font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:2px;';
+                    goBadge.textContent = 'PARTIDA NÃO RANQUEADA';
+                    goResult.insertAdjacentElement('afterend', goBadge);
+                }
+                goBadge.style.display = '';
+            } else if (goBadge) {
+                goBadge.style.display = 'none';
             }
             return;
         } else {

@@ -233,6 +233,11 @@ window.doChangePassword = async function () {
             if (btn) { btn.textContent = 'SALVAR'; btn.disabled = false; }
             return;
         }
+        // Server invalidated old token — save new one so session stays valid
+        if (data.token) {
+            const session = Session.get();
+            if (session) Session.save({ ...session, token: data.token });
+        }
     } catch {
         if (err) err.textContent = 'Erro de conexão.';
         if (btn) { btn.textContent = 'SALVAR'; btn.disabled = false; }

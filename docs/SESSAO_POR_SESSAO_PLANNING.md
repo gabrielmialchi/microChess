@@ -1882,3 +1882,199 @@ function showDisconnectBanner() {
 socket.on('disconnect', showDisconnectBanner);
 socket.on('connect',    () => document.getElementById('_dc-banner')?.remove());
 ```
+
+---
+
+# SESSÃO 18: HARDENING FINAL + P-07
+
+## Objetivo
+Fechar as 6 vulnerabilidades da Revisão 3 e adicionar o badge "PARTIDA NÃO RANQUEADA" para partidas Logado×Anônimo.
+
+## Risco: 🟡 Médio — schema migration + edições em server.js, auth.js, database.js, index.html
+
+## Arquivos
+```
+server/db/schema.sql     ← adicionar pw_version
+server/db/database.js   ← migration ALTER TABLE + pw_version
+server/auth.js          ← signToken inclui pv; verifyToken sem mudança (campo extra ignorado)
+server/server.js        ← V-01..V-06 + startup warning ALLOWED_ORIGIN
+html/index.html         ← P-07: badge "partida não ranqueada" na tela de matchmaking e game-over
+```
+
+## Checklist
+
+```
+[ ] 1. schema.sql: ADD COLUMN pw_version INTEGER DEFAULT 0
+[ ] 2. database.js: migration ALTER TABLE players ADD COLUMN pw_version INTEGER DEFAULT 0
+[ ] 3. auth.js: signToken inclui pv no payload
+[ ] 4. server.js login: retornar pv no token; PATCH /auth/password: incrementar pw_version + novo token com pv atualizado
+[ ] 5. server.js: verifyToken check — se decoded.pv !== player.pw_version → 401
+[ ] 6. server.js: startup warning ALLOWED_ORIGIN (V-02)
+[ ] 7. server.js: try/catch no ASSET_LINKS (V-03)
+[ ] 8. server.js: authLimiter em PATCH /auth/password (V-04)
+[ ] 9. server.js: /player/:id — remover ban_until/wo_count/elo_shield sem auth (V-05)
+[ ] 10. server.js: INSERT players — gravar null na coluna email legada (V-06)
+[ ] 11. index.html: badge "PARTIDA NÃO RANQUEADA" quando oponente for anônimo (P-07)
+```
+
+## Detalhes Técnicos
+
+### V-01: pw_version no JWT
+
+**schema.sql / migration:**
+```sql
+ALTER TABLE players ADD COLUMN pw_version INTEGER DEFAULT 0
+```
+
+**auth.js — signToken:**
+```js
+function signToken(payload) {
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+}
+// payload passado sempre incluirá { id, username, pv }
+```
+
+**server.js — login:** incluir `pv` no token:
+```js
+const token = signToken({ id: player.id, username: player.username, pv: player.pw_version ?? 0 });
+```
+
+**server.js — PATCH /auth/password:** incrementar e retornar novo token:
+```js
+db.prepare('UPDATE players SET password_hash=?, pw_version=pw_version+1 WHERE id=?').run(newHash, decoded.id);
+const updated = db.prepare('SELECT username, pw_version FROM players WHERE id=?').get(decoded.id);
+const newToken = signToken({ id: decoded.id, username: updated.username, pv: updated.pw_version });
+res.json({ ok: true, token: newToken });
+```
+
+**server.js — helper verifyAndCheck (onde auth é necessária):**
+Criar função `requireAuth(req)` que verifica token E pw_version:
+```js
+function requireAuth(authHeader) {
+    const token = (authHeader || '').split(' ')[1];
+    const decoded = token ? verifyToken(token) : null;
+    if (!decoded) return null;
+    const player = db.prepare('SELECT pw_version FROM players WHERE id=?').get(decoded.id);
+    if (!player || (decoded.pv ?? 0) !== (player.pw_version ?? 0)) return null;
+    return decoded;
+}
+```
+Usar `requireAuth` em: `PATCH /auth/profile`, `PATCH /auth/password`, `DELETE /auth/account`.
+**Não usar** em: queue_join, private_room_create (já validam via verifyToken, e pw_version check seria overhead desnecessário no WebSocket — o token expira em 30d de qualquer forma).
+
+### V-02: Startup warning ALLOWED_ORIGIN
+```js
+if (process.env.NODE_ENV === 'production') {
+    if (!process.env.ALLOWED_ORIGIN) console.error('[SECURITY] AVISO: ALLOWED_ORIGIN não definido — Socket.IO aceitando qualquer origem.');
+}
+```
+
+### V-03: try/catch ASSET_LINKS
+```js
+let links = [];
+try { links = process.env.ASSET_LINKS ? JSON.parse(process.env.ASSET_LINKS) : []; }
+catch { console.error('[CONFIG] ASSET_LINKS inválido — usando []'); }
+res.json(links);
+```
+
+### V-05: /player/:id — campos sensíveis apenas com auth
+```js
+app.get('/player/:id', (req, res) => {
+    const auth    = (req.headers.authorization || '').split(' ')[1];
+    const decoded = auth ? verifyToken(auth) : null;
+    const isSelf  = decoded?.id === req.params.id;
+    const p = db.prepare('SELECT id, username, mmr, wins, losses, draws, wo_against, ban_until, wo_count, elo_rank, elo_lp, elo_shield FROM players WHERE id=?').get(req.params.id);
+    if (!p) return res.status(404).json({ error: 'Não encontrado' });
+    const elo = getEloDisplay(p.elo_rank ?? 0, p.elo_lp ?? 0);
+    const pub = { id: p.id, username: p.username, mmr: p.mmr, wins: p.wins, losses: p.losses, draws: p.draws, wo_against: p.wo_against, ...getRank(p.mmr), elo };
+    if (isSelf) {
+        pub.wo_count   = p.wo_count;
+        pub.elo_shield = p.elo_shield;
+        pub.banned     = !!(p.ban_until && new Date(p.ban_until) > new Date());
+        pub.banUntil   = p.ban_until;
+    }
+    res.json(pub);
+});
+```
+
+### P-07: Badge "PARTIDA NÃO RANQUEADA"
+
+Quando `oppProfile.uid` começa com `g_` (guest uid gerado no cliente) ou `match_found` vier sem `isRanked: true`, mostrar badge na tela de matchmaking e no game-over.
+
+Server-side: incluir `isRanked` no `match_found` payload:
+```js
+// em queue_join e private_room_join, após criar o room:
+const isRanked = !!(p1.uid && !p1.uid.startsWith('g_') && p2.uid && !p2.uid.startsWith('g_'));
+io.to(p1.socketId).emit('match_found', { ..., isRanked });
+io.to(p2.socketId).emit('match_found', { ..., isRanked });
+```
+
+Client-side: salvar `isRanked` em var + mostrar badge discreto na tela de matchmaking e game-over se `!isRanked`.
+
+---
+
+# SESSÃO P-A: LOCALIZAÇÃO COMPLETA
+
+## Objetivo
+Varredura de todos os textos hardcoded em PT fora do sistema `t()` adicionados nas sessões 7-17. Criar chaves EN para todos.
+
+## Risco: 🟠 Médio-alto — muitas edições pontuais em index.html
+
+## Checklist
+
+```
+[ ] 1. Varredura: listar todos os textos hardcoded fora de t() em telas criadas nas sessões 7-17
+[ ] 2. Adicionar chaves ao objeto LANG.pt e LANG.en para cada texto encontrado
+[ ] 3. Substituir textos hardcoded por chamadas t('chave')
+[ ] 4. Testar troca de idioma: PT→EN em todas as telas novas
+```
+
+## Telas a Varrer
+- screen-ranking (ranks em PT)
+- screen-leaderboard (cabeçalhos)
+- screen-match-history
+- screen-replay
+- screen-profile (botões novos: ALTERAR SENHA, EXCLUIR CONTA)
+- screen-private-room (todos os textos)
+- ban-overlay, reconnect-overlay
+- change-password-modal, delete-account-confirm
+- disconnect banner
+- Toasts (MMR, promoção, rebaixamento)
+
+---
+
+# SESSÃO P-B: JUICY — COMBATE
+
+## Objetivo
+Adicionar peso dramático ao fluxo de resolução de combate (P-05) e redesenhar visualmente o modal de dados (P-06).
+
+## Risco: 🟠 Médio-alto — edições no modal de duelo em index.html
+
+## Checklist
+
+```
+[ ] 1. P-05: após duel_resolve → exibir resultado (vencedor/perdedor) por 2s antes de fechar modal
+[ ] 2. P-05: após fechar modal → delay de 1s antes de broadcast do próximo estado
+[ ] 3. P-06: hierarquia visual no dado (bonus + roll = total com tamanhos diferentes)
+[ ] 4. P-06: dado vencedor → glow dourado + pulse animation
+[ ] 5. P-06: dado perdedor → opacity reduzida + shake animation
+[ ] 6. P-06: cor de fundo do modal reforça vencedor (sutil verde/vermelho)
+```
+
+---
+
+# SESSÃO P-C: UX & LINKS
+
+## Objetivo
+Substituir placeholders por URLs reais (P-03) e adicionar transições suaves entre telas via showScreen (P-04).
+
+## Risco: 🟡 Médio — edições em index.html
+
+## Checklist
+
+```
+[ ] 1. P-03: substituir href="#" por URLs reais (privacy policy, portfólio, feedback)
+[ ] 2. P-03: verificar todos os <a> e botões com links externos
+[ ] 3. P-04: adicionar CSS de transição ao showScreen (fade 150ms)
+[ ] 4. P-04: garantir que transição não interfere com game-area (display:flex fora do .screen)
+```

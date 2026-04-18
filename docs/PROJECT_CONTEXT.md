@@ -286,6 +286,8 @@ curl http://localhost:3000/health
 | 14 | Integridade competitiva + exclusão de conta + sync nickname | ✅ Completo |
 | 15 | Play Store pré-requisitos: PWA, manifest, Helmet, Privacy Policy | ✅ Completo |
 | 16 | Qualidade UX: troca de senha, loading states, disconnect banner | ✅ Completo |
-| 17 | Sala privada com código 4 chars | ⏳ Pendente |
+| 17 | Sala privada com código 4 chars | ✅ Completo |
+| 18 | Hardening Final (V-01..V-06) + P-07 badge não ranqueada | ✅ Completo |
+| P-A | Localização: varredura + tradução EN | ⏳ Pendente |
 
 *(Atualizar este arquivo ao concluir cada sessão)*
