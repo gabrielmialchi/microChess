@@ -655,7 +655,7 @@ io.on('connection', (socket) => {
 
     // ── MATCHMAKING ──────────────────────────────────────────────
     socket.on('queue_join', (profile) => {
-        const { uid, nickname, avatar, token, mmr: clientMMR } = profile || {};
+        let { uid, nickname, avatar, token, mmr: clientMMR } = profile || {};
         let playerId  = uid;
         let playerMMR = clientMMR || 1500;
 

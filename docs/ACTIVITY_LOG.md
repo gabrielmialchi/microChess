@@ -504,6 +504,9 @@ Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 | 10 | Sem feedback visual de desconexão do servidor | BAIXO | 16 |
 | 11 | Sem troca de senha | BAIXO | 16 |
 
+### Bug Corrigido
+- `server.js:658`: `const { uid, nickname, ... }` → `let { uid, nickname, ... }` — `nickname` era `const` e a Sessão 12 tentou reatribuí-la, derrubando o handler `queue_join` inteiro e impedindo qualquer partida de ser formada.
+
 ### Avaliação Play Store
 - **Abordagem**: TWA (Trusted Web Activity) — mais econômica, sem reescrita nativa
 - **Bloqueadores absolutos**: exclusão de conta (#3) e Privacy Policy (#6)
