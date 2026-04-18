@@ -1469,7 +1469,7 @@
 <body>
 
 <!-- AUTH OVERLAY -->
-<div id="auth-overlay" style="display:flex;position:fixed;inset:0;background:rgba(8,8,8,0.97);z-index:10000;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
+<div id="auth-overlay" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.97);z-index:10000;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
   <div style="background:#111;border:1px solid rgba(212,168,50,0.3);border-radius:8px;padding:40px 32px;width:360px;max-width:90vw;display:flex;flex-direction:column;gap:16px;">
     <div style="text-align:center;color:#d4a832;font-size:22px;font-weight:700;letter-spacing:2px;margin-bottom:4px;">microChess</div>
     <div id="auth-form-login" style="display:flex;flex-direction:column;gap:12px;">
@@ -2146,7 +2146,7 @@
     // LOCAL: conecta ao servidor local. PRODUÇÃO: troque pela URL do Railway.
     const SERVER_URL = window.location.hostname === 'localhost' ? '' : 'microchess-production.up.railway.app';
     const socket = io(SERVER_URL);
-    listenGameEvents(socket);
+    window._mcSocket = socket;
 
     // ── GAME STATE VARS ───────────────────────────────────────────
     let roomID      = null;

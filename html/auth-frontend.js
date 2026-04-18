@@ -198,6 +198,8 @@ function listenGameEvents(socket) {
 
 // ── INIT ──────────────────────────────────────────────────────
 (async function init() {
+    if (window._mcSocket) listenGameEvents(window._mcSocket);
+
     const session = Session.get();
     if (session && session.token) {
         await MenuPopulator.populate(session);
