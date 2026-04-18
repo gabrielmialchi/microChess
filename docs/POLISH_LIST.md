@@ -92,6 +92,41 @@ Atualmente: modal fecha já com a resolução aplicada instantaneamente, sem sta
 
 ---
 
+### P-07 — Documentação In-Game: Comportamento Logado × Anônimo
+**Categoria:** UI
+**Esforço:** Baixo
+**Impacto:** Médio
+**Descrição:** Quando um jogador logado enfrenta um anônimo, a partida não salva histórico, não emite PdL e não grava replay. Esse comportamento é intencional mas invisível ao usuário. Adicionar uma indicação visual discreta na tela de matchmaking/fim de jogo quando o oponente é anônimo: ex: badge "partida não ranqueada" ou tooltip explicativo no resultado.
+**Contexto:** Sem esse aviso, o jogador logado pode achar que o sistema de PdL está quebrado.
+
+---
+
+### P-08 — Feature: Sala Privada com Código
+**Categoria:** Feature
+**Esforço:** Alto
+**Impacto:** Alto
+**Descrição:** Nova opção de partida: **SALA PRIVADA**. Fluxo:
+1. Jogador A clica "CRIAR SALA" → servidor gera código de 4 chars alfanuméricos (ex: `K3R7`) → exibido em tela com botão copiar
+2. Jogador B clica "ENTRAR COM CÓDIGO" → digita o código → entra na sala criada por A
+3. Matchmaking coloca os dois juntos com cores aleatórias
+4. Se os dois estiverem logados → partida vale PdL (comportamento igual à fila normal)
+5. Se um/ambos forem anônimos → partida não ranqueada (comportamento já existente)
+6. Sala expira em 5 minutos se ninguém entrar
+
+Novos eventos Socket.io necessários:
+- `private_room_create` → gera código, retorna `{ code }`
+- `private_room_join({ code })` → valida código, inicia match_found para ambos
+- `private_room_expired` → notifica criador se expirou
+
+Nova tela `screen-private-room`: CRIAR | ENTRAR COM CÓDIGO (input 4 chars) | VOLTAR.
+
+Botão novo no Menu Principal ou no fluxo de matchmaking.
+
+**Contexto:** Permite jogar com amigos sem depender de matchmaking aleatório. Alto valor para retenção e viral growth.
+**Nota:** Esta feature provavelmente justifica uma sessão dedicada (Sessão 17 sugerida).
+
+---
+
 ## Sessões de Polimento (A Definir)
 
 Quando a lista estiver madura o suficiente e o sistema estiver estável, as sessões serão planejadas assim:
@@ -100,8 +135,9 @@ Quando a lista estiver madura o suficiente e o sistema estiver estável, as sess
 |--------|-------|-------|
 | P-A | Localização completa | P-01 + P-02 |
 | P-B | Juicy: combate | P-05 + P-06 |
-| P-C | Juicy: navegação + links | P-03 + P-04 |
+| P-C | Juicy: navegação + links + UX info | P-03 + P-04 + P-07 |
 | P-D | [itens futuros] | — |
+| Sessão 17 | Feature: Sala Privada | P-08 |
 
 ---
 
