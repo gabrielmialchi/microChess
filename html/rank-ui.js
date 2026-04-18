@@ -39,7 +39,7 @@ const Leaderboard = {
               <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;opacity:0.75;">${escapeHTML(p.elo?.name || p.name)} · ${p.elo?.lp ?? 0} PdL</span>
               <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.45;min-width:60px;text-align:right;">${p.wins}W ${p.losses}L</span>
             </div>`;
-        }).join('') || '<div style="color:rgba(240,236,228,0.3);text-align:center;padding:32px;font-size:12px;">Nenhum jogador ainda.</div>';
+        }).join('') || `<div style="color:rgba(240,236,228,0.3);text-align:center;padding:32px;font-size:12px;">${(window.t||((k)=>k))('no_players_yet')}</div>`;
     },
 };
 
@@ -68,9 +68,10 @@ const MatchHistory = {
         const container = document.getElementById('match-history-list');
         if (!container) return;
         if (!matches.length) {
-            container.innerHTML = '<div style="color:rgba(240,236,228,0.3);font-size:11px;text-align:center;padding:32px 0;">Nenhuma partida registrada.</div>';
+            container.innerHTML = `<div style="color:rgba(240,236,228,0.3);font-size:11px;text-align:center;padding:32px 0;">${(window.t||((k)=>k))('no_matches_yet')}</div>`;
             return;
         }
+        const _t = window.t || ((k) => k);
         container.innerHTML = matches.map(m => {
             const isWhite       = m.player_white_id === playerId;
             const lpDelta       = isWhite
@@ -78,15 +79,18 @@ const MatchHistory = {
                 : (m.lp_change_black ?? m.mmr_change_black);
             const sign          = lpDelta >= 0 ? '+' : '';
             const opponentName  = isWhite ? (m.black_username || '?') : (m.white_username || '?');
+            const win  = _t('match_result_win');
+            const loss = _t('match_result_loss');
+            const wo   = _t('match_result_wo');
             const resultMap = {
-                white:    isWhite ? 'VITÓRIA'        : 'DERROTA',
-                black:    isWhite ? 'DERROTA'        : 'VITÓRIA',
+                white:    isWhite ? win  : loss,
+                black:    isWhite ? loss : win,
                 draw:     'EMPATE',
-                wo_white: isWhite ? 'DERROTA (W.O.)' : 'VITÓRIA (W.O.)',
-                wo_black: isWhite ? 'VITÓRIA (W.O.)' : 'DERROTA (W.O.)',
+                wo_white: isWhite ? `${loss} (${wo})` : `${win} (${wo})`,
+                wo_black: isWhite ? `${win} (${wo})`  : `${loss} (${wo})`,
             };
             const label  = resultMap[m.result] || m.result;
-            const isWin  = label.startsWith('VITÓRIA');
+            const isWin  = m.result === (isWhite ? 'white' : 'black') || (isWhite ? m.result === 'wo_black' : m.result === 'wo_white');
             const date   = new Date(m.created_at).toLocaleDateString('pt-BR');
             const replayBtn = m.replay_id
                 ? `<button class="_replay-btn"

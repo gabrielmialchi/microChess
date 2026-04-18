@@ -290,12 +290,13 @@ function showMMRToast(delta, isWO, lpDelta, elo, promoted, demoted) {
         st.textContent = '@keyframes _mmrFade{0%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-24px)}}';
         document.head.appendChild(st);
     }
+    const _t = window.t || ((k) => k);
     let text, positive;
     if (promoted) {
-        text = `↑ PROMOÇÃO — ${elo?.icon || ''} ${elo?.name || ''}`;
+        text = `${_t('promotion_toast')} — ${elo?.icon || ''} ${elo?.name || ''}`;
         positive = true;
     } else if (demoted) {
-        text = `↓ REBAIXAMENTO — ${elo?.icon || ''} ${elo?.name || ''}`;
+        text = `${_t('demotion_toast')} — ${elo?.icon || ''} ${elo?.name || ''}`;
         positive = false;
     } else if (elo && lpDelta != null) {
         const sign = lpDelta >= 0 ? '+' : '';
@@ -366,7 +367,7 @@ function showDisconnectBanner() {
     const b = document.createElement('div');
     b.id = '_dc-banner';
     b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#e74c3c;color:#fff;text-align:center;padding:8px;font-family:Cinzel,serif;font-size:12px;z-index:99999;letter-spacing:2px;';
-    b.textContent = 'SEM CONEXÃO COM O SERVIDOR';
+    b.textContent = (window.t || ((k) => k))('no_connection');
     document.body.prepend(b);
 }
 

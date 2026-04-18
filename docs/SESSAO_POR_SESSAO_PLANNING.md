@@ -2078,3 +2078,82 @@ Substituir placeholders por URLs reais (P-03) e adicionar transições suaves en
 [ ] 3. P-04: adicionar CSS de transição ao showScreen (fade 150ms)
 [ ] 4. P-04: garantir que transição não interfere com game-area (display:flex fora do .screen)
 ```
+
+---
+
+# SESSÃO P-D: LOCALIZAÇÃO — 7 IDIOMAS RESTANTES
+
+## Objetivo
+Preencher as ~60 chaves de tradução adicionadas na Sessão P-A nos 7 idiomas que ainda não as têm: ES, DE, IT, RU, JA, KO, ZH.
+
+## Risco: 🟡 Médio — trabalho repetitivo, risco de digitação incorreta em idiomas não-latinos
+
+## Contexto
+Na Sessão P-A, as novas chaves (telas de ranking, leaderboard, histórico, replay, sala privada, overlays) foram adicionadas apenas a `T.pt` e `T.en`. Usuários nos outros 7 idiomas veem fallback EN nessas telas — funcional, mas não localizado.
+
+## Checklist
+
+```
+[ ] 1. Exportar lista completa das chaves-alvo (apenas as novas da P-A — ~60 chaves)
+[ ] 2. Traduzir para ES (espanhol)
+[ ] 3. Traduzir para DE (alemão)
+[ ] 4. Traduzir para IT (italiano)
+[ ] 5. Traduzir para RU (russo)
+[ ] 6. Traduzir para JA (japonês)
+[ ] 7. Traduzir para KO (coreano)
+[ ] 8. Traduzir para ZH (chinês simplificado)
+[ ] 9. Inserir em cada T.xx object no index.html
+[ ] 10. Teste rápido: trocar para cada idioma e verificar telas ranking + private-room
+```
+
+## Chaves a Traduzir (referência — valores PT → copiar de T.pt da P-A)
+stats_label, change_password, sign_out, delete_account, match_history,
+history_title, replay_title, ranking_title, leaderboard_title, leaderboard_global,
+turn_label, replay_prev, replay_auto, replay_next,
+how_it_works, ranking_desc, divisions, single_div, max_rank,
+div_apprentice, div_hardworking, div_elite,
+rank_pawn, rank_bishop, rank_knight, rank_rook, rank_queen, rank_king,
+private_room_title, create_room, room_code_label, copy, copied,
+room_expires, room_expired, room_code_invalid, or_divider, join_with_code,
+room_code_placeholder, join, back_to_menu,
+ban_title, ban_reason, ban_time_remaining, close,
+logout_confirm_title, logout_confirm_desc, yes, no,
+delete_confirm_title, delete_confirm_desc, delete_btn, cancel_action,
+current_password_ph, new_password_ph, confirm_password_ph,
+reconnect_waiting, reconnect_desc, reconnect_wo_auto,
+no_connection, promotion_toast, demotion_toast,
+no_players_yet, no_matches_yet, match_result_win, match_result_loss, match_result_wo,
+unranked_match
+
+---
+
+# SESSÃO P-E: REDESIGN DE FONTES
+
+## Objetivo
+Revisar as fontes usadas em todo o jogo — avaliar legibilidade, consistência e identidade visual. Propor e implementar ajustes tipográficos.
+
+## Risco: 🟠 Médio-alto — alterações de CSS afetam múltiplas telas
+
+## Contexto
+O jogo usa atualmente:
+- **Cinzel** — títulos, botões, labels de seção
+- **Cinzel Decorative** — títulos de tela (ex: RANKING, LEADERBOARD)
+- **IBM Plex Mono** — dados numéricos, monospace (MMR, códigos, contadores)
+- Carregadas via Google Fonts CDN
+
+Pontos a avaliar:
+- Cinzel pode parecer pesada em tamanhos menores (11-12px)
+- Consistência de uso: quando usar Cinzel vs Cinzel Decorative
+- IBM Plex Mono: boa escolha para dados, mas considerar alternativas
+- Verificar se as fontes carregam bem em dispositivos Android/mobile
+
+## Checklist
+
+```
+[ ] 1. Mapear todos os usos de fonte no index.html (font-family por contexto: título, botão, label, valor, mono)
+[ ] 2. Identificar inconsistências de uso (onde Cinzel Decorative poderia/deveria ser Cinzel e vice-versa)
+[ ] 3. Avaliar legibilidade em mobile: testar em viewport 360px
+[ ] 4. Propor conjunto tipográfico final (pode manter as 3 fontes ou substituir)
+[ ] 5. Implementar ajustes — priorizar consistência e legibilidade
+[ ] 6. Verificar impacto em telas que têm texto overflow ou quebra de linha
+```

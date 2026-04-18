@@ -643,3 +643,42 @@ Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 - **Bloqueadores técnicos**: manifest.json, assetlinks.json, ícones 192px e 512px
 - **Distância estimada**: 3 sessões de implementação + criação manual de ícones e preenchimento de formulários no Play Console
 - Sessões 14, 15 e 16 adicionadas ao SESSAO_POR_SESSAO_PLANNING.md
+
+---
+
+## [2026-04-18] Sessão P-A — Localização: Varredura + Tradução EN
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- ~60 chaves de tradução adicionadas a `T.pt` e `T.en` em `html/index.html`
+- `window.t = t` exposto após definição da função `t()`
+- IDs adicionados a todos os elementos traduzíveis:
+  - ban-overlay: `ban-title`, `ban-reason`, `ban-time-label`, `ban-close-btn`
+  - logout-confirm: `logout-title`, `logout-desc`, `logout-yes-btn`, `logout-no-btn`
+  - delete-confirm: `delete-confirm-title`, `delete-confirm-desc`, `delete-cancel-btn`
+  - change-password-modal: `cp-title`, `cp-cancel-btn`
+  - reconnect-overlay: `reconnect-desc`, `reconnect-wo-auto`
+  - screen-private-room: `pr-title`, `pr-code-label`, `btn-pr-copy-text`, `pr-expires`, `pr-or-divider`, `pr-join-label`, `btn-pr-join-text`, `pr-waiting-text`, `btn-pr-back`
+  - screen-match-history: `mh-title`
+  - screen-replay: `replay-title-el`, `replay-turn-label`
+  - screen-ranking: `ranking-title`, `btn-leaderboard-global`, `ranking-how-title`, `ranking-desc-text`, `ranking-div-label`, `ranking-cards`
+  - screen-leaderboard: `lb-title`
+  - screen-profile: `btn-sign-out`, `btn-delete-account`, `btn-match-history`
+- Ranking cards section substituída por `#ranking-cards` renderizado por JS
+- Novas funções de refresh adicionadas: `refreshRankingScreen()`, `refreshOverlays()`, `refreshHistoryScreen()`, `refreshReplayScreen()`, `refreshPrivateRoomScreen()`
+- `refreshProfileScreen()` atualizado com novos botões (alterar senha, sair, excluir, histórico, stats_label)
+- `refreshSettingsScreen()` atualizado com botões COMO JOGAR, CRÉDITOS, VOLTAR
+- `selectLanguage()` atualizado para chamar todos os refresh
+- `showScreen()` atualizado para chamar refresh específico por tela + `refreshOverlays()` sempre
+- `html/rank-ui.js`: strings hardcoded substituídas por `window.t` — `no_players_yet`, `no_matches_yet`, `match_result_win/loss/wo`
+- `html/auth-frontend.js`: `no_connection`, `promotion_toast`, `demotion_toast` via `window.t`
+- Strings hardcoded no IIFE privateRoom substituídas por chamadas `t()`
+- Novas chaves: `room_expired`, `room_code_invalid`
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima sessão: P-B (Juicy combat timing + dice redesign)

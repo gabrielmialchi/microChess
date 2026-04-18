@@ -1502,22 +1502,22 @@
 <!-- BAN OVERLAY -->
 <div id="ban-overlay" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.97);z-index:9999;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
   <div style="background:#111;border:1px solid rgba(231,76,60,0.4);border-radius:8px;padding:40px 32px;width:360px;max-width:90vw;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center;">
-    <div style="color:#e74c3c;font-size:18px;font-weight:700;letter-spacing:2px;">BANIMENTO TEMPORÁRIO</div>
-    <div style="color:rgba(240,236,228,0.6);font-size:12px;line-height:1.6;">Você recebeu muitos W.O.s e foi banido temporariamente do matchmaking.</div>
-    <div style="color:#f0ece4;font-size:12px;">Tempo restante:</div>
+    <div id="ban-title" style="color:#e74c3c;font-size:18px;font-weight:700;letter-spacing:2px;">BANIMENTO TEMPORÁRIO</div>
+    <div id="ban-reason" style="color:rgba(240,236,228,0.6);font-size:12px;line-height:1.6;">Você recebeu muitos W.O.s e foi banido temporariamente do matchmaking.</div>
+    <div id="ban-time-label" style="color:#f0ece4;font-size:12px;">Tempo restante:</div>
     <div id="ban-countdown" style="color:#e74c3c;font-size:36px;font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:4px;">00:00:00</div>
-    <button onclick="BanOverlay.hide()" style="background:transparent;color:rgba(240,236,228,0.5);border:1px solid rgba(255,255,255,0.1);padding:8px 20px;border-radius:4px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;cursor:pointer;margin-top:8px;">FECHAR</button>
+    <button id="ban-close-btn" onclick="BanOverlay.hide()" style="background:transparent;color:rgba(240,236,228,0.5);border:1px solid rgba(255,255,255,0.1);padding:8px 20px;border-radius:4px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;cursor:pointer;margin-top:8px;">FECHAR</button>
   </div>
 </div>
 
 <!-- LOGOUT CONFIRM POPUP -->
 <div id="logout-confirm" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.92);z-index:9999;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
   <div style="background:#111;border:1px solid rgba(212,168,50,0.25);border-radius:8px;padding:36px 32px;width:320px;max-width:90vw;text-align:center;display:flex;flex-direction:column;gap:20px;align-items:center;">
-    <div style="color:#f0ece4;font-size:14px;font-weight:700;letter-spacing:1.5px;">TROCAR DE CONTA?</div>
-    <div style="color:rgba(240,236,228,0.55);font-size:11px;line-height:1.7;">Tem certeza que quer sair?<br>Seu progresso local será mantido.</div>
+    <div id="logout-title" style="color:#f0ece4;font-size:14px;font-weight:700;letter-spacing:1.5px;">TROCAR DE CONTA?</div>
+    <div id="logout-desc" style="color:rgba(240,236,228,0.55);font-size:11px;line-height:1.7;">Tem certeza que quer sair?<br>Seu progresso local será mantido.</div>
     <div style="display:flex;gap:12px;width:100%;">
-      <button onclick="window.doLogout && window.doLogout()" style="flex:1;padding:11px;background:#e74c3c;border:none;border-radius:4px;color:#fff;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;font-weight:700;">SIM</button>
-      <button onclick="window.hideLogoutConfirm && window.hideLogoutConfirm()" style="flex:1;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">NÃO</button>
+      <button id="logout-yes-btn" onclick="window.doLogout && window.doLogout()" style="flex:1;padding:11px;background:#e74c3c;border:none;border-radius:4px;color:#fff;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;font-weight:700;">SIM</button>
+      <button id="logout-no-btn" onclick="window.hideLogoutConfirm && window.hideLogoutConfirm()" style="flex:1;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">NÃO</button>
     </div>
   </div>
 </div>
@@ -1525,11 +1525,11 @@
 <!-- DELETE ACCOUNT CONFIRM -->
 <div id="delete-account-confirm" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.95);z-index:9999;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
   <div style="background:#111;border:1px solid rgba(231,76,60,0.35);border-radius:8px;padding:36px 32px;width:320px;max-width:90vw;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center;">
-    <div style="color:#e74c3c;font-size:14px;font-weight:700;letter-spacing:1.5px;">EXCLUIR CONTA?</div>
-    <div style="color:rgba(240,236,228,0.55);font-size:11px;line-height:1.8;">Esta ação é <strong style="color:#f0ece4;">permanente e irreversível</strong>.<br>Todo o seu histórico e ranking serão apagados.</div>
+    <div id="delete-confirm-title" style="color:#e74c3c;font-size:14px;font-weight:700;letter-spacing:1.5px;">EXCLUIR CONTA?</div>
+    <div id="delete-confirm-desc" style="color:rgba(240,236,228,0.55);font-size:11px;line-height:1.8;">Esta ação é <strong style="color:#f0ece4;">permanente e irreversível</strong>.<br>Todo o seu histórico e ranking serão apagados.</div>
     <div style="display:flex;gap:12px;width:100%;">
       <button id="btn-delete-confirm" onclick="window.doDeleteAccount && window.doDeleteAccount()" style="flex:1;padding:11px;background:#e74c3c;border:none;border-radius:4px;color:#fff;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;font-weight:700;">EXCLUIR</button>
-      <button onclick="window.hideDeleteConfirm && window.hideDeleteConfirm()" style="flex:1;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
+      <button id="delete-cancel-btn" onclick="window.hideDeleteConfirm && window.hideDeleteConfirm()" style="flex:1;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
     </div>
   </div>
 </div>
@@ -1537,14 +1537,14 @@
 <!-- CHANGE PASSWORD MODAL -->
 <div id="change-password-modal" style="display:none;position:fixed;inset:0;background:rgba(8,8,8,0.95);z-index:9999;align-items:center;justify-content:center;font-family:'Cinzel',serif;">
   <div style="background:#111;border:1px solid rgba(212,168,50,0.25);border-radius:8px;padding:36px 32px;width:320px;max-width:90vw;display:flex;flex-direction:column;gap:14px;align-items:center;">
-    <div style="color:#d4a832;font-size:13px;font-weight:700;letter-spacing:1.5px;">ALTERAR SENHA</div>
+    <div id="cp-title" style="color:#d4a832;font-size:13px;font-weight:700;letter-spacing:1.5px;">ALTERAR SENHA</div>
     <input id="cp-current" type="password" placeholder="Senha atual" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#f0ece4;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;">
     <input id="cp-new"     type="password" placeholder="Nova senha (mín. 6 caracteres)" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#f0ece4;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;">
     <input id="cp-confirm" type="password" placeholder="Confirmar nova senha" style="width:100%;box-sizing:border-box;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:#f0ece4;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;">
     <div id="cp-error" style="color:#e74c3c;font-size:10px;letter-spacing:1px;min-height:14px;text-align:center;"></div>
     <div style="display:flex;gap:12px;width:100%;">
       <button id="btn-cp-confirm" onclick="window.doChangePassword && window.doChangePassword()" style="flex:1;padding:11px;background:#d4a832;border:none;border-radius:4px;color:#080808;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;font-weight:700;">SALVAR</button>
-      <button onclick="window.hideChangePassword && window.hideChangePassword()" style="flex:1;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
+      <button id="cp-cancel-btn" onclick="window.hideChangePassword && window.hideChangePassword()" style="flex:1;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
     </div>
   </div>
 </div>
@@ -1554,9 +1554,9 @@
   <div style="background:#111;border:1px solid rgba(212,168,50,0.2);border-radius:8px;padding:36px 32px;width:320px;max-width:90vw;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center;">
     <div style="color:#d4a832;font-size:32px;">⚡</div>
     <div id="reconnect-msg" style="color:#f0ece4;font-size:13px;font-weight:700;letter-spacing:1.5px;">AGUARDANDO RECONEXÃO</div>
-    <div style="color:rgba(240,236,228,0.5);font-size:11px;line-height:1.7;">Seu oponente perdeu a conexão.<br>A partida continua se ele voltar.</div>
+    <div id="reconnect-desc" style="color:rgba(240,236,228,0.5);font-size:11px;line-height:1.7;">Seu oponente perdeu a conexão.<br>A partida continua se ele voltar.</div>
     <div id="reconnect-countdown" style="color:#d4a832;font-size:40px;font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:4px;">60</div>
-    <div style="color:rgba(240,236,228,0.35);font-size:10px;letter-spacing:1px;">W.O. automático ao zerar</div>
+    <div id="reconnect-wo-auto" style="color:rgba(240,236,228,0.35);font-size:10px;letter-spacing:1px;">W.O. automático ao zerar</div>
   </div>
 </div>
 
@@ -1646,40 +1646,40 @@
 <!-- PRIVATE ROOM SCREEN -->
 <div id="screen-private-room" class="screen" style="gap:0;justify-content:center;">
     <div style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:20px;padding:0 24px;">
-        <div style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:18px;letter-spacing:3px;margin-bottom:4px;">SALA PRIVADA</div>
+        <div id="pr-title" style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:18px;letter-spacing:3px;margin-bottom:4px;">SALA PRIVADA</div>
 
         <!-- CRIAR SALA -->
         <div id="pr-create-section" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;">
             <button onclick="window.privateRoom.create()" style="width:100%;padding:14px;background:rgba(212,168,50,0.12);border:1px solid rgba(212,168,50,0.4);border-radius:4px;color:#d4a832;font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;cursor:pointer;" id="btn-pr-create">CRIAR SALA</button>
             <div id="pr-code-display" style="display:none;flex-direction:column;align-items:center;gap:10px;width:100%;">
-                <div style="color:rgba(240,236,228,0.5);font-size:11px;letter-spacing:1px;">CÓDIGO DA SALA — COMPARTILHE COM SEU AMIGO</div>
+                <div id="pr-code-label" style="color:rgba(240,236,228,0.5);font-size:11px;letter-spacing:1px;">CÓDIGO DA SALA — COMPARTILHE COM SEU AMIGO</div>
                 <div style="display:flex;align-items:center;gap:12px;">
                     <div id="pr-code-value" style="color:#d4a832;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:700;letter-spacing:8px;">----</div>
-                    <button onclick="window.privateRoom.copyCode()" style="padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;cursor:pointer;" id="btn-pr-copy">COPIAR</button>
+                    <button onclick="window.privateRoom.copyCode()" style="padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;cursor:pointer;" id="btn-pr-copy"><span id="btn-pr-copy-text">COPIAR</span></button>
                 </div>
                 <div id="pr-waiting" style="color:rgba(240,236,228,0.4);font-size:11px;letter-spacing:1px;display:flex;align-items:center;gap:8px;">
                     <span style="display:inline-block;width:8px;height:8px;border:2px solid rgba(212,168,50,0.3);border-top-color:#d4a832;border-radius:50%;animation:_spin 0.8s linear infinite;"></span>
-                    AGUARDANDO OPONENTE...
+                    <span id="pr-waiting-text">AGUARDANDO OPONENTE...</span>
                 </div>
-                <div id="pr-expires" style="color:rgba(240,236,228,0.25);font-size:10px;letter-spacing:1px;">expira em 5 minutos</div>
+                <div id="pr-expires" style="color:rgba(240,236,228,0.25);font-size:10px;letter-spacing:1px;"></div>
             </div>
         </div>
 
-        <div style="color:rgba(240,236,228,0.2);font-size:11px;letter-spacing:2px;">— OU —</div>
+        <div id="pr-or-divider" style="color:rgba(240,236,228,0.2);font-size:11px;letter-spacing:2px;">— OU —</div>
 
         <!-- ENTRAR COM CÓDIGO -->
         <div id="pr-join-section" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;">
-            <div style="color:rgba(240,236,228,0.5);font-size:11px;letter-spacing:1px;">ENTRAR COM CÓDIGO</div>
+            <div id="pr-join-label" style="color:rgba(240,236,228,0.5);font-size:11px;letter-spacing:1px;">ENTRAR COM CÓDIGO</div>
             <input id="pr-join-input" type="text" maxlength="4" placeholder="EX: K3R7"
                 style="width:100%;box-sizing:border-box;padding:12px;text-align:center;text-transform:uppercase;
                 background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;
                 color:#f0ece4;font-family:'IBM Plex Mono',monospace;font-size:22px;letter-spacing:8px;font-weight:700;"
                 oninput="this.value=this.value.toUpperCase()">
-            <button onclick="window.privateRoom.join()" style="width:100%;padding:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.85);font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;cursor:pointer;" id="btn-pr-join">ENTRAR</button>
+            <button onclick="window.privateRoom.join()" style="width:100%;padding:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:rgba(240,236,228,0.85);font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;cursor:pointer;" id="btn-pr-join"><span id="btn-pr-join-text">ENTRAR</span></button>
             <div id="pr-join-error" style="color:#e74c3c;font-size:10px;letter-spacing:1px;min-height:14px;text-align:center;"></div>
         </div>
 
-        <button onclick="window.privateRoom.cancel()" style="margin-top:8px;width:100%;padding:10px;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:4px;color:rgba(240,236,228,0.4);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">VOLTAR AO MENU</button>
+        <button id="btn-pr-back" onclick="window.privateRoom.cancel()" style="margin-top:8px;width:100%;padding:10px;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:4px;color:rgba(240,236,228,0.4);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">VOLTAR AO MENU</button>
     </div>
 </div>
 
@@ -1773,9 +1773,9 @@
         </div>
         <button class="prof-save-btn" id="prof-save-btn" onclick="window.saveProfile()">SALVAR</button>
         <button onclick="window.showChangePassword && window.showChangePassword()" style="margin-top:12px;width:100%;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;" id="btn-change-password">ALTERAR SENHA</button>
-        <button onclick="window.confirmLogout && window.confirmLogout()" style="margin-top:6px;width:100%;padding:10px;background:transparent;border:1px solid rgba(231,76,60,0.45);border-radius:4px;color:#e74c3c;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">SAIR DA CONTA</button>
-        <button onclick="window.confirmDeleteAccount && window.confirmDeleteAccount()" style="margin-top:6px;width:100%;padding:8px;background:transparent;border:1px solid rgba(231,76,60,0.2);border-radius:4px;color:rgba(231,76,60,0.45);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1.5px;cursor:pointer;">EXCLUIR CONTA</button>
-        <button onclick="typeof MatchHistory!=='undefined' && MatchHistory.open((typeof Session!=='undefined'?Session.get():null)?.id)" style="margin-top:8px;width:100%;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">HISTÓRICO DE PARTIDAS</button>
+        <button id="btn-sign-out" onclick="window.confirmLogout && window.confirmLogout()" style="margin-top:6px;width:100%;padding:10px;background:transparent;border:1px solid rgba(231,76,60,0.45);border-radius:4px;color:#e74c3c;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">SAIR DA CONTA</button>
+        <button id="btn-delete-account" onclick="window.confirmDeleteAccount && window.confirmDeleteAccount()" style="margin-top:6px;width:100%;padding:8px;background:transparent;border:1px solid rgba(231,76,60,0.2);border-radius:4px;color:rgba(231,76,60,0.45);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1.5px;cursor:pointer;">EXCLUIR CONTA</button>
+        <button id="btn-match-history" onclick="typeof MatchHistory!=='undefined' && MatchHistory.open((typeof Session!=='undefined'?Session.get():null)?.id)" style="margin-top:8px;width:100%;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:4px;color:rgba(240,236,228,0.7);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;">HISTÓRICO DE PARTIDAS</button>
     </div>
 </div>
 
@@ -1783,7 +1783,7 @@
 <div id="screen-match-history" class="screen" style="justify-content:flex-start;padding:20px 16px;align-items:center;gap:0;">
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px;padding-bottom:16px;">
         <button class="screen-back-btn" onclick="showScreen('profile')">VOLTAR</button>
-        <div style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">HISTÓRICO</div>
+        <div id="mh-title" style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">HISTÓRICO</div>
         <div style="width:60px;"></div>
     </div>
     <div id="match-history-list" style="width:100%;max-width:480px;overflow-y:auto;max-height:80vh;"></div>
@@ -1793,9 +1793,9 @@
 <div id="screen-replay" class="screen" style="justify-content:flex-start;padding:20px 16px;gap:16px;align-items:center;">
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px;">
         <button class="screen-back-btn" onclick="ReplayViewer.close()">VOLTAR</button>
-        <div style="color:#d4a832;font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;">REPLAY</div>
+        <div id="replay-title-el" style="color:#d4a832;font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;">REPLAY</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(240,236,228,0.5);">
-            Turno <span id="replay-current">0</span> / <span id="replay-total">0</span>
+            <span id="replay-turn-label">Turno</span> <span id="replay-current">0</span> / <span id="replay-total">0</span>
         </div>
     </div>
     <div id="replay-summary" style="width:100%;max-width:480px;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(240,236,228,0.5);min-height:34px;"></div>
@@ -1812,11 +1812,11 @@
 <div id="screen-ranking" class="screen" style="justify-content:flex-start;padding:20px 16px;align-items:center;gap:0;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px;padding-bottom:12px;">
         <button class="screen-back-btn" onclick="showScreen('menu')">VOLTAR</button>
-        <div style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">RANKING</div>
+        <div id="ranking-title" style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">RANKING</div>
         <div style="width:60px;"></div>
     </div>
     <div style="width:100%;max-width:480px;margin-bottom:20px;">
-        <button onclick="window.showLeaderboard()"
+        <button id="btn-leaderboard-global" onclick="window.showLeaderboard()"
             style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(212,168,50,0.18),rgba(212,168,50,0.08));
             border:1px solid rgba(212,168,50,0.45);border-radius:6px;color:#d4a832;
             font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;">
@@ -1824,80 +1824,12 @@
         </button>
     </div>
     <div style="width:100%;max-width:480px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:14px 16px;margin-bottom:20px;">
-        <div style="color:#d4a832;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;margin-bottom:8px;">COMO FUNCIONA</div>
-        <div style="color:rgba(240,236,228,0.6);font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.8;">
-            Cada divisão tem <span style="color:#d4a832;">0–100 Pontos de Liga (PdL)</span>.<br>
-            Vença partidas para acumular PdL e subir de divisão.<br>
-            Ao atingir 100 PdL, você é <span style="color:#2ecc71;">promovido</span> automaticamente.<br>
-            Ao subir de <em>grupo</em>, você recebe um <span style="color:#d4a832;">Escudo ×3</span> que absorve rebaixamentos.
-        </div>
+        <div id="ranking-how-title" style="color:#d4a832;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;margin-bottom:8px;">COMO FUNCIONA</div>
+        <div id="ranking-desc-text" style="color:rgba(240,236,228,0.6);font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.8;"></div>
     </div>
     <div style="width:100%;max-width:480px;display:flex;flex-direction:column;gap:6px;">
-        <div style="color:rgba(240,236,228,0.35);font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;margin-bottom:4px;">DIVISÕES</div>
-        <!-- Peão -->
-        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;">
-            <span style="font-size:28px;line-height:1;">♟</span>
-            <div style="flex:1;">
-                <div style="color:#f0ece4;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;">PEÃO</div>
-                <div style="display:flex;gap:6px;">
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Aprendiz</span>
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Esforçado</span>
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Elite</span>
-                </div>
-            </div>
-        </div>
-        <!-- Bispo -->
-        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;">
-            <span style="font-size:28px;line-height:1;">♝</span>
-            <div style="flex:1;">
-                <div style="color:#f0ece4;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;">BISPO</div>
-                <div style="display:flex;gap:6px;">
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Aprendiz</span>
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Esforçado</span>
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Elite</span>
-                </div>
-            </div>
-        </div>
-        <!-- Cavalo -->
-        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;">
-            <span style="font-size:28px;line-height:1;">♞</span>
-            <div style="flex:1;">
-                <div style="color:#f0ece4;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;">CAVALO</div>
-                <div style="display:flex;gap:6px;">
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Aprendiz</span>
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Esforçado</span>
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Elite</span>
-                </div>
-            </div>
-        </div>
-        <!-- Torre -->
-        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;">
-            <span style="font-size:28px;line-height:1;">♜</span>
-            <div style="flex:1;">
-                <div style="color:#f0ece4;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;">TORRE</div>
-                <div style="display:flex;gap:6px;">
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Aprendiz</span>
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Esforçado</span>
-                    <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">Elite</span>
-                </div>
-            </div>
-        </div>
-        <!-- Rainha -->
-        <div style="background:rgba(212,168,50,0.06);border:1px solid rgba(212,168,50,0.2);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;">
-            <span style="font-size:28px;line-height:1;">♛</span>
-            <div style="flex:1;">
-                <div style="color:#d4a832;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:1px;">RAINHA</div>
-                <div style="color:rgba(212,168,50,0.5);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:4px;">Divisão única</div>
-            </div>
-        </div>
-        <!-- Rei -->
-        <div style="background:rgba(212,168,50,0.1);border:1px solid rgba(212,168,50,0.35);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;margin-bottom:8px;">
-            <span style="font-size:28px;line-height:1;">♚</span>
-            <div style="flex:1;">
-                <div style="color:#d4a832;font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;">REI</div>
-                <div style="color:rgba(212,168,50,0.5);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:4px;">Rank máximo · Divisão única</div>
-            </div>
-        </div>
+        <div id="ranking-div-label" style="color:rgba(240,236,228,0.35);font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;margin-bottom:4px;">DIVISÕES</div>
+        <div id="ranking-cards"></div>
     </div>
 </div>
 
@@ -1905,7 +1837,7 @@
 <div id="screen-leaderboard" class="screen" style="justify-content:flex-start;padding:20px 16px;align-items:center;gap:0;">
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:480px;padding-bottom:16px;">
         <button class="screen-back-btn" onclick="showScreen('ranking')">VOLTAR</button>
-        <div style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">LEADERBOARD</div>
+        <div id="lb-title" style="color:#d4a832;font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;">LEADERBOARD</div>
         <div style="width:60px;"></div>
     </div>
     <div id="leaderboard-table" style="width:100%;max-width:480px;overflow-y:auto;max-height:72vh;"></div>
@@ -1990,6 +1922,48 @@
             recruit_label:'monte seu exército', position_label:'coloque suas peças', reveal_label:'o tabuleiro à mostra', action_label:'planeje seu movimento',
             phase_draft:'RECRUTAMENTO', phase_position:'POSICIONAMENTO', phase_reveal:'REVELAÇÃO!', phase_action:'AÇÃO',
             feedback:'Dê o seu Feedback. Clique aqui.',
+            // Profile
+            stats_label:'ESTATÍSTICAS', change_password:'ALTERAR SENHA', sign_out:'SAIR DA CONTA',
+            delete_account:'EXCLUIR CONTA', match_history:'HISTÓRICO DE PARTIDAS',
+            // Screens
+            history_title:'HISTÓRICO', replay_title:'REPLAY', ranking_title:'RANKING',
+            leaderboard_title:'LEADERBOARD', leaderboard_global:'🏆 LEADERBOARD GLOBAL',
+            turn_label:'Turno', replay_prev:'⏮ ANTERIOR', replay_auto:'▶ AUTO', replay_next:'PRÓXIMO ⏭',
+            // Ranking
+            how_it_works:'COMO FUNCIONA',
+            ranking_desc:'Cada divisão tem <span style="color:#d4a832;">0–100 Pontos de Liga (PdL)</span>.<br>Vença partidas para acumular PdL e subir de divisão.<br>Ao atingir 100 PdL, você é <span style="color:#2ecc71;">promovido</span> automaticamente.<br>Ao subir de <em>grupo</em>, você recebe um <span style="color:#d4a832;">Escudo ×3</span> que absorve rebaixamentos.',
+            divisions:'DIVISÕES', single_div:'Divisão única', max_rank:'Rank máximo · Divisão única',
+            div_apprentice:'Aprendiz', div_hardworking:'Esforçado', div_elite:'Elite',
+            rank_pawn:'PEÃO', rank_bishop:'BISPO', rank_knight:'CAVALO', rank_rook:'TORRE', rank_queen:'RAINHA', rank_king:'REI',
+            // Private room
+            private_room_title:'SALA PRIVADA', create_room:'CRIAR SALA',
+            room_code_label:'CÓDIGO DA SALA — COMPARTILHE COM SEU AMIGO',
+            copy:'COPIAR', copied:'COPIADO', room_expires:'expira em 5 minutos', room_expired:'Sala expirada. Crie uma nova.',
+            or_divider:'— OU —', join_with_code:'ENTRAR COM CÓDIGO',
+            room_code_placeholder:'EX: K3R7', join:'ENTRAR', back_to_menu:'VOLTAR AO MENU', room_code_invalid:'Código inválido. Use 4 caracteres.',
+            // Ban
+            ban_title:'BANIMENTO TEMPORÁRIO',
+            ban_reason:'Você recebeu muitos W.O.s e foi banido temporariamente do matchmaking.',
+            ban_time_remaining:'Tempo restante:', close:'FECHAR',
+            // Logout confirm
+            logout_confirm_title:'TROCAR DE CONTA?',
+            logout_confirm_desc:'Tem certeza que quer sair?<br>Seu progresso local será mantido.',
+            yes:'SIM', no:'NÃO',
+            // Delete account confirm
+            delete_confirm_title:'EXCLUIR CONTA?',
+            delete_confirm_desc:'Esta ação é <strong style="color:#f0ece4;">permanente e irreversível</strong>.<br>Todo o seu histórico e ranking serão apagados.',
+            delete_btn:'EXCLUIR', cancel_action:'CANCELAR',
+            // Change password modal
+            current_password_ph:'Senha atual', new_password_ph:'Nova senha (mín. 6 caracteres)', confirm_password_ph:'Confirmar nova senha',
+            // Reconnect overlay
+            reconnect_waiting:'AGUARDANDO RECONEXÃO',
+            reconnect_desc:'Seu oponente perdeu a conexão.<br>A partida continua se ele voltar.',
+            reconnect_wo_auto:'W.O. automático ao zerar',
+            // Dynamic
+            no_connection:'SEM CONEXÃO COM O SERVIDOR', promotion_toast:'↑ PROMOÇÃO', demotion_toast:'↓ REBAIXAMENTO',
+            no_players_yet:'Nenhum jogador ainda.', no_matches_yet:'Nenhuma partida registrada.',
+            match_result_win:'VITÓRIA', match_result_loss:'DERROTA', match_result_wo:'W.O.',
+            unranked_match:'PARTIDA NÃO RANQUEADA',
             htp_intro:'microChess Online é um duelo tático onde o xadrez clássico encontra a incerteza do campo de batalha. O objetivo é simples: Capture o Rei adversário.',
             htp_flow_title:'O FLUXO DO JOGO',
             htp_draft:'Recrutamento (Draft): Você tem 5 pontos para montar seu exército. Escolha entre Rainhas poderosas ou uma massa de Peões e Cavalos.',
@@ -2020,6 +1994,38 @@
             recruit_label:'build your army', position_label:'place your pieces', reveal_label:'the board revealed', action_label:'plan your move',
             phase_draft:'RECRUITMENT', phase_position:'POSITIONING', phase_reveal:'REVEAL!', phase_action:'ACTION',
             feedback:'Give us your Feedback. Click here.',
+            stats_label:'STATISTICS', change_password:'CHANGE PASSWORD', sign_out:'SIGN OUT',
+            delete_account:'DELETE ACCOUNT', match_history:'MATCH HISTORY',
+            history_title:'HISTORY', replay_title:'REPLAY', ranking_title:'RANKING',
+            leaderboard_title:'LEADERBOARD', leaderboard_global:'🏆 GLOBAL LEADERBOARD',
+            turn_label:'Turn', replay_prev:'⏮ PREV', replay_auto:'▶ AUTO', replay_next:'NEXT ⏭',
+            how_it_works:'HOW IT WORKS',
+            ranking_desc:'Each division has <span style="color:#d4a832;">0–100 League Points (LP)</span>.<br>Win matches to gain LP and climb divisions.<br>Reaching 100 LP <span style="color:#2ecc71;">promotes</span> you automatically.<br>When crossing a <em>group</em>, you receive a <span style="color:#d4a832;">×3 Shield</span> that absorbs demotions.',
+            divisions:'DIVISIONS', single_div:'Single division', max_rank:'Max rank · Single division',
+            div_apprentice:'Apprentice', div_hardworking:'Hardworking', div_elite:'Elite',
+            rank_pawn:'PAWN', rank_bishop:'BISHOP', rank_knight:'KNIGHT', rank_rook:'ROOK', rank_queen:'QUEEN', rank_king:'KING',
+            private_room_title:'PRIVATE ROOM', create_room:'CREATE ROOM',
+            room_code_label:'ROOM CODE — SHARE WITH YOUR FRIEND',
+            copy:'COPY', copied:'COPIED', room_expires:'expires in 5 minutes', room_expired:'Room expired. Create a new one.',
+            or_divider:'— OR —', join_with_code:'JOIN WITH CODE',
+            room_code_placeholder:'EX: K3R7', join:'JOIN', back_to_menu:'BACK TO MENU', room_code_invalid:'Invalid code. Use 4 characters.',
+            ban_title:'TEMPORARY BAN',
+            ban_reason:'You received too many W.O.s and were temporarily banned from matchmaking.',
+            ban_time_remaining:'Time remaining:', close:'CLOSE',
+            logout_confirm_title:'SWITCH ACCOUNT?',
+            logout_confirm_desc:'Are you sure you want to sign out?<br>Your local progress will be kept.',
+            yes:'YES', no:'NO',
+            delete_confirm_title:'DELETE ACCOUNT?',
+            delete_confirm_desc:'This action is <strong style="color:#f0ece4;">permanent and irreversible</strong>.<br>All your history and ranking will be deleted.',
+            delete_btn:'DELETE', cancel_action:'CANCEL',
+            current_password_ph:'Current password', new_password_ph:'New password (min. 6 characters)', confirm_password_ph:'Confirm new password',
+            reconnect_waiting:'WAITING FOR RECONNECT',
+            reconnect_desc:'Your opponent lost connection.<br>The match continues if they reconnect.',
+            reconnect_wo_auto:'Automatic W.O. when timer hits zero',
+            no_connection:'NO SERVER CONNECTION', promotion_toast:'↑ PROMOTION', demotion_toast:'↓ DEMOTION',
+            no_players_yet:'No players yet.', no_matches_yet:'No matches recorded.',
+            match_result_win:'VICTORY', match_result_loss:'DEFEAT', match_result_wo:'W.O.',
+            unranked_match:'UNRANKED MATCH',
             htp_intro:'microChess Online is a tactical duel where classic chess meets battlefield uncertainty. The goal is simple: Capture the enemy King.',
             htp_flow_title:'GAME FLOW',
             htp_draft:'Recruitment (Draft): You have 5 points to build your army. Choose between powerful Queens or a mass of Pawns and Knights.',
@@ -2249,6 +2255,7 @@
 
     let currentLang = localStorage.getItem('mc_lang') || 'pt';
     function t(key) { return (T[currentLang] && T[currentLang][key]) || (T['en'] && T['en'][key]) || T['pt'][key] || key; }
+    window.t = t; // expose for rank-ui.js and auth-frontend.js
 
     // ── PROFILE ───────────────────────────────────────────────────
     function getProfile() {
@@ -2278,10 +2285,16 @@
         const el = document.getElementById(`screen-${id}`);
         if (el) el.classList.add('active');
         currentScreen = id;
-        if (id === 'menu')    refreshMenuScreen();
-        if (id === 'profile') refreshProfileScreen();
-        if (id === 'settings') refreshSettingsScreen();
-        if (id === 'how-to-play') renderHowToPlay();
+        if (id === 'menu')          refreshMenuScreen();
+        if (id === 'profile')       refreshProfileScreen();
+        if (id === 'settings')      refreshSettingsScreen();
+        if (id === 'how-to-play')   renderHowToPlay();
+        if (id === 'ranking')       refreshRankingScreen();
+        if (id === 'leaderboard')   refreshRankingScreen();
+        if (id === 'match-history') refreshHistoryScreen();
+        if (id === 'replay')        refreshReplayScreen();
+        if (id === 'private-room')  refreshPrivateRoomScreen();
+        refreshOverlays();
     };
 
     function refreshMenuScreen() {
@@ -2310,24 +2323,140 @@
         document.getElementById('stat-wo-l').textContent   = p.stats.wo_losses || 0;
         document.getElementById('prof-avatar-label').textContent  = t('avatar');
         document.getElementById('prof-nick-label').textContent    = t('nickname');
-        document.getElementById('prof-stats-label').textContent   = 'ESTATÍSTICAS';
+        document.getElementById('prof-stats-label').textContent   = t('stats_label');
         document.getElementById('stat-wins-label').textContent    = t('wins');
         document.getElementById('stat-losses-label').textContent  = t('losses');
         document.getElementById('stat-wo-w-label').textContent    = t('wo_wins');
         document.getElementById('stat-wo-l-label').textContent    = t('wo_losses');
         document.getElementById('prof-save-btn').textContent      = t('save');
+        document.getElementById('btn-change-password').textContent = t('change_password');
+        document.getElementById('btn-sign-out').textContent       = t('sign_out');
+        document.getElementById('btn-delete-account').textContent = t('delete_account');
+        document.getElementById('btn-match-history').textContent  = t('match_history');
     }
 
     function refreshSettingsScreen() {
         document.getElementById('set-title').textContent     = t('settings');
         document.getElementById('set-lang-label').textContent = t('language');
         document.getElementById('set-profile-btn').textContent = t('profile');
+        const htpBtn = document.getElementById('set-howtoplay-btn');
+        if (htpBtn) htpBtn.textContent = t('how_to_play');
+        const crdBtn = document.getElementById('set-credits-btn');
+        if (crdBtn) crdBtn.textContent = t('credits');
+        const backBtn = document.getElementById('set-back-btn');
+        if (backBtn) backBtn.textContent = t('back');
         document.querySelectorAll('.flag-btn').forEach(btn => {
             btn.classList.toggle('selected', btn.dataset.lang === currentLang);
         });
         if (typeof twemoji !== 'undefined') {
             twemoji.parse(document.getElementById('flag-grid'), { folder: 'svg', ext: '.svg' });
         }
+    }
+
+    function refreshRankingScreen() {
+        const el = id => document.getElementById(id);
+        if (el('ranking-title'))     el('ranking-title').textContent     = t('ranking_title');
+        if (el('btn-leaderboard-global')) el('btn-leaderboard-global').innerHTML = t('leaderboard_global');
+        if (el('ranking-how-title')) el('ranking-how-title').textContent = t('how_it_works');
+        if (el('ranking-desc-text')) el('ranking-desc-text').innerHTML   = t('ranking_desc');
+        if (el('ranking-div-label')) el('ranking-div-label').textContent = t('divisions');
+        if (el('lb-title'))          el('lb-title').textContent          = t('leaderboard_title');
+        const cards = el('ranking-cards');
+        if (!cards) return;
+        const sub = (icon, nameKey, type) => {
+            const name = t(nameKey);
+            const isSingle = type === 'single';
+            const isMax    = type === 'max';
+            const bg    = isMax ? 'rgba(212,168,50,0.1)' : isSingle ? 'rgba(212,168,50,0.06)' : 'rgba(255,255,255,0.03)';
+            const border= isMax ? 'rgba(212,168,50,0.35)' : isSingle ? 'rgba(212,168,50,0.2)' : 'rgba(255,255,255,0.07)';
+            const nameColor = (isSingle || isMax) ? '#d4a832' : '#f0ece4';
+            const nameSz = isMax ? '13px' : '12px';
+            const nameLS = isMax ? '2px' : '1px';
+            let subHtml = '';
+            if (isSingle) subHtml = `<div style="color:rgba(212,168,50,0.5);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:4px;">${t('single_div')}</div>`;
+            else if (isMax) subHtml = `<div style="color:rgba(212,168,50,0.5);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:4px;">${t('max_rank')}</div>`;
+            else subHtml = `<div style="display:flex;gap:6px;">
+                <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">${t('div_apprentice')}</span>
+                <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">${t('div_hardworking')}</span>
+                <span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:2px 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(240,236,228,0.55);">${t('div_elite')}</span>
+            </div>`;
+            return `<div style="background:${bg};border:1px solid ${border};border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;margin-bottom:6px;">
+                <span style="font-size:28px;line-height:1;">${icon}</span>
+                <div style="flex:1;">
+                    <div style="color:${nameColor};font-family:'Cinzel',serif;font-size:${nameSz};font-weight:700;letter-spacing:${nameLS};margin-bottom:${isSingle||isMax?'0':'6px'}">${name}</div>
+                    ${subHtml}
+                </div>
+            </div>`;
+        };
+        cards.innerHTML =
+            sub('♟','rank_pawn','') +
+            sub('♝','rank_bishop','') +
+            sub('♞','rank_knight','') +
+            sub('♜','rank_rook','') +
+            sub('♛','rank_queen','single') +
+            sub('♚','rank_king','max');
+    }
+
+    function refreshOverlays() {
+        const set = (id, prop, val) => { const el = document.getElementById(id); if (el) el[prop] = val; };
+        // ban overlay
+        set('ban-title',       'textContent', t('ban_title'));
+        set('ban-reason',      'textContent', t('ban_reason'));
+        set('ban-time-label',  'textContent', t('ban_time_remaining'));
+        set('ban-close-btn',   'textContent', t('close'));
+        // logout confirm
+        set('logout-title',    'textContent', t('logout_confirm_title'));
+        set('logout-desc',     'innerHTML',   t('logout_confirm_desc'));
+        set('logout-yes-btn',  'textContent', t('yes'));
+        set('logout-no-btn',   'textContent', t('no'));
+        // delete confirm
+        set('delete-confirm-title','textContent', t('delete_confirm_title'));
+        set('delete-confirm-desc', 'innerHTML',   t('delete_confirm_desc'));
+        set('btn-delete-confirm',  'textContent', t('delete_btn'));
+        set('delete-cancel-btn',   'textContent', t('cancel_action'));
+        // change password modal
+        set('cp-title',        'textContent', t('change_password'));
+        const cpCurrent = document.getElementById('cp-current');
+        if (cpCurrent) cpCurrent.placeholder = t('current_password_ph');
+        const cpNew = document.getElementById('cp-new');
+        if (cpNew) cpNew.placeholder = t('new_password_ph');
+        const cpConfirm = document.getElementById('cp-confirm');
+        if (cpConfirm) cpConfirm.placeholder = t('confirm_password_ph');
+        set('btn-cp-confirm',  'textContent', t('save'));
+        set('cp-cancel-btn',   'textContent', t('cancel_action'));
+        // reconnect overlay
+        set('reconnect-desc',    'innerHTML',   t('reconnect_desc'));
+        set('reconnect-wo-auto', 'textContent', t('reconnect_wo_auto'));
+    }
+
+    function refreshHistoryScreen() {
+        const el = document.getElementById('mh-title');
+        if (el) el.textContent = t('history_title');
+    }
+
+    function refreshReplayScreen() {
+        const set = (id, prop, val) => { const el = document.getElementById(id); if (el) el[prop] = val; };
+        set('replay-title-el', 'textContent', t('replay_title'));
+        set('replay-turn-label','textContent', t('turn_label'));
+        set('btn-replay-prev', 'textContent', t('replay_prev'));
+        set('btn-replay-play', 'textContent', t('replay_auto'));
+        set('btn-replay-next', 'textContent', t('replay_next'));
+    }
+
+    function refreshPrivateRoomScreen() {
+        const set = (id, prop, val) => { const el = document.getElementById(id); if (el) el[prop] = val; };
+        set('pr-title',        'textContent', t('private_room_title'));
+        set('btn-pr-create',   'textContent', t('create_room'));
+        set('pr-code-label',   'textContent', t('room_code_label'));
+        set('btn-pr-copy-text','textContent', t('copy'));
+        set('pr-expires',      'textContent', t('room_expires'));
+        set('pr-or-divider',   'textContent', t('or_divider'));
+        set('pr-join-label',   'textContent', t('join_with_code'));
+        const inp = document.getElementById('pr-join-input');
+        if (inp) inp.placeholder = t('room_code_placeholder');
+        set('btn-pr-join-text','textContent', t('join'));
+        set('btn-pr-back',     'textContent', t('back_to_menu'));
+        set('pr-waiting-text', 'textContent', t('waiting_opp'));
     }
 
     function renderHowToPlay() {
@@ -2355,6 +2484,14 @@
         currentLang = lang;
         localStorage.setItem('mc_lang', lang);
         refreshSettingsScreen();
+        refreshMenuScreen();
+        refreshOverlays();
+        if (currentScreen === 'profile')      refreshProfileScreen();
+        if (currentScreen === 'ranking')      refreshRankingScreen();
+        if (currentScreen === 'leaderboard')  refreshRankingScreen();
+        if (currentScreen === 'match-history') refreshHistoryScreen();
+        if (currentScreen === 'replay')       refreshReplayScreen();
+        if (currentScreen === 'private-room') refreshPrivateRoomScreen();
     };
 
     window.selectAvatar = function(piece) {
@@ -2479,7 +2616,7 @@
                 badge = document.createElement('div');
                 badge.id = '_mm-unranked-badge';
                 badge.style.cssText = 'margin-top:8px;padding:4px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:3px;color:rgba(240,236,228,0.45);font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:2px;';
-                badge.textContent = 'PARTIDA NÃO RANQUEADA';
+                badge.textContent = t('unranked_match');
                 document.getElementById('mm-found')?.appendChild(badge);
             }
             badge.style.display = '';
@@ -2533,13 +2670,13 @@
             const codeDisplay = document.getElementById('pr-code-display');
             const createBtn   = document.getElementById('btn-pr-create');
             if (codeDisplay) codeDisplay.style.display = 'none';
-            if (createBtn)   { createBtn.style.display = ''; createBtn.disabled = false; createBtn.textContent = 'CRIAR SALA'; }
+            if (createBtn)   { createBtn.style.display = ''; createBtn.disabled = false; createBtn.textContent = t('create_room'); }
             const joinInput = document.getElementById('pr-join-input');
             const joinErr   = document.getElementById('pr-join-error');
             const joinBtn   = document.getElementById('btn-pr-join');
             if (joinInput) { joinInput.value = ''; joinInput.disabled = false; }
             if (joinErr)   joinErr.textContent = '';
-            if (joinBtn)   { joinBtn.disabled = false; joinBtn.textContent = 'ENTRAR'; }
+            if (joinBtn)   { joinBtn.disabled = false; joinBtn.textContent = t('join'); }
             _currentCode = null;
         }
 
@@ -2570,7 +2707,7 @@
                 if (!_currentCode) return;
                 navigator.clipboard?.writeText(_currentCode).catch(() => {});
                 const btn = document.getElementById('btn-pr-copy');
-                if (btn) { btn.textContent = 'COPIADO'; setTimeout(() => { btn.textContent = 'COPIAR'; }, 1500); }
+                if (btn) { btn.textContent = t('copied'); setTimeout(() => { btn.textContent = t('copy'); }, 1500); }
             },
 
             join() {
@@ -2578,7 +2715,7 @@
                 const err   = document.getElementById('pr-join-error');
                 const btn   = document.getElementById('btn-pr-join');
                 const code  = (input?.value || '').trim().toUpperCase();
-                if (code.length !== 4) { if (err) err.textContent = 'Digite um código de 4 caracteres.'; return; }
+                if (code.length !== 4) { if (err) err.textContent = t('room_code_invalid'); return; }
                 if (err) err.textContent = '';
                 if (btn) { btn.disabled = true; btn.textContent = '...'; }
                 if (input) input.disabled = true;
@@ -2605,10 +2742,10 @@
                 const codeDisplay = document.getElementById('pr-code-display');
                 const createBtn   = document.getElementById('btn-pr-create');
                 if (codeDisplay) codeDisplay.style.display = 'none';
-                if (createBtn)   { createBtn.style.display = ''; createBtn.disabled = false; createBtn.textContent = 'CRIAR SALA'; }
+                if (createBtn)   { createBtn.style.display = ''; createBtn.disabled = false; createBtn.textContent = t('create_room'); }
                 const expires = document.getElementById('pr-expires');
-                if (expires) expires.textContent = 'Sala expirada. Crie uma nova.';
-                setTimeout(() => { if (expires) expires.textContent = 'expira em 5 minutos'; }, 3000);
+                if (expires) expires.textContent = t('room_expired');
+                setTimeout(() => { if (expires) expires.textContent = t('room_expires'); }, 3000);
             },
 
             _onError(msg) {
@@ -2616,7 +2753,7 @@
                 const btn = document.getElementById('btn-pr-join');
                 const inp = document.getElementById('pr-join-input');
                 if (err) err.textContent = msg;
-                if (btn) { btn.disabled = false; btn.textContent = 'ENTRAR'; }
+                if (btn) { btn.disabled = false; btn.textContent = t('join'); }
                 if (inp) inp.disabled = false;
             },
         };
@@ -2788,7 +2925,7 @@
                     goBadge = document.createElement('div');
                     goBadge.id = '_go-unranked-badge';
                     goBadge.style.cssText = 'margin-top:6px;padding:4px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:rgba(240,236,228,0.35);font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:2px;';
-                    goBadge.textContent = 'PARTIDA NÃO RANQUEADA';
+                    goBadge.textContent = t('unranked_match');
                     goResult.insertAdjacentElement('afterend', goBadge);
                 }
                 goBadge.style.display = '';

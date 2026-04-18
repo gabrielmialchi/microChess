@@ -288,6 +288,10 @@ curl http://localhost:3000/health
 | 16 | Qualidade UX: troca de senha, loading states, disconnect banner | ✅ Completo |
 | 17 | Sala privada com código 4 chars | ✅ Completo |
 | 18 | Hardening Final (V-01..V-06) + P-07 badge não ranqueada | ✅ Completo |
-| P-A | Localização: varredura + tradução EN | ⏳ Pendente |
+| P-A | Localização: varredura + tradução EN | ✅ Completo |
+| P-B | Juicy combat timing + dice redesign | ⏳ Pendente |
+| P-C | Links + transições de tela | ⏳ Pendente |
+| P-D | Localização: 7 idiomas restantes (ES/DE/IT/RU/JA/KO/ZH) | ⏳ Pendente |
+| P-E | Redesign de fontes: revisão tipográfica completa | ⏳ Pendente |
 
 *(Atualizar este arquivo ao concluir cada sessão)*
