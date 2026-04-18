@@ -2157,3 +2157,51 @@ Pontos a avaliar:
 [ ] 5. Implementar ajustes — priorizar consistência e legibilidade
 [ ] 6. Verificar impacto em telas que têm texto overflow ou quebra de linha
 ```
+
+---
+
+# SESSÃO P-F: REPLAY — TABULEIRO + TURNO 0 + LABEL DE TURNO
+
+## Objetivo
+Corrigir distorção visual do tabuleiro no Replay e melhorar a navegação de turnos.
+
+## Risco: 🟡 Médio — edições em rank-ui.js (ReplayViewer) e possivelmente em index.html
+
+## Problemas a Resolver
+
+### P-F-01: Tabuleiro com proporção fixa
+O tabuleiro do Replay usa `display:grid;grid-template-columns:repeat(4,1fr)` sem altura fixa nas células — quando uma casa está vazia, ela colapsa; quando tem peça, expande. Resultado: casas de tamanhos diferentes.
+
+**Solução**: usar o mesmo padrão do tabuleiro do jogo principal — células com tamanho fixo via `aspect-ratio:1` ou altura explícita. Peça posicionada com `position:absolute` ou `font-size` controlado dentro da célula de tamanho fixo.
+
+### P-F-02: Turno 0 — Posicionamento inicial
+Atualmente o Replay começa no Turno 1 (primeiro turno de ação). Adicionar Turno 0 que exibe o estado inicial do tabuleiro após o posicionamento (antes de qualquer movimento).
+
+**Fonte dos dados**: `turns_json` já inclui `armyAfter` em cada turno — o estado "antes do turno 1" pode ser inferido a partir do `armyAfter` de um turno artificial, ou o servidor pode gravar o estado inicial separadamente.
+
+Verificar se `replays` já grava o estado inicial (`initial_state` ou similar). Se não, usar o `armyAfter` do turno 0 sintético gerado a partir dos dados de posicionamento existentes.
+
+### P-F-03: Label de turno formatado
+Substituir o simples "Turno X / Y" por:
+
+```
+[0]: Posicionamento
+[1]: Turno 1
+[2]: Turno 2
+...
+```
+
+Usar a chave `turn_label` existente para "Turno" e adicionar chave `turn_positioning` para "Posicionamento".
+
+## Checklist
+
+```
+[ ] 1. P-F-01: Corrigir CSS do #replay-board — células com tamanho fixo, peças sem distorcer a grade
+[ ] 2. P-F-01: Verificar que o tabuleiro do Replay usa o mesmo estilo visual do tabuleiro do jogo
+[ ] 3. P-F-02: Verificar se server.js grava estado inicial no replay (initial_army ou turno 0)
+[ ] 4. P-F-02: Se não gravado: adicionar gravação do estado de posicionamento ao criar o replay
+[ ] 5. P-F-02: ReplayViewer.load(): inserir turno 0 sintético no início do array de turnos
+[ ] 6. P-F-03: Atualizar label de turno: [0] = t('turn_positioning'), [N] = '[N]: ' + t('turn_label') + ' N'
+[ ] 7. P-F-03: Adicionar chave turn_positioning a T.pt e T.en (e demais idiomas na P-D)
+[ ] 8. Testar navegação: Turno 0 → 1 → 2 → ... sem quebrar lógica de prev/next/auto
+```

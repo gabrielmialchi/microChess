@@ -293,5 +293,6 @@ curl http://localhost:3000/health
 | P-C | Links + transições de tela | ⏳ Pendente |
 | P-D | Localização: 7 idiomas restantes (ES/DE/IT/RU/JA/KO/ZH) | ⏳ Pendente |
 | P-E | Redesign de fontes: revisão tipográfica completa | ⏳ Pendente |
+| P-F | Replay: tabuleiro fixo + Turno 0 (posicionamento) + label [N] formatado | ⏳ Pendente |
 
 *(Atualizar este arquivo ao concluir cada sessão)*
