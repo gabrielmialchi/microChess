@@ -2,21 +2,18 @@
 
 ## Ao abrir qualquer conversa neste projeto
 
-Leia os seguintes documentos antes de qualquer ação:
-
-1. `docs/CLAUDE.md` — arquitetura, telas, regras de negócio, stack
-2. `docs/ACTIVITY_LOG.md` — status atual de cada sessão
-3. `docs/SESSAO_POR_SESSAO_PLANNING.md` — plano detalhado com checklists
+Não leia nenhum arquivo automaticamente. Aguarde o comando do usuário.
 
 ## Quando o usuário disser "iniciar sessão"
 
 Execute automaticamente estes passos, sem pedir confirmação adicional:
 
-1. Leia `docs/ACTIVITY_LOG.md` e identifique a primeira sessão com status ⏳ Pendente
-2. Leia a seção dessa sessão em `docs/SESSAO_POR_SESSAO_PLANNING.md`
-3. Execute TUDO que a sessão pede, seguindo o checklist na ordem exata
-4. Ao concluir, preencha o template correspondente em `docs/ACTIVITY_LOG.md`
-5. Atualize a tabela de progresso em `docs/CLAUDE.md` (marcar sessão como ✅)
+1. Leia `docs/PROJECT_CONTEXT.md` — arquitetura, telas, regras de negócio, stack
+2. Leia `docs/ACTIVITY_LOG.md` e identifique a primeira sessão com status ⏳ Pendente
+3. Leia a seção dessa sessão em `docs/SESSAO_POR_SESSAO_PLANNING.md`
+4. Execute TUDO que a sessão pede, seguindo o checklist na ordem exata
+5. Ao concluir, preencha o template correspondente em `docs/ACTIVITY_LOG.md`
+6. Atualize a tabela de progresso em `docs/PROJECT_CONTEXT.md` (marcar sessão como ✅)
 
 ## Regras que nunca devem ser violadas
 
@@ -28,7 +25,7 @@ Execute automaticamente estes passos, sem pedir confirmação adicional:
 
 ## Quando o usuário disser "status do projeto"
 
-Leia `docs/ACTIVITY_LOG.md` e `docs/CLAUDE.md` e responda:
+Leia `docs/ACTIVITY_LOG.md` e `docs/PROJECT_CONTEXT.md` e responda:
 - Qual sessão está em andamento ou é a próxima
 - Quais arquivos já existem
 - Quais bugs ou bloqueios estão registrados

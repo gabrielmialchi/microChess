@@ -25,7 +25,7 @@ microChess/
 │   ├── package.json        ← express + socket.io
 │   └── node_modules/
 └── docs/
-    ├── CLAUDE.md           ← Este arquivo
+    ├── PROJECT_CONTEXT.md  ← Este arquivo
     ├── SESSAO_POR_SESSAO_PLANNING.md
     └── ACTIVITY_LOG.md
 ```
