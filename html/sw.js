@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'microchess-v1';
+const CACHE_NAME = 'microchess-v2';
 const SHELL = [
     '/',
     '/auth-frontend.js',
