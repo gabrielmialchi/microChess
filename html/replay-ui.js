@@ -15,7 +15,7 @@ const ReplayViewer = {
 
     async load(matchId) {
         try {
-            const res = await fetch(`/match/${matchId}/replay`);
+            const res = await fetch(`${window.API_BASE||''}/match/${matchId}/replay`);
             if (!res.ok) { alert('Replay não disponível.'); return; }
             this.open(await res.json());
         } catch { alert('Erro ao carregar replay.'); }

@@ -32,7 +32,7 @@ const MenuPopulator = {
         localStorage.setItem('mc_nickname', session.username || 'Guerreiro');
 
         try {
-            const res = await fetch(`/player/${session.id}`);
+            const res = await fetch(`${window.API_BASE||''}/player/${session.id}`);
             if (!res.ok) return;
             const p = await res.json();
             if (el('menu-stat-w'))  el('menu-stat-w').textContent  = p.wins || 0;
@@ -113,14 +113,14 @@ const AuthUI = {
             if (!username) { this._fieldError('reg-username', 'reg-username-hint', 'Preencha o apelido.'); return; }
             if (!email)    { this._fieldError('reg-email',    'reg-email-hint',    'Preencha o email.'); return; }
             if (!password) { this._fieldError('reg-password', 'reg-password-hint', 'Preencha a senha.'); return; }
-            url  = '/auth/register';
+            url  = (window.API_BASE||'') + '/auth/register';
             body = { username, email, password };
         } else {
             const email    = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
             if (!email)    { this._fieldError('login-email',    'login-email-hint',    'Preencha o email.'); return; }
             if (!password) { this._fieldError('login-password', 'login-password-hint', 'Preencha a senha.'); return; }
-            url  = '/auth/login';
+            url  = (window.API_BASE||'') + '/auth/login';
             body = { email, password };
         }
 
@@ -197,7 +197,7 @@ window.doDeleteAccount = async function () {
     const session = Session.get();
     if (!session?.token) { window.hideDeleteConfirm(); AuthUI.show(); return; }
     try {
-        const res = await fetch('/auth/account', {
+        const res = await fetch((window.API_BASE||'') + '/auth/account', {
             method: 'DELETE',
             headers: { 'Authorization': 'Bearer ' + session.token },
         });
@@ -255,7 +255,7 @@ window.doChangePassword = async function () {
     const session = Session.get();
     if (!session?.token) { window.hideChangePassword(); AuthUI.show(); return; }
     try {
-        const res = await fetch('/auth/password', {
+        const res = await fetch((window.API_BASE||'') + '/auth/password', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.token },
             body: JSON.stringify({ currentPassword: current, newPassword: newPwd }),

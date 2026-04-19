@@ -3888,7 +3888,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             btn.textContent = '...';
             btn.disabled = true;
             try {
-                const res = await fetch('/auth/profile', {
+                const res = await fetch((window.API_BASE||'') + '/auth/profile', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.token },
                     body: JSON.stringify({ username: nick }),
@@ -3937,7 +3937,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     // LOCAL: conecta ao servidor local. PRODUÇÃO: troque pela URL do Railway.
     const h = window.location.hostname;
     const isLocal = h === 'localhost' || h.startsWith('192.168.') || h.startsWith('10.') || h.startsWith('172.');
-    const SERVER_URL = isLocal ? '' : 'microchess-production.up.railway.app';
+    const SERVER_URL = isLocal ? '' : 'https://microchess-production.up.railway.app';
+    window.API_BASE = SERVER_URL;
     const socket = io(SERVER_URL);
     window._mcSocket = socket;
 

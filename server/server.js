@@ -21,6 +21,16 @@ const PORT   = process.env.PORT || 3000;
 
 app.use(compression());
 app.use(helmet({ contentSecurityPolicy: false })); // CSP off: Google Fonts CDN + Socket.io inline
+
+const _origin = process.env.ALLOWED_ORIGIN || '*';
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', _origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+});
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../html')));
 app.get('/health', (_, res) => {

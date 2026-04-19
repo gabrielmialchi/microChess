@@ -14,7 +14,7 @@ const Leaderboard = {
         const table = document.getElementById('leaderboard-table');
         if (table) table.innerHTML = _spinner;
         try {
-            const res = await fetch('/leaderboard');
+            const res = await fetch((window.API_BASE||'') + '/leaderboard');
             if (!res.ok) { if (table) table.innerHTML = ''; return; }
             this.render(await res.json());
         } catch { console.error('[Leaderboard] Erro ao carregar.'); }
@@ -96,7 +96,7 @@ const MatchHistory = {
     async _load(playerId) {
         const container = document.getElementById('match-history-list');
         try {
-            const res = await fetch(`/player/${playerId}/matches`);
+            const res = await fetch(`${window.API_BASE||''}/player/${playerId}/matches`);
             if (!res.ok) { if (container) container.innerHTML = ''; return; }
             this.render(await res.json(), playerId);
         } catch { if (container) container.innerHTML = ''; }
