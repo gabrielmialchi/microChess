@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>03 · Menu + Matchmaking — microChess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mc-bg:          #f5f3ee;
+  --mc-surface:     #ffffff;
+  --mc-surface-2:   #ebe8e0;
+  --mc-ink:         #18130c;
+  --mc-ink-2:       #3a3227;
+  --mc-muted:       rgba(24,19,12,0.52);
+  --mc-faint:       rgba(24,19,12,0.28);
+  --mc-rule:        rgba(24,19,12,0.10);
+  --mc-rule-strong: rgba(24,19,12,0.18);
+
+  --mc-accent:       #ff5a1f;
+  --mc-accent-ink:   #ffffff;
+  --mc-accent-soft:  rgba(255,90,31,0.12);
+  --mc-accent-glow:  rgba(255,90,31,0.40);
+
+  --mc-success:      #2f9e5d;
+  --mc-success-soft: rgba(47,158,93,0.12);
+  --mc-danger:       #d43a2a;
+  --mc-danger-soft:  rgba(212,58,42,0.10);
+
+  --mc-aura-w: rgba(245,98,0,0.8);
+  --mc-aura-b: rgba(69,56,255,0.8);
+
+  --mc-font-sans: 'Inter', system-ui, sans-serif;
+  --mc-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --mc-r-xs: 6px; --mc-r-sm: 8px; --mc-r-md: 12px;
+  --mc-r-lg: 16px; --mc-r-xl: 20px; --mc-r-pill: 999px;
+
+  --mc-sh-1: 0 1px 2px rgba(24,19,12,0.05);
+  --mc-sh-2: 0 4px 12px rgba(24,19,12,0.08);
+  --mc-sh-pop: 0 20px 48px -12px rgba(24,19,12,0.22);
+
+  --mc-ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+  --mc-ease-out:    cubic-bezier(0.22,1,0.36,1);
+  --mc-ls-wide: 0.12em;
+  --mc-ls-tight: -0.02em;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+html, body {
+  background: var(--mc-bg);
+  color: var(--mc-ink);
+  font-family: var(--mc-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Canvas ──────────────────────────────────────────────── */
+.canvas { max-width: 1640px; margin: 0 auto; padding: 56px 32px 96px }
+.canvas-head { margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap }
+.canvas-head h1 { font-size: 32px; font-weight: 700; letter-spacing: var(--mc-ls-tight) }
+.canvas-head p { color: var(--mc-muted); font-size: 14px; max-width: 540px; margin-top: 6px; line-height: 1.5 }
+.meta { font-family: var(--mc-font-mono); font-size: 11px; letter-spacing: var(--mc-ls-wide); text-transform: uppercase; color: var(--mc-muted) }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 32px 24px }
+
+/* ── Scene frame ──────────────────────────────────────────── */
+.scene { display: flex; flex-direction: column; gap: 12px }
+.scene-head { display: flex; align-items: baseline; gap: 10px; padding-left: 2px }
+.scene-head .num { font-family: var(--mc-font-mono); font-size: 11px; color: var(--mc-muted); letter-spacing: var(--mc-ls-wide) }
+.scene-head h3 { font-size: 15px; font-weight: 600 }
+.scene-body {
+  background: var(--mc-surface);
+  border: 1px solid var(--mc-rule);
+  border-radius: var(--mc-r-lg);
+  overflow: hidden;
+  box-shadow: var(--mc-sh-2);
+  aspect-ratio: 9/16;
+  position: relative;
+}
+.scene-note { font-size: 11px; color: var(--mc-muted); line-height: 1.5; padding: 0 2px }
+
+/* ── Phone shell ──────────────────────────────────────────── */
+.phone { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--mc-bg); overflow: hidden }
+
+/* ── Status bar ───────────────────────────────────────────── */
+.status-bar {
+  height: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 18px;
+  font-family: var(--mc-font-mono); font-size: 10px; color: var(--mc-muted);
+}
+
+/* ── Tab bar ──────────────────────────────────────────────── */
+.tabbar {
+  flex-shrink: 0;
+  display: grid; grid-template-columns: repeat(4,1fr);
+  background: var(--mc-surface);
+  border-top: 1px solid var(--mc-rule);
+  padding: 4px 8px 10px;
+}
+.tabbar .tab {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  height: 48px; justify-content: center;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--mc-faint); font-family: var(--mc-font-sans); font-size: 10px; font-weight: 500;
+}
+.tabbar .tab .gl { font-size: 18px; line-height: 1 }
+.tabbar .tab.active { color: var(--mc-ink) }
+.tabbar .tab.active .gl { color: var(--mc-accent) }
+
+/* ── Menu content ─────────────────────────────────────────── */
+.menu-body {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 16px 20px 12px; gap: 0; overflow: hidden;
+}
+
+.player-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 16px; border-bottom: 1px solid var(--mc-rule);
+  flex-shrink: 0;
+}
+.player-id { display: flex; align-items: center; gap: 10px }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--mc-ink); color: var(--mc-surface);
+  display: grid; place-items: center; font-size: 18px;
+  flex-shrink: 0;
+}
+.player-name { font-size: 14px; font-weight: 600; letter-spacing: -0.01em }
+.player-elo { font-size: 12px; color: var(--mc-muted); margin-top: 1px }
+.wl { font-family: var(--mc-font-mono); font-size: 11px; color: var(--mc-muted) }
+.wl strong { color: var(--mc-ink); font-weight: 600 }
+
+.menu-hero {
+  flex: 1; display: flex; flex-direction: column;
+  justify-content: center; padding: 0 0 8px;
+}
+.logo {
+  font-size: clamp(28px,8vw,44px); font-weight: 800;
+  letter-spacing: var(--mc-ls-tight); line-height: 1;
+}
+.logo em { font-style: normal; color: var(--mc-accent) }
+.logo-sub { font-size: 12px; color: var(--mc-muted); margin-top: 8px; letter-spacing: 0.05em }
+
+.menu-nav { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0 }
+.menu-btn {
+  height: 52px; border-radius: var(--mc-r-md);
+  display: flex; align-items: center; padding: 0 18px; gap: 12px;
+  font-family: var(--mc-font-sans); font-size: 15px; font-weight: 500;
+  border: 1px solid var(--mc-rule-strong); background: var(--mc-surface);
+  color: var(--mc-ink); cursor: pointer;
+  transition: background 180ms var(--mc-ease-out);
+}
+.menu-btn.primary {
+  background: var(--mc-ink); color: var(--mc-surface);
+  border-color: var(--mc-ink); font-weight: 600;
+}
+.menu-btn .arr { margin-left: auto; opacity: 0.4; font-size: 18px }
+.menu-btn.primary .arr { opacity: 0.9 }
+.menu-btn .ico { width: 20px; display: grid; place-items: center; opacity: 0.5; font-size: 15px; flex-shrink: 0 }
+.menu-btn.primary .ico { opacity: 0.9 }
+
+/* ── Matchmaking ──────────────────────────────────────────── */
+.mm-wrap {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 20px; gap: 0;
+}
+.mm-back {
+  flex-shrink: 0; padding-bottom: 12px;
+  display: flex; align-items: center;
+}
+.mm-back button {
+  background: transparent; border: none; cursor: pointer;
+  font-family: var(--mc-font-sans); font-size: 13px;
+  color: var(--mc-muted); display: flex; align-items: center; gap: 6px;
+  padding: 6px 0;
+}
+.mm-back button:hover { color: var(--mc-ink) }
+
+.mm-stage {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; gap: 20px;
+}
+
+/* Radar */
+.radar {
+  width: 140px; height: 140px; border-radius: 50%;
+  border: 1px solid var(--mc-rule-strong);
+  display: grid; place-items: center; position: relative;
+  flex-shrink: 0;
+}
+.radar::after {
+  content: ''; position: absolute;
+  inset: 18px; border-radius: 50%;
+  border: 1px solid var(--mc-rule);
+  animation: radar-ring 2.4s var(--mc-ease-out) infinite;
+}
+@keyframes radar-ring {
+  0%   { transform: scale(0.7); opacity: 0.9 }
+  100% { transform: scale(1.4); opacity: 0 }
+}
+.radar .core { font-size: 52px; color: var(--mc-accent); text-shadow: 0 0 16px var(--mc-accent-glow) }
+
+.mm-label {
+  font-family: var(--mc-font-mono); font-size: 10px;
+  letter-spacing: var(--mc-ls-wide); text-transform: uppercase;
+  color: var(--mc-accent);
+}
+.mm-title { font-size: 22px; font-weight: 700; letter-spacing: var(--mc-ls-tight); line-height: 1.15 }
+.mm-sub { font-size: 12px; color: var(--mc-muted); line-height: 1.5 }
+.mm-ticker { font-family: var(--mc-font-mono); font-size: 11px; color: var(--mc-faint) }
+
+/* VS row */
+.vs-row { display: flex; align-items: center; gap: 16px; width: 100% }
+.vs-card {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 8px; padding: 16px 10px;
+  background: var(--mc-surface); border: 1px solid var(--mc-rule);
+  border-radius: var(--mc-r-lg);
+}
+.vs-card .piece { font-size: 48px; line-height: 1 }
+.vs-card .piece.w { color: #fff; text-shadow: 0 0 10px var(--mc-aura-w), 0 0 20px var(--mc-aura-w) }
+.vs-card .piece.b { color: var(--mc-ink); text-shadow: 0 0 10px var(--mc-aura-b), 0 0 20px var(--mc-aura-b) }
+.vs-card .vs-name { font-size: 12px; font-weight: 600 }
+.vs-card .vs-elo { font-size: 11px; color: var(--mc-muted) }
+.vs-divider { font-family: var(--mc-font-mono); font-weight: 700; font-size: 16px; color: var(--mc-muted) }
+
+/* Countdown */
+.countdown {
+  font-family: var(--mc-font-mono); font-size: 96px;
+  font-weight: 700; letter-spacing: var(--mc-ls-tight);
+  color: var(--mc-accent); text-shadow: 0 0 32px var(--mc-accent-glow);
+  line-height: 1;
+}
+
+/* Sala privada */
+.pr-wrap {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 20px; gap: 0; overflow: hidden;
+}
+.pr-header {
+  flex-shrink: 0; display: flex; align-items: center; gap: 10px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--mc-rule);
+}
+.pr-header button {
+  background: transparent; border: none; cursor: pointer;
+  font-family: var(--mc-font-sans); font-size: 13px; color: var(--mc-muted);
+  padding: 6px 0;
+}
+.pr-title { font-size: 15px; font-weight: 600 }
+.pr-body { flex: 1; display: flex; flex-direction: column; gap: 16px; padding-top: 20px }
+.pr-section { display: flex; flex-direction: column; gap: 10px }
+.pr-section-label {
+  font-family: var(--mc-font-mono); font-size: 10px;
+  letter-spacing: var(--mc-ls-wide); text-transform: uppercase;
+  color: var(--mc-muted);
+}
+.pr-code {
+  font-family: var(--mc-font-mono); font-size: 40px;
+  font-weight: 700; letter-spacing: 10px; color: var(--mc-accent);
+  text-align: center; padding: 16px;
+  background: var(--mc-accent-soft); border-radius: var(--mc-r-md);
+}
+.pr-divider {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 11px; color: var(--mc-faint);
+}
+.pr-divider::before, .pr-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--mc-rule);
+}
+.pr-input {
+  width: 100%; height: 52px;
+  background: var(--mc-surface); border: 1px solid var(--mc-rule-strong);
+  border-radius: var(--mc-r-md); text-align: center;
+  font-family: var(--mc-font-mono); font-size: 24px;
+  font-weight: 700; letter-spacing: 8px; color: var(--mc-ink);
+  text-transform: uppercase;
+}
+.pr-input::placeholder { color: var(--mc-faint); letter-spacing: 4px; font-size: 16px }
+
+/* Buttons reused */
+.cta {
+  height: 52px; border: 0; border-radius: var(--mc-r-md);
+  background: var(--mc-ink); color: var(--mc-surface);
+  font: 600 13px var(--mc-font-sans); letter-spacing: var(--mc-ls-wide);
+  text-transform: uppercase; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: var(--mc-sh-1); flex-shrink: 0;
+}
+.cta.accent { background: var(--mc-accent); color: var(--mc-accent-ink); box-shadow: 0 4px 16px -6px var(--mc-accent-glow) }
+.cta.ghost { background: transparent; border: 1px solid var(--mc-rule-strong); color: var(--mc-ink) }
+.cta.sm { height: 40px; font-size: 11px }
+.cta.full { width: 100% }
+
+/* Tag */
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 8px;
+  font: 500 10px var(--mc-font-mono); letter-spacing: var(--mc-ls-wide); text-transform: uppercase;
+  color: var(--mc-muted); background: var(--mc-rule); border-radius: var(--mc-r-pill);
+}
+.tag.accent { color: var(--mc-accent); background: var(--mc-accent-soft) }
+.tag.success { color: var(--mc-success); background: var(--mc-success-soft) }
+
+/* Live dot */
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mc-success); flex-shrink: 0 }
+.dot.waiting { background: var(--mc-accent); animation: dot-pulse 1.2s ease infinite }
+@keyframes dot-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+/* ── Tweaks ──────────────────────────────────────────────── */
+#tw {
+  position: fixed; right: 20px; bottom: 20px; z-index: 100;
+  background: var(--mc-surface); border: 1px solid var(--mc-rule-strong);
+  border-radius: var(--mc-r-lg); padding: 14px;
+  display: none; flex-direction: column; gap: 12px; width: 260px;
+  box-shadow: var(--mc-sh-pop);
+}
+#tw.on { display: flex }
+#tw h4 { font: 500 11px var(--mc-font-mono); letter-spacing: var(--mc-ls-wide); text-transform: uppercase; color: var(--mc-muted) }
+#tw .chips { display: flex; flex-wrap: wrap; gap: 5px }
+#tw .chips button {
+  font: 500 10px var(--mc-font-mono); letter-spacing: 1px; text-transform: uppercase;
+  padding: 6px 10px; border: 1px solid var(--mc-rule);
+  background: transparent; color: var(--mc-ink-2); border-radius: var(--mc-r-pill); cursor: pointer;
+}
+#tw .chips button.on { background: var(--mc-accent); color: var(--mc-accent-ink); border-color: var(--mc-accent) }
+
+.canvas[data-focus] .scene { display: none }
+.canvas[data-focus="all"] .scene { display: flex }
+.canvas[data-focus="menu"] .scene[data-tag="menu"] { display: flex }
+.canvas[data-focus="mm"] .scene[data-tag="mm"] { display: flex }
+.canvas[data-focus="private"] .scene[data-tag="private"] { display: flex }
+</style>
+</head>
+<body>
+
+<div class="canvas" id="canvas" data-focus="all">
+  <div class="canvas-head">
+    <div>
+      <div class="meta">03 · Menu + Matchmaking</div>
+      <h1>Entrada e fila</h1>
+      <p>Menu principal com identidade do jogador, navegação por tab bar, matchmaking em 3 estados e sala privada.</p>
+    </div>
+    <div class="meta">mobile · 440px · light</div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="tw">
+  <h4>Tweaks · Filtrar</h4>
+  <div class="chips" id="chips">
+    <button class="on" data-f="all">Todas</button>
+    <button data-f="menu">Menu</button>
+    <button data-f="mm">Matchmaking</button>
+    <button data-f="private">Sala privada</button>
+  </div>
+</div>
+
+<script>
+/* ── Scenes ──────────────────────────────────────────────── */
+const scenes = [
+
+  // ── MENU ──────────────────────────────────────────────────
+  {
+    tag:'menu', num:'01', title:'Menu principal · logado com ELO',
+    sub:'Header com identidade (nome + rank visível), logo, CTAs hierarquizados, tabbar',
+    render: () => `
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="menu-body">
+        <div class="player-row">
+          <div class="player-id">
+            <div class="avatar">M</div>
+            <div>
+              <div class="player-name">Marianna</div>
+              <div class="player-elo">Cavaleiro Aprendiz</div>
+            </div>
+          </div>
+          <div class="wl"><strong>12</strong>W · <strong>4</strong>L</div>
+        </div>
+        <div class="menu-hero">
+          <div class="logo">micro<em>Chess</em>.</div>
+          <div class="logo-sub">xadrez 4×4 · online · rápido</div>
+        </div>
+        <div class="menu-nav">
+          <button class="menu-btn primary">
+            <span class="ico">▶</span>Jogar ranqueada<span class="arr">→</span>
+          </button>
+          <button class="menu-btn">
+            <span class="ico">⌘</span>Sala privada<span class="arr">→</span>
+          </button>
+          <button class="menu-btn">
+            <span class="ico">◆</span>Ranking<span class="arr">→</span>
+          </button>
+          <button class="menu-btn">
+            <span class="ico">⚙</span>Configurações<span class="arr">→</span>
+          </button>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab active"><span class="gl">⌂</span>Início</button>
+        <button class="tab"><span class="gl">▶</span>Jogar</button>
+        <button class="tab"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'menu', num:'02', title:'Menu · convidado (sem conta)',
+    sub:'Sem ELO nem W/L; CTA de criar conta em destaque',
+    render: () => `
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="menu-body">
+        <div class="player-row">
+          <div class="player-id">
+            <div class="avatar" style="background:var(--mc-surface-2);color:var(--mc-muted);border:1px solid var(--mc-rule-strong);font-size:22px">?</div>
+            <div>
+              <div class="player-name">Convidado</div>
+              <div class="player-elo" style="color:var(--mc-accent)">Criar conta para subir no ranking →</div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-hero">
+          <div class="logo">micro<em>Chess</em>.</div>
+          <div class="logo-sub">xadrez 4×4 · online · rápido</div>
+        </div>
+        <div class="menu-nav">
+          <button class="menu-btn primary" style="background:var(--mc-accent);border-color:var(--mc-accent)">
+            <span class="ico">★</span>Criar conta<span class="arr">→</span>
+          </button>
+          <button class="menu-btn">
+            <span class="ico">▶</span>Jogar como convidado<span class="arr">→</span>
+          </button>
+          <button class="menu-btn">
+            <span class="ico">◆</span>Ranking<span class="arr">→</span>
+          </button>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab active"><span class="gl">⌂</span>Início</button>
+        <button class="tab"><span class="gl">▶</span>Jogar</button>
+        <button class="tab"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  // ── MATCHMAKING ──────────────────────────────────────────
+  {
+    tag:'mm', num:'03', title:'Matchmaking · buscando',
+    sub:'Radar animado, ELO visível, tempo de fila, cancelar',
+    render: () => `
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="mm-wrap">
+        <div class="mm-back">
+          <button>← cancelar</button>
+        </div>
+        <div class="mm-stage">
+          <div class="radar"><span class="core">♛</span></div>
+          <div>
+            <div class="mm-label">procurando oponente</div>
+            <div class="mm-title" style="margin-top:10px">Na fila</div>
+            <div class="mm-sub" style="margin-top:8px">Cavaleiro Aprendiz · ranqueada</div>
+          </div>
+          <div class="mm-ticker">00:23 na fila</div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab active"><span class="gl">▶</span>Jogar</button>
+        <button class="tab"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'mm', num:'04', title:'Matchmaking · partida encontrada',
+    sub:'VS card com rank (ELO) de ambos — sem números',
+    render: () => `
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="mm-wrap">
+        <div class="mm-back" style="visibility:hidden"><button>←</button></div>
+        <div class="mm-stage">
+          <div class="mm-label" style="color:var(--mc-success)">✓ partida encontrada</div>
+          <div class="vs-row" style="margin-top:8px">
+            <div class="vs-card">
+              <div class="piece w">♘</div>
+              <div class="vs-name">Você</div>
+              <div class="vs-elo">Cavaleiro Aprendiz</div>
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="vs-card">
+              <div class="piece b">♞</div>
+              <div class="vs-name">sentinela_07</div>
+              <div class="vs-elo">Cavaleiro Elite</div>
+            </div>
+          </div>
+          <div class="tag" style="margin-top:4px">Ranqueada</div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab active"><span class="gl">▶</span>Jogar</button>
+        <button class="tab"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'mm', num:'05', title:'Matchmaking · countdown',
+    sub:'Contagem dramática antes do draft',
+    render: () => `
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="mm-wrap">
+        <div class="mm-back" style="visibility:hidden"><button>←</button></div>
+        <div class="mm-stage">
+          <div class="mm-label">a batalha começa em</div>
+          <div class="countdown">3</div>
+          <div class="mm-sub">Prepare sua estratégia</div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab active"><span class="gl">▶</span>Jogar</button>
+        <button class="tab"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  // ── SALA PRIVADA ──────────────────────────────────────────
+  {
+    tag:'private', num:'06', title:'Sala privada · código gerado',
+    sub:'Código 4 chars em destaque, aguardando oponente',
+    render: () => `
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="pr-wrap">
+        <div class="pr-header">
+          <button>←</button>
+          <span class="pr-title">Sala Privada</span>
+        </div>
+        <div class="pr-body">
+          <div class="pr-section">
+            <div class="pr-section-label">Seu código · compartilhe</div>
+            <div class="pr-code">7K9A</div>
+            <div style="display:flex;align-items:center;gap:8px;justify-content:center">
+              <span class="dot waiting"></span>
+              <span style="font-size:12px;color:var(--mc-muted)">Aguardando oponente · expira em 4:52</span>
+            </div>
+            <button class="cta sm" style="align-self:center;padding:0 20px">COPIAR CÓDIGO</button>
+          </div>
+          <div class="pr-divider">ou</div>
+          <div class="pr-section">
+            <div class="pr-section-label">Entrar com código</div>
+            <input class="pr-input" placeholder="EX: K3R7" disabled>
+            <button class="cta full ghost" disabled>ENTRAR</button>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab active"><span class="gl">▶</span>Jogar</button>
+        <button class="tab"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'private', num:'07', title:'Sala privada · entrar com código',
+    sub:'Input preenchido, botão ENTRAR ativo',
+    render: () => `
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="pr-wrap">
+        <div class="pr-header">
+          <button>←</button>
+          <span class="pr-title">Sala Privada</span>
+        </div>
+        <div class="pr-body">
+          <div class="pr-section">
+            <div class="pr-section-label">Criar sala</div>
+            <button class="cta full ghost">CRIAR NOVA SALA</button>
+          </div>
+          <div class="pr-divider">ou</div>
+          <div class="pr-section">
+            <div class="pr-section-label">Entrar com código</div>
+            <input class="pr-input" value="7K9A">
+            <button class="cta full accent">ENTRAR</button>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab active"><span class="gl">▶</span>Jogar</button>
+        <button class="tab"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+];
+
+/* ── Render ──────────────────────────────────────────────── */
+const grid = document.getElementById('grid');
+scenes.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'scene';
+  el.dataset.tag = s.tag;
+  el.innerHTML = `
+    <div class="scene-head"><span class="num">${s.num}</span><h3>${s.title}</h3></div>
+    <div class="scene-body">${s.render()}</div>
+    <div class="scene-note">${s.sub}</div>
+  `;
+  grid.appendChild(el);
+});
+
+/* ── Tweaks ──────────────────────────────────────────────── */
+window.addEventListener('message', (e) => {
+  if (!e.data) return;
+  if (e.data.type === '__activate_edit_mode') document.getElementById('tw').classList.add('on');
+  if (e.data.type === '__deactivate_edit_mode') document.getElementById('tw').classList.remove('on');
+});
+document.querySelectorAll('#chips button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#chips button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('canvas').setAttribute('data-focus', b.dataset.f);
+  });
+});
+try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(_) {}
+</script>
+</body>
+</html>

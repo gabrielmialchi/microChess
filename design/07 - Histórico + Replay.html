@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>07 · Histórico + Replay — microChess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mc-bg:#f5f3ee; --mc-surface:#ffffff; --mc-surface-2:#ebe8e0;
+  --mc-ink:#18130c; --mc-ink-2:#3a3227;
+  --mc-muted:rgba(24,19,12,0.52); --mc-faint:rgba(24,19,12,0.28);
+  --mc-rule:rgba(24,19,12,0.10); --mc-rule-strong:rgba(24,19,12,0.18);
+  --mc-accent:#ff5a1f; --mc-accent-ink:#ffffff;
+  --mc-accent-soft:rgba(255,90,31,0.12); --mc-accent-glow:rgba(255,90,31,0.4);
+  --mc-success:#2f9e5d; --mc-success-soft:rgba(47,158,93,0.12);
+  --mc-danger:#d43a2a; --mc-danger-soft:rgba(212,58,42,0.10);
+  --mc-aura-w:rgba(245,98,0,0.8); --mc-aura-b:rgba(69,56,255,0.8);
+  --mc-cell-light:#eee9de; --mc-cell-dark:#a68e6d;
+  --mc-font-sans:'Inter',system-ui,sans-serif;
+  --mc-font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --mc-r-xs:4px; --mc-r-sm:8px; --mc-r-md:12px;
+  --mc-r-lg:16px; --mc-r-xl:20px; --mc-r-pill:999px;
+  --mc-sh-1:0 1px 2px rgba(24,19,12,0.05);
+  --mc-sh-2:0 4px 12px rgba(24,19,12,0.08);
+  --mc-sh-pop:0 20px 48px -12px rgba(24,19,12,0.22);
+  --mc-ls-wide:0.12em; --mc-ls-tight:-0.02em;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--mc-bg);color:var(--mc-ink);font-family:var(--mc-font-sans);-webkit-font-smoothing:antialiased}
+
+.canvas{max-width:1640px;margin:0 auto;padding:56px 32px 96px}
+.canvas-head{margin-bottom:40px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.canvas-head h1{font-size:32px;font-weight:700;letter-spacing:var(--mc-ls-tight)}
+.canvas-head p{color:var(--mc-muted);font-size:14px;max-width:540px;margin-top:6px;line-height:1.5}
+.meta{font-family:var(--mc-font-mono);font-size:11px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:32px 24px}
+.scene{display:flex;flex-direction:column;gap:12px}
+.scene-head{display:flex;align-items:baseline;gap:10px;padding-left:2px}
+.scene-head .num{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);letter-spacing:var(--mc-ls-wide)}
+.scene-head h3{font-size:15px;font-weight:600}
+.scene-body{background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-lg);overflow:hidden;box-shadow:var(--mc-sh-2);aspect-ratio:9/16;position:relative}
+.scene-note{font-size:11px;color:var(--mc-muted);line-height:1.5;padding:0 2px}
+
+.phone{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--mc-bg);overflow:hidden}
+.sbar{height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-muted)}
+.topbar{height:52px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--mc-rule);background:var(--mc-surface)}
+.topbar .back{width:36px;height:36px;border-radius:var(--mc-r-sm);display:grid;place-items:center;background:transparent;border:none;color:var(--mc-muted);font-size:18px;cursor:pointer;flex-shrink:0}
+.topbar .title{font-size:15px;font-weight:600;flex:1;text-align:center}
+.topbar .side{width:36px;flex-shrink:0}
+.scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.scroll::-webkit-scrollbar{width:3px}
+.scroll::-webkit-scrollbar-thumb{background:var(--mc-rule-strong);border-radius:99px}
+
+/* ── Match history row ── */
+.mh-row{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;border-bottom:1px solid var(--mc-rule);
+  cursor:pointer;
+}
+.mh-row:last-child{border-bottom:none}
+.mh-result{
+  width:36px;height:36px;border-radius:var(--mc-r-sm);
+  display:grid;place-items:center;
+  font:700 14px var(--mc-font-sans);flex-shrink:0;
+}
+.mh-result.win{background:var(--mc-success-soft);color:var(--mc-success)}
+.mh-result.lose{background:var(--mc-danger-soft);color:var(--mc-danger)}
+.mh-result.wo{background:rgba(193,130,0,0.12);color:#c18200}
+.mh-result.draw{background:rgba(24,19,12,0.06);color:var(--mc-muted)}
+.mh-info{flex:1;min-width:0}
+.mh-opp{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mh-meta{font-size:11px;color:var(--mc-muted);margin-top:2px}
+.mh-pdl{font-family:var(--mc-font-mono);font-size:11px;font-weight:600;flex-shrink:0;width:44px;text-align:right}
+.mh-pdl.up{color:var(--mc-success)}
+.mh-pdl.dn{color:var(--mc-danger)}
+.mh-pdl.shield{color:#c18200}
+.mh-pdl.draw{color:var(--mc-muted)}
+.mh-play{width:32px;height:32px;border-radius:var(--mc-r-sm);display:grid;place-items:center;background:var(--mc-surface-2);color:var(--mc-muted);font-size:12px;flex-shrink:0;border:none;cursor:pointer}
+
+/* ── Replay ── */
+.replay-header{
+  padding:12px 16px;border-bottom:1px solid var(--mc-rule);
+  background:var(--mc-surface);flex-shrink:0;
+  display:flex;flex-direction:column;gap:6px;
+}
+.replay-match-row{display:flex;align-items:center;gap:8px}
+.replay-match-row .res{width:28px;height:28px;border-radius:var(--mc-r-xs);display:grid;place-items:center;font:700 12px var(--mc-font-sans);flex-shrink:0}
+.replay-match-row .res.win{background:var(--mc-success-soft);color:var(--mc-success)}
+.replay-match-row .res.lose{background:var(--mc-danger-soft);color:var(--mc-danger)}
+.replay-match-row .opp{font-size:13px;font-weight:600;flex:1}
+.replay-match-row .date{font-size:11px;color:var(--mc-muted)}
+.replay-match-row .pdl{font-family:var(--mc-font-mono);font-size:11px;font-weight:600;color:var(--mc-success)}
+
+.replay-turn-row{display:flex;align-items:center;justify-content:space-between}
+.replay-turn-row .turn{font-family:var(--mc-font-mono);font-size:11px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+.replay-turn-row .count{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted)}
+
+/* Board 4×4 */
+.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(4,1fr);border-radius:var(--mc-r-md);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(24,19,12,0.16)}
+.cell{background:var(--mc-cell-light);display:grid;place-items:center;position:relative}
+.cell.dk{background:var(--mc-cell-dark)}
+.cell.hl{box-shadow:inset 0 0 0 3px var(--mc-accent)}
+.cell.last{background:rgba(255,90,31,0.14)}
+.cell.last.dk{background:color-mix(in oklab,var(--mc-cell-dark) 80%,var(--mc-accent) 20%)}
+.p{font-size:clamp(22px,8vw,36px);line-height:1;user-select:none}
+.p-w{color:#fff;text-shadow:0 0 8px var(--mc-aura-w),0 0 16px var(--mc-aura-w)}
+.p-b{color:var(--mc-ink);text-shadow:0 0 8px var(--mc-aura-b),0 0 16px var(--mc-aura-b)}
+
+/* Replay controls */
+.replay-controls{
+  flex-shrink:0;padding:10px 16px;
+  display:flex;align-items:center;gap:8px;
+  border-top:1px solid var(--mc-rule);background:var(--mc-surface);
+}
+.ctrl-btn{height:40px;border-radius:var(--mc-r-sm);border:1px solid var(--mc-rule-strong);background:transparent;color:var(--mc-ink-2);font:500 11px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.ctrl-btn.primary{background:var(--mc-ink);color:var(--mc-surface);border-color:var(--mc-ink);flex:1}
+.ctrl-btn.icon{width:40px;flex-shrink:0}
+.ctrl-btn.playing{background:var(--mc-accent);color:var(--mc-accent-ink);border-color:var(--mc-accent);flex:1}
+
+/* Duel info */
+.duel-info{padding:8px 16px;background:var(--mc-danger-soft);border-top:1px solid rgba(212,58,42,0.15);flex-shrink:0;font-size:12px;color:var(--mc-danger);display:flex;align-items:center;gap:8px}
+.duel-info .ico{font-size:14px;flex-shrink:0}
+
+/* Empty state */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px;text-align:center}
+.empty .icon{font-size:48px;opacity:0.2}
+.empty .label{font-size:15px;font-weight:600;color:var(--mc-ink-2)}
+.empty .sub{font-size:13px;color:var(--mc-muted)}
+
+/* Tweaks */
+#tw{position:fixed;right:20px;bottom:20px;z-index:100;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-lg);padding:14px;display:none;flex-direction:column;gap:12px;width:260px;box-shadow:var(--mc-sh-pop)}
+#tw.on{display:flex}
+#tw h4{font:500 11px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+#tw .chips{display:flex;flex-wrap:wrap;gap:5px}
+#tw .chips button{font:500 10px var(--mc-font-mono);letter-spacing:1px;text-transform:uppercase;padding:6px 10px;border:1px solid var(--mc-rule);background:transparent;color:var(--mc-ink-2);border-radius:var(--mc-r-pill);cursor:pointer}
+#tw .chips button.on{background:var(--mc-accent);color:var(--mc-accent-ink);border-color:var(--mc-accent)}
+.canvas[data-focus] .scene{display:none}
+.canvas[data-focus="all"] .scene{display:flex}
+.canvas[data-focus="history"] .scene[data-tag="history"]{display:flex}
+.canvas[data-focus="replay"] .scene[data-tag="replay"]{display:flex}
+</style>
+</head>
+<body>
+
+<div class="canvas" id="canvas" data-focus="all">
+  <div class="canvas-head">
+    <div>
+      <div class="meta">07 · Histórico + Replay</div>
+      <h1>Partidas anteriores</h1>
+      <p>Lista de partidas com resultado, delta de PdL e acesso ao replay turno a turno.</p>
+    </div>
+    <div class="meta">mobile · light</div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="tw">
+  <h4>Tweaks · Filtrar</h4>
+  <div class="chips" id="chips">
+    <button class="on" data-f="all">Todas</button>
+    <button data-f="history">Histórico</button>
+    <button data-f="replay">Replay</button>
+  </div>
+</div>
+
+<script>
+function boardHTML(cells) {
+  let h = '<div class="board">';
+  for (let i = 0; i < 16; i++) {
+    const x = i%4, y = Math.floor(i/4);
+    const dk = (x+y)%2===1;
+    const c = cells[i]||{};
+    const cls = ['cell', dk&&'dk', ...(c.cls||[])].filter(Boolean).join(' ');
+    h += `<div class="${cls}">${c.p?`<span class="p p-${c.col}">${c.p}</span>`:''}</div>`;
+  }
+  h += '</div>';
+  return h;
+}
+
+function mhRow(result, opp, rank, duration, pdl, pdlSign, date) {
+  const rc = result==='V'?'win':result==='D'?'lose':result==='E'?'draw':'wo';
+  const pdlClass = pdlSign==='+'?'up':pdlSign==='-'?'dn':pdlSign==='='?'draw':'shield';
+  const pdlText = pdlSign==='🛡'?'🛡':''+pdlSign+pdl;
+  return `<div class="mh-row">
+    <div class="mh-result ${rc}">${result}</div>
+    <div class="mh-info">
+      <div class="mh-opp">${opp}</div>
+      <div class="mh-meta">${rank} · ${duration} · ${date}</div>
+    </div>
+    <div class="mh-pdl ${pdlClass}">${pdlText}</div>
+    <button class="mh-play">▶</button>
+  </div>`;
+}
+
+const scenes = [
+
+  // ── HISTÓRICO ──────────────────────────────────────────────
+  {
+    tag:'history', num:'01', title:'Histórico · lista com resultados',
+    sub:'V/D/WO coloridos, delta PdL pessoal, rank do oponente, botão replay',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Histórico</span>
+        <div class="side"></div>
+      </div>
+      <div class="scroll">
+        ${mhRow('V','sentinela_07','Torre Aprendiz','4m 12s','+18','+','hoje')}
+        ${mhRow('E','pawn_rises','Torre Elite','3m 01s','0','=','hoje')}
+        ${mhRow('D','rei_absoluto','Rei','2m 58s','-','-','hoje')}
+        ${mhRow('V','knight_x','Torre Elite','5m 44s','+22','+','ontem')}
+        ${mhRow('WO','bishop_42','Torre Esforçado','—','+15','+','ontem')}
+        ${mhRow('D','dama_negra','Cavalo Elite','3m 20s','🛡','🛡','25 abr')}
+        ${mhRow('V','pawn_rises','Torre Elite','6m 01s','+19','+','24 abr')}
+        ${mhRow('D','matheus_x','Cavalo Elite','4m 55s','-','-','24 abr')}
+        ${mhRow('V','torre_f1','Rainha','3m 38s','+21','+','23 abr')}
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'history', num:'02', title:'Histórico · vazio',
+    sub:'Estado vazio — primeira partida ainda não jogada',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Histórico</span>
+        <div class="side"></div>
+      </div>
+      <div class="empty">
+        <div class="icon">♟</div>
+        <div class="label">Nenhuma partida ainda</div>
+        <div class="sub">Jogue sua primeira partida para ver o histórico aqui.</div>
+      </div>
+    </div>`
+  },
+
+  // ── REPLAY ─────────────────────────────────────────────────
+  {
+    tag:'replay', num:'03', title:'Replay · turno inicial (posicionamento)',
+    sub:'Turno 0 mostra a formação inicial antes da revelação',
+    render: () => {
+      const cells = Array(16).fill(null).map(()=>({}));
+      cells[12]={p:'♔',col:'w'}; cells[13]={p:'♘',col:'w'};
+      cells[15]={p:'♘',col:'w'}; cells[9]={p:'♙',col:'w'};
+      cells[11]={p:'♙',col:'w'};
+      cells[0]={p:'♚',col:'b'}; cells[2]={p:'♛',col:'b'};
+      cells[5]={p:'♟',col:'b'}; cells[6]={p:'♟',col:'b'};
+      cells[7]={p:'♟',col:'b'};
+      return `
+      <div class="phone">
+        <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+        <div class="topbar">
+          <button class="back">←</button>
+          <span class="title">Replay</span>
+          <div class="side"></div>
+        </div>
+        <div class="replay-header">
+          <div class="replay-match-row">
+            <div class="res win">V</div>
+            <div class="opp">sentinela_07 · Torre Aprendiz</div>
+            <div class="pdl">+18 PdL</div>
+          </div>
+          <div class="replay-turn-row">
+            <span class="turn">Posicionamento</span>
+            <span class="count">T0 / T7</span>
+          </div>
+        </div>
+        <div style="flex:1;padding:14px;display:flex;align-items:center">
+          ${boardHTML(cells)}
+        </div>
+        <div class="replay-controls">
+          <button class="ctrl-btn icon">⏮</button>
+          <button class="ctrl-btn primary">▶ AUTO</button>
+          <button class="ctrl-btn icon">⏭</button>
+        </div>
+      </div>`
+    }
+  },
+
+  {
+    tag:'replay', num:'04', title:'Replay · turno em andamento',
+    sub:'Último movimento destacado, info do turno, controles de navegação',
+    render: () => {
+      const cells = Array(16).fill(null).map(()=>({}));
+      cells[12]={p:'♔',col:'w'}; cells[15]={p:'♘',col:'w'};
+      cells[9]={p:'♙',col:'w'}; cells[11]={p:'♙',col:'w'};
+      cells[2]={p:'♘',col:'w',cls:['last']};
+      cells[0]={p:'♚',col:'b'}; cells[5]={p:'♟',col:'b'};
+      cells[6]={p:'♟',col:'b'};
+      return `
+      <div class="phone">
+        <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+        <div class="topbar">
+          <button class="back">←</button>
+          <span class="title">Replay</span>
+          <div class="side"></div>
+        </div>
+        <div class="replay-header">
+          <div class="replay-match-row">
+            <div class="res win">V</div>
+            <div class="opp">sentinela_07 · Torre Aprendiz</div>
+            <div class="pdl">+18 PdL</div>
+          </div>
+          <div class="replay-turn-row">
+            <span class="turn">Turno 4 · Ação</span>
+            <span class="count">T4 / T7</span>
+          </div>
+        </div>
+        <div style="flex:1;padding:14px;display:flex;align-items:center">
+          ${boardHTML(cells)}
+        </div>
+        <div class="replay-controls">
+          <button class="ctrl-btn icon">⏮</button>
+          <button class="ctrl-btn playing">⏸ AUTO</button>
+          <button class="ctrl-btn icon">⏭</button>
+        </div>
+      </div>`
+    }
+  },
+
+  {
+    tag:'replay', num:'05', title:'Replay · turno com duelo',
+    sub:'Banner de duelo abaixo do tabuleiro com resultado do combate',
+    render: () => {
+      const cells = Array(16).fill(null).map(()=>({}));
+      cells[12]={p:'♔',col:'w'}; cells[15]={p:'♘',col:'w'};
+      cells[9]={p:'♙',col:'w'}; cells[11]={p:'♙',col:'w'};
+      cells[2]={p:'♘',col:'w',cls:['hl']};
+      cells[0]={p:'♚',col:'b'}; cells[5]={p:'♟',col:'b'};
+      return `
+      <div class="phone">
+        <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+        <div class="topbar">
+          <button class="back">←</button>
+          <span class="title">Replay</span>
+          <div class="side"></div>
+        </div>
+        <div class="replay-header">
+          <div class="replay-match-row">
+            <div class="res win">V</div>
+            <div class="opp">sentinela_07 · Torre Aprendiz</div>
+            <div class="pdl">+18 PdL</div>
+          </div>
+          <div class="replay-turn-row">
+            <span class="turn">Turno 5 · Duelo</span>
+            <span class="count">T5 / T7</span>
+          </div>
+        </div>
+        <div style="flex:1;padding:14px;display:flex;align-items:center">
+          ${boardHTML(cells)}
+        </div>
+        <div class="duel-info">
+          <span class="ico">⚔</span>
+          <div><div>♘ Cavalo venceu ♛ Rainha</div><div style="font-family:var(--mc-font-mono);font-size:11px;margin-top:2px">7 (5+2) × 6 (2+4)</div></div>
+        </div>
+        <div class="replay-controls">
+          <button class="ctrl-btn icon">⏮</button>
+          <button class="ctrl-btn primary">▶ AUTO</button>
+          <button class="ctrl-btn icon">⏭</button>
+        </div>
+      </div>`
+    }
+  },
+];
+
+/* Render */
+const grid = document.getElementById('grid');
+scenes.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'scene';
+  el.dataset.tag = s.tag;
+  el.innerHTML = `
+    <div class="scene-head"><span class="num">${s.num}</span><h3>${s.title}</h3></div>
+    <div class="scene-body">${s.render()}</div>
+    <div class="scene-note">${s.sub}</div>
+  `;
+  grid.appendChild(el);
+});
+
+/* Tweaks */
+window.addEventListener('message', (e) => {
+  if (!e.data) return;
+  if (e.data.type === '__activate_edit_mode') document.getElementById('tw').classList.add('on');
+  if (e.data.type === '__deactivate_edit_mode') document.getElementById('tw').classList.remove('on');
+});
+document.querySelectorAll('#chips button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#chips button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('canvas').setAttribute('data-focus', b.dataset.f);
+  });
+});
+try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(_) {}
+</script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>06 · Ranking + Leaderboard — microChess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mc-bg:#f5f3ee; --mc-surface:#ffffff; --mc-surface-2:#ebe8e0;
+  --mc-ink:#18130c; --mc-ink-2:#3a3227;
+  --mc-muted:rgba(24,19,12,0.52); --mc-faint:rgba(24,19,12,0.28);
+  --mc-rule:rgba(24,19,12,0.10); --mc-rule-strong:rgba(24,19,12,0.18);
+  --mc-accent:#ff5a1f; --mc-accent-ink:#ffffff;
+  --mc-accent-soft:rgba(255,90,31,0.12); --mc-accent-glow:rgba(255,90,31,0.4);
+  --mc-success:#2f9e5d; --mc-success-soft:rgba(47,158,93,0.12);
+  --mc-aura-w:rgba(245,98,0,0.8); --mc-aura-b:rgba(69,56,255,0.8);
+  --mc-font-sans:'Inter',system-ui,sans-serif;
+  --mc-font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --mc-r-xs:4px; --mc-r-sm:8px; --mc-r-md:12px;
+  --mc-r-lg:16px; --mc-r-xl:20px; --mc-r-pill:999px;
+  --mc-sh-1:0 1px 2px rgba(24,19,12,0.05);
+  --mc-sh-2:0 4px 12px rgba(24,19,12,0.08);
+  --mc-sh-pop:0 20px 48px -12px rgba(24,19,12,0.22);
+  --mc-ls-wide:0.12em; --mc-ls-tight:-0.02em;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--mc-bg);color:var(--mc-ink);font-family:var(--mc-font-sans);-webkit-font-smoothing:antialiased}
+
+/* Canvas */
+.canvas{max-width:1640px;margin:0 auto;padding:56px 32px 96px}
+.canvas-head{margin-bottom:40px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.canvas-head h1{font-size:32px;font-weight:700;letter-spacing:var(--mc-ls-tight)}
+.canvas-head p{color:var(--mc-muted);font-size:14px;max-width:540px;margin-top:6px;line-height:1.5}
+.meta{font-family:var(--mc-font-mono);font-size:11px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:32px 24px}
+.scene{display:flex;flex-direction:column;gap:12px}
+.scene-head{display:flex;align-items:baseline;gap:10px;padding-left:2px}
+.scene-head .num{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);letter-spacing:var(--mc-ls-wide)}
+.scene-head h3{font-size:15px;font-weight:600}
+.scene-body{background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-lg);overflow:hidden;box-shadow:var(--mc-sh-2);aspect-ratio:9/16;position:relative}
+.scene-note{font-size:11px;color:var(--mc-muted);line-height:1.5;padding:0 2px}
+
+/* Phone */
+.phone{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--mc-bg);overflow:hidden}
+.sbar{height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-muted)}
+.topbar{height:52px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--mc-rule);background:var(--mc-surface)}
+.topbar .back{width:36px;height:36px;border-radius:var(--mc-r-sm);display:grid;place-items:center;background:transparent;border:none;color:var(--mc-muted);font-size:18px;cursor:pointer;flex-shrink:0}
+.topbar .title{font-size:15px;font-weight:600;flex:1;text-align:center}
+.topbar .side{width:36px;flex-shrink:0}
+.tabbar{flex-shrink:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--mc-surface);border-top:1px solid var(--mc-rule);padding:4px 8px 10px}
+.tabbar .tab{display:flex;flex-direction:column;align-items:center;gap:2px;height:48px;justify-content:center;background:transparent;border:none;cursor:pointer;color:var(--mc-faint);font-family:var(--mc-font-sans);font-size:10px;font-weight:500}
+.tabbar .tab .gl{font-size:18px;line-height:1}
+.tabbar .tab.active{color:var(--mc-ink)}
+.tabbar .tab.active .gl{color:var(--mc-accent)}
+.scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+.scroll::-webkit-scrollbar{width:3px}
+.scroll::-webkit-scrollbar-thumb{background:var(--mc-rule-strong);border-radius:99px}
+
+/* Rank ladder */
+.ladder{display:flex;flex-direction:column;padding:16px;gap:0}
+.rank-group{display:flex;flex-direction:column;gap:0;position:relative}
+/* vertical line on left */
+.rank-group::before{content:'';position:absolute;left:22px;top:0;bottom:0;width:2px;background:var(--mc-rule)}
+.rank-group:last-child::before{bottom:50%}
+.rank-row{display:flex;align-items:center;gap:10px;padding:6px 0;position:relative;z-index:1}
+.rank-piece{width:44px;height:44px;border-radius:50%;background:var(--mc-surface);border:2px solid var(--mc-rule);display:grid;place-items:center;font-size:22px;flex-shrink:0;position:relative;z-index:2}
+.rank-piece.you{border-color:var(--mc-accent);background:var(--mc-accent-soft);box-shadow:0 0 0 4px var(--mc-accent-soft)}
+.rank-piece .p-w{color:#fff;text-shadow:0 0 8px var(--mc-aura-w)}
+.rank-piece .p-b{color:var(--mc-ink);text-shadow:0 0 8px var(--mc-aura-b)}
+.rank-info{flex:1;min-width:0}
+.rank-info .name{font-size:13px;font-weight:600;letter-spacing:var(--mc-ls-tight)}
+.rank-info .divs{font-size:11px;color:var(--mc-muted);margin-top:1px}
+.rank-badge{font-family:var(--mc-font-mono);font-size:9px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;padding:3px 7px;border-radius:var(--mc-r-pill);border:1px solid var(--mc-rule);color:var(--mc-muted);white-space:nowrap}
+.rank-badge.you{border-color:var(--mc-accent);color:var(--mc-accent);background:var(--mc-accent-soft)}
+.rank-badge.top{border-color:rgba(193,130,0,0.6);color:#c18200;background:rgba(193,130,0,0.1)}
+
+/* PdL bar (inside rank-row for current) */
+.pdl-bar{height:4px;border-radius:99px;background:var(--mc-rule);overflow:hidden;margin-top:4px}
+.pdl-fill{height:100%;background:var(--mc-accent);border-radius:99px}
+
+/* Explainer card */
+.explainer{margin:0 16px 16px;padding:14px;background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-md);font-size:12px;color:var(--mc-muted);line-height:1.6}
+.explainer strong{color:var(--mc-ink);font-weight:600}
+
+/* Leaderboard row */
+.lb-header{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--mc-rule);background:var(--mc-surface)}
+.lb-header .col-pos{width:28px;font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);text-align:center;flex-shrink:0}
+.lb-header .col-name{flex:1;font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);text-transform:uppercase;letter-spacing:var(--mc-ls-wide)}
+.lb-header .col-elo{width:90px;font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);text-align:right;flex-shrink:0}
+.lb-header .col-wl{width:48px;font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);text-align:right;flex-shrink:0}
+
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--mc-rule);transition:background 150ms}
+.lb-row:last-child{border-bottom:none}
+.lb-row.you{background:var(--mc-accent-soft)}
+.lb-row .pos{width:28px;font-family:var(--mc-font-mono);font-size:12px;font-weight:600;text-align:center;flex-shrink:0;color:var(--mc-muted)}
+.lb-row.top3 .pos{color:var(--mc-ink)}
+.lb-row .pos.gold{color:#c18200}
+.lb-row .pos.silver{color:#7a8a9a}
+.lb-row .pos.bronze{color:#8a5a2a}
+.lb-row .av{width:28px;height:28px;border-radius:50%;background:var(--mc-surface-2);display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.lb-row .player{flex:1;min-width:0}
+.lb-row .player .name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-row .player .elo{font-size:11px;color:var(--mc-muted)}
+.lb-row .wl{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);width:48px;text-align:right;flex-shrink:0}
+
+/* My rank strip (leaderboard pinned) */
+.lb-you-strip{padding:8px 16px;background:var(--mc-accent-soft);border-top:1px solid rgba(255,90,31,0.2);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.lb-you-strip .pos{font-family:var(--mc-font-mono);font-size:12px;font-weight:700;color:var(--mc-accent);width:28px;text-align:center;flex-shrink:0}
+.lb-you-strip .av{width:28px;height:28px;border-radius:50%;background:var(--mc-accent-soft);border:1px solid var(--mc-accent);display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.lb-you-strip .name{font-size:13px;font-weight:600;flex:1}
+.lb-you-strip .elo{font-size:11px;color:var(--mc-muted)}
+.lb-you-strip .wl{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted)}
+
+/* CTA */
+.cta{height:52px;border:0;border-radius:var(--mc-r-md);background:var(--mc-ink);color:var(--mc-surface);font:600 13px var(--mc-font-sans);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;cursor:pointer;width:100%;flex-shrink:0}
+.cta.ghost{background:transparent;border:1px solid var(--mc-rule-strong);color:var(--mc-ink-2)}
+
+/* Tweaks */
+#tw{position:fixed;right:20px;bottom:20px;z-index:100;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-lg);padding:14px;display:none;flex-direction:column;gap:12px;width:260px;box-shadow:var(--mc-sh-pop)}
+#tw.on{display:flex}
+#tw h4{font:500 11px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+#tw .chips{display:flex;flex-wrap:wrap;gap:5px}
+#tw .chips button{font:500 10px var(--mc-font-mono);letter-spacing:1px;text-transform:uppercase;padding:6px 10px;border:1px solid var(--mc-rule);background:transparent;color:var(--mc-ink-2);border-radius:var(--mc-r-pill);cursor:pointer}
+#tw .chips button.on{background:var(--mc-accent);color:var(--mc-accent-ink);border-color:var(--mc-accent)}
+.canvas[data-focus] .scene{display:none}
+.canvas[data-focus="all"] .scene{display:flex}
+.canvas[data-focus="ranking"] .scene[data-tag="ranking"]{display:flex}
+.canvas[data-focus="lb"] .scene[data-tag="lb"]{display:flex}
+</style>
+</head>
+<body>
+
+<div class="canvas" id="canvas" data-focus="all">
+  <div class="canvas-head">
+    <div>
+      <div class="meta">06 · Ranking + Leaderboard</div>
+      <h1>Progressão e tabela global</h1>
+      <p>Escada dos 14 ranks com posição atual do jogador. Leaderboard global top 50 com podium e linha "você" fixada no fundo.</p>
+    </div>
+    <div class="meta">mobile · light</div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="tw">
+  <h4>Tweaks · Filtrar</h4>
+  <div class="chips" id="chips">
+    <button class="on" data-f="all">Todas</button>
+    <button data-f="ranking">Ranking</button>
+    <button data-f="lb">Leaderboard</button>
+  </div>
+</div>
+
+<script>
+/* 14 ranks — ordem de progressão */
+const RANKS = [
+  { piece:'♙', name:'Peão',    divs:['Aprendiz','Esforçado','Elite'], color:'w' },
+  { piece:'♗', name:'Bispo',   divs:['Aprendiz','Esforçado','Elite'], color:'b' },
+  { piece:'♘', name:'Cavalo',  divs:['Aprendiz','Esforçado','Elite'], color:'w' },
+  { piece:'♖', name:'Torre',   divs:['Aprendiz','Esforçado','Elite'], color:'w' },
+  { piece:'♕', name:'Rainha',  divs:['Divisão única'],                color:'w' },
+  { piece:'♔', name:'Rei',     divs:['Divisão única · rank máximo'],  color:'w' },
+];
+
+function ladderHTML(youRank, youDiv, youPdl) {
+  // youRank: index into RANKS (0-5), youDiv: division index
+  let html = '<div class="ladder">';
+  RANKS.forEach((r, ri) => {
+    html += '<div class="rank-group">';
+    r.divs.forEach((d, di) => {
+      const isYou = ri === youRank && di === youDiv;
+      html += `<div class="rank-row">
+        <div class="rank-piece ${isYou ? 'you' : ''}">
+          <span class="p-${r.color}">${r.piece}</span>
+        </div>
+        <div class="rank-info">
+          <div class="name">${r.name} ${r.divs.length > 1 ? d : ''}</div>
+          ${isYou ? `<div class="pdl-bar"><div class="pdl-fill" style="width:${youPdl}%"></div></div>` : ''}
+        </div>
+        ${isYou
+          ? `<span class="rank-badge you">Você · ${youPdl} PdL</span>`
+          : (ri === RANKS.length-1 && di === 0 ? `<span class="rank-badge top">★ TOPO</span>` : '')
+        }
+      </div>`;
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function lbRowHTML(pos, piece, name, rank, wl, isYou) {
+  const posClass = pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';
+  return `<div class="lb-row ${pos<=3?'top3':''} ${isYou?'you':''}">
+    <div class="pos ${posClass}">${pos}</div>
+    <div class="av">${piece}</div>
+    <div class="player">
+      <div class="name">${name}</div>
+      <div class="elo">${rank}</div>
+    </div>
+    <div class="wl">${wl}</div>
+  </div>`;
+}
+
+const scenes = [
+
+  // ── RANKING ────────────────────────────────────────────────
+  {
+    tag:'ranking', num:'01', title:'Ranking · posição atual',
+    sub:'Escada dos 14 ranks. Posição do jogador destacada com barra de PdL',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Ranking</span>
+        <div class="side"></div>
+      </div>
+      <div class="scroll">
+        <div class="explainer">
+          <strong>Como funciona:</strong> ganhe partidas para acumular <strong>PdL (0–100)</strong>. Ao atingir 100, você sobe de divisão. Ao mudar de grupo recebe um <strong>Escudo ×3</strong> contra rebaixamento.
+        </div>
+        ${ladderHTML(2, 0, 62)}
+        <div style="padding:0 16px 16px">
+          <button class="cta ghost" style="height:44px;font-size:12px">VER LEADERBOARD GLOBAL →</button>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab"><span class="gl">▶</span>Jogar</button>
+        <button class="tab active"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'ranking', num:'02', title:'Ranking · rank máximo (Rei)',
+    sub:'Único rank sem divisões. Badge TOPO em dourado',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Ranking</span>
+        <div class="side"></div>
+      </div>
+      <div class="scroll">
+        <div class="explainer">
+          <strong>Rei</strong> é o rank máximo — divisão única. Não há mais progressão de PdL; o objetivo é manter a posição no Leaderboard.
+        </div>
+        ${ladderHTML(5, 0, 100)}
+        <div style="padding:0 16px 16px">
+          <button class="cta ghost" style="height:44px;font-size:12px">VER LEADERBOARD GLOBAL →</button>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab"><span class="gl">▶</span>Jogar</button>
+        <button class="tab active"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  // ── LEADERBOARD ────────────────────────────────────────────
+  {
+    tag:'lb', num:'03', title:'Leaderboard · top 10',
+    sub:'Podium implícito (ouro/prata/bronze), linha "você" fixada no rodapé',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Leaderboard</span>
+        <div class="side"></div>
+      </div>
+      <div class="lb-header">
+        <div class="col-pos">#</div>
+        <div style="width:28px;flex-shrink:0"></div>
+        <div class="col-name">Jogador</div>
+        <div class="col-wl">W/L</div>
+      </div>
+      <div class="scroll">
+        ${lbRowHTML(1,  '♔', 'rei_absoluto',  'Rei',              '88/12', false)}
+        ${lbRowHTML(2,  '♕', 'sentinel_queen','Rainha',           '74/18', false)}
+        ${lbRowHTML(3,  '♖', 'torre_f1',      'Rainha',           '61/22', false)}
+        ${lbRowHTML(4,  '♘', 'knight_x',      'Torre Elite',      '55/20', false)}
+        ${lbRowHTML(5,  '♙', 'pawn_rises',    'Torre Elite',      '50/24', false)}
+        ${lbRowHTML(6,  '♗', 'bishop_42',     'Torre Esforçado',  '48/22', false)}
+        ${lbRowHTML(7,  '♘', 'sentinela_07',  'Torre Aprendiz',   '44/25', false)}
+        ${lbRowHTML(8,  '♙', 'matheus_x',     'Cavalo Elite',     '42/20', false)}
+        ${lbRowHTML(9,  '♕', 'dama_negra',    'Cavalo Elite',     '38/22', false)}
+        ${lbRowHTML(10, '♘', 'guerreiro_old', 'Cavalo Esforçado', '35/24', false)}
+        <div style="height:8px"></div>
+      </div>
+      <div class="lb-you-strip">
+        <div class="pos">47</div>
+        <div class="av">♘</div>
+        <div style="flex:1;min-width:0">
+          <div class="name">Marianna</div>
+          <div class="elo">Cavaleiro Aprendiz · 62 PdL</div>
+        </div>
+        <div class="wl">12/4</div>
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab"><span class="gl">▶</span>Jogar</button>
+        <button class="tab active"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'lb', num:'04', title:'Leaderboard · jogador no top 10',
+    sub:'Linha do jogador destacada na lista principal, sem strip fixado',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Leaderboard</span>
+        <div class="side"></div>
+      </div>
+      <div class="lb-header">
+        <div class="col-pos">#</div>
+        <div style="width:28px;flex-shrink:0"></div>
+        <div class="col-name">Jogador</div>
+        <div class="col-wl">W/L</div>
+      </div>
+      <div class="scroll">
+        ${lbRowHTML(1,  '♔', 'rei_absoluto',  'Rei',              '88/12', false)}
+        ${lbRowHTML(2,  '♕', 'sentinel_queen','Rainha',           '74/18', false)}
+        ${lbRowHTML(3,  '♖', 'torre_f1',      'Rainha',           '61/22', false)}
+        ${lbRowHTML(4,  '♘', 'knight_x',      'Torre Elite',      '55/20', false)}
+        ${lbRowHTML(5,  '♘', 'Marianna',      'Torre Elite',      '50/18', true)}
+        ${lbRowHTML(6,  '♗', 'bishop_42',     'Torre Esforçado',  '48/22', false)}
+        ${lbRowHTML(7,  '♘', 'sentinela_07',  'Torre Aprendiz',   '44/25', false)}
+        ${lbRowHTML(8,  '♙', 'matheus_x',     'Cavalo Elite',     '42/20', false)}
+        ${lbRowHTML(9,  '♕', 'dama_negra',    'Cavalo Elite',     '38/22', false)}
+        ${lbRowHTML(10, '♘', 'guerreiro_old', 'Cavalo Esforçado', '35/24', false)}
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab"><span class="gl">▶</span>Jogar</button>
+        <button class="tab active"><span class="gl">◆</span>Ranking</button>
+        <button class="tab"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+];
+
+/* Render */
+const grid = document.getElementById('grid');
+scenes.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'scene';
+  el.dataset.tag = s.tag;
+  el.innerHTML = `
+    <div class="scene-head"><span class="num">${s.num}</span><h3>${s.title}</h3></div>
+    <div class="scene-body">${s.render()}</div>
+    <div class="scene-note">${s.sub}</div>
+  `;
+  grid.appendChild(el);
+});
+
+/* Tweaks */
+window.addEventListener('message', (e) => {
+  if (!e.data) return;
+  if (e.data.type === '__activate_edit_mode') document.getElementById('tw').classList.add('on');
+  if (e.data.type === '__deactivate_edit_mode') document.getElementById('tw').classList.remove('on');
+});
+document.querySelectorAll('#chips button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#chips button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('canvas').setAttribute('data-focus', b.dataset.f);
+  });
+});
+try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(_) {}
+</script>
+</body>
+</html>

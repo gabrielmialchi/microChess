@@ -3,13 +3,13 @@
 const bcrypt = require('bcrypt');
 const jwt    = require('jsonwebtoken');
 
-const JWT_SECRET  = process.env.JWT_SECRET || 'microchess-secret-dev-key';
+if (!process.env.JWT_SECRET) {
+    console.error('[SECURITY] CRÍTICO: JWT_SECRET não definido. Defina a variável de ambiente antes de iniciar o servidor.');
+    process.exit(1);
+}
+const JWT_SECRET  = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10;
 const JWT_EXPIRES = '30d';
-
-if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'microchess-secret-dev-key') {
-    console.error('[SECURITY] CRÍTICO: JWT_SECRET é o valor padrão de desenvolvimento. Defina JWT_SECRET no ambiente de produção!');
-}
 
 async function hashPassword(plain) {
     return bcrypt.hash(plain, SALT_ROUNDS);

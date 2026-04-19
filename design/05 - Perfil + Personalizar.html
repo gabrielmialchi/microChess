@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>05 · Perfil + Personalizar — microChess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mc-bg:          #f5f3ee;
+  --mc-surface:     #ffffff;
+  --mc-surface-2:   #ebe8e0;
+  --mc-ink:         #18130c;
+  --mc-ink-2:       #3a3227;
+  --mc-muted:       rgba(24,19,12,0.52);
+  --mc-faint:       rgba(24,19,12,0.28);
+  --mc-rule:        rgba(24,19,12,0.10);
+  --mc-rule-strong: rgba(24,19,12,0.18);
+  --mc-accent:      #ff5a1f;
+  --mc-accent-ink:  #ffffff;
+  --mc-accent-soft: rgba(255,90,31,0.12);
+  --mc-success:     #2f9e5d;
+  --mc-success-soft:rgba(47,158,93,0.12);
+  --mc-danger:      #d43a2a;
+  --mc-danger-soft: rgba(212,58,42,0.10);
+  --mc-aura-w: rgba(245,98,0,0.8);
+  --mc-aura-b: rgba(69,56,255,0.8);
+  --mc-font-sans: 'Inter', system-ui, sans-serif;
+  --mc-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --mc-r-xs:4px; --mc-r-sm:8px; --mc-r-md:12px;
+  --mc-r-lg:16px; --mc-r-xl:20px; --mc-r-pill:999px;
+  --mc-sh-1: 0 1px 2px rgba(24,19,12,0.05);
+  --mc-sh-2: 0 4px 12px rgba(24,19,12,0.08);
+  --mc-sh-pop: 0 20px 48px -12px rgba(24,19,12,0.22);
+  --mc-ls-wide: 0.12em;
+  --mc-ls-tight: -0.02em;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--mc-bg);color:var(--mc-ink);font-family:var(--mc-font-sans);-webkit-font-smoothing:antialiased}
+
+/* Canvas */
+.canvas{max-width:1640px;margin:0 auto;padding:56px 32px 96px}
+.canvas-head{margin-bottom:40px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.canvas-head h1{font-size:32px;font-weight:700;letter-spacing:var(--mc-ls-tight)}
+.canvas-head p{color:var(--mc-muted);font-size:14px;max-width:540px;margin-top:6px;line-height:1.5}
+.meta{font-family:var(--mc-font-mono);font-size:11px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:32px 24px}
+
+/* Scene */
+.scene{display:flex;flex-direction:column;gap:12px}
+.scene-head{display:flex;align-items:baseline;gap:10px;padding-left:2px}
+.scene-head .num{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);letter-spacing:var(--mc-ls-wide)}
+.scene-head h3{font-size:15px;font-weight:600}
+.scene-body{background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-lg);overflow:hidden;box-shadow:var(--mc-sh-2);aspect-ratio:9/16;position:relative}
+.scene-note{font-size:11px;color:var(--mc-muted);line-height:1.5;padding:0 2px}
+
+/* Phone */
+.phone{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--mc-bg);overflow:hidden}
+.sbar{height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-muted)}
+
+/* Topbar */
+.topbar{height:52px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 8px 0 14px;border-bottom:1px solid var(--mc-rule);background:var(--mc-surface)}
+.topbar .back{width:36px;height:36px;border-radius:var(--mc-r-sm);display:grid;place-items:center;background:transparent;border:none;color:var(--mc-muted);font-size:18px;cursor:pointer;flex-shrink:0}
+.topbar .title{font-size:15px;font-weight:600;flex:1;text-align:center}
+.topbar .action{height:32px;padding:0 12px;border-radius:var(--mc-r-pill);border:1px solid var(--mc-rule-strong);background:transparent;color:var(--mc-ink-2);font:500 12px var(--mc-font-sans);cursor:pointer;flex-shrink:0}
+.topbar .action.accent{background:var(--mc-accent);color:var(--mc-accent-ink);border-color:var(--mc-accent)}
+
+/* Tabbar */
+.tabbar{flex-shrink:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--mc-surface);border-top:1px solid var(--mc-rule);padding:4px 8px 10px}
+.tabbar .tab{display:flex;flex-direction:column;align-items:center;gap:2px;height:48px;justify-content:center;background:transparent;border:none;cursor:pointer;color:var(--mc-faint);font-family:var(--mc-font-sans);font-size:10px;font-weight:500}
+.tabbar .tab .gl{font-size:18px;line-height:1}
+.tabbar .tab.active{color:var(--mc-ink)}
+.tabbar .tab.active .gl{color:var(--mc-accent)}
+
+/* Scroll body */
+.scroll{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:20px}
+.scroll::-webkit-scrollbar{width:3px}
+.scroll::-webkit-scrollbar-thumb{background:var(--mc-rule-strong);border-radius:99px}
+
+/* Profile hero */
+.prof-hero{display:flex;align-items:center;gap:14px;padding:4px 0 4px}
+.avatar-xl{width:64px;height:64px;border-radius:50%;background:var(--mc-ink);color:var(--mc-surface);display:grid;place-items:center;font-size:30px;flex-shrink:0;position:relative}
+.avatar-xl .edit-badge{position:absolute;bottom:0;right:0;width:20px;height:20px;border-radius:50%;background:var(--mc-accent);color:#fff;font-size:11px;display:grid;place-items:center;border:2px solid var(--mc-bg)}
+.prof-name{font-size:20px;font-weight:700;letter-spacing:var(--mc-ls-tight)}
+.prof-elo{font-size:13px;color:var(--mc-muted);margin-top:3px}
+.prof-pdl{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-accent);margin-top:3px;letter-spacing:0.5px}
+
+/* Section label */
+.sec-label{font:500 10px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+
+/* Stats grid */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-md);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat .v{font-size:24px;font-weight:700;letter-spacing:var(--mc-ls-tight);font-variant-numeric:tabular-nums}
+.stat .l{font-size:11px;color:var(--mc-muted);text-transform:uppercase;letter-spacing:0.06em}
+.stat.success .v{color:var(--mc-success)}
+.stat.danger .v{color:var(--mc-danger)}
+
+/* Winrate bar */
+.wr-bar{background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-md);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.wr-bar .row{display:flex;justify-content:space-between;align-items:baseline}
+.wr-bar .label{font-size:12px;font-weight:600}
+.wr-bar .pct{font-family:var(--mc-font-mono);font-size:13px;font-weight:600;color:var(--mc-success)}
+.wr-track{height:6px;background:var(--mc-rule);border-radius:99px;overflow:hidden}
+.wr-fill{height:100%;background:var(--mc-success);border-radius:99px}
+
+/* Action list */
+.action-list{display:flex;flex-direction:column;gap:6px}
+.action-row{height:44px;display:flex;align-items:center;padding:0 14px;gap:12px;background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-md);cursor:pointer;font-size:14px;color:var(--mc-ink-2)}
+.action-row .ico{width:20px;text-align:center;font-size:16px;opacity:0.5;flex-shrink:0}
+.action-row .arr{margin-left:auto;opacity:0.3;font-size:16px}
+.action-row.danger{color:var(--mc-danger)}
+.action-row.danger .ico{opacity:0.7}
+.action-row.ghost{color:var(--mc-muted);border-color:transparent;background:transparent}
+
+/* Avatar picker */
+.avatar-picker{display:flex;flex-direction:column;gap:6px}
+.av-row-label{font:500 9px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-faint);margin-bottom:2px}
+.av-row{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.av-opt{aspect-ratio:1;border-radius:50%;border:2px solid var(--mc-rule);background:var(--mc-surface);display:grid;place-items:center;font-size:22px;cursor:pointer;transition:all 180ms}
+.av-opt.sel{border-color:var(--mc-accent);background:var(--mc-accent-soft)}
+.av-opt .p-w{color:#fff;text-shadow:0 0 6px var(--mc-aura-w)}
+.av-opt .p-b{color:var(--mc-ink);text-shadow:0 0 6px var(--mc-aura-b)}
+
+/* Field */
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:var(--mc-ls-wide);color:var(--mc-muted)}
+.field input{height:50px;padding:0 14px;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-md);font-family:var(--mc-font-sans);font-size:15px;color:var(--mc-ink)}
+
+/* CTA */
+.cta{height:52px;border:0;border-radius:var(--mc-r-md);background:var(--mc-ink);color:var(--mc-surface);font:600 13px var(--mc-font-sans);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;cursor:pointer;flex-shrink:0;width:100%}
+.cta.accent{background:var(--mc-accent);color:var(--mc-accent-ink)}
+
+/* Tag */
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;font:500 10px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted);background:var(--mc-rule);border-radius:var(--mc-r-pill)}
+.tag.success{color:var(--mc-success);background:var(--mc-success-soft)}
+.tag.accent{color:var(--mc-accent);background:var(--mc-accent-soft)}
+
+/* Tweaks */
+#tw{position:fixed;right:20px;bottom:20px;z-index:100;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-lg);padding:14px;display:none;flex-direction:column;gap:12px;width:260px;box-shadow:var(--mc-sh-pop)}
+#tw.on{display:flex}
+#tw h4{font:500 11px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+#tw .chips{display:flex;flex-wrap:wrap;gap:5px}
+#tw .chips button{font:500 10px var(--mc-font-mono);letter-spacing:1px;text-transform:uppercase;padding:6px 10px;border:1px solid var(--mc-rule);background:transparent;color:var(--mc-ink-2);border-radius:var(--mc-r-pill);cursor:pointer}
+#tw .chips button.on{background:var(--mc-accent);color:var(--mc-accent-ink);border-color:var(--mc-accent)}
+.canvas[data-focus] .scene{display:none}
+.canvas[data-focus="all"] .scene{display:flex}
+.canvas[data-focus="perfil"] .scene[data-tag="perfil"]{display:flex}
+.canvas[data-focus="editar"] .scene[data-tag="editar"]{display:flex}
+</style>
+</head>
+<body>
+
+<div class="canvas" id="canvas" data-focus="all">
+  <div class="canvas-head">
+    <div>
+      <div class="meta">05 · Perfil + Personalizar</div>
+      <h1>Identidade do jogador</h1>
+      <p>Tela de perfil com stats, ELO/PdL e ações de conta. Tela de edição com seletor de avatar (peça) e apelido.</p>
+    </div>
+    <div class="meta">mobile · light</div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="tw">
+  <h4>Tweaks · Filtrar</h4>
+  <div class="chips" id="chips">
+    <button class="on" data-f="all">Todas</button>
+    <button data-f="perfil">Perfil</button>
+    <button data-f="editar">Editar</button>
+  </div>
+</div>
+
+<script>
+const scenes = [
+
+  // ── PERFIL ─────────────────────────────────────────────────
+  {
+    tag:'perfil', num:'01', title:'Perfil · visão geral',
+    sub:'Avatar, nome, ELO (rank), PdL pessoal. Stats com winrate. Ações de conta',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Perfil</span>
+        <button class="action">Editar</button>
+      </div>
+      <div class="scroll">
+        <div class="prof-hero">
+          <div class="avatar-xl">♘</div>
+          <div>
+            <div class="prof-name">Marianna</div>
+            <div class="prof-elo">Cavaleiro Aprendiz</div>
+            <div class="prof-pdl">62 PdL</div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Estatísticas</div>
+          <div class="stats">
+            <div class="stat success"><span class="v">12</span><span class="l">Vitórias</span></div>
+            <div class="stat danger"><span class="v">4</span><span class="l">Derrotas</span></div>
+            <div class="stat"><span class="v">2</span><span class="l">W.O. ganhos</span></div>
+            <div class="stat"><span class="v">1</span><span class="l">W.O. perdidos</span></div>
+            <div class="stat" style="grid-column:span 2"><span class="v" style="font-size:20px">1</span><span class="l">Empates</span></div>
+          </div>
+          <div class="wr-bar">
+            <div class="row"><span class="label">Taxa de vitória</span><span class="pct">75%</span></div>
+            <div class="wr-track"><div class="wr-fill" style="width:75%"></div></div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Partidas</div>
+          <div class="action-list">
+            <div class="action-row"><span class="ico">⏱</span>Histórico de partidas<span class="arr">→</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Conta</div>
+          <div class="action-list">
+            <div class="action-row"><span class="ico">🔑</span>Alterar senha<span class="arr">→</span></div>
+            <div class="action-row danger"><span class="ico">⏻</span>Sair da conta<span class="arr">→</span></div>
+            <div class="action-row ghost" style="font-size:12px"><span class="ico" style="font-size:13px">✕</span>Excluir conta</div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab"><span class="gl">▶</span>Jogar</button>
+        <button class="tab"><span class="gl">◆</span>Ranking</button>
+        <button class="tab active"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'perfil', num:'02', title:'Perfil · convidado',
+    sub:'Sem ELO nem stats, CTA de criar conta em destaque',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Perfil</span>
+        <div style="width:60px"></div>
+      </div>
+      <div class="scroll">
+        <div class="prof-hero">
+          <div class="avatar-xl" style="background:var(--mc-surface-2);color:var(--mc-muted);border:1px solid var(--mc-rule-strong);font-size:28px">?</div>
+          <div>
+            <div class="prof-name">Convidado</div>
+            <div class="prof-elo" style="color:var(--mc-muted)">Sem conta · sem ranking</div>
+          </div>
+        </div>
+        <div style="background:var(--mc-accent-soft);border:1px solid rgba(255,90,31,0.2);border-radius:var(--mc-r-lg);padding:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:14px;font-weight:600">Crie uma conta gratuita</div>
+          <div style="font-size:13px;color:var(--mc-muted);line-height:1.5">Suba no ranking, acumule PdL e veja seu histórico de partidas.</div>
+          <button class="cta accent" style="height:44px;font-size:12px">CRIAR CONTA</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Conta</div>
+          <div class="action-list">
+            <div class="action-row"><span class="ico">→</span>Entrar com conta existente<span class="arr">→</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <button class="tab"><span class="gl">⌂</span>Início</button>
+        <button class="tab"><span class="gl">▶</span>Jogar</button>
+        <button class="tab"><span class="gl">◆</span>Ranking</button>
+        <button class="tab active"><span class="gl">○</span>Perfil</button>
+      </div>
+    </div>`
+  },
+
+  // ── EDITAR ─────────────────────────────────────────────────
+  {
+    tag:'editar', num:'03', title:'Editar perfil · seletor de avatar',
+    sub:'6 peças como avatar — com aura. Apelido editável. Salvar no topo (não no fundo)',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">✕</button>
+        <span class="title">Editar perfil</span>
+        <button class="action accent">Salvar</button>
+      </div>
+      <div class="scroll">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Avatar</div>
+          <div class="avatar-picker">
+            <div class="av-row-label">Brancas</div>
+            <div class="av-row">
+              <div class="av-opt sel"><span class="p-w">♔</span></div>
+              <div class="av-opt"><span class="p-w">♕</span></div>
+              <div class="av-opt"><span class="p-w">♖</span></div>
+              <div class="av-opt"><span class="p-w">♗</span></div>
+              <div class="av-opt"><span class="p-w">♘</span></div>
+              <div class="av-opt"><span class="p-w">♙</span></div>
+            </div>
+            <div class="av-row-label">Pretas</div>
+            <div class="av-row">
+              <div class="av-opt"><span class="p-b">♚</span></div>
+              <div class="av-opt"><span class="p-b">♛</span></div>
+              <div class="av-opt"><span class="p-b">♜</span></div>
+              <div class="av-opt"><span class="p-b">♝</span></div>
+              <div class="av-opt"><span class="p-b">♞</span></div>
+              <div class="av-opt"><span class="p-b">♟</span></div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--mc-muted)">Seu avatar aparece no menu, matchmaking e para oponentes.</div>
+        </div>
+        <div class="field">
+          <label>Apelido</label>
+          <input type="text" value="Marianna" maxlength="16">
+          <div style="font-size:11px;color:var(--mc-muted);margin-top:4px">Público · visível no ranking e partidas · máx. 16 caracteres</div>
+        </div>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'editar', num:'04', title:'Editar perfil · alterações pendentes',
+    sub:'Avatar novo selecionado, apelido modificado — botão Salvar em destaque',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">✕</button>
+        <span class="title">Editar perfil</span>
+        <button class="action accent">Salvar</button>
+      </div>
+      <div class="scroll">
+        <div style="background:var(--mc-accent-soft);border-radius:var(--mc-r-md);padding:10px 14px;font-size:12px;color:var(--mc-accent);font-weight:500">
+          Alterações não salvas
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Avatar</div>
+          <div class="avatar-picker">
+            <div class="av-row-label">Brancas</div>
+            <div class="av-row">
+              <div class="av-opt"><span class="p-w">♔</span></div>
+              <div class="av-opt"><span class="p-w">♕</span></div>
+              <div class="av-opt"><span class="p-w">♖</span></div>
+              <div class="av-opt"><span class="p-w">♗</span></div>
+              <div class="av-opt sel"><span class="p-w">♘</span></div>
+              <div class="av-opt"><span class="p-w">♙</span></div>
+            </div>
+            <div class="av-row-label">Pretas</div>
+            <div class="av-row">
+              <div class="av-opt"><span class="p-b">♚</span></div>
+              <div class="av-opt"><span class="p-b">♛</span></div>
+              <div class="av-opt"><span class="p-b">♜</span></div>
+              <div class="av-opt"><span class="p-b">♝</span></div>
+              <div class="av-opt"><span class="p-b">♞</span></div>
+              <div class="av-opt"><span class="p-b">♟</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Apelido</label>
+          <input type="text" value="Mari_07" maxlength="16" style="border-color:var(--mc-accent);box-shadow:0 0 0 3px var(--mc-accent-soft)">
+        </div>
+      </div>
+    </div>`
+  },
+];
+
+/* Render */
+const grid = document.getElementById('grid');
+scenes.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'scene';
+  el.dataset.tag = s.tag;
+  el.innerHTML = `
+    <div class="scene-head"><span class="num">${s.num}</span><h3>${s.title}</h3></div>
+    <div class="scene-body">${s.render()}</div>
+    <div class="scene-note">${s.sub}</div>
+  `;
+  grid.appendChild(el);
+});
+
+/* Tweaks */
+window.addEventListener('message', (e) => {
+  if (!e.data) return;
+  if (e.data.type === '__activate_edit_mode') document.getElementById('tw').classList.add('on');
+  if (e.data.type === '__deactivate_edit_mode') document.getElementById('tw').classList.remove('on');
+});
+document.querySelectorAll('#chips button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#chips button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('canvas').setAttribute('data-focus', b.dataset.f);
+  });
+});
+try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(_) {}
+</script>
+</body>
+</html>

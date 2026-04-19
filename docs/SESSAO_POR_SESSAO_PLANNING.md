@@ -2043,45 +2043,23 @@ Varredura de todos os textos hardcoded em PT fora do sistema `t()` adicionados n
 
 ---
 
-# SESSÃO P-B: JUICY — COMBATE
+# SESSÃO P-B: LINKS EXTERNOS
 
 ## Objetivo
-Adicionar peso dramático ao fluxo de resolução de combate (P-05) e redesenhar visualmente o modal de dados (P-06).
+Substituir todos os links placeholder (href="#") por URLs reais (P-03).
 
-## Risco: 🟠 Médio-alto — edições no modal de duelo em index.html
-
-## Checklist
-
-```
-[ ] 1. P-05: após duel_resolve → exibir resultado (vencedor/perdedor) por 2s antes de fechar modal
-[ ] 2. P-05: após fechar modal → delay de 1s antes de broadcast do próximo estado
-[ ] 3. P-06: hierarquia visual no dado (bonus + roll = total com tamanhos diferentes)
-[ ] 4. P-06: dado vencedor → glow dourado + pulse animation
-[ ] 5. P-06: dado perdedor → opacity reduzida + shake animation
-[ ] 6. P-06: cor de fundo do modal reforça vencedor (sutil verde/vermelho)
-```
-
----
-
-# SESSÃO P-C: UX & LINKS
-
-## Objetivo
-Substituir placeholders por URLs reais (P-03) e adicionar transições suaves entre telas via showScreen (P-04).
-
-## Risco: 🟡 Médio — edições em index.html
+## Risco: 🟢 Baixo — edições pontuais em index.html
 
 ## Checklist
 
 ```
 [ ] 1. P-03: substituir href="#" por URLs reais (privacy policy, portfólio, feedback)
 [ ] 2. P-03: verificar todos os <a> e botões com links externos
-[ ] 3. P-04: adicionar CSS de transição ao showScreen (fade 150ms)
-[ ] 4. P-04: garantir que transição não interfere com game-area (display:flex fora do .screen)
 ```
 
 ---
 
-# SESSÃO P-D: LOCALIZAÇÃO — 7 IDIOMAS RESTANTES
+# SESSÃO P-C: LOCALIZAÇÃO — 7 IDIOMAS RESTANTES
 
 ## Objetivo
 Preencher as ~60 chaves de tradução adicionadas na Sessão P-A nos 7 idiomas que ainda não as têm: ES, DE, IT, RU, JA, KO, ZH.
@@ -2089,7 +2067,7 @@ Preencher as ~60 chaves de tradução adicionadas na Sessão P-A nos 7 idiomas q
 ## Risco: 🟡 Médio — trabalho repetitivo, risco de digitação incorreta em idiomas não-latinos
 
 ## Contexto
-Na Sessão P-A, as novas chaves (telas de ranking, leaderboard, histórico, replay, sala privada, overlays) foram adicionadas apenas a `T.pt` e `T.en`. Usuários nos outros 7 idiomas veem fallback EN nessas telas — funcional, mas não localizado.
+Na Sessão P-A, as novas chaves (telas de ranking, leaderboard, histórico, replay, sala privada, overlays) foram adicionadas apenas a `T.pt` e `T.en`. Usuários nos outros 7 idiomas veem fallback EN — funcional, mas não localizado.
 
 ## Checklist
 
@@ -2127,40 +2105,7 @@ unranked_match
 
 ---
 
-# SESSÃO P-E: REDESIGN DE FONTES
-
-## Objetivo
-Revisar as fontes usadas em todo o jogo — avaliar legibilidade, consistência e identidade visual. Propor e implementar ajustes tipográficos.
-
-## Risco: 🟠 Médio-alto — alterações de CSS afetam múltiplas telas
-
-## Contexto
-O jogo usa atualmente:
-- **Cinzel** — títulos, botões, labels de seção
-- **Cinzel Decorative** — títulos de tela (ex: RANKING, LEADERBOARD)
-- **IBM Plex Mono** — dados numéricos, monospace (MMR, códigos, contadores)
-- Carregadas via Google Fonts CDN
-
-Pontos a avaliar:
-- Cinzel pode parecer pesada em tamanhos menores (11-12px)
-- Consistência de uso: quando usar Cinzel vs Cinzel Decorative
-- IBM Plex Mono: boa escolha para dados, mas considerar alternativas
-- Verificar se as fontes carregam bem em dispositivos Android/mobile
-
-## Checklist
-
-```
-[ ] 1. Mapear todos os usos de fonte no index.html (font-family por contexto: título, botão, label, valor, mono)
-[ ] 2. Identificar inconsistências de uso (onde Cinzel Decorative poderia/deveria ser Cinzel e vice-versa)
-[ ] 3. Avaliar legibilidade em mobile: testar em viewport 360px
-[ ] 4. Propor conjunto tipográfico final (pode manter as 3 fontes ou substituir)
-[ ] 5. Implementar ajustes — priorizar consistência e legibilidade
-[ ] 6. Verificar impacto em telas que têm texto overflow ou quebra de linha
-```
-
----
-
-# SESSÃO P-F: REPLAY — TABULEIRO + TURNO 0 + LABEL DE TURNO
+# SESSÃO P-D: REPLAY — TABULEIRO + TURNO 0 + LABEL DE TURNO
 
 ## Objetivo
 Corrigir distorção visual do tabuleiro no Replay e melhorar a navegação de turnos.
@@ -2202,6 +2147,339 @@ Usar a chave `turn_label` existente para "Turno" e adicionar chave `turn_positio
 [ ] 4. P-F-02: Se não gravado: adicionar gravação do estado de posicionamento ao criar o replay
 [ ] 5. P-F-02: ReplayViewer.load(): inserir turno 0 sintético no início do array de turnos
 [ ] 6. P-F-03: Atualizar label de turno: [0] = t('turn_positioning'), [N] = '[N]: ' + t('turn_label') + ' N'
-[ ] 7. P-F-03: Adicionar chave turn_positioning a T.pt e T.en (e demais idiomas na P-D)
+[ ] 7. P-F-03: Adicionar chave turn_positioning a T.pt e T.en (e demais idiomas na P-C)
 [ ] 8. Testar navegação: Turno 0 → 1 → 2 → ... sem quebrar lógica de prev/next/auto
+```
+
+> ⚠️ Esta sessão foi absorvida pela Sessão Design-J. Não implementar separado.
+
+---
+
+# ═══════════════════════════════════════════════════════
+# REDESIGN VISUAL — SESSÕES DESIGN-A a DESIGN-L
+# Handoff: design/HANDOFF.md  |  Arquivos: design/01–09 .html
+# ═══════════════════════════════════════════════════════
+
+---
+
+# SESSÃO DESIGN-A: TOKENS CSS + COMPONENTES BASE
+
+## Objetivo
+Instalar a fundação visual do novo design: tokens CSS (light + dark), fontes Inter + JetBrains Mono, biblioteca flag-icons e classes de componente base.
+
+## Ler antes de iniciar
+`design/01 - Design System.html`
+
+## Risco: 🟡 Médio — edições no `<head>` e novo bloco `<style>` em index.html
+
+## Checklist
+
+```
+[ ] 1. Adicionar import de fontes Inter + JetBrains Mono no <head> (Google Fonts)
+[ ] 2. Adicionar import de flag-icons CDN no <head>
+[ ] 3. Copiar bloco :root (tokens light) para o TOPO do <style> existente — sem remover nada
+[ ] 4. Copiar bloco [data-theme="dark"] logo abaixo do :root
+[ ] 5. Criar novo bloco <style> no final do <head> com as classes base:
+       .mc-btn, .mc-input, .mc-card, .mc-tag, .mc-avatar,
+       .mc-board, .mc-die, .mc-tabbar, .mc-topbar
+[ ] 6. Validar sintaxe (node --check não se aplica a HTML — testar no browser)
+[ ] 7. Confirmar que dark mode toggle funciona: document.documentElement.setAttribute('data-theme','dark')
+```
+
+---
+
+# SESSÃO DESIGN-B: MENU PRINCIPAL + HEADER + TAB BAR
+
+## Objetivo
+Redesenhar `#screen-menu` com novo header de jogador, hero do logo, 4 botões de nav e instalar a `#tab-bar` fixa no fundo.
+
+## Ler antes de iniciar
+`design/03 - Menu + Matchmaking.html` (cenas 01 e 02)
+
+## Risco: 🟡 Médio — redesenho do #screen-menu e adição do #tab-bar global
+
+## Checklist
+
+```
+[ ] 1. Redesenhar #screen-menu: header (avatar + nome + rank + W/L), hero (logo), 4 botões de nav
+[ ] 2. Modo convidado: CTA "Criar conta" em laranja no lugar dos stats
+[ ] 3. Adicionar #tab-bar fixo no fundo (4 abas: Início · Jogar · Ranking · Perfil)
+[ ] 4. Não alterar showScreen() — apenas HTML/CSS
+[ ] 5. Verificar que o jogo ainda funciona sem conta (guest retrocompat)
+```
+
+---
+
+# SESSÃO DESIGN-F: AUTH OVERLAY (TELA CHEIA)
+
+## Objetivo
+Redesenhar `#auth-overlay` como tela cheia (não modal sobre escuro) com nova estrutura visual e tratamento de erros inline.
+
+## Ler antes de iniciar
+`design/04 - Login + Modais.html` (cenas 01–03)
+
+## Risco: 🟡 Médio — redesenho do auth-overlay, mantendo todos os IDs existentes
+
+## Checklist
+
+```
+[ ] 1. Redesenhar #auth-overlay como tela cheia: logo · eyebrow · título · campos · CTA · link · "Jogar sem conta"
+[ ] 2. Erro: border vermelho no campo + hint abaixo (não alert/toast)
+[ ] 3. Manter IDs: #login-email, #login-password, #reg-username, #reg-email, #reg-password, #auth-error
+[ ] 4. Testar fluxo completo: login, registro, jogar sem conta
+```
+
+---
+
+# SESSÃO DESIGN-C: MATCHMAKING + SALA PRIVADA
+
+## Objetivo
+Redesenhar `#screen-matchmaking` com radar animado e `#screen-private-room` com novo layout de código.
+
+## Ler antes de iniciar
+`design/03 - Menu + Matchmaking.html` (cenas 03–07)
+
+## Risco: 🟡 Médio — redesenho de duas telas, IDs existentes mantidos
+
+## Checklist
+
+```
+[ ] 1. Redesenhar #screen-matchmaking: radar animado, rank dos jogadores (nome, não número), countdown grande
+[ ] 2. Redesenhar #screen-private-room: código em destaque, dot pulsando, divider "ou", input centralizado
+[ ] 3. Manter IDs: #mm-lobby, #mm-found, #mm-countdown, #pr-code-value, demais existentes
+[ ] 4. Testar criação e entrada em sala privada
+```
+
+---
+
+# SESSÃO DESIGN-D: TELAS DE PARTIDA (DRAFT · POSIÇÃO · REVELAÇÃO · AÇÃO)
+
+## Objetivo
+Redesenhar `#game-area` com novo topbar de fase, remover barra de etapas, redesenhar draft e aplicar aura nas peças.
+
+## Ler antes de iniciar
+`design/02 - Telas de Partida.html` (cenas 04–10)
+`design/_decisions/pieces-aura.md`
+
+## Risco: 🔴 Alto — toca o core visual do jogo
+
+## Checklist
+
+```
+[ ] 1. Redesenhar #game-area: novo topbar (oponente · phase pill · timer)
+[ ] 2. Remover barra de etapas (DRAFT · POSIÇÃO · AÇÃO) — topbar já informa a fase
+[ ] 3. Redesenhar inventário do Draft: label "Toque para devolver" + botão "Limpar ✕"
+[ ] 4. Adicionar chaves de localização: draft_return_hint, draft_clear (PT e EN)
+[ ] 5. Aplicar aura nas peças: text-shadow duplo (brancas → laranja rgba(245,98,0,0.8), pretas → azul rgba(69,56,255,0.8))
+[ ] 6. Células de zona própria no POSITION: color-mix(in oklab, var(--mc-cell-light) 86%, var(--mc-accent) 14%)
+[ ] 7. Testar fluxo completo de partida: draft → position → reveal → action
+```
+
+---
+
+# SESSÃO DESIGN-E: DUELO + GAME OVER + ESTADO DE EMPATE
+
+## Objetivo
+Redesenhar `#duel-modal` com cards horizontais, `#game-over-screen` com peça grande + delta PdL, e adicionar estado de Empate.
+
+## Ler antes de iniciar
+`design/02 - Telas de Partida.html` (cenas 11–15)
+
+## Risco: 🟠 Médio-alto — duel modal e game over são os momentos mais críticos do jogo
+
+## Decisões fixadas (não questionar):
+- Empate ocorre SOMENTE em Morte Súbita com resultado 0×0
+- Game over de empate: dois Reis com suas auras + "= 0 PdL"
+- Morte Súbita: phase pill pulsando vermelho, vai direto para duelo
+
+## Checklist
+
+```
+[ ] 1. Redesenhar #duel-modal: dois cards lado a lado (horizontal), botão livre abaixo
+[ ] 2. Redesenhar #game-over-screen: ícone de peça grande, resultado, delta PdL, botões
+[ ] 3. Adicionar estado "Empate" no game over: dois Reis com aura, "= 0 PdL"
+[ ] 4. Morte Súbita: phase pill pulsando vermelho. Adicionar lógica de ir direto ao duelo (sem aguardar jogada)
+[ ] 5. Adicionar chaves de localização: draw, pdl_draw (PT e EN — outros idiomas depois)
+[ ] 6. Testar: vitória, derrota, empate (Morte Súbita 0×0), WO
+```
+
+> Nota: O cálculo de PdL para empate (P-12) será implementado depois em server/mmr.js.
+
+---
+
+# SESSÃO DESIGN-G: MODAIS DE SISTEMA
+
+## Objetivo
+Redesenhar os overlays de sistema com padrão unificado: backdrop-filter blur + card branco centralizado.
+
+## Ler antes de iniciar
+`design/04 - Login + Modais.html` (cenas 04–08)
+
+## Risco: 🟢 Baixo — visual only, IDs e onclick mantidos
+
+## Checklist
+
+```
+[ ] 1. Redesenhar #ban-overlay
+[ ] 2. Redesenhar #logout-confirm
+[ ] 3. Redesenhar #delete-account-confirm
+[ ] 4. Redesenhar #change-password-modal
+[ ] 5. Redesenhar #reconnect-overlay
+[ ] 6. Todos usam: backdrop-filter:blur(10px) + card branco centralizado
+[ ] 7. Manter todos os IDs e onclick existentes
+```
+
+---
+
+# SESSÃO DESIGN-H: PERFIL + EDITAR
+
+## Objetivo
+Redesenhar `#screen-profile` com hero, stats grid 2×2, winrate bar e `#avatar-grid` em duas fileiras (brancas/pretas).
+
+## Ler antes de iniciar
+`design/05 - Perfil + Personalizar.html`
+
+## Risco: 🟡 Médio — redesenho de tela complexa com estados (logado vs guest)
+
+## Checklist
+
+```
+[ ] 1. Redesenhar #screen-profile: hero (avatar + nome + rank + PdL) · stats grid 2×2 · winrate bar · ações de conta
+[ ] 2. Adicionar stat "Empates" na grid (span 2 colunas)
+[ ] 3. Redesenhar #avatar-grid: duas fileiras — "Brancas" (♔♕♖♗♘♙) + "Pretas" (♚♛♜♝♞♟)
+[ ] 4. Botão "Salvar" no topbar direito (não no fundo)
+[ ] 5. Convidado: card CTA "Criar conta" no lugar dos stats
+[ ] 6. Adicionar chaves: avatar_white, avatar_black (PT e EN)
+[ ] 7. ELO visível = apenas nome do rank (nunca o número MMR)
+```
+
+---
+
+# SESSÃO DESIGN-I: RANKING + LEADERBOARD
+
+## Objetivo
+Redesenhar `#screen-ranking` com escada vertical dos 14 ranks e `#screen-leaderboard` com tabela compacta e podium por cor.
+
+## Ler antes de iniciar
+`design/06 - Ranking + Leaderboard.html`
+
+## Risco: 🟡 Médio — redesenho de duas telas, lógica de renderização JS pode mudar
+
+## Checklist
+
+```
+[ ] 1. Redesenhar #screen-ranking: escada vertical dos 14 ranks, posição atual destacada (borda laranja + barra PdL)
+[ ] 2. Redesenhar #screen-leaderboard: linhas compactas (posição · avatar · nome · rank · W/L)
+[ ] 3. Podium via cor do número (ouro/prata/bronze)
+[ ] 4. Linha "você" fixada acima da tabbar
+[ ] 5. ELO = nome do rank. Número MMR nunca aparece
+[ ] 6. PdL: exibido só para o dono — oponentes/ranking veem apenas o rank
+```
+
+---
+
+# SESSÃO DESIGN-J: HISTÓRICO + REPLAY
+
+## Objetivo
+Redesenhar `#screen-match-history` e `#screen-replay`. Absorve P-D (tabuleiro fixo + turno 0 + label formatado).
+
+## Ler antes de iniciar
+`design/07 - Histórico + Replay.html`
+
+## Risco: 🟠 Médio-alto — redesenho + feature de turno 0 toca server.js (gravação de estado inicial)
+
+## Checklist
+
+```
+[ ] 1. Redesenhar #screen-match-history: linhas V/D/WO/E coloridas · oponente + rank · duração · delta PdL · botão ▶
+[ ] 2. Adicionar estado "E" (empate): badge muted, "= 0 PdL"
+[ ] 3. Redesenhar #screen-replay: header fixo (resultado/oponente/turno) · tabuleiro · controles ⏮ AUTO ⏭
+[ ] 4. Tabuleiro com células de tamanho fixo (casas vazias não colapsam)
+[ ] 5. Turno 0: verificar se server.js grava estado inicial. Se não, adicionar gravação do posicionamento
+[ ] 6. ReplayViewer.load(): inserir turno 0 sintético no início do array
+[ ] 7. Label de turno: [0] = t('turn_positioning'), [N] = '[N]: Turno N'
+[ ] 8. Banner de duelo abaixo do tabuleiro: "♘ Cavalo venceu ♛ Rainha" · "7 (5+2) × 6 (2+4)"
+[ ] 9. Adicionar chave turn_positioning (PT e EN)
+[ ] 10. Testar navegação: turno 0 → 1 → 2 → ... prev/next/auto sem quebrar
+```
+
+---
+
+# SESSÃO DESIGN-K: CONFIGURAÇÕES + CONTEÚDO + LINKS EXTERNOS
+
+## Objetivo
+Redesenhar Settings (grid de idiomas com flags), Como Jogar (4 fases + tabela de bônus correta) e Créditos. Integra P-B (links reais).
+
+## Ler antes de iniciar
+`design/08 - Configurações + Conteúdo.html`
+
+## Risco: 🟡 Médio — bônus das peças em Como Jogar diferem do texto atual
+
+## Atenção — bônus corretos (confirmar com `design/_decisions/piece-bonus-rules.md`):
+Rainha +5 · Torre +4 · Cavalo +3 · Bispo +2 · Peão +1 · Rei +4
+Peão promovido (última fileira) +1 adicional → Peão+2
+
+## Checklist
+
+```
+[ ] 1. Redesenhar #screen-settings: grid 3×3 de idiomas com flag-icons, toggle dark/light
+[ ] 2. Troca de idioma: instantânea, sem botão Salvar
+[ ] 3. Redesenhar #screen-how-to-play: 4 fases numeradas + tabela de bônus correta + mencionar empate
+[ ] 4. Redesenhar #screen-credits: centrado, limpo
+[ ] 5. Substituir todos href="#" por URLs reais (P-B): privacy policy, portfolio, redes sociais, feedback
+[ ] 6. Confirmar URLs com o usuário antes de inserir (se ainda não fornecidas)
+```
+
+---
+
+# SESSÃO DESIGN-L: ESTADOS DE EXCEÇÃO
+
+## Objetivo
+Implementar banners e overlays dos estados de exceção: desconexão, AFK, Morte Súbita, saída da partida, erro de sala privada, sem conexão, reconectando.
+
+## Ler antes de iniciar
+`design/09 - Estados de Exceção.html`
+
+## Risco: 🟡 Médio — majoritariamente visual, mas Morte Súbita pode tocar lógica de jogo
+
+## Checklist
+
+```
+[ ] 1. Banner de desconexão: tira horizontal abaixo do topbar (não modal), countdown visível
+[ ] 2. Banner AFK warning: âmbar, timer pulsando, CTA urgente
+[ ] 3. Morte Súbita: phase pill vermelho pulsando + banner informativo "vai direto para duelo"
+[ ] 4. Overlay "sair da partida": aviso leve de WO
+[ ] 5. Sala privada: erro de código (borda vermelha) + sala expirada (banner âmbar)
+[ ] 6. Sem conexão: tela cheia simples com botão retry
+[ ] 7. Reconectando: banner sutil no topo, UI desfocada no fundo
+[ ] 8. Testar todos os estados manualmente
+```
+
+---
+
+# SESSÃO P-12: BALANCEAMENTO MMR — EMPATE
+
+## Objetivo
+Implementar cálculo de PdL para resultado de empate em `server/mmr.js`.
+
+## Implementar APÓS Design-E (estado de empate na UI) estar concluída.
+
+## Risco: 🟡 Médio — edição em mmr.js, nenhuma alteração em server.js ou index.html
+
+## Regras decididas
+- Empate só ocorre em Morte Súbita com duelo 0×0
+- Mínimo +1 PdL para ambos os jogadores
+- Cálculo considera diferença de rank (estilo ELO):
+  - Jogador mais fraco que empata contra mais forte → PdL proporcional à diferença (pode ser +2, +3, etc.)
+  - Jogador mais forte que empata contra mais fraco → apenas o mínimo (+1)
+  - Jogadores do mesmo rank → +1 para ambos
+
+## Checklist
+
+```
+[ ] 1. Ler a lógica atual de cálculo de PdL em server/mmr.js
+[ ] 2. Adicionar case 'draw' (ou equivalente) na função de cálculo
+[ ] 3. Implementar fórmula: base +1, acrescido de bônus proporcional à diferença de rank (para o mais fraco)
+[ ] 4. Garantir que partidas não-ranqueadas (guest) não alteram PdL mesmo em empate
+[ ] 5. Testar: empate entre ranks iguais, empate fraco-vs-forte, empate em partida não-ranqueada
 ```

@@ -681,4 +681,31 @@ Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 - Nenhum
 
 ### Notas para próxima sessão
-- Próxima sessão: P-B (Juicy combat timing + dice redesign)
+- Próxima sessão: P-C (Localização 7 idiomas restantes)
+
+---
+
+## [2026-04-19] Sessão P-C — Localização: 7 Idiomas Restantes
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- ~60 chaves adicionadas a todos os 7 idiomas faltantes em `html/index.html`:
+  - **ES** (espanhol) — tradução completa
+  - **DE** (alemão) — tradução completa
+  - **IT** (italiano) — tradução completa
+  - **RU** (russo) — tradução completa
+  - **JA** (japonês) — tradução completa
+  - **KO** (coreano) — tradução completa
+  - **ZH** (chinês simplificado) — tradução completa
+- Chaves inseridas após `feedback` e antes de `htp_intro` em cada bloco `T.xx`
+- Cobre: perfil, telas (history, replay, ranking, leaderboard), sala privada, ban, logout confirm, delete confirm, change password, reconnect overlay, dinâmicas (toasts, partida não ranqueada)
+- Sintaxe JS validada (`new Function()` em todos os blocos `<script>`) — 0 erros
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima sessão: P-D (Replay: tabuleiro fixo + turno 0 + label de turno)
+- P-B (links externos) suspensa até links reais serem definidos

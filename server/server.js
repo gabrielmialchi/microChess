@@ -464,8 +464,8 @@ function createState() {
 
 function stateView(state, color) {
     const opp = color === 'white' ? 'black' : 'white';
-    // Hide opponent's planning until they have confirmed (ready), preventing WebSocket snooping
-    if (state.ready[opp]) return state;
+    // Hide opponent's planning until both have confirmed (ready), preventing WebSocket snooping
+    if (!state.ready[opp]) return state;
     return { ...state, planning: { ...state.planning, [opp]: null } };
 }
 

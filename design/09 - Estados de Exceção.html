@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>09 · Estados de Exceção — microChess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mc-bg:#f5f3ee; --mc-surface:#ffffff; --mc-surface-2:#ebe8e0;
+  --mc-ink:#18130c; --mc-ink-2:#3a3227;
+  --mc-muted:rgba(24,19,12,0.52); --mc-faint:rgba(24,19,12,0.28);
+  --mc-rule:rgba(24,19,12,0.10); --mc-rule-strong:rgba(24,19,12,0.18);
+  --mc-accent:#ff5a1f; --mc-accent-ink:#ffffff;
+  --mc-accent-soft:rgba(255,90,31,0.12); --mc-accent-glow:rgba(255,90,31,0.4);
+  --mc-success:#2f9e5d; --mc-success-soft:rgba(47,158,93,0.12);
+  --mc-danger:#d43a2a; --mc-danger-soft:rgba(212,58,42,0.10);
+  --mc-warn:#c18200; --mc-warn-soft:rgba(193,130,0,0.12);
+  --mc-aura-w:rgba(245,98,0,0.8); --mc-aura-b:rgba(69,56,255,0.8);
+  --mc-cell-light:#eee9de; --mc-cell-dark:#a68e6d;
+  --mc-font-sans:'Inter',system-ui,sans-serif;
+  --mc-font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --mc-r-xs:4px; --mc-r-sm:8px; --mc-r-md:12px;
+  --mc-r-lg:16px; --mc-r-xl:20px; --mc-r-pill:999px;
+  --mc-sh-1:0 1px 2px rgba(24,19,12,0.05);
+  --mc-sh-2:0 4px 12px rgba(24,19,12,0.08);
+  --mc-sh-pop:0 20px 48px -12px rgba(24,19,12,0.22);
+  --mc-ls-wide:0.12em; --mc-ls-tight:-0.02em;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--mc-bg);color:var(--mc-ink);font-family:var(--mc-font-sans);-webkit-font-smoothing:antialiased}
+
+.canvas{max-width:1640px;margin:0 auto;padding:56px 32px 96px}
+.canvas-head{margin-bottom:40px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.canvas-head h1{font-size:32px;font-weight:700;letter-spacing:var(--mc-ls-tight)}
+.canvas-head p{color:var(--mc-muted);font-size:14px;max-width:600px;margin-top:6px;line-height:1.5}
+.meta{font-family:var(--mc-font-mono);font-size:11px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:32px 24px}
+.scene{display:flex;flex-direction:column;gap:12px}
+.scene-head{display:flex;align-items:baseline;gap:10px;padding-left:2px}
+.scene-head .num{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);letter-spacing:var(--mc-ls-wide)}
+.scene-head h3{font-size:15px;font-weight:600}
+.scene-body{background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-lg);overflow:hidden;box-shadow:var(--mc-sh-2);aspect-ratio:9/16;position:relative}
+.scene-note{font-size:11px;color:var(--mc-muted);line-height:1.5;padding:0 2px}
+
+.phone{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--mc-bg);overflow:hidden}
+.sbar{height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-muted)}
+
+/* Topbar de jogo */
+.g-topbar{height:52px;flex-shrink:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 14px;border-bottom:1px solid var(--mc-rule);background:var(--mc-surface);gap:8px}
+.g-topbar .opp{display:flex;align-items:center;gap:8px;font-size:11px;min-width:0}
+.g-topbar .opp .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.g-topbar .opp .dot.ok{background:var(--mc-success)}
+.g-topbar .opp .dot.gone{background:var(--mc-danger);animation:pulse-d 1s ease infinite}
+@keyframes pulse-d{0%,100%{opacity:1}50%{opacity:0.3}}
+.g-topbar .opp .name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-topbar .phase{font-family:var(--mc-font-mono);font-size:10px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-accent);padding:5px 10px;border-radius:var(--mc-r-pill);background:var(--mc-accent-soft);white-space:nowrap}
+.g-topbar .timer{justify-self:end;font-family:var(--mc-font-mono);font-size:12px;color:var(--mc-muted)}
+.g-topbar .timer.warn{color:var(--mc-danger);font-weight:700}
+
+/* Board */
+.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(4,1fr);border-radius:var(--mc-r-md);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(24,19,12,0.16)}
+.cell{background:var(--mc-cell-light);display:grid;place-items:center}
+.cell.dk{background:var(--mc-cell-dark)}
+.p{font-size:clamp(22px,7vw,34px);line-height:1;user-select:none}
+.p-w{color:#fff;text-shadow:0 0 8px var(--mc-aura-w),0 0 16px var(--mc-aura-w)}
+.p-b{color:var(--mc-ink);text-shadow:0 0 8px var(--mc-aura-b),0 0 16px var(--mc-aura-b)}
+
+/* Stage */
+.stage{flex:1;display:flex;flex-direction:column;padding:14px;gap:10px;min-height:0}
+
+/* CTA */
+.cta{height:52px;border:0;border-radius:var(--mc-r-md);background:var(--mc-ink);color:var(--mc-surface);font:600 13px var(--mc-font-sans);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;cursor:pointer;width:100%;flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px}
+.cta.waiting{background:var(--mc-surface-2);color:var(--mc-muted);box-shadow:none;cursor:not-allowed}
+.cta.waiting::after{content:'';width:14px;height:14px;border:2px solid var(--mc-muted);border-top-color:transparent;border-radius:50%;animation:spin 0.9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cta.danger{background:var(--mc-danger)}
+
+/* Banners in-game */
+.banner{
+  flex-shrink:0;display:flex;align-items:center;gap:10px;
+  padding:8px 14px;font-size:12px;font-weight:500;
+}
+.banner.danger{background:var(--mc-danger-soft);color:var(--mc-danger);border-bottom:1px solid rgba(212,58,42,0.2)}
+.banner.warn{background:var(--mc-warn-soft);color:var(--mc-warn);border-bottom:1px solid rgba(193,130,0,0.2)}
+.banner.info{background:rgba(24,19,12,0.05);color:var(--mc-ink-2);border-bottom:1px solid var(--mc-rule)}
+.banner .ico{font-size:14px;flex-shrink:0}
+.banner .txt{flex:1;line-height:1.4}
+.banner .timer-mono{font-family:var(--mc-font-mono);font-weight:700;font-size:13px;flex-shrink:0}
+
+/* Overlay (full screen on phone) */
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;z-index:10}
+.ov.dim{background:rgba(245,243,238,0.92);backdrop-filter:blur(10px)}
+.ov-card{background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-xl);padding:28px 24px;width:100%;box-shadow:var(--mc-sh-pop);display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+.ov-icon{font-size:40px;line-height:1}
+.ov-eyebrow{font-family:var(--mc-font-mono);font-size:10px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+.ov-title{font-size:22px;font-weight:700;letter-spacing:var(--mc-ls-tight);line-height:1.1}
+.ov-body{font-size:13px;color:var(--mc-muted);line-height:1.55;max-width:260px}
+.ov-timer{font-family:var(--mc-font-mono);font-size:44px;font-weight:700;letter-spacing:var(--mc-ls-tight)}
+.ov-timer.danger{color:var(--mc-danger)}
+.ov-timer.warn{color:var(--mc-warn)}
+.ov-row{display:flex;gap:8px;width:100%}
+.ov-btn{flex:1;height:48px;border-radius:var(--mc-r-md);font:600 13px var(--mc-font-sans);letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:1px solid var(--mc-rule-strong);background:var(--mc-surface);color:var(--mc-ink)}
+.ov-btn.primary{background:var(--mc-ink);color:var(--mc-surface);border-color:var(--mc-ink)}
+.ov-btn.danger{background:var(--mc-danger);color:#fff;border-color:var(--mc-danger)}
+.ov-btn.full{width:100%}
+
+/* Morte súbita */
+.sudden-phase{
+  font-family:var(--mc-font-mono);font-size:10px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;
+  background:var(--mc-danger-soft);color:var(--mc-danger);
+  padding:5px 10px;border-radius:var(--mc-r-pill);
+  animation:sudden-flash 1.6s ease infinite;
+}
+@keyframes sudden-flash{0%,100%{opacity:1}50%{opacity:0.55}}
+
+/* No-connection */
+.no-conn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;text-align:center}
+.no-conn .icon{font-size:48px;opacity:0.3}
+.no-conn .label{font-size:17px;font-weight:700;letter-spacing:var(--mc-ls-tight)}
+.no-conn .sub{font-size:13px;color:var(--mc-muted);line-height:1.5}
+.no-conn .retry{height:44px;padding:0 24px;border-radius:var(--mc-r-pill);border:1px solid var(--mc-rule-strong);background:transparent;color:var(--mc-ink);font:500 13px var(--mc-font-sans);cursor:pointer}
+
+/* Sala privada error */
+.field-err{display:flex;flex-direction:column;gap:5px}
+.field-err label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:var(--mc-ls-wide);color:var(--mc-danger)}
+.field-err input{height:50px;padding:0 14px;background:var(--mc-surface);border:1.5px solid var(--mc-danger);border-radius:var(--mc-r-md);font:700 24px var(--mc-font-mono);color:var(--mc-ink);text-align:center;letter-spacing:6px;text-transform:uppercase;box-shadow:0 0 0 3px var(--mc-danger-soft)}
+.field-err .hint{font-size:12px;color:var(--mc-danger)}
+
+/* Tweaks */
+#tw{position:fixed;right:20px;bottom:20px;z-index:100;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-lg);padding:14px;display:none;flex-direction:column;gap:12px;width:280px;box-shadow:var(--mc-sh-pop)}
+#tw.on{display:flex}
+#tw h4{font:500 11px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+#tw .chips{display:flex;flex-wrap:wrap;gap:5px}
+#tw .chips button{font:500 10px var(--mc-font-mono);letter-spacing:1px;text-transform:uppercase;padding:6px 10px;border:1px solid var(--mc-rule);background:transparent;color:var(--mc-ink-2);border-radius:var(--mc-r-pill);cursor:pointer}
+#tw .chips button.on{background:var(--mc-accent);color:var(--mc-accent-ink);border-color:var(--mc-accent)}
+.canvas[data-focus] .scene{display:none}
+.canvas[data-focus="all"] .scene{display:flex}
+.canvas[data-focus="ingame"] .scene[data-tag="ingame"]{display:flex}
+.canvas[data-focus="private"] .scene[data-tag="private"]{display:flex}
+.canvas[data-focus="conn"] .scene[data-tag="conn"]{display:flex}
+</style>
+</head>
+<body>
+
+<div class="canvas" id="canvas" data-focus="all">
+  <div class="canvas-head">
+    <div>
+      <div class="meta">09 · Estados de Exceção</div>
+      <h1>Edge cases e interrupções</h1>
+      <p>Banners in-game de desconexão e AFK · Morte Súbita · Confirmação de saída durante partida · Código de sala inválido/expirado · Sem conexão.</p>
+    </div>
+    <div class="meta">mobile · light</div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="tw">
+  <h4>Tweaks · Filtrar</h4>
+  <div class="chips" id="chips">
+    <button class="on" data-f="all">Todas</button>
+    <button data-f="ingame">Em jogo</button>
+    <button data-f="private">Sala privada</button>
+    <button data-f="conn">Conexão</button>
+  </div>
+</div>
+
+<script>
+function simpleBoard() {
+  const p = [
+    {},{p:'♔',c:'w'},{},{p:'♚',c:'b'},
+    {},{},{},{},
+    {},{p:'♙',c:'w'},{},{},
+    {},{},{p:'♟',c:'b'},{}
+  ];
+  let h='<div class="board">';
+  p.forEach((c,i)=>{
+    const dk=(i%4+Math.floor(i/4))%2===1;
+    h+=`<div class="cell${dk?' dk':''}">${c.p?`<span class="p p-${c.c}">${c.p}</span>`:''}</div>`;
+  });
+  return h+'</div>';
+}
+
+const scenes = [
+
+  // ── EM JOGO ────────────────────────────────────────────────
+  {
+    tag:'ingame', num:'01', title:'Banner · oponente desconectou',
+    sub:'Banner sutil abaixo do topbar — não bloqueia o tabuleiro. Aguardando 60s.',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="g-topbar">
+        <div class="opp"><span class="dot gone"></span><div style="min-width:0"><span class="name">sentinela_07</span></div></div>
+        <div class="phase">AÇÃO · T4</div>
+        <div class="timer">0:38</div>
+      </div>
+      <div class="banner danger">
+        <span class="ico">⚡</span>
+        <span class="txt">Oponente desconectou</span>
+        <span class="timer-mono">00:54</span>
+      </div>
+      <div class="stage">
+        ${simpleBoard()}
+        <div style="font-size:12px;color:var(--mc-muted);text-align:center;line-height:1.5">Aguardando reconexão. W.O. automático ao zerar.</div>
+        <button class="cta waiting" style="margin-top:auto">AGUARDANDO</button>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'ingame', num:'02', title:'Banner · AFK warning',
+    sub:'Aviso 15s antes de WO automático por inatividade na fase Ação',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="g-topbar">
+        <div class="opp"><span class="dot ok"></span><div style="min-width:0"><span class="name">sentinela_07</span></div></div>
+        <div class="phase">AÇÃO · T4</div>
+        <div class="timer warn">0:10</div>
+      </div>
+      <div class="banner warn">
+        <span class="ico">⏱</span>
+        <span class="txt">Jogue agora ou você perde por WO</span>
+        <span class="timer-mono">0:10</span>
+      </div>
+      <div class="stage">
+        ${simpleBoard()}
+        <button class="cta danger" style="margin-top:auto">CONFIRMAR JOGADA</button>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'ingame', num:'03', title:'Morte Súbita · só os 2 Reis restam',
+    sub:'Phase pill pulsando vermelho. Próximo duelo decide o vencedor.',
+    render: () => {
+      const cells = Array(16).fill({});
+      cells[1]={p:'♔',c:'w'}; cells[14]={p:'♚',c:'b'};
+      let h='<div class="board">';
+      cells.forEach((c,i)=>{
+        const dk=(i%4+Math.floor(i/4))%2===1;
+        h+=`<div class="cell${dk?' dk':''}">${c.p?`<span class="p p-${c.c}">${c.p}</span>`:''}</div>`;
+      });
+      h+='</div>';
+      return `
+      <div class="phone">
+        <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+        <div class="g-topbar">
+          <div class="opp"><span class="dot ok"></span><div style="min-width:0"><span class="name">sentinela_07</span></div></div>
+          <div class="sudden-phase">⚔ MORTE SÚBITA</div>
+          <div class="timer">0:38</div>
+        </div>
+        <div class="banner danger">
+          <span class="ico">♔</span>
+          <span class="txt">Apenas os Reis restam. O próximo duelo decide.</span>
+        </div>
+        <div class="stage">
+          ${h}
+          <div style="font-size:12px;color:var(--mc-muted);text-align:center;line-height:1.5">
+            Empate possível se o duelo resultar em 0 vs 0.
+          </div>
+        </div>
+        <div class="banner info" style="border-radius:var(--mc-r-md);border:1px solid var(--mc-rule)">⚔ O jogo vai direto para o duelo de dados. Não é necessário mover.</div>
+      </div>`
+    }
+  },
+
+  {
+    tag:'ingame', num:'04', title:'Sair da partida · confirmação',
+    sub:'Overlay leve — linguagem direta sobre consequência (WO)',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="g-topbar">
+        <div class="opp"><span class="dot ok"></span><div style="min-width:0"><span class="name">sentinela_07</span></div></div>
+        <div class="phase">AÇÃO · T4</div>
+        <div class="timer">0:38</div>
+      </div>
+      <div class="stage" style="filter:blur(2px)">
+        ${simpleBoard()}
+      </div>
+      <div class="ov dim">
+        <div class="ov-card">
+          <div class="ov-eyebrow">Sair da partida</div>
+          <div class="ov-title">Desistir agora?</div>
+          <div class="ov-body">Isso conta como W.O. — derrota registrada. 3 W.O.s em 24h resultam em banimento temporário.</div>
+          <div class="ov-row">
+            <button class="ov-btn primary">Continuar</button>
+            <button class="ov-btn danger">Sair mesmo assim</button>
+          </div>
+        </div>
+      </div>
+    </div>`
+  },
+
+  // ── SALA PRIVADA ───────────────────────────────────────────
+  {
+    tag:'private', num:'05', title:'Sala privada · código inválido',
+    sub:'Input vermelho, mensagem abaixo, foco retido',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div style="height:52px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--mc-rule);background:var(--mc-surface)">
+        <button style="width:36px;height:36px;border-radius:var(--mc-r-sm);display:grid;place-items:center;background:transparent;border:none;color:var(--mc-muted);font-size:18px;cursor:pointer;flex-shrink:0">←</button>
+        <span style="font-size:15px;font-weight:600;flex:1;text-align:center">Sala Privada</span>
+        <div style="width:36px"></div>
+      </div>
+      <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font:500 10px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)">Criar sala</div>
+          <button style="height:44px;border-radius:var(--mc-r-md);border:1px solid var(--mc-rule-strong);background:transparent;color:var(--mc-ink-2);font:500 13px var(--mc-font-sans);cursor:pointer">CRIAR NOVA SALA</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:var(--mc-faint)">
+          <div style="flex:1;height:1px;background:var(--mc-rule)"></div>ou<div style="flex:1;height:1px;background:var(--mc-rule)"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="field-err">
+            <label>Código inválido</label>
+            <input type="text" value="XY9Z">
+            <span class="hint">Sala não encontrada ou expirada. Verifique o código.</span>
+          </div>
+          <button style="height:52px;border-radius:var(--mc-r-md);background:var(--mc-accent);color:var(--mc-accent-ink);border:0;font:600 13px var(--mc-font-sans);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;cursor:pointer">ENTRAR</button>
+        </div>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'private', num:'06', title:'Sala privada · sala expirada',
+    sub:'Código sumiu após 5 min, banner de aviso, botão criar nova sala',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div style="height:52px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--mc-rule);background:var(--mc-surface)">
+        <button style="width:36px;height:36px;border-radius:var(--mc-r-sm);display:grid;place-items:center;background:transparent;border:none;color:var(--mc-muted);font-size:18px;cursor:pointer;flex-shrink:0">←</button>
+        <span style="font-size:15px;font-weight:600;flex:1;text-align:center">Sala Privada</span>
+        <div style="width:36px"></div>
+      </div>
+      <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px">
+        <div style="background:var(--mc-warn-soft);border:1px solid rgba(193,130,0,0.25);border-radius:var(--mc-r-md);padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+          <span style="font-size:16px;flex-shrink:0">⏱</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--mc-warn)">Sala expirada</div>
+            <div style="font-size:12px;color:var(--mc-muted);margin-top:3px;line-height:1.5">O código 7K9A expirou após 5 minutos. Crie uma nova sala e compartilhe o código com seu amigo.</div>
+          </div>
+        </div>
+        <button style="height:52px;border-radius:var(--mc-r-md);background:var(--mc-ink);color:var(--mc-surface);border:0;font:600 13px var(--mc-font-sans);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;cursor:pointer">CRIAR NOVA SALA</button>
+        <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:var(--mc-faint)">
+          <div style="flex:1;height:1px;background:var(--mc-rule)"></div>ou<div style="flex:1;height:1px;background:var(--mc-rule)"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font:500 10px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)">Entrar com código</div>
+          <input style="height:50px;padding:0 14px;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-md);font:700 22px var(--mc-font-mono);color:var(--mc-ink);text-align:center;letter-spacing:6px;text-transform:uppercase" placeholder="EX: K3R7">
+          <button style="height:44px;border-radius:var(--mc-r-md);border:1px solid var(--mc-rule-strong);background:transparent;color:var(--mc-ink-2);font:500 13px var(--mc-font-sans);cursor:pointer">ENTRAR</button>
+        </div>
+      </div>
+    </div>`
+  },
+
+  // ── CONEXÃO ────────────────────────────────────────────────
+  {
+    tag:'conn', num:'07', title:'Sem conexão · tela cheia',
+    sub:'Substitui toda a UI quando não há servidor — botão de tentar novamente',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●●</span></div>
+      <div class="no-conn">
+        <div class="icon">⚡</div>
+        <div class="label">Sem conexão</div>
+        <div class="sub">Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.</div>
+        <button class="retry">Tentar novamente</button>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'conn', num:'08', title:'Reconectando · spinner in-banner',
+    sub:'Versão leve — banner no topo do menu enquanto reconecta em background',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●●</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:rgba(24,19,12,0.06);border-bottom:1px solid var(--mc-rule);font-size:12px;color:var(--mc-muted);flex-shrink:0">
+        <span style="width:14px;height:14px;border:2px solid var(--mc-muted);border-top-color:transparent;border-radius:50%;animation:spin 0.9s linear infinite;flex-shrink:0"></span>
+        <span>Reconectando ao servidor…</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;opacity:0.4;pointer-events:none">
+        <div style="font-size:28px;font-weight:800;letter-spacing:var(--mc-ls-tight)">micro<span style="color:var(--mc-accent)">Chess</span>.</div>
+        <div style="font-size:13px;color:var(--mc-muted)">Xadrez 4×4 · online · rápido</div>
+      </div>
+    </div>`
+  },
+];
+
+/* Render */
+const grid = document.getElementById('grid');
+scenes.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'scene';
+  el.dataset.tag = s.tag;
+  el.innerHTML = `
+    <div class="scene-head"><span class="num">${s.num}</span><h3>${s.title}</h3></div>
+    <div class="scene-body">${s.render()}</div>
+    <div class="scene-note">${s.sub}</div>
+  `;
+  grid.appendChild(el);
+});
+
+/* Tweaks */
+window.addEventListener('message', (e) => {
+  if (!e.data) return;
+  if (e.data.type === '__activate_edit_mode') document.getElementById('tw').classList.add('on');
+  if (e.data.type === '__deactivate_edit_mode') document.getElementById('tw').classList.remove('on');
+});
+document.querySelectorAll('#chips button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#chips button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('canvas').setAttribute('data-focus', b.dataset.f);
+  });
+});
+try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(_) {}
+</script>
+</body>
+</html>

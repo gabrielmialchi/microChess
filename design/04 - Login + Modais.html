@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>04 · Login + Modais — microChess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mc-bg:          #f5f3ee;
+  --mc-surface:     #ffffff;
+  --mc-surface-2:   #ebe8e0;
+  --mc-ink:         #18130c;
+  --mc-ink-2:       #3a3227;
+  --mc-muted:       rgba(24,19,12,0.52);
+  --mc-faint:       rgba(24,19,12,0.28);
+  --mc-rule:        rgba(24,19,12,0.10);
+  --mc-rule-strong: rgba(24,19,12,0.18);
+  --mc-accent:      #ff5a1f;
+  --mc-accent-ink:  #ffffff;
+  --mc-accent-soft: rgba(255,90,31,0.12);
+  --mc-accent-glow: rgba(255,90,31,0.40);
+  --mc-success:     #2f9e5d;
+  --mc-success-soft:rgba(47,158,93,0.12);
+  --mc-danger:      #d43a2a;
+  --mc-danger-soft: rgba(212,58,42,0.10);
+  --mc-warn:        #c18200;
+  --mc-warn-soft:   rgba(193,130,0,0.12);
+  --mc-font-sans:   'Inter', system-ui, sans-serif;
+  --mc-font-mono:   'JetBrains Mono', ui-monospace, monospace;
+  --mc-r-xs: 6px; --mc-r-sm: 8px; --mc-r-md: 12px;
+  --mc-r-lg: 16px; --mc-r-xl: 20px; --mc-r-pill: 999px;
+  --mc-sh-1: 0 1px 2px rgba(24,19,12,0.05);
+  --mc-sh-2: 0 4px 12px rgba(24,19,12,0.08);
+  --mc-sh-pop: 0 20px 48px -12px rgba(24,19,12,0.22);
+  --mc-ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+  --mc-ease-out:    cubic-bezier(0.22,1,0.36,1);
+  --mc-ls-wide: 0.12em;
+  --mc-ls-tight: -0.02em;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+html, body { background: var(--mc-bg); color: var(--mc-ink); font-family: var(--mc-font-sans); -webkit-font-smoothing: antialiased }
+
+/* Canvas */
+.canvas { max-width: 1640px; margin: 0 auto; padding: 56px 32px 96px }
+.canvas-head { margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap }
+.canvas-head h1 { font-size: 32px; font-weight: 700; letter-spacing: var(--mc-ls-tight) }
+.canvas-head p { color: var(--mc-muted); font-size: 14px; max-width: 540px; margin-top: 6px; line-height: 1.5 }
+.meta { font-family: var(--mc-font-mono); font-size: 11px; letter-spacing: var(--mc-ls-wide); text-transform: uppercase; color: var(--mc-muted) }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 32px 24px }
+
+/* Scene */
+.scene { display: flex; flex-direction: column; gap: 12px }
+.scene-head { display: flex; align-items: baseline; gap: 10px; padding-left: 2px }
+.scene-head .num { font-family: var(--mc-font-mono); font-size: 11px; color: var(--mc-muted); letter-spacing: var(--mc-ls-wide) }
+.scene-head h3 { font-size: 15px; font-weight: 600 }
+.scene-body { background: var(--mc-surface); border: 1px solid var(--mc-rule); border-radius: var(--mc-r-lg); overflow: hidden; box-shadow: var(--mc-sh-2); aspect-ratio: 9/16; position: relative }
+.scene-note { font-size: 11px; color: var(--mc-muted); line-height: 1.5; padding: 0 2px }
+.phone { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--mc-bg); overflow: hidden }
+
+/* Status bar */
+.sbar { height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-family: var(--mc-font-mono); font-size: 10px; color: var(--mc-muted) }
+
+/* Auth screens (full screen, not modal) */
+.auth-screen { flex: 1; display: flex; flex-direction: column; padding: 24px 24px 32px; gap: 0; overflow: hidden }
+.auth-logo { font-size: 26px; font-weight: 800; letter-spacing: var(--mc-ls-tight) }
+.auth-logo em { font-style: normal; color: var(--mc-accent) }
+.auth-eyebrow { font-family: var(--mc-font-mono); font-size: 10px; letter-spacing: var(--mc-ls-wide); text-transform: uppercase; color: var(--mc-muted); margin-top: 32px }
+.auth-title { font-size: 26px; font-weight: 700; letter-spacing: var(--mc-ls-tight); margin-top: 6px; line-height: 1.1 }
+.auth-sub { font-size: 13px; color: var(--mc-muted); margin-top: 8px; line-height: 1.5 }
+.auth-form { display: flex; flex-direction: column; gap: 10px; margin-top: 28px; flex: 1 }
+.field { display: flex; flex-direction: column; gap: 5px }
+.field label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: var(--mc-ls-wide); color: var(--mc-muted) }
+.field input {
+  height: 50px; padding: 0 14px;
+  background: var(--mc-surface); border: 1px solid var(--mc-rule-strong);
+  border-radius: var(--mc-r-md); font-family: var(--mc-font-sans);
+  font-size: 15px; color: var(--mc-ink);
+}
+.field input:focus { outline: none; border-color: var(--mc-accent); box-shadow: 0 0 0 3px var(--mc-accent-soft) }
+.field input.error { border-color: var(--mc-danger); box-shadow: 0 0 0 3px var(--mc-danger-soft) }
+.field .hint { font-size: 11px; color: var(--mc-danger); margin-top: 2px }
+.auth-spacer { flex: 1 }
+.auth-cta { height: 52px; border: 0; border-radius: var(--mc-r-md); background: var(--mc-ink); color: var(--mc-surface); font: 600 13px var(--mc-font-sans); letter-spacing: var(--mc-ls-wide); text-transform: uppercase; cursor: pointer; flex-shrink: 0 }
+.auth-cta.accent { background: var(--mc-accent); color: var(--mc-accent-ink) }
+.auth-link { text-align: center; font-size: 13px; color: var(--mc-muted); margin-top: 14px; flex-shrink: 0 }
+.auth-link a { color: var(--mc-ink); font-weight: 600; text-decoration: none }
+.auth-divider { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--mc-faint); margin: 14px 0; flex-shrink: 0 }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--mc-rule) }
+.auth-ghost { height: 44px; border: 1px solid var(--mc-rule-strong); border-radius: var(--mc-r-md); background: transparent; color: var(--mc-muted); font: 500 12px var(--mc-font-sans); letter-spacing: 0.04em; cursor: pointer; flex-shrink: 0 }
+
+/* Modal overlay (ban, logout, delete, etc.) */
+.overlay-bg {
+  position: absolute; inset: 0;
+  background: rgba(245,243,238,0.88);
+  backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.modal {
+  background: var(--mc-surface);
+  border: 1px solid var(--mc-rule);
+  border-radius: var(--mc-r-xl);
+  padding: 28px 24px;
+  width: 100%;
+  box-shadow: var(--mc-sh-pop);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.modal.danger-border { border-color: var(--mc-danger-soft) }
+.modal.warn-border { border-color: var(--mc-warn-soft) }
+.modal-icon { font-size: 36px; text-align: center; line-height: 1 }
+.modal-eyebrow { font-family: var(--mc-font-mono); font-size: 10px; letter-spacing: var(--mc-ls-wide); text-transform: uppercase; color: var(--mc-muted); text-align: center }
+.modal-title { font-size: 20px; font-weight: 700; letter-spacing: var(--mc-ls-tight); text-align: center; line-height: 1.2 }
+.modal-body { font-size: 13px; color: var(--mc-muted); text-align: center; line-height: 1.55 }
+.modal-timer { font-family: var(--mc-font-mono); font-size: 36px; font-weight: 600; letter-spacing: 4px; text-align: center }
+.modal-row { display: flex; gap: 8px }
+.modal-btn { flex: 1; height: 48px; border-radius: var(--mc-r-md); font: 600 13px var(--mc-font-sans); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--mc-rule-strong); background: var(--mc-surface); color: var(--mc-ink) }
+.modal-btn.primary { background: var(--mc-ink); color: var(--mc-surface); border-color: var(--mc-ink) }
+.modal-btn.danger { background: var(--mc-danger); color: #fff; border-color: var(--mc-danger) }
+.modal-btn.accent { background: var(--mc-accent); color: var(--mc-accent-ink); border-color: var(--mc-accent) }
+.modal-btn.full { width: 100% }
+
+/* Inputs inside modals */
+.modal .field input { height: 44px; font-size: 13px }
+
+/* Reconnect specific */
+.reconnect-ring {
+  width: 80px; height: 80px; border-radius: 50%;
+  border: 2px solid var(--mc-rule-strong);
+  display: grid; place-items: center;
+  margin: 0 auto; font-size: 32px;
+  position: relative;
+}
+.reconnect-ring::after {
+  content: ''; position: absolute; inset: -4px; border-radius: 50%;
+  border: 2px solid var(--mc-warn);
+  border-right-color: transparent;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg) } }
+.reconnect-timer { font-family: var(--mc-font-mono); font-size: 42px; font-weight: 600; text-align: center; letter-spacing: var(--mc-ls-tight); color: var(--mc-warn) }
+
+/* Tweaks */
+#tw { position: fixed; right: 20px; bottom: 20px; z-index: 100; background: var(--mc-surface); border: 1px solid var(--mc-rule-strong); border-radius: var(--mc-r-lg); padding: 14px; display: none; flex-direction: column; gap: 12px; width: 260px; box-shadow: var(--mc-sh-pop) }
+#tw.on { display: flex }
+#tw h4 { font: 500 11px var(--mc-font-mono); letter-spacing: var(--mc-ls-wide); text-transform: uppercase; color: var(--mc-muted) }
+#tw .chips { display: flex; flex-wrap: wrap; gap: 5px }
+#tw .chips button { font: 500 10px var(--mc-font-mono); letter-spacing: 1px; text-transform: uppercase; padding: 6px 10px; border: 1px solid var(--mc-rule); background: transparent; color: var(--mc-ink-2); border-radius: var(--mc-r-pill); cursor: pointer }
+#tw .chips button.on { background: var(--mc-accent); color: var(--mc-accent-ink); border-color: var(--mc-accent) }
+.canvas[data-focus] .scene { display: none }
+.canvas[data-focus="all"] .scene { display: flex }
+.canvas[data-focus="auth"] .scene[data-tag="auth"] { display: flex }
+.canvas[data-focus="modal"] .scene[data-tag="modal"] { display: flex }
+</style>
+</head>
+<body>
+
+<div class="canvas" id="canvas" data-focus="all">
+  <div class="canvas-head">
+    <div>
+      <div class="meta">04 · Login + Modais</div>
+      <h1>Auth e overlays de sistema</h1>
+      <p>Fluxo de login/registro (tela cheia, não modal) + todos os overlays de sistema: ban, logout, excluir conta, alterar senha, reconexão.</p>
+    </div>
+    <div class="meta">mobile · light</div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="tw">
+  <h4>Tweaks · Filtrar</h4>
+  <div class="chips" id="chips">
+    <button class="on" data-f="all">Todas</button>
+    <button data-f="auth">Auth</button>
+    <button data-f="modal">Modais</button>
+  </div>
+</div>
+
+<script>
+const scenes = [
+
+  // ── AUTH ────────────────────────────────────────────────────
+  {
+    tag:'auth', num:'01', title:'Login',
+    sub:'Tela cheia — sem modal sobre escuro. Logo, campos limpos, link para registro',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="auth-screen">
+        <div class="auth-logo">micro<em>Chess</em>.</div>
+        <div class="auth-eyebrow">Bem-vindo de volta</div>
+        <div class="auth-title">Entrar</div>
+        <div class="auth-form">
+          <div class="field">
+            <label>Email</label>
+            <input type="email" placeholder="voce@email.com">
+          </div>
+          <div class="field">
+            <label>Senha</label>
+            <input type="password" value="••••••••">
+          </div>
+          <div class="auth-spacer"></div>
+          <button class="auth-cta">ENTRAR</button>
+          <div class="auth-link">Não tem conta? <a href="#">Criar conta</a></div>
+          <div class="auth-divider">ou</div>
+          <button class="auth-ghost">Jogar sem conta</button>
+        </div>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'auth', num:'02', title:'Login · erro de credenciais',
+    sub:'Campo com erro destacado, mensagem clara sem jargão técnico',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="auth-screen">
+        <div class="auth-logo">micro<em>Chess</em>.</div>
+        <div class="auth-eyebrow">Bem-vindo de volta</div>
+        <div class="auth-title">Entrar</div>
+        <div class="auth-form">
+          <div class="field">
+            <label>Email</label>
+            <input type="email" value="guerreiro@email.com">
+          </div>
+          <div class="field">
+            <label>Senha</label>
+            <input type="password" class="error" value="••••••••">
+            <span class="hint">Senha incorreta. Tente novamente.</span>
+          </div>
+          <div class="auth-spacer"></div>
+          <button class="auth-cta">ENTRAR</button>
+          <div class="auth-link">Não tem conta? <a href="#">Criar conta</a></div>
+          <div class="auth-divider">ou</div>
+          <button class="auth-ghost">Jogar sem conta</button>
+        </div>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'auth', num:'03', title:'Criar conta',
+    sub:'3 campos: apelido, email, senha. Apelido é o nome público (ELO visível)',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="auth-screen">
+        <div class="auth-logo">micro<em>Chess</em>.</div>
+        <div class="auth-eyebrow">Primeira vez aqui?</div>
+        <div class="auth-title">Criar conta</div>
+        <div class="auth-sub">Seu apelido é público — aparece no ranking e para oponentes.</div>
+        <div class="auth-form">
+          <div class="field">
+            <label>Apelido</label>
+            <input type="text" placeholder="até 16 caracteres">
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" placeholder="voce@email.com">
+          </div>
+          <div class="field">
+            <label>Senha</label>
+            <input type="password" placeholder="mínimo 6 caracteres">
+          </div>
+          <div class="auth-spacer"></div>
+          <button class="auth-cta accent">CRIAR CONTA</button>
+          <div class="auth-link">Já tem conta? <a href="#">Entrar</a></div>
+        </div>
+      </div>
+    </div>`
+  },
+
+  // ── MODAIS ──────────────────────────────────────────────────
+  {
+    tag:'modal', num:'04', title:'Ban · banimento temporário',
+    sub:'Countdown visível, motivo claro, sem botão de ação (apenas fechar)',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div style="flex:1;background:var(--mc-bg)"></div>
+      <div class="overlay-bg">
+        <div class="modal warn-border">
+          <div class="modal-icon">⏸</div>
+          <div class="modal-eyebrow">Acesso restrito</div>
+          <div class="modal-title">Banimento temporário</div>
+          <div class="modal-body">Você recebeu W.O.s em excesso e foi temporariamente removido do matchmaking.</div>
+          <div class="modal-timer" style="color:var(--mc-warn)">00:28:14</div>
+          <button class="modal-btn full">FECHAR</button>
+        </div>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'modal', num:'05', title:'Logout · confirmar saída',
+    sub:'Confirmação leve — sem drama. Apenas Sim/Não',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div style="flex:1;background:var(--mc-bg)"></div>
+      <div class="overlay-bg">
+        <div class="modal">
+          <div class="modal-eyebrow">Conta</div>
+          <div class="modal-title">Sair da conta?</div>
+          <div class="modal-body">Seu progresso está salvo. Você pode entrar novamente a qualquer momento.</div>
+          <div class="modal-row">
+            <button class="modal-btn">Cancelar</button>
+            <button class="modal-btn primary">Sair</button>
+          </div>
+        </div>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'modal', num:'06', title:'Excluir conta · confirmação crítica',
+    sub:'Ação destrutiva — linguagem direta, botão vermelho, fácil de cancelar',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div style="flex:1;background:var(--mc-bg)"></div>
+      <div class="overlay-bg">
+        <div class="modal danger-border">
+          <div class="modal-eyebrow">Ação permanente</div>
+          <div class="modal-title">Excluir conta?</div>
+          <div class="modal-body">Todo o seu histórico, rank e PdL serão apagados.<br><strong style="color:var(--mc-ink)">Isso não pode ser desfeito.</strong></div>
+          <div class="modal-row">
+            <button class="modal-btn">Cancelar</button>
+            <button class="modal-btn danger">Excluir</button>
+          </div>
+        </div>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'modal', num:'07', title:'Alterar senha',
+    sub:'3 campos inline dentro do modal, sem navegar para nova tela',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div style="flex:1;background:var(--mc-bg)"></div>
+      <div class="overlay-bg">
+        <div class="modal">
+          <div class="modal-eyebrow">Segurança</div>
+          <div class="modal-title">Alterar senha</div>
+          <div class="field">
+            <label>Senha atual</label>
+            <input type="password" placeholder="••••••••">
+          </div>
+          <div class="field">
+            <label>Nova senha</label>
+            <input type="password" placeholder="mínimo 6 caracteres">
+          </div>
+          <div class="field">
+            <label>Confirmar nova senha</label>
+            <input type="password" placeholder="repita a nova senha">
+          </div>
+          <div class="modal-row" style="margin-top:4px">
+            <button class="modal-btn">Cancelar</button>
+            <button class="modal-btn primary">Salvar</button>
+          </div>
+        </div>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'modal', num:'08', title:'Reconexão · aguardando oponente',
+    sub:'Spinner + countdown de 60s, oponente desconectou durante partida',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div style="flex:1;background:var(--mc-bg)"></div>
+      <div class="overlay-bg">
+        <div class="modal">
+          <div class="reconnect-ring">⚡</div>
+          <div class="modal-eyebrow">Oponente desconectou</div>
+          <div class="modal-title">Aguardando reconexão</div>
+          <div class="modal-body">A partida continua se ele voltar antes do tempo acabar.</div>
+          <div class="reconnect-timer">00:47</div>
+          <div style="font-size:11px;color:var(--mc-faint);text-align:center">W.O. automático ao zerar</div>
+        </div>
+      </div>
+    </div>`
+  },
+];
+
+/* Render */
+const grid = document.getElementById('grid');
+scenes.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'scene';
+  el.dataset.tag = s.tag;
+  el.innerHTML = `
+    <div class="scene-head"><span class="num">${s.num}</span><h3>${s.title}</h3></div>
+    <div class="scene-body">${s.render()}</div>
+    <div class="scene-note">${s.sub}</div>
+  `;
+  grid.appendChild(el);
+});
+
+/* Tweaks */
+window.addEventListener('message', (e) => {
+  if (!e.data) return;
+  if (e.data.type === '__activate_edit_mode') document.getElementById('tw').classList.add('on');
+  if (e.data.type === '__deactivate_edit_mode') document.getElementById('tw').classList.remove('on');
+});
+document.querySelectorAll('#chips button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#chips button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('canvas').setAttribute('data-focus', b.dataset.f);
+  });
+});
+try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(_) {}
+</script>
+</body>
+</html>

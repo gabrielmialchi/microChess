@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>microChess · 01 Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   microChess — Design System · Tema default "Editorial Claro"
+   Arquivo de referência. NÃO é usado em runtime do jogo.
+   Claude Code: copie os tokens (:root) e os blocos de componente marcados
+   /* @apply ... */ /* para os divs que criar em html/index.html.
+   ========================================================================== */
+
+:root {
+  /* ── LIGHT (default) ─────────────────────────────────── */
+  --mc-bg:          #f5f3ee;   /* fundo da página */
+  --mc-surface:     #ffffff;   /* cards, modais */
+  --mc-surface-2:   #ebe8e0;   /* áreas sutis (casas claras tabuleiro, backdrops) */
+  --mc-ink:         #18130c;   /* texto principal */
+  --mc-ink-2:       #3a3227;   /* texto secundário */
+  --mc-muted:       rgba(24,19,12,0.52);
+  --mc-faint:       rgba(24,19,12,0.32);
+  --mc-rule:        rgba(24,19,12,0.10);
+  --mc-rule-strong: rgba(24,19,12,0.18);
+
+  /* Accent (laranja) */
+  --mc-accent:        #ff5a1f;
+  --mc-accent-hover:  #e64a12;
+  --mc-accent-ink:    #ffffff;       /* texto em cima do acento */
+  --mc-accent-soft:   rgba(255,90,31,0.12);
+  --mc-accent-glow:   rgba(255,90,31,0.35);
+
+  /* Semantic */
+  --mc-success:       #2a8f52;
+  --mc-success-soft:  rgba(42,143,82,0.12);
+  --mc-danger:        #d43a2a;
+  --mc-danger-soft:   rgba(212,58,42,0.12);
+  --mc-warn:          #c18200;
+  --mc-warn-soft:     rgba(193,130,0,0.14);
+
+  /* Players */
+  --mc-white:        #ffffff;       /* peças brancas */
+  --mc-white-line:   #18130c;       /* contorno das brancas em light */
+  --mc-black-p:      #18130c;       /* peças pretas */
+  --mc-black-line:   #0a0805;       /* contorno das pretas (usado mais no dark) */
+  --mc-outline-w:    1.5px;         /* largura do contorno das brancas */
+  --mc-outline-b:    0px;           /* largura do contorno das pretas (light = 0) */
+
+  /* Pieces FX (glow + shadow) — tweakables */
+  --mc-fx-glow-w:       0 0 0 rgba(255,255,255,0);
+  --mc-fx-glow-b:       0 0 0 rgba(0,0,0,0);
+  --mc-fx-shadow-w:     0 0 0 rgba(0,0,0,0);
+  --mc-fx-shadow-b:     0 0 0 rgba(255,255,255,0);
+  --mc-fx-w-text:       0 1px 0 rgba(0,0,0,0.15);
+  --mc-fx-b-text:       0 1px 0 rgba(255,255,255,0.2);
+  --mc-you:          #18130c;       /* cor de “você” neutra */
+  --mc-opp:          #8a6a3d;       /* cor de “oponente” bege-bronze */
+
+  /* Board (foco em inteligibilidade) */
+  --mc-cell-light:   #eee9de;
+  --mc-cell-dark:    #a68e6d;
+  --mc-cell-hl:      var(--mc-accent);
+  --mc-cell-move:    rgba(255,90,31,0.22);
+  --mc-cell-lastmove:rgba(255,90,31,0.14);
+  --mc-cell-check:   rgba(212,58,42,0.22);
+  --mc-cell-border:  rgba(24,19,12,0.16);
+
+  /* Typography */
+  --mc-font-sans: 'Inter', system-ui, -apple-system, Segoe UI, sans-serif;
+  --mc-font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+  /* Type scale (mobile-first, tabuleiro precisa de respiro) */
+  --mc-t-display:  clamp(40px, 12vw, 56px);  /* logo, hero */
+  --mc-t-h1:       28px;  /* título de tela */
+  --mc-t-h2:       20px;  /* título de seção */
+  --mc-t-h3:       16px;  /* título de card */
+  --mc-t-body:     15px;  /* corpo */
+  --mc-t-small:    13px;  /* meta */
+  --mc-t-xs:       11px;  /* eyebrow/label, uppercase */
+  --mc-t-mono:     12px;  /* números técnicos */
+
+  /* Line height */
+  --mc-lh-tight:   1.05;
+  --mc-lh-snug:    1.25;
+  --mc-lh-normal:  1.45;
+
+  /* Letter-spacing */
+  --mc-ls-tight:   -0.02em;   /* títulos grandes */
+  --mc-ls-mid:     -0.01em;   /* títulos médios */
+  --mc-ls-wide:    0.12em;    /* eyebrow uppercase */
+  --mc-ls-mono:    0.02em;
+
+  /* Spacing (base 4) */
+  --mc-s-1: 4px;
+  --mc-s-2: 8px;
+  --mc-s-3: 12px;
+  --mc-s-4: 16px;
+  --mc-s-5: 20px;
+  --mc-s-6: 24px;
+  --mc-s-8: 32px;
+  --mc-s-10: 40px;
+  --mc-s-12: 48px;
+
+  /* Radius */
+  --mc-r-xs: 6px;
+  --mc-r-sm: 8px;
+  --mc-r-md: 12px;
+  --mc-r-lg: 16px;
+  --mc-r-xl: 20px;
+  --mc-r-pill: 999px;
+
+  /* Shadow */
+  --mc-sh-1: 0 1px 2px rgba(24,19,12,0.05);
+  --mc-sh-2: 0 4px 12px rgba(24,19,12,0.08);
+  --mc-sh-3: 0 12px 30px -8px rgba(24,19,12,0.18);
+  --mc-sh-pop: 0 20px 48px -12px rgba(24,19,12,0.24);
+
+  /* Sizes (garantir touch targets ≥44px) */
+  --mc-touch: 48px;           /* altura mínima de botões principais */
+  --mc-touch-sm: 40px;
+
+  /* Motion (juicy equilibrado) */
+  --mc-ease-out:      cubic-bezier(0.22, 1, 0.36, 1);
+  --mc-ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
+  --mc-ease-smooth:   cubic-bezier(0.4, 0, 0.2, 1);
+  --mc-dur-xs: 120ms;
+  --mc-dur-sm: 180ms;
+  --mc-dur-md: 260ms;
+  --mc-dur-lg: 420ms;
+  --mc-dur-xl: 640ms;
+
+  /* Layout */
+  --mc-max-screen: 440px;     /* largura máx do container mobile */
+}
+
+/* ── DARK (aplicado por attribute em <html> ou <body>) ─── */
+[data-theme="dark"], .theme-dark {
+  --mc-bg:          #0e0c09;
+  --mc-surface:     #18140e;
+  --mc-surface-2:   #1f1a13;
+  --mc-ink:         #f4efe4;
+  --mc-ink-2:       #c9c0ae;
+  --mc-muted:       rgba(244,239,228,0.56);
+  --mc-faint:       rgba(244,239,228,0.32);
+  --mc-rule:        rgba(244,239,228,0.10);
+  --mc-rule-strong: rgba(244,239,228,0.20);
+
+  --mc-accent:        #ff6a33;     /* levemente mais quente no dark */
+  --mc-accent-hover:  #ff8555;
+  --mc-accent-ink:    #1a0d06;
+  --mc-accent-soft:   rgba(255,106,51,0.16);
+  --mc-accent-glow:   rgba(255,106,51,0.45);
+
+  --mc-success:       #3fb369;
+  --mc-success-soft:  rgba(63,179,105,0.18);
+  --mc-danger:        #e95442;
+  --mc-danger-soft:   rgba(233,84,66,0.18);
+  --mc-warn:          #e0a42a;
+  --mc-warn-soft:     rgba(224,164,42,0.18);
+
+  --mc-white:        #f4efe4;
+  --mc-white-line:   #0a0805;
+  --mc-black-p:      #1a140d;
+  --mc-you:          #f4efe4;
+  --mc-opp:          #c9a46d;
+
+  --mc-cell-light:   #2a231a;
+  --mc-cell-dark:    #4c3c28;
+  --mc-cell-hl:      var(--mc-accent);
+  --mc-cell-move:    rgba(255,106,51,0.28);
+  --mc-cell-lastmove:rgba(255,106,51,0.16);
+  --mc-cell-check:   rgba(233,84,66,0.28);
+  --mc-cell-border:  rgba(244,239,228,0.12);
+
+  --mc-sh-1: 0 1px 2px rgba(0,0,0,0.5);
+  --mc-sh-2: 0 4px 12px rgba(0,0,0,0.4);
+  --mc-sh-3: 0 12px 30px -8px rgba(0,0,0,0.55);
+  --mc-sh-pop: 0 20px 48px -12px rgba(0,0,0,0.6);
+}
+
+/* ==========================================================================
+   DOC (esta página)
+   ========================================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  background: var(--mc-bg);
+  color: var(--mc-ink);
+  font-family: var(--mc-font-sans);
+  font-size: var(--mc-t-body);
+  line-height: var(--mc-lh-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  padding: 48px 32px 120px;
+  transition: background var(--mc-dur-md) var(--mc-ease-smooth), color var(--mc-dur-md) var(--mc-ease-smooth);
+}
+.wrap{max-width: 1280px;margin:0 auto;display:flex;flex-direction:column;gap:64px}
+
+.doc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--mc-rule)}
+.doc-head h1{font-size:32px;font-weight:700;letter-spacing:var(--mc-ls-tight)}
+.doc-head h1 em{font-style:normal;color:var(--mc-accent)}
+.doc-head p{color:var(--mc-muted);max-width:640px;margin-top:6px;font-size:var(--mc-t-small)}
+.doc-head .meta{font-family:var(--mc-font-mono);font-size:var(--mc-t-xs);color:var(--mc-muted);text-transform:uppercase;letter-spacing:var(--mc-ls-wide);display:flex;gap:8px;flex-wrap:wrap}
+.doc-head .meta span{padding:4px 10px;border:1px solid var(--mc-rule);border-radius:var(--mc-r-pill)}
+
+.sec{display:flex;flex-direction:column;gap:24px}
+.sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sec-head .num{font-family:var(--mc-font-mono);font-size:var(--mc-t-xs);color:var(--mc-muted);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;padding:4px 10px;border:1px solid var(--mc-rule);border-radius:var(--mc-r-pill)}
+.sec-head h2{font-size:22px;font-weight:600;letter-spacing:var(--mc-ls-mid)}
+.sec-head p{color:var(--mc-muted);font-size:var(--mc-t-small);margin-left:auto;max-width:520px;line-height:var(--mc-lh-normal)}
+
+.card{background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-lg);padding:24px}
+.grid{display:grid;gap:16px}
+.g-2{grid-template-columns:repeat(2,1fr)}
+.g-3{grid-template-columns:repeat(3,1fr)}
+.g-4{grid-template-columns:repeat(4,1fr)}
+.g-6{grid-template-columns:repeat(6,1fr)}
+@media (max-width:900px){.g-3,.g-4,.g-6{grid-template-columns:repeat(2,1fr)}}
+
+.lbl{font-family:var(--mc-font-mono);font-size:10px;text-transform:uppercase;letter-spacing:var(--mc-ls-wide);color:var(--mc-muted)}
+.val{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-ink-2)}
+
+/* ─── Swatches ─── */
+.sw{display:flex;flex-direction:column;gap:10px}
+.sw-chip{aspect-ratio:3/2;border-radius:var(--mc-r-md);border:1px solid var(--mc-rule);position:relative;overflow:hidden}
+.sw-chip .name{position:absolute;bottom:8px;left:10px;font-family:var(--mc-font-mono);font-size:10px;color:#fff;mix-blend-mode:difference;letter-spacing:0.5px}
+.sw .meta{display:flex;justify-content:space-between;font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-muted)}
+.sw .meta strong{color:var(--mc-ink-2);font-weight:500}
+
+/* ─── Type specimens ─── */
+.type{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--mc-rule);border-radius:var(--mc-r-md);background:var(--mc-surface)}
+.type .name{font-family:var(--mc-font-mono);font-size:10px;text-transform:uppercase;letter-spacing:var(--mc-ls-wide);color:var(--mc-muted)}
+.type .sample{line-height:var(--mc-lh-tight)}
+.type .usage{font-size:12px;color:var(--mc-muted)}
+
+/* ─── Spacing demo ─── */
+.space-row{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.space-cell{display:flex;flex-direction:column;align-items:center;gap:8px}
+.space-cell .bar{background:var(--mc-accent-soft);border:1px solid var(--mc-accent);border-radius:2px}
+.space-cell .n{font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-muted)}
+
+/* ─── Radius demo ─── */
+.rad-row{display:flex;gap:12px;flex-wrap:wrap}
+.rad{width:72px;height:72px;background:var(--mc-accent-soft);border:1px solid var(--mc-accent);display:flex;align-items:center;justify-content:center;font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-accent)}
+
+/* ─── Shadow demo ─── */
+.sh{padding:20px;background:var(--mc-surface);border-radius:var(--mc-r-md);display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.sh .n{font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-muted);text-transform:uppercase;letter-spacing:var(--mc-ls-wide)}
+.sh .v{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-ink-2)}
+
+/* =========================================================================
+   COMPONENTS (copiáveis)
+   ========================================================================= */
+
+/* Container / screen shell */
+.mc-screen{
+  width:100%;
+  max-width:var(--mc-max-screen);
+  margin:0 auto;
+  padding: var(--mc-s-5) var(--mc-s-5) var(--mc-s-6);
+  display:flex;
+  flex-direction:column;
+  gap: var(--mc-s-5);
+}
+
+/* ── Buttons ── */
+.mc-btn{
+  appearance:none;
+  font-family: var(--mc-font-sans);
+  font-size: var(--mc-t-body);
+  font-weight: 600;
+  letter-spacing: var(--mc-ls-mid);
+  height: var(--mc-touch);
+  padding: 0 var(--mc-s-5);
+  border-radius: var(--mc-r-md);
+  border: 1px solid var(--mc-rule-strong);
+  background: var(--mc-surface);
+  color: var(--mc-ink);
+  display:inline-flex;align-items:center;justify-content:center;gap: var(--mc-s-3);
+  cursor:pointer;
+  transition: transform var(--mc-dur-xs) var(--mc-ease-spring),
+              box-shadow var(--mc-dur-sm) var(--mc-ease-out),
+              background var(--mc-dur-sm) var(--mc-ease-out),
+              border-color var(--mc-dur-sm) var(--mc-ease-out),
+              color var(--mc-dur-sm) var(--mc-ease-out);
+  user-select:none;
+  -webkit-tap-highlight-color: transparent;
+}
+.mc-btn:hover{background:var(--mc-surface-2)}
+.mc-btn:active{transform: translateY(1px) scale(0.985)}
+.mc-btn:focus-visible{outline:2px solid var(--mc-accent); outline-offset: 2px}
+.mc-btn[disabled]{opacity:0.45;cursor:not-allowed}
+
+.mc-btn.primary{
+  background: var(--mc-ink);
+  color: var(--mc-surface);
+  border-color: var(--mc-ink);
+}
+.mc-btn.primary:hover{background: #000}
+[data-theme="dark"] .mc-btn.primary:hover, .theme-dark .mc-btn.primary:hover{background:#fff; color:#0e0c09}
+
+.mc-btn.accent{
+  background: var(--mc-accent);
+  color: var(--mc-accent-ink);
+  border-color: var(--mc-accent);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 8px 24px -12px var(--mc-accent-glow);
+}
+.mc-btn.accent:hover{background: var(--mc-accent-hover); border-color: var(--mc-accent-hover)}
+.mc-btn.accent:active{box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 4px 12px -8px var(--mc-accent-glow)}
+
+.mc-btn.ghost{
+  background: transparent;
+  border-color: transparent;
+  color: var(--mc-ink-2);
+}
+.mc-btn.ghost:hover{background: var(--mc-rule); color:var(--mc-ink)}
+
+.mc-btn.danger{color:var(--mc-danger);border-color: var(--mc-danger-soft);background: transparent}
+.mc-btn.danger:hover{background: var(--mc-danger-soft)}
+
+.mc-btn.sm{height: var(--mc-touch-sm); font-size: var(--mc-t-small); padding: 0 var(--mc-s-4); border-radius: var(--mc-r-sm)}
+.mc-btn.full{width:100%}
+.mc-btn .mc-ico{width:20px;height:20px;display:inline-grid;place-items:center;font-size:16px;flex-shrink:0}
+.mc-btn .mc-idx{font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-muted);letter-spacing:1px;margin-right:4px}
+.mc-btn.primary .mc-idx{color:rgba(255,255,255,0.5)}
+.mc-btn .mc-arr{margin-left:auto;opacity:0.4;font-size:18px;transition: transform var(--mc-dur-sm) var(--mc-ease-spring)}
+.mc-btn:hover .mc-arr{transform: translateX(3px); opacity:0.7}
+.mc-btn.primary .mc-arr{opacity: 0.9}
+
+/* Icon-only button (square) */
+.mc-btn.icon{width: var(--mc-touch); padding: 0; border-radius: var(--mc-r-md)}
+.mc-btn.icon.sm{width: var(--mc-touch-sm); border-radius: var(--mc-r-sm)}
+
+/* ── Inputs ── */
+.mc-input{
+  width:100%;
+  height: var(--mc-touch);
+  padding: 0 var(--mc-s-4);
+  background: var(--mc-surface);
+  color: var(--mc-ink);
+  border:1px solid var(--mc-rule-strong);
+  border-radius: var(--mc-r-md);
+  font-family: var(--mc-font-sans);
+  font-size: var(--mc-t-body);
+  transition: border-color var(--mc-dur-sm) var(--mc-ease-out), box-shadow var(--mc-dur-sm) var(--mc-ease-out);
+}
+.mc-input::placeholder{color: var(--mc-faint)}
+.mc-input:focus{outline:none;border-color:var(--mc-accent);box-shadow:0 0 0 3px var(--mc-accent-soft)}
+
+.mc-field{display:flex;flex-direction:column;gap: var(--mc-s-2)}
+.mc-field label{font-size: var(--mc-t-xs); text-transform: uppercase; letter-spacing: var(--mc-ls-wide); color: var(--mc-muted); font-weight:500}
+
+/* ── Card ── */
+.mc-card{
+  background: var(--mc-surface);
+  border: 1px solid var(--mc-rule);
+  border-radius: var(--mc-r-lg);
+  padding: var(--mc-s-5);
+}
+.mc-card.flat{background: transparent; border-color: var(--mc-rule); box-shadow: none}
+
+/* ── Badge / Tag / Pill ── */
+.mc-tag{
+  display:inline-flex;align-items:center;gap: var(--mc-s-2);
+  height: 22px;
+  padding: 0 var(--mc-s-3);
+  font-family: var(--mc-font-mono);
+  font-size: 10px;
+  letter-spacing: var(--mc-ls-wide);
+  text-transform: uppercase;
+  color: var(--mc-ink-2);
+  background: var(--mc-rule);
+  border-radius: var(--mc-r-pill);
+}
+.mc-tag.accent{color: var(--mc-accent); background: var(--mc-accent-soft)}
+.mc-tag.success{color: var(--mc-success); background: var(--mc-success-soft)}
+.mc-tag.danger{color: var(--mc-danger); background: var(--mc-danger-soft)}
+.mc-tag.warn{color: var(--mc-warn); background: var(--mc-warn-soft)}
+.mc-tag.solid{background: var(--mc-ink); color: var(--mc-surface)}
+
+/* Live dot */
+.mc-dot{width:6px;height:6px;border-radius:50%;background: var(--mc-accent); box-shadow:0 0 0 0 var(--mc-accent-glow); animation: mc-dot-pulse 2s infinite}
+@keyframes mc-dot-pulse{
+  0%,100%{box-shadow:0 0 0 0 var(--mc-accent-glow)}
+  50%{box-shadow:0 0 0 6px transparent}
+}
+
+/* ── Avatar ── */
+.mc-avatar{
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--mc-ink); color: var(--mc-surface);
+  display:inline-grid; place-items:center;
+  font-weight: 600; font-size: 15px;
+  letter-spacing: -0.01em;
+  flex-shrink:0;
+}
+.mc-avatar.sm{width:28px;height:28px;font-size:12px}
+.mc-avatar.lg{width:56px;height:56px;font-size:20px}
+.mc-avatar.accent{background: var(--mc-accent); color: var(--mc-accent-ink)}
+.mc-avatar.outline{background: var(--mc-surface); color: var(--mc-ink); border:1px solid var(--mc-rule-strong)}
+
+.mc-identity{display:flex;align-items:center;gap: var(--mc-s-3)}
+.mc-identity .n{font-size: var(--mc-t-body); font-weight: 600; letter-spacing: var(--mc-ls-mid)}
+.mc-identity .s{font-size: var(--mc-t-small); color: var(--mc-muted)}
+
+/* ── Stat ── */
+.mc-stat{display:flex;flex-direction:column;gap:2px;padding: var(--mc-s-4); background: var(--mc-surface); border:1px solid var(--mc-rule); border-radius: var(--mc-r-md)}
+.mc-stat .v{font-size: 22px; font-weight: 700; letter-spacing: var(--mc-ls-tight); font-variant-numeric: tabular-nums}
+.mc-stat .l{font-size: var(--mc-t-xs); text-transform: uppercase; letter-spacing: var(--mc-ls-wide); color: var(--mc-muted)}
+
+/* ── Toast / Banner ── */
+.mc-toast{
+  display:flex;align-items:flex-start;gap: var(--mc-s-3);
+  padding: var(--mc-s-3) var(--mc-s-4);
+  background: var(--mc-surface);
+  border:1px solid var(--mc-rule-strong);
+  border-radius: var(--mc-r-md);
+  box-shadow: var(--mc-sh-2);
+  font-size: var(--mc-t-small);
+}
+.mc-toast .ico{width:20px;height:20px;flex-shrink:0;display:grid;place-items:center;color:var(--mc-accent);font-size:14px}
+.mc-toast.success{border-color: var(--mc-success); background: var(--mc-success-soft)}
+.mc-toast.success .ico{color: var(--mc-success)}
+.mc-toast.danger{border-color: var(--mc-danger); background: var(--mc-danger-soft)}
+.mc-toast.danger .ico{color: var(--mc-danger)}
+.mc-toast.warn{border-color: var(--mc-warn); background: var(--mc-warn-soft)}
+.mc-toast.warn .ico{color: var(--mc-warn)}
+
+/* ── Modal / Dialog ── */
+.mc-modal-backdrop{
+  position: fixed; inset: 0;
+  background: rgba(14,12,9,0.55);
+  backdrop-filter: blur(8px);
+  display:grid; place-items:center;
+  padding: var(--mc-s-5);
+  z-index: 100;
+  animation: mc-fade-in var(--mc-dur-sm) var(--mc-ease-out);
+}
+@keyframes mc-fade-in{from{opacity:0}}
+.mc-modal{
+  background: var(--mc-surface);
+  border-radius: var(--mc-r-xl);
+  border: 1px solid var(--mc-rule);
+  padding: var(--mc-s-6);
+  max-width: 360px; width: 100%;
+  box-shadow: var(--mc-sh-pop);
+  display:flex;flex-direction:column;gap: var(--mc-s-5);
+  animation: mc-pop-in var(--mc-dur-md) var(--mc-ease-spring);
+}
+@keyframes mc-pop-in{from{transform: scale(0.92) translateY(10px); opacity: 0}}
+
+/* ── Bottom tab bar ── */
+.mc-tabbar{
+  position: sticky; bottom: 0;
+  display:grid;grid-template-columns: repeat(4,1fr);
+  background: var(--mc-surface);
+  border-top:1px solid var(--mc-rule);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+.mc-tabbar .tab{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  height:52px;justify-content:center;
+  color: var(--mc-faint);
+  font-size: 10px;font-weight:600;letter-spacing:0.02em;
+  border:none;background:transparent;cursor:pointer;
+  transition: color var(--mc-dur-sm) var(--mc-ease-out);
+}
+.mc-tabbar .tab .gl{font-size:20px;line-height:1}
+.mc-tabbar .tab.active{color: var(--mc-ink)}
+.mc-tabbar .tab.active .gl{color: var(--mc-accent)}
+
+/* ── Topbar (in-screen) ── */
+.mc-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  height: 52px;
+  padding: 0 var(--mc-s-2);
+}
+.mc-topbar .title{font-size: var(--mc-t-h3); font-weight: 600; letter-spacing: var(--mc-ls-mid)}
+.mc-topbar .back{width:40px;height:40px;border-radius: var(--mc-r-md);display:grid;place-items:center;background:transparent;border:1px solid transparent;color:var(--mc-ink-2);cursor:pointer;font-size:18px}
+.mc-topbar .back:hover{background: var(--mc-rule)}
+
+/* ── Board (base — cores/sizing; lógica vem do jogo) ── */
+.mc-board{
+  width: 100%;
+  aspect-ratio: 1/1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--mc-surface);
+  border: 1px solid var(--mc-cell-border);
+  border-radius: var(--mc-r-md);
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+}
+.mc-board .cell{
+  position: relative;
+  display: grid; place-items: center;
+  font-family: var(--mc-font-sans);
+  font-size: clamp(32px, 11vw, 56px);
+  line-height: 1;
+  background: var(--mc-cell-light);
+  transition: background var(--mc-dur-sm) var(--mc-ease-out);
+}
+.mc-board .cell.dk{background: var(--mc-cell-dark)}
+.mc-board .cell.hl{box-shadow: inset 0 0 0 3px var(--mc-cell-hl)}
+.mc-board .cell.last{background: var(--mc-cell-lastmove)}
+.mc-board .cell.last.dk{background: color-mix(in srgb, var(--mc-cell-dark) 75%, var(--mc-cell-hl) 25%)}
+.mc-board .cell.check{box-shadow: inset 0 0 0 3px var(--mc-danger)}
+.mc-board .cell.target::after{
+  content:"";position:absolute;width:26%;height:26%;border-radius:50%;
+  background: var(--mc-accent); opacity: 0.85;
+  animation: mc-target-pulse 1.6s var(--mc-ease-out) infinite;
+}
+@keyframes mc-target-pulse{
+  0%,100%{transform: scale(1); opacity: 0.85}
+  50%{transform: scale(1.15); opacity: 0.55}
+}
+.mc-board .cell.capture::after{
+  content:"";position:absolute;inset:8%;border-radius:50%;
+  border: 3px solid var(--mc-accent);
+  opacity: 0.9;
+  animation: mc-target-pulse 1.6s var(--mc-ease-out) infinite;
+}
+.mc-board .cell .p-w{
+  color: var(--mc-white);
+  -webkit-text-stroke: var(--mc-outline-w) var(--mc-white-line);
+  text-shadow: var(--mc-fx-w-text), var(--mc-fx-shadow-w), var(--mc-fx-glow-w);
+}
+.mc-board .cell .p-b{
+  color: var(--mc-black-p);
+  -webkit-text-stroke: var(--mc-outline-b) var(--mc-black-line);
+  text-shadow: var(--mc-fx-b-text), var(--mc-fx-shadow-b), var(--mc-fx-glow-b);
+}
+[data-theme="dark"] .mc-board .cell .p-b, .theme-dark .mc-board .cell .p-b{color:#0a0805}
+
+/* Coord (opcional, canto superior esquerdo das casas) */
+.mc-board .cell .coord{
+  position:absolute; top:3px; left:4px;
+  font-family: var(--mc-font-mono); font-size: 9px;
+  color: rgba(24,19,12,0.35); letter-spacing:0.5px;
+}
+.mc-board .cell.dk .coord{color: rgba(255,255,255,0.4)}
+
+/* ── Die (dado) ── */
+.mc-die{
+  width: 56px; height: 56px;
+  background: var(--mc-surface);
+  border: 1.5px solid var(--mc-ink);
+  border-radius: var(--mc-r-md);
+  display: grid; place-items: center;
+  font-family: var(--mc-font-mono); font-size: 26px; font-weight: 700;
+  color: var(--mc-ink);
+  box-shadow: 0 3px 0 var(--mc-ink);
+  font-variant-numeric: tabular-nums;
+}
+[data-theme="dark"] .mc-die, .theme-dark .mc-die{box-shadow: 0 3px 0 var(--mc-ink-2)}
+.mc-die.rolling{animation: mc-roll 0.5s var(--mc-ease-spring)}
+@keyframes mc-roll{
+  0%{transform: rotate(0) scale(1)}
+  50%{transform: rotate(180deg) scale(1.1)}
+  100%{transform: rotate(360deg) scale(1)}
+}
+
+/* =========================================================================
+   DOC layout helpers
+   ========================================================================= */
+.preview{background: var(--mc-bg); border:1px solid var(--mc-rule); border-radius: var(--mc-r-lg); padding: var(--mc-s-6); display:flex; flex-direction:column; gap: var(--mc-s-4)}
+.preview .row{display:flex; gap: var(--mc-s-3); flex-wrap:wrap; align-items:center}
+.cap{font-family: var(--mc-font-mono); font-size:10px; color: var(--mc-muted); text-transform: uppercase; letter-spacing: var(--mc-ls-wide)}
+
+.board-demo{max-width: 320px}
+
+#tweaks-panel{
+  position: fixed; right: 24px; bottom: 24px; z-index: 60;
+  background: var(--mc-surface); color: var(--mc-ink);
+  border: 1px solid var(--mc-rule-strong);
+  border-radius: var(--mc-r-lg);
+  padding: 14px;
+  display: none; flex-direction: column; gap: 10px;
+  width: 320px; max-height: calc(100vh - 48px); overflow-y: auto;
+  box-shadow: var(--mc-sh-pop);
+  font-family: var(--mc-font-sans);
+}
+#tweaks-panel.on{display:flex}
+#tweaks-panel .tw-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#tweaks-panel h4{font-size:11px;text-transform:uppercase;letter-spacing:var(--mc-ls-wide);color:var(--mc-muted);font-weight:500}
+#tweaks-panel .tw-tabs{display:flex;gap:4px;background:var(--mc-surface-2);padding:3px;border-radius:var(--mc-r-sm)}
+#tweaks-panel .tw-tabs button{flex:1;font:500 11px var(--mc-font-mono);letter-spacing:1px;text-transform:uppercase;padding:7px 6px;border:0;background:transparent;color:var(--mc-muted);border-radius:calc(var(--mc-r-sm) - 2px);cursor:pointer;transition:all var(--mc-dur-sm) var(--mc-ease-out)}
+#tweaks-panel .tw-tabs button.on{background:var(--mc-surface);color:var(--mc-ink);box-shadow:var(--mc-sh-1)}
+#tweaks-panel .tw-tab{display:none;flex-direction:column;gap:10px}
+#tweaks-panel .tw-tab.on{display:flex}
+#tweaks-panel .tw-row{display:flex;flex-direction:column;gap:5px}
+#tweaks-panel .tw-row .hdr{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--mc-ink-2)}
+#tweaks-panel .tw-row .hdr strong{font-family:var(--mc-font-mono);color:var(--mc-accent);font-weight:600;font-size:11px}
+#tweaks-panel input[type=range]{width:100%;accent-color:var(--mc-accent)}
+#tweaks-panel input[type=color]{height:28px;width:100%;border:1px solid var(--mc-rule);border-radius:var(--mc-r-sm);background:transparent;cursor:pointer}
+#tweaks-panel .tw-preview{background:var(--mc-surface-2);border-radius:var(--mc-r-sm);padding:14px;display:flex;gap:10px;justify-content:center;align-items:center;font-size:44px;line-height:1}
+#tweaks-panel .tw-preview .p-w{color:var(--mc-white);-webkit-text-stroke: var(--mc-outline-w) var(--mc-white-line);text-shadow: var(--mc-fx-w-text), var(--mc-fx-shadow-w), var(--mc-fx-glow-w)}
+#tweaks-panel .tw-preview .p-b{color:var(--mc-black-p);-webkit-text-stroke: var(--mc-outline-b) var(--mc-black-line);text-shadow: var(--mc-fx-b-text), var(--mc-fx-shadow-b), var(--mc-fx-glow-b)}
+#tweaks-panel .tw-preview .sw{width:52px;height:52px;border-radius:var(--mc-r-sm);background:var(--mc-cell-dark);display:grid;place-items:center}
+#tweaks-panel .tw-preview .sw.lt{background:var(--mc-cell-light)}
+#tweaks-panel .tw-section{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--mc-rule);border-radius:var(--mc-r-sm)}
+#tweaks-panel .tw-section .lbl{font:500 10px var(--mc-font-mono);letter-spacing:1.5px;text-transform:uppercase;color:var(--mc-muted)}
+#tweaks-panel .tw-presets{display:flex;gap:6px;flex-wrap:wrap}
+#tweaks-panel .tw-presets button{flex:1;min-width:70px;font:500 10px var(--mc-font-mono);letter-spacing:1px;text-transform:uppercase;padding:6px 4px;border:1px solid var(--mc-rule);background:var(--mc-surface-2);color:var(--mc-ink-2);border-radius:var(--mc-r-xs);cursor:pointer;transition:all var(--mc-dur-sm) var(--mc-ease-out)}
+#tweaks-panel .tw-presets button:hover{border-color:var(--mc-accent);color:var(--mc-accent)}
+#tweaks-panel .tw-reset{font:500 10px var(--mc-font-mono);letter-spacing:1px;text-transform:uppercase;padding:5px 10px;border:1px solid var(--mc-rule);background:transparent;color:var(--mc-muted);border-radius:var(--mc-r-xs);cursor:pointer}
+#tweaks-panel .tw-reset:hover{color:var(--mc-danger);border-color:var(--mc-danger)}
+
+#theme-toggle{
+  position: fixed; right: 24px; top: 24px;
+  z-index: 50;
+  background: var(--mc-surface); color: var(--mc-ink);
+  border: 1px solid var(--mc-rule-strong);
+  padding: 8px 14px; border-radius: var(--mc-r-pill);
+  font-family: var(--mc-font-mono); font-size: 11px;
+  letter-spacing: var(--mc-ls-wide); text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: var(--mc-sh-2);
+}
+
+.legend-row{display:grid;grid-template-columns: 140px 1fr;gap:12px 20px;font-size:13px;align-items:baseline}
+.legend-row .k{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);text-transform:uppercase;letter-spacing:1.5px}
+.legend-row .v{color: var(--mc-ink-2)}
+</style>
+</head>
+<body>
+
+<button id="theme-toggle">☽ Dark</button>
+
+<div id="tweaks-panel">
+  <div class="tw-head">
+    <h4>Tweaks · Peças</h4>
+    <button class="tw-reset" id="tw-reset">Reset</button>
+  </div>
+
+  <div class="tw-preview">
+    <span class="sw lt"><span class="p-w">♘</span></span>
+    <span class="sw"><span class="p-w">♔</span></span>
+    <span class="sw lt"><span class="p-b">♞</span></span>
+    <span class="sw"><span class="p-b">♚</span></span>
+  </div>
+
+  <div class="tw-presets">
+    <button data-preset="none">Limpo</button>
+    <button data-preset="classic">Clássico</button>
+    <button data-preset="glow">Glow</button>
+    <button data-preset="lift">Elevado</button>
+    <button data-preset="neon">Neon</button>
+  </div>
+
+  <div class="tw-tabs">
+    <button class="on" data-tab="outline">Outline</button>
+    <button data-tab="glow">Glow</button>
+    <button data-tab="shadow">Sombra</button>
+  </div>
+
+  <!-- OUTLINE -->
+  <div class="tw-tab on" data-panel="outline">
+    <div class="tw-section">
+      <span class="lbl">♔ Brancas</span>
+      <div class="tw-row">
+        <div class="hdr"><span>Espessura</span><strong><span id="tw-w-val">0</span>px</strong></div>
+        <input type="range" id="tw-w" min="0" max="4" step="0.1" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Cor</span><strong id="tw-wc-val">#FFFFFF</strong></div>
+        <input type="color" id="tw-wc" value="#ffffff">
+      </div>
+    </div>
+    <div class="tw-section">
+      <span class="lbl">♚ Pretas</span>
+      <div class="tw-row">
+        <div class="hdr"><span>Espessura</span><strong><span id="tw-b-val">0</span>px</strong></div>
+        <input type="range" id="tw-b" min="0" max="4" step="0.1" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Cor</span><strong id="tw-bc-val">#000000</strong></div>
+        <input type="color" id="tw-bc" value="#000000">
+      </div>
+    </div>
+  </div>
+
+  <!-- GLOW -->
+  <div class="tw-tab" data-panel="glow">
+    <div class="tw-section">
+      <span class="lbl">♔ Brancas · aura</span>
+      <div class="tw-row">
+        <div class="hdr"><span>Raio</span><strong><span id="tw-gw-val">0</span>px</strong></div>
+        <input type="range" id="tw-gw" min="0" max="30" step="1" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Intensidade</span><strong><span id="tw-gwa-val">0</span>%</strong></div>
+        <input type="range" id="tw-gwa" min="0" max="100" step="1" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Cor</span><strong id="tw-gwc-val">#FFFFFF</strong></div>
+        <input type="color" id="tw-gwc" value="#ffffff">
+      </div>
+    </div>
+    <div class="tw-section">
+      <span class="lbl">♚ Pretas · aura</span>
+      <div class="tw-row">
+        <div class="hdr"><span>Raio</span><strong><span id="tw-gb-val">0</span>px</strong></div>
+        <input type="range" id="tw-gb" min="0" max="30" step="1" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Intensidade</span><strong><span id="tw-gba-val">0</span>%</strong></div>
+        <input type="range" id="tw-gba" min="0" max="100" step="1" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Cor</span><strong id="tw-gbc-val">#000000</strong></div>
+        <input type="color" id="tw-gbc" value="#000000">
+      </div>
+    </div>
+  </div>
+
+  <!-- SHADOW -->
+  <div class="tw-tab" data-panel="shadow">
+    <div class="tw-section">
+      <span class="lbl">♔ Brancas · sombra</span>
+      <div class="tw-row">
+        <div class="hdr"><span>Deslocamento Y</span><strong><span id="tw-sw-y-val">0</span>px</strong></div>
+        <input type="range" id="tw-sw-y" min="0" max="12" step="0.5" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Desfoque</span><strong><span id="tw-sw-blur-val">0</span>px</strong></div>
+        <input type="range" id="tw-sw-blur" min="0" max="20" step="0.5" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Intensidade</span><strong><span id="tw-sw-a-val">0</span>%</strong></div>
+        <input type="range" id="tw-sw-a" min="0" max="100" step="1" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Cor</span><strong id="tw-swc-val">#000000</strong></div>
+        <input type="color" id="tw-swc" value="#000000">
+      </div>
+    </div>
+    <div class="tw-section">
+      <span class="lbl">♚ Pretas · sombra</span>
+      <div class="tw-row">
+        <div class="hdr"><span>Deslocamento Y</span><strong><span id="tw-sb-y-val">0</span>px</strong></div>
+        <input type="range" id="tw-sb-y" min="0" max="12" step="0.5" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Desfoque</span><strong><span id="tw-sb-blur-val">0</span>px</strong></div>
+        <input type="range" id="tw-sb-blur" min="0" max="20" step="0.5" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Intensidade</span><strong><span id="tw-sb-a-val">0</span>%</strong></div>
+        <input type="range" id="tw-sb-a" min="0" max="100" step="1" value="0">
+      </div>
+      <div class="tw-row">
+        <div class="hdr"><span>Cor</span><strong id="tw-sbc-val">#FFFFFF</strong></div>
+        <input type="color" id="tw-sbc" value="#ffffff">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ── HEAD ─────────────────────────────────────────────────── -->
+<div class="doc-head">
+  <div>
+    <h1>microChess — <em>Design System</em></h1>
+    <p>Tema default “Editorial Claro”. Tokens, tipografia, espaçamento e componentes base reutilizados em todas as telas. O Claude Code deve copiar o bloco <code>:root</code> e os componentes que forem usados — nunca importar este arquivo em runtime.</p>
+  </div>
+  <div class="meta">
+    <span>v1 · default</span>
+    <span>light + dark</span>
+    <span>mobile-first · max 440px</span>
+  </div>
+</div>
+
+<!-- ── 01 · Princípios ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">01</span><h2>Princípios</h2><p>Guias para decisões futuras. Quando em dúvida, volte aqui.</p></div>
+  <div class="card">
+    <div class="legend-row"><span class="k">Velocidade</span><span class="v">Partida dura poucos minutos. A UI nunca pode ser o gargalo. Alvos de toque grandes (≥44px), transições curtas (≤420ms), confirmação em 1 tap.</span></div>
+    <div class="legend-row" style="margin-top:12px"><span class="k">Clareza</span><span class="v">Uma intenção por tela. Hierarquia óbvia: eyebrow · título · ação. Zero ornamento no default (o charme vem dos skins).</span></div>
+    <div class="legend-row" style="margin-top:12px"><span class="k">Motion como feedback</span><span class="v">Animação serve ao entendimento (onde bater, quem ganhou, o que está pronto). Juicy nos duelos e no game over — sutil no resto.</span></div>
+    <div class="legend-row" style="margin-top:12px"><span class="k">Densidade equilibrada</span><span class="v">Informação essencial em primeira vista (fase, timer, placar). Resto acessível via drill-down.</span></div>
+    <div class="legend-row" style="margin-top:12px"><span class="k">Acessibilidade</span><span class="v">Contraste AA no mínimo. Foco visível em tudo interativo. Peças em Unicode com contorno, nunca só cor.</span></div>
+  </div>
+</div>
+
+<!-- ── 02 · Color ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">02</span><h2>Cor</h2><p>Paleta neutra quente + acento laranja. Dark mode reescreve os mesmos tokens.</p></div>
+
+  <div class="grid g-6">
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-bg)"><span class="name">bg</span></div><div class="meta"><strong>--mc-bg</strong><span>#F5F3EE</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-surface)"><span class="name">surface</span></div><div class="meta"><strong>--mc-surface</strong><span>#FFFFFF</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-surface-2)"><span class="name">surface-2</span></div><div class="meta"><strong>--mc-surface-2</strong><span>#EBE8E0</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-ink)"><span class="name">ink</span></div><div class="meta"><strong>--mc-ink</strong><span>#18130C</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-ink-2)"><span class="name">ink-2</span></div><div class="meta"><strong>--mc-ink-2</strong><span>#3A3227</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-muted)"><span class="name">muted</span></div><div class="meta"><strong>--mc-muted</strong><span>52%</span></div></div>
+  </div>
+
+  <div class="grid g-6">
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-accent)"><span class="name">accent</span></div><div class="meta"><strong>--mc-accent</strong><span>#FF5A1F</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-accent-soft)"><span class="name">accent-soft</span></div><div class="meta"><strong>soft</strong><span>12%</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-success)"><span class="name">success</span></div><div class="meta"><strong>--mc-success</strong><span>#2A8F52</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-danger)"><span class="name">danger</span></div><div class="meta"><strong>--mc-danger</strong><span>#D43A2A</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-warn)"><span class="name">warn</span></div><div class="meta"><strong>--mc-warn</strong><span>#C18200</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-opp)"><span class="name">opp</span></div><div class="meta"><strong>--mc-opp</strong><span>#8A6A3D</span></div></div>
+  </div>
+
+  <div class="grid g-4">
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-cell-light)"><span class="name">cell-light</span></div><div class="meta"><strong>--mc-cell-light</strong><span>#EEE9DE</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-cell-dark)"><span class="name">cell-dark</span></div><div class="meta"><strong>--mc-cell-dark</strong><span>#A68E6D</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-cell-move)"><span class="name">cell-move</span></div><div class="meta"><strong>--mc-cell-move</strong><span>accent 22%</span></div></div>
+    <div class="sw"><div class="sw-chip" style="background:var(--mc-cell-check)"><span class="name">cell-check</span></div><div class="meta"><strong>--mc-cell-check</strong><span>danger 22%</span></div></div>
+  </div>
+</div>
+
+<!-- ── 03 · Type ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">03</span><h2>Tipografia</h2><p>Inter para texto, JetBrains Mono para números técnicos e labels uppercase.</p></div>
+
+  <div class="grid g-2">
+    <div class="type">
+      <span class="name">display · 56/1.05 · Inter 800 · -0.02em</span>
+      <span class="sample" style="font-size:var(--mc-t-display); font-weight:800; letter-spacing:var(--mc-ls-tight)">microChess.</span>
+      <span class="usage">Logo e título hero (menu, game over).</span>
+    </div>
+    <div class="type">
+      <span class="name">h1 · 28/1.05 · Inter 700 · -0.02em</span>
+      <span class="sample" style="font-size:var(--mc-t-h1); font-weight:700; letter-spacing:var(--mc-ls-tight)">Procurando oponente</span>
+      <span class="usage">Título de tela.</span>
+    </div>
+    <div class="type">
+      <span class="name">h2 · 20/1.25 · Inter 600 · -0.01em</span>
+      <span class="sample" style="font-size:var(--mc-t-h2); font-weight:600; letter-spacing:var(--mc-ls-mid)">Suas estatísticas</span>
+      <span class="usage">Título de seção.</span>
+    </div>
+    <div class="type">
+      <span class="name">h3 · 16/1.25 · Inter 600</span>
+      <span class="sample" style="font-size:var(--mc-t-h3); font-weight:600">Duelo em andamento</span>
+      <span class="usage">Título de card/modal.</span>
+    </div>
+    <div class="type">
+      <span class="name">body · 15/1.45 · Inter 400</span>
+      <span class="sample" style="font-size:var(--mc-t-body); font-weight:400">Cada jogador planeja seu movimento em segredo. Na revelação, peças no mesmo destino duelam nos dados.</span>
+      <span class="usage">Texto corrido.</span>
+    </div>
+    <div class="type">
+      <span class="name">small · 13/1.45 · Inter 400</span>
+      <span class="sample" style="font-size:var(--mc-t-small); color:var(--mc-muted)">Cavaleiro · 1482 MMR</span>
+      <span class="usage">Meta, legenda.</span>
+    </div>
+    <div class="type">
+      <span class="name">eyebrow · 11/1 · Inter 500 · uppercase 0.12em</span>
+      <span class="sample" style="font-size:var(--mc-t-xs); font-weight:500; text-transform:uppercase; letter-spacing:var(--mc-ls-wide); color:var(--mc-muted)">Fase · Ação</span>
+      <span class="usage">Rótulo acima do dado principal.</span>
+    </div>
+    <div class="type">
+      <span class="name">mono · 12/1.25 · JetBrains Mono 500</span>
+      <span class="sample" style="font-family:var(--mc-font-mono); font-size:var(--mc-t-mono); font-weight:500; letter-spacing:var(--mc-ls-mono)">00:32 · PING 42ms · SALA #7K9A</span>
+      <span class="usage">Números, códigos, telemetria.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── 04 · Spacing + Radius + Shadow ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">04</span><h2>Espaço, raios, sombras</h2><p>Escala base 4. Radii progressivos. Sombras sutis — a identidade não depende delas.</p></div>
+  <div class="grid g-2">
+    <div class="card">
+      <div class="cap" style="margin-bottom:14px">Spacing · escala 4</div>
+      <div class="space-row">
+        <div class="space-cell"><div class="bar" style="width:4px;height:4px"></div><span class="n">s-1 · 4</span></div>
+        <div class="space-cell"><div class="bar" style="width:8px;height:8px"></div><span class="n">s-2 · 8</span></div>
+        <div class="space-cell"><div class="bar" style="width:12px;height:12px"></div><span class="n">s-3 · 12</span></div>
+        <div class="space-cell"><div class="bar" style="width:16px;height:16px"></div><span class="n">s-4 · 16</span></div>
+        <div class="space-cell"><div class="bar" style="width:20px;height:20px"></div><span class="n">s-5 · 20</span></div>
+        <div class="space-cell"><div class="bar" style="width:24px;height:24px"></div><span class="n">s-6 · 24</span></div>
+        <div class="space-cell"><div class="bar" style="width:32px;height:32px"></div><span class="n">s-8 · 32</span></div>
+        <div class="space-cell"><div class="bar" style="width:40px;height:40px"></div><span class="n">s-10 · 40</span></div>
+        <div class="space-cell"><div class="bar" style="width:48px;height:48px"></div><span class="n">s-12 · 48</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="cap" style="margin-bottom:14px">Radius</div>
+      <div class="rad-row">
+        <div class="rad" style="border-radius:var(--mc-r-xs)">xs · 6</div>
+        <div class="rad" style="border-radius:var(--mc-r-sm)">sm · 8</div>
+        <div class="rad" style="border-radius:var(--mc-r-md)">md · 12</div>
+        <div class="rad" style="border-radius:var(--mc-r-lg)">lg · 16</div>
+        <div class="rad" style="border-radius:var(--mc-r-xl)">xl · 20</div>
+        <div class="rad" style="border-radius:var(--mc-r-pill)">pill</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid g-4">
+    <div class="sh" style="box-shadow:var(--mc-sh-1)"><span class="n">sh-1</span><span class="v">1/2 · 5%</span></div>
+    <div class="sh" style="box-shadow:var(--mc-sh-2)"><span class="n">sh-2</span><span class="v">4/12 · 8%</span></div>
+    <div class="sh" style="box-shadow:var(--mc-sh-3)"><span class="n">sh-3</span><span class="v">12/30 · 18%</span></div>
+    <div class="sh" style="box-shadow:var(--mc-sh-pop)"><span class="n">sh-pop</span><span class="v">20/48 · modal</span></div>
+  </div>
+</div>
+
+<!-- ── 05 · Motion ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">05</span><h2>Motion</h2><p>Durations + easings nomeados. Juicy onde importa (duelo, game over), sutil no resto.</p></div>
+  <div class="card">
+    <div class="legend-row"><span class="k">ease-out</span><span class="v">Entrada padrão (cards, sheets). <code>cubic-bezier(0.22, 1, 0.36, 1)</code></span></div>
+    <div class="legend-row" style="margin-top:10px"><span class="k">ease-spring</span><span class="v">Botões, micro-interações, pop. <code>cubic-bezier(0.34, 1.56, 0.64, 1)</code></span></div>
+    <div class="legend-row" style="margin-top:10px"><span class="k">ease-smooth</span><span class="v">Troca de cor/tema. <code>cubic-bezier(0.4, 0, 0.2, 1)</code></span></div>
+    <div class="legend-row" style="margin-top:10px"><span class="k">durations</span><span class="v">xs 120 · sm 180 · md 260 · lg 420 · xl 640. Regra: se é feedback imediato de toque, ≤180ms.</span></div>
+    <div class="legend-row" style="margin-top:10px"><span class="k">timing dos duelos</span><span class="v">Roll do dado 500ms, reveal do vencedor 260ms, captura 420ms. Total do momento duelo ≤ 1.8s.</span></div>
+  </div>
+</div>
+
+<!-- ── 06 · Buttons ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">06</span><h2>Botões</h2><p>Três pesos: primary (ink), accent (laranja, CTA de jogo), ghost (ações neutras).</p></div>
+  <div class="preview">
+    <div class="row">
+      <button class="mc-btn primary"><span class="mc-idx">01</span>Jogar ranqueada<span class="mc-arr">→</span></button>
+      <button class="mc-btn accent">Confirmar jogada<span class="mc-arr">→</span></button>
+      <button class="mc-btn">Sala privada</button>
+      <button class="mc-btn ghost">Voltar</button>
+      <button class="mc-btn danger">Sair da partida</button>
+    </div>
+    <div class="row">
+      <button class="mc-btn sm primary">Confirmar</button>
+      <button class="mc-btn sm">Cancelar</button>
+      <button class="mc-btn sm ghost">Limpar</button>
+      <button class="mc-btn icon">↺</button>
+      <button class="mc-btn icon sm">⋯</button>
+    </div>
+    <div class="row">
+      <button class="mc-btn full accent">Pronto</button>
+    </div>
+    <span class="cap">Altura padrão 48px (touch), sm 40px. Focus ring laranja · ease-spring no :active.</span>
+  </div>
+</div>
+
+<!-- ── 07 · Inputs + Fields ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">07</span><h2>Inputs</h2><p>Campo único com label em eyebrow. Foco com accent-soft ring.</p></div>
+  <div class="preview">
+    <div class="grid g-2" style="width:100%">
+      <div class="mc-field"><label>Email</label><input class="mc-input" placeholder="voce@email.com"></div>
+      <div class="mc-field"><label>Senha</label><input class="mc-input" type="password" value="••••••••"></div>
+      <div class="mc-field"><label>Apelido</label><input class="mc-input" value="Guerreiro"></div>
+      <div class="mc-field"><label>Código da sala</label><input class="mc-input" style="font-family:var(--mc-font-mono);letter-spacing:4px;text-transform:uppercase" value="7K9A"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 08 · Tags + Dot + Avatar + Stat ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">08</span><h2>Tags, Avatar, Stat</h2></div>
+  <div class="preview">
+    <div class="row">
+      <span class="mc-tag">draft</span>
+      <span class="mc-tag accent">fase · ação</span>
+      <span class="mc-tag success">pronto</span>
+      <span class="mc-tag danger">wo</span>
+      <span class="mc-tag warn">ban · 28min</span>
+      <span class="mc-tag solid">beta</span>
+      <span class="mc-tag accent"><span class="mc-dot"></span>ao vivo</span>
+    </div>
+    <div class="row">
+      <div class="mc-identity">
+        <div class="mc-avatar">G</div>
+        <div><div class="n">Guerreiro</div><div class="s">Cavaleiro · 1482</div></div>
+      </div>
+      <div class="mc-identity">
+        <div class="mc-avatar accent">A</div>
+        <div><div class="n">Adversário</div><div class="s">Bispo · 1450</div></div>
+      </div>
+      <div class="mc-identity">
+        <div class="mc-avatar outline sm">?</div>
+        <div><div class="n" style="font-size:13px">Procurando…</div><div class="s" style="font-size:11px">1400 – 1560</div></div>
+      </div>
+    </div>
+    <div class="grid g-4" style="width:100%">
+      <div class="mc-stat"><span class="v">12</span><span class="l">Vitórias</span></div>
+      <div class="mc-stat"><span class="v">4</span><span class="l">Derrotas</span></div>
+      <div class="mc-stat"><span class="v">75%</span><span class="l">Winrate</span></div>
+      <div class="mc-stat"><span class="v">1482</span><span class="l">MMR</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 09 · Toasts + Modal ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">09</span><h2>Toast, Banner, Modal</h2></div>
+  <div class="preview">
+    <div class="row" style="flex-direction:column;align-items:stretch">
+      <div class="mc-toast"><span class="ico">ⓘ</span><div><strong>Oponente digitando sua jogada</strong><div style="color:var(--mc-muted);margin-top:2px">Aguardando revelação.</div></div></div>
+      <div class="mc-toast success"><span class="ico">✓</span><div><strong>Vitória registrada</strong><div style="color:var(--mc-muted);margin-top:2px">+24 pontos de liga.</div></div></div>
+      <div class="mc-toast danger"><span class="ico">!</span><div><strong>Desconectado</strong><div style="color:var(--mc-muted);margin-top:2px">Tentando reconectar em 58s…</div></div></div>
+      <div class="mc-toast warn"><span class="ico">◷</span><div><strong>Você está banido</strong><div style="color:var(--mc-muted);margin-top:2px">Tempo restante 00:28:14.</div></div></div>
+    </div>
+    <div class="row" style="justify-content:center;padding:20px 0;background:rgba(24,19,12,0.5);border-radius:var(--mc-r-md);backdrop-filter:blur(4px)">
+      <div class="mc-modal" style="animation:none">
+        <div><div class="cap" style="margin-bottom:4px">Confirmação</div><h3 style="font-size:var(--mc-t-h2);font-weight:600;letter-spacing:var(--mc-ls-mid)">Sair da partida?</h3></div>
+        <p style="color:var(--mc-muted);font-size:var(--mc-t-small)">Desconectar agora conta como derrota (WO) e pode levar a banimento temporário.</p>
+        <div class="row" style="gap:8px"><button class="mc-btn ghost full">Continuar</button><button class="mc-btn danger full">Sair mesmo assim</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 10 · Board + Die ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">10</span><h2>Tabuleiro e dado</h2><p>4×4. Casas claras <code>#EEE9DE</code> e escuras <code>#A68E6D</code> — contraste claro com peças brancas e pretas sem confundir com o fundo creme da página.</p></div>
+  <div class="preview">
+    <div class="row" style="gap:40px;align-items:flex-start">
+      <div class="board-demo">
+        <div class="mc-board">
+          <div class="cell"><span class="coord">a4</span></div>
+          <div class="cell dk"><span class="p-b">♛</span></div>
+          <div class="cell"></div>
+          <div class="cell dk"><span class="p-b">♚</span></div>
+          <div class="cell dk"><span class="p-b">♟</span></div>
+          <div class="cell"></div>
+          <div class="cell dk target"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell dk hl"><span class="p-w">♘</span></div>
+          <div class="cell"></div>
+          <div class="cell dk"></div>
+          <div class="cell dk last"><span class="p-w">♖</span></div>
+          <div class="cell check"><span class="p-w">♔</span></div>
+          <div class="cell dk"><span class="p-w">♙</span></div>
+          <div class="cell"></div>
+        </div>
+        <div class="cap" style="margin-top:8px">tabuleiro 4×4 · estados: hl (seleção), target (destino), last (última), check</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;align-items:center">
+        <div class="mc-die">5</div>
+        <div class="cap">56×56 · borda ink · sombra sólida 3px (feel físico)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 11 · Tabbar + Topbar ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">11</span><h2>Navegação</h2><p>Tab bar inferior como navegação principal (home / jogar / ranking / perfil) — padrão de app moderno, reduz clics para matchmaking. Topbar enxuta em telas internas.</p></div>
+  <div class="preview">
+    <div class="row" style="justify-content:center;gap:24px;flex-wrap:wrap">
+      <div style="width:320px;background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-lg);overflow:hidden">
+        <div class="mc-topbar" style="padding:0 var(--mc-s-4);border-bottom:1px solid var(--mc-rule)">
+          <button class="back">←</button>
+          <div class="title">Perfil</div>
+          <button class="mc-btn ghost sm">Editar</button>
+        </div>
+        <div style="padding:20px;color:var(--mc-muted);font-size:13px">conteúdo da tela</div>
+        <div class="mc-tabbar">
+          <button class="tab"><span class="gl">⌂</span>Home</button>
+          <button class="tab active"><span class="gl">▶</span>Jogar</button>
+          <button class="tab"><span class="gl">◆</span>Ranking</button>
+          <button class="tab"><span class="gl">○</span>Perfil</button>
+        </div>
+      </div>
+      <div class="cap" style="max-width:240px;align-self:center">Altura 52px. Só ícone + label pequena; o acento marca o item ativo via cor do glifo.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 12 · Referência rápida ── -->
+<div class="sec">
+  <div class="sec-head"><span class="num">12</span><h2>Referência rápida (handoff)</h2><p>O que o Claude Code precisa copiar para começar.</p></div>
+  <div class="card" style="font-family:var(--mc-font-mono);font-size:12px;line-height:1.7;white-space:pre-wrap;color:var(--mc-ink-2)">
+/* 1. Copiar o bloco :root completo (linhas 10-130 deste arquivo). */
+/* 2. Copiar o bloco [data-theme="dark"] para suporte a dark. */
+/* 3. Importar fontes: Inter + JetBrains Mono do Google Fonts. */
+/* 4. Aplicar classes .mc-* nos divs novos (não alterar o &lt;style&gt; existente). */
+/* 5. Toggle dark: document.documentElement.setAttribute('data-theme', isDark ? 'dark' : ''); */
+  </div>
+</div>
+
+</div>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const btn = document.getElementById('theme-toggle');
+  const KEY = 'microchess-ds-theme';
+  const apply = (t) => {
+    root.setAttribute('data-theme', t === 'dark' ? 'dark' : '');
+    btn.textContent = t === 'dark' ? '☀ Light' : '☽ Dark';
+    try { localStorage.setItem(KEY, t); } catch(_){}
+  };
+  let initial = 'light';
+  try { initial = localStorage.getItem(KEY) || 'light'; } catch(_){}
+  apply(initial);
+  btn.addEventListener('click', () => apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+
+  // Tweaks panel — outline + glow + shadow
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "outlineWhite": 0,
+    "outlineBlack": 0,
+    "outlineWhiteColor": "#18130c",
+    "outlineBlackColor": "#0a0805",
+    "glowWhiteRadius": 10,
+    "glowWhiteAlpha": 80,
+    "glowWhiteColor": "#f56200",
+    "glowBlackRadius": 10,
+    "glowBlackAlpha": 80,
+    "glowBlackColor": "#4538ff",
+    "shadowWhiteY": 0,
+    "shadowWhiteBlur": 0,
+    "shadowWhiteAlpha": 0,
+    "shadowWhiteColor": "#000000",
+    "shadowBlackY": 0,
+    "shadowBlackBlur": 0,
+    "shadowBlackAlpha": 0,
+    "shadowBlackColor": "#000000"
+  }/*EDITMODE-END*/;
+
+  const panel = document.getElementById('tweaks-panel');
+  const state = Object.assign({}, TWEAK_DEFAULTS);
+
+  // helpers
+  const hex2rgb = (hex) => {
+    const h = hex.replace('#','');
+    const n = h.length === 3 ? h.split('').map(c=>c+c).join('') : h;
+    const i = parseInt(n, 16);
+    return [(i>>16)&255, (i>>8)&255, i&255];
+  };
+  const rgba = (hex, a) => { const [r,g,b] = hex2rgb(hex); return `rgba(${r},${g},${b},${a})`; };
+
+  const applyVars = () => {
+    // Outline
+    root.style.setProperty('--mc-outline-w', state.outlineWhite + 'px');
+    root.style.setProperty('--mc-outline-b', state.outlineBlack + 'px');
+    root.style.setProperty('--mc-white-line', state.outlineWhiteColor);
+    root.style.setProperty('--mc-black-line', state.outlineBlackColor);
+
+    // Glow — 2 camadas para aura mais densa
+    const gwA = state.glowWhiteAlpha / 100;
+    const gbA = state.glowBlackAlpha / 100;
+    const gwC = rgba(state.glowWhiteColor, gwA);
+    const gbC = rgba(state.glowBlackColor, gbA);
+    root.style.setProperty('--mc-fx-glow-w',
+      `0 0 ${state.glowWhiteRadius}px ${gwC}, 0 0 ${state.glowWhiteRadius*2}px ${gwC}`);
+    root.style.setProperty('--mc-fx-glow-b',
+      `0 0 ${state.glowBlackRadius}px ${gbC}, 0 0 ${state.glowBlackRadius*2}px ${gbC}`);
+
+    // Shadow
+    const swA = state.shadowWhiteAlpha / 100;
+    const sbA = state.shadowBlackAlpha / 100;
+    root.style.setProperty('--mc-fx-shadow-w',
+      `0 ${state.shadowWhiteY}px ${state.shadowWhiteBlur}px ${rgba(state.shadowWhiteColor, swA)}`);
+    root.style.setProperty('--mc-fx-shadow-b',
+      `0 ${state.shadowBlackY}px ${state.shadowBlackBlur}px ${rgba(state.shadowBlackColor, sbA)}`);
+
+    // sync UI
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+
+    set('tw-w-val', state.outlineWhite);           setVal('tw-w', state.outlineWhite);
+    set('tw-b-val', state.outlineBlack);           setVal('tw-b', state.outlineBlack);
+    set('tw-wc-val', state.outlineWhiteColor.toUpperCase()); setVal('tw-wc', state.outlineWhiteColor);
+    set('tw-bc-val', state.outlineBlackColor.toUpperCase()); setVal('tw-bc', state.outlineBlackColor);
+
+    set('tw-gw-val', state.glowWhiteRadius);       setVal('tw-gw', state.glowWhiteRadius);
+    set('tw-gwa-val', state.glowWhiteAlpha);       setVal('tw-gwa', state.glowWhiteAlpha);
+    set('tw-gwc-val', state.glowWhiteColor.toUpperCase()); setVal('tw-gwc', state.glowWhiteColor);
+    set('tw-gb-val', state.glowBlackRadius);       setVal('tw-gb', state.glowBlackRadius);
+    set('tw-gba-val', state.glowBlackAlpha);       setVal('tw-gba', state.glowBlackAlpha);
+    set('tw-gbc-val', state.glowBlackColor.toUpperCase()); setVal('tw-gbc', state.glowBlackColor);
+
+    set('tw-sw-y-val', state.shadowWhiteY);        setVal('tw-sw-y', state.shadowWhiteY);
+    set('tw-sw-blur-val', state.shadowWhiteBlur); setVal('tw-sw-blur', state.shadowWhiteBlur);
+    set('tw-sw-a-val', state.shadowWhiteAlpha);   setVal('tw-sw-a', state.shadowWhiteAlpha);
+    set('tw-swc-val', state.shadowWhiteColor.toUpperCase()); setVal('tw-swc', state.shadowWhiteColor);
+    set('tw-sb-y-val', state.shadowBlackY);       setVal('tw-sb-y', state.shadowBlackY);
+    set('tw-sb-blur-val', state.shadowBlackBlur); setVal('tw-sb-blur', state.shadowBlackBlur);
+    set('tw-sb-a-val', state.shadowBlackAlpha);   setVal('tw-sb-a', state.shadowBlackAlpha);
+    set('tw-sbc-val', state.shadowBlackColor.toUpperCase()); setVal('tw-sbc', state.shadowBlackColor);
+  };
+  const push = (patch) => {
+    Object.assign(state, patch);
+    applyVars();
+    try { window.parent.postMessage({type:'__edit_mode_set_keys', edits: patch}, '*'); } catch(_){}
+  };
+
+  // bindings — ranges
+  const bindRange = (id, key) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', e => push({[key]: parseFloat(e.target.value)}));
+  };
+  const bindColor = (id, key) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', e => push({[key]: e.target.value}));
+  };
+  bindRange('tw-w', 'outlineWhite');
+  bindRange('tw-b', 'outlineBlack');
+  bindColor('tw-wc', 'outlineWhiteColor');
+  bindColor('tw-bc', 'outlineBlackColor');
+  bindRange('tw-gw', 'glowWhiteRadius');
+  bindRange('tw-gwa', 'glowWhiteAlpha');
+  bindColor('tw-gwc', 'glowWhiteColor');
+  bindRange('tw-gb', 'glowBlackRadius');
+  bindRange('tw-gba', 'glowBlackAlpha');
+  bindColor('tw-gbc', 'glowBlackColor');
+  bindRange('tw-sw-y', 'shadowWhiteY');
+  bindRange('tw-sw-blur', 'shadowWhiteBlur');
+  bindRange('tw-sw-a', 'shadowWhiteAlpha');
+  bindColor('tw-swc', 'shadowWhiteColor');
+  bindRange('tw-sb-y', 'shadowBlackY');
+  bindRange('tw-sb-blur', 'shadowBlackBlur');
+  bindRange('tw-sb-a', 'shadowBlackAlpha');
+  bindColor('tw-sbc', 'shadowBlackColor');
+
+  // Tabs
+  document.querySelectorAll('#tweaks-panel .tw-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#tweaks-panel .tw-tabs button').forEach(b => b.classList.remove('on'));
+      document.querySelectorAll('#tweaks-panel .tw-tab').forEach(t => t.classList.remove('on'));
+      btn.classList.add('on');
+      document.querySelector(`#tweaks-panel .tw-tab[data-panel="${btn.dataset.tab}"]`).classList.add('on');
+    });
+  });
+
+  // Presets
+  const PRESETS = {
+    none: {
+      outlineWhite: 0, outlineBlack: 0,
+      glowWhiteRadius: 0, glowWhiteAlpha: 0, glowBlackRadius: 0, glowBlackAlpha: 0,
+      shadowWhiteY: 0, shadowWhiteBlur: 0, shadowWhiteAlpha: 0,
+      shadowBlackY: 0, shadowBlackBlur: 0, shadowBlackAlpha: 0
+    },
+    classic: { // outline clássico, sem FX
+      outlineWhite: 1.5, outlineBlack: 0.5,
+      outlineWhiteColor: '#18130c', outlineBlackColor: '#0a0805',
+      glowWhiteRadius: 0, glowWhiteAlpha: 0, glowBlackRadius: 0, glowBlackAlpha: 0,
+      shadowWhiteY: 0, shadowWhiteBlur: 0, shadowWhiteAlpha: 0,
+      shadowBlackY: 0, shadowBlackBlur: 0, shadowBlackAlpha: 0
+    },
+    glow: { // aura suave, sem outline
+      outlineWhite: 0, outlineBlack: 0,
+      glowWhiteRadius: 8, glowWhiteAlpha: 55, glowWhiteColor: '#ffffff',
+      glowBlackRadius: 8, glowBlackAlpha: 55, glowBlackColor: '#000000',
+      shadowWhiteY: 0, shadowWhiteBlur: 0, shadowWhiteAlpha: 0,
+      shadowBlackY: 0, shadowBlackBlur: 0, shadowBlackAlpha: 0
+    },
+    lift: { // sombra dramática, peças flutuando
+      outlineWhite: 0, outlineBlack: 0,
+      glowWhiteRadius: 0, glowWhiteAlpha: 0, glowBlackRadius: 0, glowBlackAlpha: 0,
+      shadowWhiteY: 3, shadowWhiteBlur: 6, shadowWhiteAlpha: 45, shadowWhiteColor: '#000000',
+      shadowBlackY: 3, shadowBlackBlur: 6, shadowBlackAlpha: 35, shadowBlackColor: '#000000'
+    },
+    neon: { // glow forte colorido (usa accent)
+      outlineWhite: 0, outlineBlack: 0,
+      glowWhiteRadius: 10, glowWhiteAlpha: 80, glowWhiteColor: '#ff5a1f',
+      glowBlackRadius: 10, glowBlackAlpha: 80, glowBlackColor: '#ff5a1f',
+      shadowWhiteY: 0, shadowWhiteBlur: 0, shadowWhiteAlpha: 0,
+      shadowBlackY: 0, shadowBlackBlur: 0, shadowBlackAlpha: 0
+    }
+  };
+  document.querySelectorAll('#tweaks-panel .tw-presets button').forEach(btn => {
+    btn.addEventListener('click', () => push(PRESETS[btn.dataset.preset] || {}));
+  });
+
+  // Reset
+  document.getElementById('tw-reset').addEventListener('click', () => push({...TWEAK_DEFAULTS}));
+
+  applyVars();
+
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === '__activate_edit_mode') panel.classList.add('on');
+    if (e.data.type === '__deactivate_edit_mode') panel.classList.remove('on');
+  });
+  try { window.parent.postMessage({type: '__edit_mode_available'}, '*'); } catch(_){}
+})();
+</script>
+</body>
+</html>

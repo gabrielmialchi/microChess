@@ -1,11 +1,14 @@
-# microChess — Lista de Polimentos e Game Feel
+# microChess — Lista de Polimentos
 
 Este documento é a fila de polimentos do projeto. Não tem prioridade fixa — os itens são trabalhados
 em sessões dedicadas após o sistema do jogo estar completo e operante.
 
+> **Nota (2026-04-18):** Polimentos visuais, juicy e UX foram removidos desta lista e entregues ao
+> Claude Design. O redesign completo será implementado nas sessões Design-A a Design-L.
+> Esta lista foca em: mecânica de jogo, servidor, balanceamento e localização.
+
 **Como usar:** Quando encontrar um polimento necessário mas fora do momento oportuno, peça
-"adiciona polimento: [descrição]" e ele será encaixado aqui. Quando for a hora de trabalhar
-a lista, criaremos um plano de ação por sessão.
+"adiciona polimento: [descrição]" e ele será encaixado aqui.
 
 ---
 
@@ -13,7 +16,7 @@ a lista, criaremos um plano de ação por sessão.
 
 ```
 ### P-XX — [NOME]
-**Categoria:** Localização | Juicy | UI | Audio | Performance | Legal
+**Categoria:** Localização | Mecânica | Servidor | Balanceamento | Legal
 **Esforço:** Baixo | Médio | Alto
 **Impacto:** Baixo | Médio | Alto
 **Status:** Pendente | ✅ Completo
@@ -46,59 +49,17 @@ a lista, criaremos um plano de ação por sessão.
 ---
 
 ### P-03 — Links e Referências Externas
-**Categoria:** Legal / UI
+**Categoria:** Legal
 **Esforço:** Baixo
 **Impacto:** Médio
-**Status:** Pendente (Sessão P-C)
-**Descrição:** Identificar todos os pontos do app com links placeholder (href="#") e substituir por URLs reais: política de privacidade, portfolio, redes sociais da o6 games, feedback.
-**Contexto:** Sessão 15 criou a Privacy Policy. Outros links dependem de decisão de negócio.
-
----
-
-### P-04 — Juicy: Transições de Tela
-**Categoria:** Juicy
-**Esforço:** Médio
-**Impacto:** Alto
-**Status:** Pendente (Sessão P-C)
-**Descrição:** Adicionar animações de transição entre telas (fade 150-200ms) ao trocar via `showScreen()`. Telas que entram: fade-in. Telas que saem: fade-out simultâneo.
-**Contexto:** Atualmente as telas trocam instantaneamente (display:none/flex), o que parece abrupto especialmente em mobile.
-
----
-
-### P-05 — Juicy: Fluxo de Resolução de Combate
-**Categoria:** Juicy
-**Esforço:** Alto
-**Impacto:** Alto
-**Status:** Pendente (Sessão P-B)
-**Descrição:** Adicionar timing dramático ao fluxo pós-duelo:
-1. Modal de dados abre com animação
-2. Animação de rolagem (já existe)
-3. Resultado — exibir vencedor/perdedor por 2 segundos antes de fechar
-4. Modal fecha → aguardar 1 segundo
-5. Peças se movem/desaparecem com animação
-6. Transição para próxima fase
-
-**Contexto:** Momento mais tenso do jogo — precisa de peso dramático. Atualmente o modal fecha com a resolução aplicada instantaneamente.
-
----
-
-### P-06 — Juicy: Ajustes na Tela de Rolagem de Dados
-**Categoria:** Juicy / UI
-**Esforço:** Médio
-**Impacto:** Alto
-**Status:** Pendente (Sessão P-B)
-**Descrição:** Revisar o modal de duelo:
-- Hierarquia visual: bonus + roll = total com tamanhos diferentes
-- Dado vencedor: pulse + glow dourado
-- Dado perdedor: fade + shake
-- Cor de fundo sutil reforça vencedor (verde/vermelho)
-
-**Contexto:** Tela mais interativa do jogo e atualmente a mais carente de polish.
+**Status:** Pendente (Sessão Design-K)
+**Descrição:** Substituir links placeholder (href="#") por URLs reais: política de privacidade, portfolio, redes sociais da o6 games, feedback. Será integrado durante o redesign da tela de créditos e configurações.
+**Contexto:** URLs a serem fornecidas pelo usuário antes ou durante a Sessão Design-K.
 
 ---
 
 ### P-07 — Badge: Partida Não Ranqueada
-**Categoria:** UI
+**Categoria:** Mecânica
 **Esforço:** Baixo
 **Impacto:** Médio
 **Status:** ✅ Completo (Sessão 18)
@@ -108,7 +69,7 @@ a lista, criaremos um plano de ação por sessão.
 ---
 
 ### P-08 — Feature: Sala Privada com Código
-**Categoria:** Feature
+**Categoria:** Mecânica
 **Esforço:** Alto
 **Impacto:** Alto
 **Status:** ✅ Completo (Sessão 17)
@@ -121,33 +82,34 @@ a lista, criaremos um plano de ação por sessão.
 **Categoria:** Localização
 **Esforço:** Médio
 **Impacto:** Alto
-**Status:** Pendente (Sessão P-D)
-**Descrição:** Preencher as ~60 chaves adicionadas na P-A nos 7 idiomas que ainda não as têm: ES, DE, IT, RU, JA, KO, ZH. Atualmente esses idiomas fazem fallback para EN nessas telas.
-**Contexto:** Usuários em idiomas não-latinos (JA, KO, ZH) veem as novas telas em inglês — experiência incompleta.
-
----
-
-### P-10 — Redesign de Fontes
-**Categoria:** UI
-**Esforço:** Médio
-**Impacto:** Alto
-**Status:** Pendente (Sessão P-E)
-**Descrição:** Revisar as fontes usadas em todo o jogo: Cinzel (botões/labels), Cinzel Decorative (títulos de tela), IBM Plex Mono (valores numéricos). Avaliar consistência de uso, legibilidade em mobile (360px) e identidade visual. Propor e implementar ajustes tipográficos.
-**Contexto:** Cinzel pode parecer pesada em tamanhos pequenos (11-12px). Inconsistências de uso identificadas entre telas antigas e novas.
+**Status:** ✅ Completo (Sessão P-C)
+**Descrição:** ~60 chaves adicionadas a ES, DE, IT, RU, JA, KO, ZH em `html/index.html`.
+**Contexto:** Telas de ranking, leaderboard, histórico, replay, sala privada e overlays agora localizadas em todos os idiomas.
 
 ---
 
 ### P-11 — Replay: Tabuleiro Fixo + Turno 0 + Label Formatado
-**Categoria:** UI / Feature
+**Categoria:** Mecânica
 **Esforço:** Médio
 **Impacto:** Alto
-**Status:** Pendente (Sessão P-F)
-**Descrição:** Três melhorias no Replay Viewer:
-1. **Tabuleiro fixo**: células de tamanho igual independente de conteúdo — casas vazias não colapsam, casas com peça não expandem. Usar o mesmo padrão visual do tabuleiro do jogo.
-2. **Turno 0**: novo turno inicial mostrando o posicionamento das peças antes do primeiro movimento.
-3. **Label formatado**: `[0]: Posicionamento`, `[1]: Turno 1`, `[2]: Turno 2`, etc.
+**Status:** Absorvido pela Sessão Design-J
+**Descrição:** Tabuleiro com células de tamanho fixo, Turno 0 (posicionamento inicial) e label `[0]: Posicionamento / [N]: Turno N`. Será resolvido durante o redesign completo do Histórico + Replay.
+**Contexto:** O redesign da Sessão Design-J reconstrói o tabuleiro do Replay do zero — os três itens ficam naturalmente incluídos.
 
-**Contexto:** O tabuleiro atual distorce visualmente quando casas estão vazias. O Replay começar no Turno 1 pula o contexto de onde as peças foram posicionadas.
+---
+
+### P-12 — Balanceamento: MMR para Resultado de Empate
+**Categoria:** Balanceamento
+**Esforço:** Médio
+**Impacto:** Médio
+**Status:** Pendente (pós Design-E)
+**Descrição:** Definir e implementar o cálculo de PdL para empate. Regras decididas:
+- Empate ocorre **somente em Morte Súbita** quando o duelo resulta em 0×0.
+- Mínimo de **+1 PdL** para ambos os jogadores em qualquer empate.
+- O cálculo deve usar diferença de rank (estilo ELO): jogador mais fraco que empata contra mais forte recebe PdL extra proporcional à diferença. Exemplo: Peão Aprendiz empatando com Torre Elite recebe mais do que +1 PdL.
+- Jogador mais forte que empata contra mais fraco recebe apenas o mínimo (+1).
+
+**Contexto:** O estado de empate existe no design (Design-E Game Over + Design-J Histórico). A lógica de cálculo fica em `server/mmr.js`. Implementar após o redesign visual incluir os estados de empate na UI.
 
 ---
 
@@ -156,13 +118,11 @@ a lista, criaremos um plano de ação por sessão.
 | Sessão | Itens | Status |
 |--------|-------|--------|
 | P-A | P-01 + P-02 — Localização PT+EN | ✅ Completo |
-| P-B | P-05 + P-06 — Juicy: combate + dados | ⏳ Pendente |
-| P-C | P-03 + P-04 — Links + transições de tela | ⏳ Pendente |
-| P-D | P-09 — Localização 7 idiomas restantes | ⏳ Pendente |
-| P-E | P-10 — Redesign de fontes | ⏳ Pendente |
-| P-F | P-11 — Replay: tabuleiro + turno 0 + label | ⏳ Pendente |
+| P-B | P-03 — Links externos reais | ⏸ Suspenso → integrado na Design-K |
+| P-C | P-09 — Localização 7 idiomas restantes | ✅ Completo |
+| P-D | P-11 — Replay: tabuleiro + turno 0 + label | ⏸ Absorvido pela Design-J |
 
 ---
 
-*Última atualização: 2026-04-18*
-*Adicionar itens conforme forem identificados durante desenvolvimento.*
+*Última atualização: 2026-04-19*
+*Redesign visual: sessões Design-A a Design-L em andamento.*

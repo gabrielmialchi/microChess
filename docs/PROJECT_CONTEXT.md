@@ -289,10 +289,21 @@ curl http://localhost:3000/health
 | 17 | Sala privada com código 4 chars | ✅ Completo |
 | 18 | Hardening Final (V-01..V-06) + P-07 badge não ranqueada | ✅ Completo |
 | P-A | Localização: varredura + tradução EN | ✅ Completo |
-| P-B | Juicy combat timing + dice redesign | ⏳ Pendente |
-| P-C | Links + transições de tela | ⏳ Pendente |
-| P-D | Localização: 7 idiomas restantes (ES/DE/IT/RU/JA/KO/ZH) | ⏳ Pendente |
-| P-E | Redesign de fontes: revisão tipográfica completa | ⏳ Pendente |
-| P-F | Replay: tabuleiro fixo + Turno 0 (posicionamento) + label [N] formatado | ⏳ Pendente |
+| P-B | Links externos reais | ⏸ Integrado na Design-K |
+| P-C | Localização: 7 idiomas restantes (ES/DE/IT/RU/JA/KO/ZH) | ✅ Completo |
+| P-D | Replay: tabuleiro fixo + Turno 0 + label [N] | ⏸ Absorvido pela Design-J |
+| **Design-A** | **Tokens CSS + fontes + flag-icons — base de tudo** | ⏳ Pendente |
+| Design-B | Menu principal + header de jogador + tab bar | ⏳ Pendente |
+| Design-F | Auth overlay (tela cheia) | ⏳ Pendente |
+| Design-C | Matchmaking + Sala privada | ⏳ Pendente |
+| Design-D | Telas de partida: Draft · Posição · Revelação · Ação | ⏳ Pendente |
+| Design-E | Duelo + Game Over + estado de Empate | ⏳ Pendente |
+| Design-G | Modais de sistema: ban, logout, delete, change-pw, reconnect | ⏳ Pendente |
+| Design-H | Perfil + Editar avatar/apelido | ⏳ Pendente |
+| Design-I | Ranking + Leaderboard | ⏳ Pendente |
+| Design-J | Histórico + Replay (absorve P-D: tabuleiro + turno 0) | ⏳ Pendente |
+| Design-K | Configurações + Como Jogar + Créditos + links externos (P-B) | ⏳ Pendente |
+| Design-L | Estados de exceção: disconnect, AFK, Morte Súbita, sem conexão | ⏳ Pendente |
+| P-12 | Balanceamento MMR para empate (pós Design-E) | ⏳ Pendente |
 
 *(Atualizar este arquivo ao concluir cada sessão)*

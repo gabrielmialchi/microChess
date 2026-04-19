@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>08 · Configurações + Conteúdo — microChess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css">
+<style>
+:root {
+  --mc-bg:#f5f3ee; --mc-surface:#ffffff; --mc-surface-2:#ebe8e0;
+  --mc-ink:#18130c; --mc-ink-2:#3a3227;
+  --mc-muted:rgba(24,19,12,0.52); --mc-faint:rgba(24,19,12,0.28);
+  --mc-rule:rgba(24,19,12,0.10); --mc-rule-strong:rgba(24,19,12,0.18);
+  --mc-accent:#ff5a1f; --mc-accent-ink:#ffffff;
+  --mc-accent-soft:rgba(255,90,31,0.12);
+  --mc-font-sans:'Inter',system-ui,sans-serif;
+  --mc-font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --mc-r-xs:4px; --mc-r-sm:8px; --mc-r-md:12px;
+  --mc-r-lg:16px; --mc-r-xl:20px; --mc-r-pill:999px;
+  --mc-sh-1:0 1px 2px rgba(24,19,12,0.05);
+  --mc-sh-2:0 4px 12px rgba(24,19,12,0.08);
+  --mc-sh-pop:0 20px 48px -12px rgba(24,19,12,0.22);
+  --mc-ls-wide:0.12em; --mc-ls-tight:-0.02em;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--mc-bg);color:var(--mc-ink);font-family:var(--mc-font-sans);-webkit-font-smoothing:antialiased}
+
+.canvas{max-width:1640px;margin:0 auto;padding:56px 32px 96px}
+.canvas-head{margin-bottom:40px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.canvas-head h1{font-size:32px;font-weight:700;letter-spacing:var(--mc-ls-tight)}
+.canvas-head p{color:var(--mc-muted);font-size:14px;max-width:540px;margin-top:6px;line-height:1.5}
+.meta{font-family:var(--mc-font-mono);font-size:11px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:32px 24px}
+.scene{display:flex;flex-direction:column;gap:12px}
+.scene-head{display:flex;align-items:baseline;gap:10px;padding-left:2px}
+.scene-head .num{font-family:var(--mc-font-mono);font-size:11px;color:var(--mc-muted);letter-spacing:var(--mc-ls-wide)}
+.scene-head h3{font-size:15px;font-weight:600}
+.scene-body{background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-lg);overflow:hidden;box-shadow:var(--mc-sh-2);aspect-ratio:9/16;position:relative}
+.scene-note{font-size:11px;color:var(--mc-muted);line-height:1.5;padding:0 2px}
+
+.phone{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--mc-bg);overflow:hidden}
+.sbar{height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-muted)}
+.topbar{height:52px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--mc-rule);background:var(--mc-surface)}
+.topbar .back{width:36px;height:36px;border-radius:var(--mc-r-sm);display:grid;place-items:center;background:transparent;border:none;color:var(--mc-muted);font-size:18px;cursor:pointer;flex-shrink:0}
+.topbar .title{font-size:15px;font-weight:600;flex:1;text-align:center}
+.topbar .side{width:36px;flex-shrink:0}
+.scroll{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:20px}
+.scroll::-webkit-scrollbar{width:3px}
+.scroll::-webkit-scrollbar-thumb{background:var(--mc-rule-strong);border-radius:99px}
+
+/* Settings rows */
+.sec-label{font:500 10px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+.action-list{display:flex;flex-direction:column;gap:6px}
+.action-row{height:48px;display:flex;align-items:center;padding:0 14px;gap:12px;background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-md);cursor:pointer;font-size:14px;color:var(--mc-ink)}
+.action-row .ico{width:20px;text-align:center;font-size:16px;opacity:0.5;flex-shrink:0}
+.action-row .arr{margin-left:auto;opacity:0.3;font-size:16px}
+
+/* Language grid */
+.lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lang-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  height:56px;border-radius:var(--mc-r-md);border:1px solid var(--mc-rule);
+  background:var(--mc-surface);cursor:pointer;
+  font-family:var(--mc-font-mono);font-size:10px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--mc-muted);
+}
+.lang-btn .flag{width:24px;height:18px;border-radius:3px;overflow:hidden;flex-shrink:0;display:inline-block}
+.lang-btn.sel{border-color:var(--mc-accent);background:var(--mc-accent-soft);color:var(--mc-accent)}
+
+/* Toggle row */
+.toggle-row{display:flex;align-items:center;padding:0 14px;height:48px;gap:12px;background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-md)}
+.toggle-row .lbl{flex:1;font-size:14px}
+.toggle{width:40px;height:24px;border-radius:99px;background:var(--mc-rule-strong);position:relative;flex-shrink:0;cursor:pointer}
+.toggle.on{background:var(--mc-accent)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform 180ms}
+.toggle.on::after{transform:translateX(16px)}
+
+/* HTP (Como Jogar) */
+.htp-section{display:flex;flex-direction:column;gap:8px}
+.htp-step{background:var(--mc-surface);border:1px solid var(--mc-rule);border-radius:var(--mc-r-md);padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.htp-step .num{width:24px;height:24px;border-radius:50%;background:var(--mc-accent);color:var(--mc-accent-ink);font:700 11px var(--mc-font-mono);display:grid;place-items:center;flex-shrink:0;margin-top:1px}
+.htp-step .body{}
+.htp-step .title{font-size:13px;font-weight:600}
+.htp-step .desc{font-size:11px;color:var(--mc-muted);line-height:1.5;margin-top:3px}
+.htp-bonus{background:var(--mc-surface-2);border-radius:var(--mc-r-md);padding:12px 14px;font-size:12px;color:var(--mc-muted);line-height:1.6}
+.htp-bonus strong{color:var(--mc-ink);font-weight:600}
+.piece-table{display:grid;grid-template-columns:auto 1fr auto;gap:5px 10px;font-size:12px;align-items:center}
+.piece-table .p{font-size:20px;text-align:center}
+.piece-table .n{font-weight:600}
+.piece-table .b{font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-muted)}
+
+/* Credits */
+.credits-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;text-align:center}
+.credits-logo{font-size:32px;font-weight:800;letter-spacing:var(--mc-ls-tight)}
+.credits-logo em{font-style:normal;color:var(--mc-accent)}
+.credits-version{font-family:var(--mc-font-mono);font-size:11px;letter-spacing:var(--mc-ls-wide);color:var(--mc-muted)}
+.credits-rule{width:40px;height:1px;background:var(--mc-rule-strong)}
+.credits-name{font-size:17px;font-weight:700}
+.credits-role{font-size:13px;color:var(--mc-muted)}
+.credits-studio{font-family:var(--mc-font-mono);font-size:11px;letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+.credits-feedback{font-size:12px;color:var(--mc-accent);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+
+/* Tweaks */
+#tw{position:fixed;right:20px;bottom:20px;z-index:100;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-lg);padding:14px;display:none;flex-direction:column;gap:12px;width:260px;box-shadow:var(--mc-sh-pop)}
+#tw.on{display:flex}
+#tw h4{font:500 11px var(--mc-font-mono);letter-spacing:var(--mc-ls-wide);text-transform:uppercase;color:var(--mc-muted)}
+#tw .chips{display:flex;flex-wrap:wrap;gap:5px}
+#tw .chips button{font:500 10px var(--mc-font-mono);letter-spacing:1px;text-transform:uppercase;padding:6px 10px;border:1px solid var(--mc-rule);background:transparent;color:var(--mc-ink-2);border-radius:var(--mc-r-pill);cursor:pointer}
+#tw .chips button.on{background:var(--mc-accent);color:var(--mc-accent-ink);border-color:var(--mc-accent)}
+.canvas[data-focus] .scene{display:none}
+.canvas[data-focus="all"] .scene{display:flex}
+.canvas[data-focus="settings"] .scene[data-tag="settings"]{display:flex}
+.canvas[data-focus="htp"] .scene[data-tag="htp"]{display:flex}
+.canvas[data-focus="credits"] .scene[data-tag="credits"]{display:flex}
+</style>
+</head>
+<body>
+
+<div class="canvas" id="canvas" data-focus="all">
+  <div class="canvas-head">
+    <div>
+      <div class="meta">08 · Configurações + Conteúdo</div>
+      <h1>Settings, Como Jogar e Créditos</h1>
+      <p>Configurações com idioma (9 línguas), tema e acessibilidade. Como Jogar com fluxo passo a passo e tabela de bônus. Créditos limpos.</p>
+    </div>
+    <div class="meta">mobile · light</div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="tw">
+  <h4>Tweaks · Filtrar</h4>
+  <div class="chips" id="chips">
+    <button class="on" data-f="all">Todas</button>
+    <button data-f="settings">Settings</button>
+    <button data-f="htp">Como Jogar</button>
+    <button data-f="credits">Créditos</button>
+  </div>
+</div>
+
+<script>
+const LANGS = [
+  {code:'PT', fi:'br'},
+  {code:'ES', fi:'es'},
+  {code:'EN', fi:'gb'},
+  {code:'DE', fi:'de'},
+  {code:'IT', fi:'it'},
+  {code:'RU', fi:'ru'},
+  {code:'JA', fi:'jp'},
+  {code:'KO', fi:'kr'},
+  {code:'ZH', fi:'cn'},
+];
+
+function langGrid(selCode) {
+  return `<div class="lang-grid">
+    ${LANGS.map(l=>`<button class="lang-btn ${l.code===selCode?'sel':''}">
+      <span class="flag fi fi-${l.fi} fis"></span>${l.code}
+    </button>`).join('')}
+  </div>`;
+}
+
+const scenes = [
+
+  // ── CONFIGURAÇÕES ──────────────────────────────────────────
+  {
+    tag:'settings', num:'01', title:'Configurações · principal',
+    sub:'Idioma, tema claro/escuro, acessibilidade, links para conteúdo',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Configurações</span>
+        <div class="side"></div>
+      </div>
+      <div class="scroll">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Idioma</div>
+          ${langGrid('PT')}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Aparência</div>
+          <div class="toggle-row">
+            <span class="lbl">Tema escuro</span>
+            <div class="toggle"></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Informações</div>
+          <div class="action-list">
+            <div class="action-row"><span class="ico">○</span>Perfil<span class="arr">→</span></div>
+            <div class="action-row"><span class="ico">?</span>Como Jogar<span class="arr">→</span></div>
+            <div class="action-row"><span class="ico">★</span>Créditos<span class="arr">→</span></div>
+          </div>
+        </div>
+        <div style="font-family:var(--mc-font-mono);font-size:10px;color:var(--mc-faint);text-align:center;letter-spacing:0.06em">microChess v1.0 · o6 games</div>
+      </div>
+    </div>`
+  },
+
+  {
+    tag:'settings', num:'02', title:'Configurações · idioma EN selecionado',
+    sub:'Seleção muda instantaneamente — sem botão Salvar',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Settings</span>
+        <div class="side"></div>
+      </div>
+      <div class="scroll">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Language</div>
+          ${langGrid('EN')}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Appearance</div>
+          <div class="toggle-row">
+            <span class="lbl">Dark theme</span>
+            <div class="toggle on"></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sec-label">Info</div>
+          <div class="action-list">
+            <div class="action-row"><span class="ico">○</span>Profile<span class="arr">→</span></div>
+            <div class="action-row"><span class="ico">?</span>How to Play<span class="arr">→</span></div>
+            <div class="action-row"><span class="ico">★</span>Credits<span class="arr">→</span></div>
+          </div>
+        </div>
+      </div>
+    </div>`
+  },
+
+  // ── COMO JOGAR ─────────────────────────────────────────────
+  {
+    tag:'htp', num:'03', title:'Como Jogar · fluxo e regras',
+    sub:'4 fases numeradas + tabela de bônus das peças',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Como Jogar</span>
+        <div class="side"></div>
+      </div>
+      <div class="scroll">
+        <div class="htp-section">
+          <div class="htp-step">
+            <div class="num">1</div>
+            <div class="body">
+              <div class="title">Recrutamento</div>
+              <div class="desc">Você tem 5 pontos. Gaste comprando peças — peças mais fortes custam mais.</div>
+            </div>
+          </div>
+          <div class="htp-step">
+            <div class="num">2</div>
+            <div class="body">
+              <div class="title">Posicionamento</div>
+              <div class="desc">Posicione suas peças nas 2 fileiras iniciais. O oponente não vê sua formação.</div>
+            </div>
+          </div>
+          <div class="htp-step">
+            <div class="num">3</div>
+            <div class="body">
+              <div class="title">Ação simultânea</div>
+              <div class="desc">Ambos escolhem um movimento ao mesmo tempo. Não há turnos — você precisa prever onde o inimigo estará.</div>
+            </div>
+          </div>
+          <div class="htp-step">
+            <div class="num">4</div>
+            <div class="body">
+              <div class="title">Duelo</div>
+              <div class="desc">Duas peças no mesmo destino? Role 1d6 e some o bônus da peça. Maior total vence. Empate: ambas são removidas — exceto o Rei, que sempre vence empates.</div>
+            </div>
+          </div>
+        </div>
+        <div class="sec-label">Bônus por peça</div>
+        <div class="htp-bonus">
+          <div class="piece-table">
+            <span class="p">♔</span><span class="n">Rei</span><span class="b">+5</span>
+            <span class="p">♕</span><span class="n">Rainha</span><span class="b">+4</span>
+            <span class="p">♖</span><span class="n">Torre</span><span class="b">+3</span>
+            <span class="p">♘</span><span class="n">Cavalo</span><span class="b">+2</span>
+            <span class="p">♗</span><span class="n">Bispo</span><span class="b">+2</span>
+            <span class="p">♙</span><span class="n">Peão</span><span class="b">+1</span>
+          </div>
+        </div>
+        <div class="htp-bonus">
+          <strong>Objetivo:</strong> capture o Rei inimigo. A partida termina quando um Rei é eliminado em duelo — ou empatada se ambos os Reis sobram e o duelo final resulta em empate.
+        </div>
+      </div>
+    </div>`
+  },
+
+  // ── CRÉDITOS ───────────────────────────────────────────────
+  {
+    tag:'credits', num:'04', title:'Créditos',
+    sub:'Limpo e centrado — nome, estúdio, versão, link de feedback',
+    render: () => `
+    <div class="phone">
+      <div class="sbar"><span>9:41</span><span>●●●● 5G</span></div>
+      <div class="topbar">
+        <button class="back">←</button>
+        <span class="title">Créditos</span>
+        <div class="side"></div>
+      </div>
+      <div class="credits-body">
+        <div>
+          <div class="credits-logo">micro<em>Chess</em>.</div>
+          <div class="credits-version" style="margin-top:6px">v1.0 · 2025</div>
+        </div>
+        <div class="credits-rule"></div>
+        <div>
+          <div class="credits-name">Gabriel Mialchi</div>
+          <div class="credits-role" style="margin-top:4px">Design · Desenvolvimento · Ideia</div>
+        </div>
+        <div class="credits-studio">o6 games</div>
+        <div class="credits-rule"></div>
+        <div style="font-size:12px;color:var(--mc-muted);text-align:center;line-height:1.6;max-width:220px">
+          Obrigado por jogar.<br>Feedback é muito bem-vindo.
+        </div>
+        <div class="credits-feedback">Deixe seu feedback →</div>
+      </div>
+    </div>`
+  },
+];
+
+/* Render */
+const grid = document.getElementById('grid');
+scenes.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'scene';
+  el.dataset.tag = s.tag;
+  el.innerHTML = `
+    <div class="scene-head"><span class="num">${s.num}</span><h3>${s.title}</h3></div>
+    <div class="scene-body">${s.render()}</div>
+    <div class="scene-note">${s.sub}</div>
+  `;
+  grid.appendChild(el);
+});
+
+/* Tweaks */
+window.addEventListener('message', (e) => {
+  if (!e.data) return;
+  if (e.data.type === '__activate_edit_mode') document.getElementById('tw').classList.add('on');
+  if (e.data.type === '__deactivate_edit_mode') document.getElementById('tw').classList.remove('on');
+});
+document.querySelectorAll('#chips button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#chips button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('canvas').setAttribute('data-focus', b.dataset.f);
+  });
+});
+try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(_) {}
+</script>
+</body>
+</html>
