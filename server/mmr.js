@@ -11,6 +11,16 @@ function calculate(winnerMMR, loserMMR) {
     };
 }
 
+// Standard ELO draw: score=0.5 for both.
+// +1 floor ensures the weaker player always gains at least 1 MMR from a draw.
+function calculateDraw(mmrA, mmrB) {
+    let deltaA = Math.round(K * (0.5 - expected(mmrA, mmrB)));
+    let deltaB = Math.round(K * (0.5 - expected(mmrB, mmrA)));
+    if (mmrA < mmrB && deltaA < 1) deltaA = 1;
+    if (mmrB < mmrA && deltaB < 1) deltaB = 1;
+    return { deltaA, deltaB };
+}
+
 function getRank(mmr) {
     if (mmr < 1200) return { name: 'Peão',      icon: '♟', threshold: 1200 };
     if (mmr < 1400) return { name: 'Bispo',     icon: '♝', threshold: 1400 };
@@ -27,4 +37,4 @@ function getBanDuration(woCount) {
     return 0;
 }
 
-module.exports = { calculate, getRank, getBanDuration };
+module.exports = { calculate, calculateDraw, getRank, getBanDuration };

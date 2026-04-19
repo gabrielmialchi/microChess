@@ -292,18 +292,26 @@ curl http://localhost:3000/health
 | P-B | Links externos reais | ⏸ Integrado na Design-K |
 | P-C | Localização: 7 idiomas restantes (ES/DE/IT/RU/JA/KO/ZH) | ✅ Completo |
 | P-D | Replay: tabuleiro fixo + Turno 0 + label [N] | ⏸ Absorvido pela Design-J |
-| **Design-A** | **Tokens CSS + fontes + flag-icons — base de tudo** | ⏳ Pendente |
-| Design-B | Menu principal + header de jogador + tab bar | ⏳ Pendente |
-| Design-F | Auth overlay (tela cheia) | ⏳ Pendente |
-| Design-C | Matchmaking + Sala privada | ⏳ Pendente |
-| Design-D | Telas de partida: Draft · Posição · Revelação · Ação | ⏳ Pendente |
-| Design-E | Duelo + Game Over + estado de Empate | ⏳ Pendente |
-| Design-G | Modais de sistema: ban, logout, delete, change-pw, reconnect | ⏳ Pendente |
-| Design-H | Perfil + Editar avatar/apelido | ⏳ Pendente |
-| Design-I | Ranking + Leaderboard | ⏳ Pendente |
-| Design-J | Histórico + Replay (absorve P-D: tabuleiro + turno 0) | ⏳ Pendente |
-| Design-K | Configurações + Como Jogar + Créditos + links externos (P-B) | ⏳ Pendente |
-| Design-L | Estados de exceção: disconnect, AFK, Morte Súbita, sem conexão | ⏳ Pendente |
-| P-12 | Balanceamento MMR para empate (pós Design-E) | ⏳ Pendente |
+| **Design-A** | **Tokens CSS + fontes + flag-icons — base de tudo** | ✅ Completo |
+| Design-B | Menu principal + header de jogador + tab bar | ✅ Completo |
+| Design-F | Auth overlay (tela cheia) | ✅ Completo |
+| Design-C | Matchmaking + Sala privada | ✅ Completo |
+| Design-D | Telas de partida: Draft · Posição · Revelação · Ação | ✅ Completo |
+| Design-E | Duelo + Game Over + estado de Empate | ✅ Completo |
+| Design-G | Modais de sistema: ban, logout, delete, change-pw, reconnect | ✅ Completo |
+| Design-H | Perfil + Editar avatar/apelido | ✅ Completo |
+| Design-I | Ranking + Leaderboard | ✅ Completo |
+| Design-J | Histórico + Replay (absorve P-D: tabuleiro + turno 0) | ✅ Completo |
+| Design-K | Configurações + Como Jogar + Créditos + links externos (P-B) | ✅ Completo |
+| Design-L | Estados de exceção: disconnect, AFK, Morte Súbita, sem conexão | ✅ Completo |
+| P-12 | Balanceamento MMR para empate + fix Morte Súbita | ✅ Completo |
+| P-12B | PdL empate (só ganho) + SD-1 overlay Morte Súbita | ✅ Completo |
+| OPT-A | GZIP + remover Twemoji + reduzir pesos de fonte | ✅ Completo |
+| OPT-B | Animação de peças: transform vs left/top | ⏳ Pendente |
+| OPT-C | flag-icons inline + SW versioning + perMessageDeflate + CSS hints | ⏳ Pendente |
+| TESTES-A | Unit tests + db-inspector | ⏳ Pendente |
+| TESTES-B | Integration API + partida automatizada | ⏳ Pendente |
+| TESTES-C | 6 ferramentas de navegador | ⏳ Pendente |
+| TESTES-D | Cenários avançados + carga + replay validator | ⏳ Pendente |
 
 *(Atualizar este arquivo ao concluir cada sessão)*

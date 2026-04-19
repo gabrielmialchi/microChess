@@ -2481,5 +2481,7 @@ Implementar cálculo de PdL para resultado de empate em `server/mmr.js`.
 [ ] 2. Adicionar case 'draw' (ou equivalente) na função de cálculo
 [ ] 3. Implementar fórmula: base +1, acrescido de bônus proporcional à diferença de rank (para o mais fraco)
 [ ] 4. Garantir que partidas não-ranqueadas (guest) não alteram PdL mesmo em empate
-[ ] 5. Testar: empate entre ranks iguais, empate fraco-vs-forte, empate em partida não-ranqueada
+[ ] 5. Após calcular resultado (vitória/derrota/empate), emitir evento socket `pdl_result` para ambos os jogadores com: `{ delta: number, now: number, rankName: string }` — o cliente usa isso para popular `#go-pdl-delta` e `#go-pdl-now` no game-over (Design-E)
+[ ] 6. No cliente (index.html), adicionar listener `socket.on('pdl_result', ...)` que atualiza `#go-pdl-delta` e `#go-pdl-now` se a tela de game-over estiver visível
+[ ] 7. Testar: empate entre ranks iguais, empate fraco-vs-forte, empate em partida não-ranqueada
 ```

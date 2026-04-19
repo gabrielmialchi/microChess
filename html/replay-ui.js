@@ -5,6 +5,8 @@ const _REPLAY_ICONS = {
     black: { K:'♚', Q:'♛', R:'♜', B:'♝', N:'♞', P:'♟' },
 };
 
+const _PIECE_NAMES = { K:'Rei', Q:'Rainha', R:'Torre', B:'Bispo', N:'Cavalo', P:'Peão' };
+
 const ReplayViewer = {
     data:       null,
     turnIndex:  0,
@@ -25,42 +27,55 @@ const ReplayViewer = {
         this.turnIndex = 0;
         showScreen('replay');
 
-        // Preencher header de resumo
-        const summaryEl = document.getElementById('replay-summary');
-        if (summaryEl) {
-            const m = this._meta;
-            if (m) {
-                const sign    = (m.lpDelta >= 0) ? '+' : '';
-                const lpColor = m.lpDelta >= 0 ? '#2ecc71' : '#e74c3c';
-                summaryEl.innerHTML =
-                    `<span>vs <strong style="color:#f0ece4;">${m.opponentName || '?'}</strong></span>` +
-                    `<span>${m.date || ''}</span>` +
-                    `<span style="color:${lpColor};font-weight:700;">${sign}${m.lpDelta} PdL</span>`;
-            } else {
-                summaryEl.innerHTML = '';
-            }
+        const m = this._meta;
+
+        // Result badge
+        const resEl = document.getElementById('rp-match-res');
+        if (resEl) {
+            const letter = m?.result || '?';
+            const cls = m?.isWin ? 'win' : m?.isDraw ? 'draw' : letter === 'WO' ? 'lose' : 'lose';
+            resEl.className = 'rp-match-res ' + cls;
+            resEl.textContent = letter;
         }
 
-        const actions = this._actions();
-        const total   = document.getElementById('replay-total');
-        if (total) total.textContent = actions.length;
+        // Opponent
+        const oppEl = document.getElementById('rp-match-opp');
+        if (oppEl) oppEl.textContent = m?.opponentName ? `vs ${m.opponentName}` : '—';
+
+        // PdL
+        const pdlEl = document.getElementById('rp-match-pdl');
+        if (pdlEl) {
+            const lp = m?.lpDelta ?? 0;
+            if (m?.isDraw)   { pdlEl.className = 'rp-match-pdl eq'; pdlEl.textContent = '= 0 PdL'; }
+            else if (lp > 0) { pdlEl.className = 'rp-match-pdl up'; pdlEl.textContent = `+${lp} PdL`; }
+            else if (lp < 0) { pdlEl.className = 'rp-match-pdl dn'; pdlEl.textContent = `${lp} PdL`; }
+            else             { pdlEl.className = 'rp-match-pdl eq'; pdlEl.textContent = '0 PdL'; }
+        }
+
+        // Play button reset
         const playBtn = document.getElementById('btn-replay-play');
-        if (playBtn) playBtn.textContent = '▶ AUTO';
+        if (playBtn) { playBtn.classList.remove('playing'); playBtn.textContent = '▶ AUTO'; }
+
         this.renderTurn(0);
     },
 
-    _actions() {
-        return (this.data?.turns || []).filter(t => t.type === 'action');
+    _displayTurns() {
+        return (this.data?.turns || []).filter(t => t.type === 'position' || t.type === 'action');
     },
 
     renderTurn(index) {
-        const actions = this._actions();
-        if (!actions.length) return;
-        this.turnIndex = Math.max(0, Math.min(index, actions.length - 1));
-        const turn     = actions[this.turnIndex];
+        const turns = this._displayTurns();
+        if (!turns.length) return;
+        this.turnIndex = Math.max(0, Math.min(index, turns.length - 1));
+        const turn = turns[this.turnIndex];
+        const _t = window.t || ((k) => k);
+        const isPos = turn.type === 'position';
 
-        const cur = document.getElementById('replay-current');
-        if (cur) cur.textContent = this.turnIndex + 1;
+        // Turn label + count
+        const labelEl = document.getElementById('rp-turn-label');
+        const countEl = document.getElementById('rp-turn-count');
+        if (labelEl) labelEl.textContent = isPos ? _t('turn_positioning') : `Turno ${this.turnIndex}`;
+        if (countEl) countEl.textContent = `T${this.turnIndex}/${turns.length - 1}`;
 
         // Board
         const board = document.getElementById('replay-board');
@@ -72,43 +87,70 @@ const ReplayViewer = {
             board.innerHTML = '';
             for (let y = 3; y >= 0; y--) {
                 for (let x = 0; x < 4; x++) {
-                    const cell  = document.createElement('div');
-                    const dark  = (x + y) % 2 === 0;
-                    cell.style.cssText = `display:flex;align-items:center;justify-content:center;
-                        background:${dark ? '#141414' : '#272727'};font-size:clamp(24px,7vw,36px);`;
+                    const cell = document.createElement('div');
+                    cell.className = 'rp-cell' + ((x + y) % 2 === 0 ? ' dk' : '');
                     const p = grid[y][x];
                     if (p) {
-                        cell.textContent = _REPLAY_ICONS[p.color]?.[p.type] || '?';
-                        cell.style.filter = p.color === 'white'
-                            ? 'drop-shadow(0 0 6px rgba(82,162,225,0.85))'
-                            : 'drop-shadow(0 0 6px rgba(165,105,210,0.85))';
+                        const span = document.createElement('span');
+                        span.className = 'rp-piece ' + (p.color === 'white' ? 'pw' : 'pb');
+                        span.textContent = _REPLAY_ICONS[p.color]?.[p.type] || '?';
+                        cell.appendChild(span);
                     }
                     board.appendChild(cell);
                 }
             }
         }
 
-        // Duel info
-        const allTurns   = this.data?.turns || [];
-        const actionIdxs = allTurns.reduce((acc, t, i) => { if (t.type === 'action') acc.push(i); return acc; }, []);
-        const thisActionGlobalIdx = actionIdxs[this.turnIndex] ?? -1;
-        const prevActionGlobalIdx = actionIdxs[this.turnIndex - 1] ?? -1;
-        const duels = allTurns.filter((t, i) => t.type === 'duel' && i > prevActionGlobalIdx && i < thisActionGlobalIdx);
-
-        const duelInfo = document.getElementById('replay-duel-info');
-        if (duelInfo) {
-            duelInfo.innerHTML = duels.map(d => {
-                const res = d.result === 'white_wins' ? '⬜ vence' : d.result === 'black_wins' ? '⬛ vence' : 'empate';
-                return `<div style="font-size:11px;color:rgba(240,236,228,0.5);font-family:'IBM Plex Mono',monospace;text-align:center;">
-                    Duelo: ⬜ ${d.rolls?.white}+${d.bonuses?.white} vs ⬛ ${d.rolls?.black}+${d.bonuses?.black} → ${res}
-                </div>`;
-            }).join('');
+        // Duel banner
+        const banner  = document.getElementById('replay-duel-info');
+        const duelTxt = document.getElementById('rp-duel-text');
+        if (banner && duelTxt) {
+            if (!isPos) {
+                const allTurns = this.data?.turns || [];
+                // build global-index map for display turns
+                const dispGlobalIdxs = [];
+                allTurns.forEach((t, i) => { if (t.type === 'position' || t.type === 'action') dispGlobalIdxs.push(i); });
+                const curGlobal  = dispGlobalIdxs[this.turnIndex]     ?? -1;
+                const prevGlobal = dispGlobalIdxs[this.turnIndex - 1] ?? -1;
+                const duels = allTurns.filter((t, i) => t.type === 'duel' && i > prevGlobal && i < curGlobal);
+                if (duels.length) {
+                    duelTxt.innerHTML = duels.map(d => {
+                        const wType  = (d.wPiece?.[1] || 'K').toUpperCase();
+                        const bType  = (d.bPiece?.[1] || 'K').toUpperCase();
+                        const wIcon  = _REPLAY_ICONS.white[wType] || '?';
+                        const bIcon  = _REPLAY_ICONS.black[bType] || '?';
+                        const wName  = _PIECE_NAMES[wType] || wType;
+                        const bName  = _PIECE_NAMES[bType] || bType;
+                        const wRoll  = d.rolls?.white  || 0;
+                        const bRoll  = d.rolls?.black  || 0;
+                        const wBonus = d.bonuses?.white || 0;
+                        const bBonus = d.bonuses?.black || 0;
+                        const wTotal = wRoll + wBonus;
+                        const bTotal = bRoll + bBonus;
+                        if (d.result === 'draw') {
+                            return `<span>${wIcon} ${wName} = ${bIcon} ${bName} · ${wTotal} × ${bTotal}</span>`;
+                        }
+                        const isWWin = d.result === 'white_wins';
+                        const winIcon  = isWWin ? wIcon  : bIcon;
+                        const winName  = isWWin ? wName  : bName;
+                        const loseIcon = isWWin ? bIcon  : wIcon;
+                        const loseName = isWWin ? bName  : wName;
+                        return `<span>${winIcon} ${winName} venceu ${loseIcon} ${loseName} · ${wTotal} (${wRoll}+${wBonus}) × ${bTotal} (${bRoll}+${bBonus})</span>`;
+                    }).join('<br>');
+                    banner.classList.add('visible');
+                } else {
+                    banner.classList.remove('visible');
+                }
+            } else {
+                banner.classList.remove('visible');
+            }
         }
 
+        // Nav buttons
         const prevBtn = document.getElementById('btn-replay-prev');
         const nextBtn = document.getElementById('btn-replay-next');
         if (prevBtn) prevBtn.disabled = this.turnIndex === 0;
-        if (nextBtn) nextBtn.disabled = this.turnIndex === actions.length - 1;
+        if (nextBtn) nextBtn.disabled = this.turnIndex === turns.length - 1;
     },
 
     prev() { this.renderTurn(this.turnIndex - 1); },
@@ -119,16 +161,16 @@ const ReplayViewer = {
         if (this._autoTimer) {
             clearInterval(this._autoTimer);
             this._autoTimer = null;
-            if (btn) btn.textContent = '▶ AUTO';
+            if (btn) { btn.classList.remove('playing'); btn.textContent = '▶ AUTO'; }
             return;
         }
-        if (btn) btn.textContent = '⏹ PARAR';
+        if (btn) { btn.classList.add('playing'); btn.textContent = '⏹ PARAR'; }
         this._autoTimer = setInterval(() => {
-            const actions = this._actions();
-            if (this.turnIndex >= actions.length - 1) {
+            const turns = this._displayTurns();
+            if (this.turnIndex >= turns.length - 1) {
                 clearInterval(this._autoTimer);
                 this._autoTimer = null;
-                if (btn) btn.textContent = '▶ AUTO';
+                if (btn) { btn.classList.remove('playing'); btn.textContent = '▶ AUTO'; }
                 return;
             }
             this.renderTurn(this.turnIndex + 1);

@@ -15,7 +15,7 @@ const Session = (() => {
 })();
 
 // ── MENU POPULATOR ────────────────────────────────────────────
-const PIECE_MAP = { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' };
+const PIECE_MAP = { K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙', k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' };
 
 const MenuPopulator = {
     async populate(session) {
@@ -44,9 +44,19 @@ const MenuPopulator = {
             // ELO badge (uses visible Liga rank, not hidden MMR)
             if (p.elo && el('menu-rank-badge'))
                 el('menu-rank-badge').textContent = `${p.elo.icon} ${p.elo.name} · ${p.elo.lp} PdL`;
+            // profile hero elo + PdL
+            if (p.elo) {
+                if (el('ph-elo-name')) el('ph-elo-name').textContent = p.elo.name;
+                if (el('ph-pdl-val'))  el('ph-pdl-val').textContent  = p.elo.lp + ' PdL';
+            }
+            if (el('stat-draws')) el('stat-draws').textContent = p.draws || 0;
+            // save elo rank+lp for ranking ladder highlight
+            if (p.elo_rank != null) localStorage.setItem('mc_elo_rank', String(p.elo_rank));
+            if (p.elo_lp   != null) localStorage.setItem('mc_elo_lp',   String(Math.round(p.elo_lp)));
             localStorage.setItem('mc_stats', JSON.stringify({
                 wins: p.wins, losses: p.losses,
                 wo_wins: p.wo_against, wo_losses: p.wo_count,
+                draws: p.draws || 0,
             }));
         } catch {}
     },
@@ -56,7 +66,7 @@ const MenuPopulator = {
 const AuthUI = {
     show() {
         const o = document.getElementById('auth-overlay');
-        if (o) o.style.display = 'flex';
+        if (o) o.style.display = 'block';
         this.toggle('login');
     },
 
@@ -66,27 +76,50 @@ const AuthUI = {
     },
 
     toggle(mode) {
+        this._clearErrors();
         document.getElementById('auth-form-login').style.display    = mode === 'login'    ? 'flex' : 'none';
         document.getElementById('auth-form-register').style.display = mode === 'register' ? 'flex' : 'none';
-        document.getElementById('auth-error').textContent = '';
+    },
+
+    _clearErrors() {
+        ['login-email','login-password','reg-username','reg-email','reg-password'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('error');
+        });
+        ['login-email-hint','login-password-hint','reg-username-hint','reg-email-hint','reg-password-hint'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.textContent = ''; el.style.display = 'none'; }
+        });
+        const err = document.getElementById('auth-error');
+        if (err) err.textContent = '';
+    },
+
+    _fieldError(inputId, hintId, msg) {
+        const input = document.getElementById(inputId);
+        const hint  = document.getElementById(hintId);
+        if (input) input.classList.add('error');
+        if (hint)  { hint.textContent = msg; hint.style.display = 'block'; }
     },
 
     async handleSubmit(mode) {
+        this._clearErrors();
         const err = document.getElementById('auth-error');
-        err.textContent = '';
         let url, body;
 
         if (mode === 'register') {
             const username = document.getElementById('reg-username').value.trim();
             const email    = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
-            if (!username || !email || !password) { err.textContent = 'Preencha todos os campos.'; return; }
+            if (!username) { this._fieldError('reg-username', 'reg-username-hint', 'Preencha o apelido.'); return; }
+            if (!email)    { this._fieldError('reg-email',    'reg-email-hint',    'Preencha o email.'); return; }
+            if (!password) { this._fieldError('reg-password', 'reg-password-hint', 'Preencha a senha.'); return; }
             url  = '/auth/register';
             body = { username, email, password };
         } else {
             const email    = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
-            if (!email || !password) { err.textContent = 'Preencha todos os campos.'; return; }
+            if (!email)    { this._fieldError('login-email',    'login-email-hint',    'Preencha o email.'); return; }
+            if (!password) { this._fieldError('login-password', 'login-password-hint', 'Preencha a senha.'); return; }
             url  = '/auth/login';
             body = { email, password };
         }
@@ -98,7 +131,7 @@ const AuthUI = {
                 body: JSON.stringify(body),
             });
             const data = await res.json();
-            if (!res.ok) { err.textContent = data.error || 'Erro desconhecido.'; return; }
+            if (!res.ok) { if (err) err.textContent = data.error || 'Erro desconhecido.'; return; }
 
             const session = {
                 token:    data.token,
@@ -112,7 +145,7 @@ const AuthUI = {
             this.hide();
             await MenuPopulator.populate(session);
         } catch {
-            err.textContent = 'Erro de conexão com o servidor.';
+            if (err) err.textContent = 'Erro de conexão com o servidor.';
         }
     },
 
@@ -282,6 +315,24 @@ const BanOverlay = {
     },
 };
 
+// ── GAME-OVER PdL UPDATE ──────────────────────────────────────
+// Populates #go-pdl-delta and #go-pdl-now when mmr_update fires while
+// the game-over screen is visible (P-12 items 5-6).
+function _updateGameOverPdl(lpDelta, elo) {
+    const go = document.getElementById('game-over-screen');
+    if (!go || go.style.display === 'none') return;
+    const deltaEl = document.getElementById('go-pdl-delta');
+    if (deltaEl && lpDelta != null) {
+        const sign = lpDelta > 0 ? '+' : '';
+        deltaEl.textContent = `${sign}${lpDelta} PdL`;
+        deltaEl.className   = lpDelta > 0 ? 'delta up' : lpDelta < 0 ? 'delta dn' : 'delta eq';
+    }
+    const nowEl = document.getElementById('go-pdl-now');
+    if (nowEl && elo) {
+        nowEl.textContent = `${elo.icon || ''} ${elo.name || ''} · ${elo.lp ?? 0} PdL`.trim();
+    }
+}
+
 // ── MMR / LP TOAST ────────────────────────────────────────────
 function showMMRToast(delta, isWO, lpDelta, elo, promoted, demoted) {
     if (!document.getElementById('_mmr-toast-css')) {
@@ -334,24 +385,32 @@ const ReconnectOverlay = {
     _timer: null,
 
     show(remainMs) {
+        // Dismiss old blocking modal — Design-L uses the in-game banner
         const overlay = document.getElementById('reconnect-overlay');
-        if (overlay) overlay.style.display = 'flex';
-        const countEl = document.getElementById('reconnect-countdown');
-        let remaining = Math.max(0, remainMs);
-        const tick = () => {
-            const secs = Math.ceil(remaining / 1_000);
-            if (countEl) countEl.textContent = secs;
-            if (remaining <= 0) { clearInterval(this._timer); }
-            remaining -= 1_000;
-        };
-        tick();
-        this._timer = setInterval(tick, 1_000);
+        if (overlay) overlay.style.display = 'none';
+        if (window.ExcBanners) {
+            window.ExcBanners.showOppDc(remainMs);
+        } else {
+            // Fallback: show old modal if Design-L not loaded yet
+            if (overlay) overlay.style.display = 'flex';
+            const countEl = document.getElementById('reconnect-countdown');
+            let remaining = Math.max(0, remainMs);
+            const tick = () => {
+                const secs = Math.ceil(remaining / 1_000);
+                if (countEl) countEl.textContent = secs;
+                if (remaining <= 0) { clearInterval(this._timer); }
+                remaining -= 1_000;
+            };
+            tick();
+            this._timer = setInterval(tick, 1_000);
+        }
     },
 
     hide() {
         const overlay = document.getElementById('reconnect-overlay');
         if (overlay) overlay.style.display = 'none';
         if (this._timer) { clearInterval(this._timer); this._timer = null; }
+        if (window.ExcBanners) window.ExcBanners.hideOppDc();
     },
 };
 
@@ -363,18 +422,30 @@ function tryRejoinIfPending(socket) {
 
 // ── DISCONNECT BANNER ─────────────────────────────────────────
 function showDisconnectBanner() {
-    if (document.getElementById('_dc-banner')) return;
-    const b = document.createElement('div');
-    b.id = '_dc-banner';
-    b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#e74c3c;color:#fff;text-align:center;padding:8px;font-family:Cinzel,serif;font-size:12px;z-index:99999;letter-spacing:2px;';
-    b.textContent = (window.t || ((k) => k))('no_connection');
-    document.body.prepend(b);
+    document.getElementById('_dc-banner')?.remove();
+    const reconnBanner = document.getElementById('exc-reconn-banner');
+    const noConn       = document.getElementById('exc-no-conn');
+    const inGame       = document.getElementById('game-area')?.style.display === 'flex';
+    if (reconnBanner) reconnBanner.style.display = '';
+    if (!inGame && noConn) noConn.style.display = 'flex';
+    if (inGame) {
+        document.getElementById('my-panel')?.classList.add('exc-blur-panel');
+        document.getElementById('main-board')?.classList.add('exc-blur-panel');
+    }
 }
 
 // ── SOCKET GAME EVENTS ────────────────────────────────────────
 function listenGameEvents(socket) {
     socket.on('disconnect', showDisconnectBanner);
-    socket.on('connect',    () => document.getElementById('_dc-banner')?.remove());
+    socket.on('connect', () => {
+        document.getElementById('_dc-banner')?.remove();
+        const reconnBanner = document.getElementById('exc-reconn-banner');
+        const noConn       = document.getElementById('exc-no-conn');
+        if (reconnBanner) reconnBanner.style.display = 'none';
+        if (noConn)       noConn.style.display = 'none';
+        document.getElementById('my-panel')?.classList.remove('exc-blur-panel');
+        document.getElementById('main-board')?.classList.remove('exc-blur-panel');
+    });
 
     socket.on('mmr_update', async ({ delta, newMMR, rank, isWO, lpDelta, elo, promoted, demoted }) => {
         const session = Session.get();
@@ -382,6 +453,7 @@ function listenGameEvents(socket) {
         const updated = { ...session, mmr: newMMR, rank };
         Session.save(updated);
         showMMRToast(delta, isWO, lpDelta, elo, promoted, demoted);
+        _updateGameOverPdl(lpDelta, elo);
         await MenuPopulator.populate(updated);
     });
 

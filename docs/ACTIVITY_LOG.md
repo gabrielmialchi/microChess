@@ -709,3 +709,493 @@ Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 ### Notas para próxima sessão
 - Próxima sessão: P-D (Replay: tabuleiro fixo + turno 0 + label de turno)
 - P-B (links externos) suspensa até links reais serem definidos
+
+---
+
+## [2026-04-19] Sessão Design-A — Tokens CSS + Componentes Base
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- Adicionado import de `Inter` + `JetBrains Mono` ao link Google Fonts existente (mesma tag, sem duplicar preconnect)
+- Adicionado import de `flag-icons@7.0.0` via CDN jsdelivr
+- Novo bloco `<style>` inserido antes do `<style>` existente contendo:
+  - `:root` com ~70 tokens `--mc-*`: cores, tipografia, espaçamento, radius, sombras, motion, layout
+  - `[data-theme="dark"]` com overrides completos para dark mode
+  - Classes de componente: `.mc-screen`, `.mc-btn` (+ variantes: primary/accent/ghost/danger/sm/full/icon), `.mc-input`, `.mc-field`, `.mc-card`, `.mc-tag` (+ variantes), `.mc-dot`, `.mc-avatar` (+ variantes), `.mc-identity`, `.mc-stat`, `.mc-toast` (+ variantes), `.mc-modal-backdrop`, `.mc-modal`, `.mc-tabbar`, `.mc-topbar`, `.mc-board` (+ células e peças), `.mc-die`
+- `<style>` existente intocado — zero variáveis removidas
+- Sintaxe JS validada: 2 blocos OK, 0 falhas
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima sessão: Design-B (Menu principal + header + tab bar)
+
+---
+
+## [2026-04-18] Sessão Design-B — Menu Principal + Tab Bar
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `#screen-menu` redesenhado com tokens `--mc-*`:
+  - Player row: `.mc-avatar` + nome + rank badge + W·L + botão logout (⏻)
+  - Hero: `microChess.` com `<em>` laranja, subtítulo `id="menu-version-sub"`
+  - Nav: 4 botões `.mc-btn` — Jogar ranqueada / Sala privada / Ranking / Configurações
+  - Footer: link feedback estilizado com `var(--mc-faint)`
+  - `btn-sair` mantido oculto (retrocompat)
+- Modo convidado: `#menu-guest-cta` "Criar conta" em `var(--mc-accent)` (oculto quando logado)
+- `#mc-tabbar` fixo (position:fixed) adicionado antes de `<script src="auth-frontend.js">`:
+  - 4 abas: ⌂ Início · ▶ Jogar · ◆ Ranking · ○ Perfil
+  - Usa classe `.mc-tabbar` + `.tab` do Design-A
+- `refreshMenuScreen()` atualizado: detecta `Session.isValid()` e alterna entre `menu-logged-stats` e `menu-guest-cta`
+- IDs preservados: `menu-avatar-icon`, `menu-player-name`, `menu-rank-badge`, `menu-stat-w`, `menu-stat-l`, `btn-logout-header`, `btn-novo-jogo`, `btn-sala-privada`, `btn-ranking`, `btn-configuracoes`, `btn-sair`, `footer-feedback`
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima sessão: Design-F (Auth overlay — tela cheia)
+
+---
+
+## [2026-04-19] Sessão Design-F — Auth Overlay (Tela Cheia)
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `html/index.html`: `#auth-overlay` redesenhado como tela cheia (não modal sobre escuro)
+  - Fundo: `var(--mc-bg)` — consistente com Design-A/B
+  - Logo: `micro<em>Chess</em>.` com accent color no "Chess"
+  - Eyebrow mono + título bold 26px por modo (login/registro)
+  - Campos com `<label>` visível + `<span id="*-hint">` para erro inline
+  - CTA login: fundo `var(--mc-ink)` (escuro); CTA registro: fundo `var(--mc-accent)` (laranja)
+  - Divider "ou" + botão ghost "Jogar sem conta" (apenas login)
+  - `#auth-error` posicionado absolutamente no fundo do overlay (compartilhado entre modos)
+  - Inputs com classe `.auth-fi` + novo `<style>` block para `:focus` e `.error` states
+  - IDs preservados: `#login-email`, `#login-password`, `#reg-username`, `#reg-email`, `#reg-password`, `#auth-error`
+- `html/auth-frontend.js`:
+  - `AuthUI.show()` usa `display:block` (overlay é full-screen, não flex-centered)
+  - `AuthUI.toggle()` chama `_clearErrors()` antes de trocar de modo
+  - `AuthUI._clearErrors()` — limpa classes `.error` e hints de todos os campos + `#auth-error`
+  - `AuthUI._fieldError(inputId, hintId, msg)` — aplica `.error` no input + mostra hint abaixo
+  - `AuthUI.handleSubmit()` — validação client-side usa `_fieldError` por campo; erros de servidor vão para `#auth-error`
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima sessão: Design-C (Matchmaking + Sala privada)
+
+---
+
+## [2026-04-19] Sessão Design-C — Matchmaking + Sala Privada
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `html/index.html`: `#screen-matchmaking` redesenhado com tokens `--mc-*`:
+  - Fundo `var(--mc-bg)`, layout flex column full-screen
+  - Botão "← cancelar" com `.mm-back-bar` (CSS mantido, estilo atualizado via seletor novo)
+  - Estado **Lobby**: radar animado (`.mc-mm-radar` + `::after` com `@keyframes mc-radar-ring`), ícone de peça em destaque accent, eyebrow mono, título "Na fila", nick/rank inline
+  - Estado **Found**: label success "✓ PARTIDA ENCONTRADA", VS cards lado a lado com avatar/nick/rank de ambos os jogadores, tag "Ranqueada"
+  - Estado **Countdown**: eyebrow + número grande `mm-countdown-num` com glow accent + sub texto
+  - Adicionados `#mm-found-my-rank` e `#mm-found-opp-rank` nos VS cards
+  - IDs mantidos: `btn-mm-cancel`, `mm-lobby`, `mm-found`, `mm-countdown`, `mm-my-avatar`, `mm-my-nick`, `mm-found-my-avatar`, `mm-found-my-nick`, `mm-found-opp-avatar`, `mm-found-opp-nick`, `mm-title-searching`, `mm-title-found`, `mm-countdown-sub`, `mm-count-num`, `mm-vs-label-you`, `mm-vs-label-opp`, `mm-vs-text`, `mm-searching-text`
+- `html/index.html`: `#screen-private-room` redesenhado com tokens `--mc-*`:
+  - Fundo `var(--mc-bg)`, header com botão ← e título "Sala Privada"
+  - Seção CRIAR SALA: botão ghost → `pr-code-display` (código 40px mono accent + dot pulsante + expiração + COPIAR)
+  - Divider "ou" com linhas
+  - Seção ENTRAR COM CÓDIGO: input mono centralizado + botão accent ENTRAR + `pr-join-error`
+  - IDs mantidos: `btn-pr-back`, `pr-title`, `pr-create-section`, `btn-pr-create`, `pr-code-display`, `pr-code-value`, `pr-code-label`, `btn-pr-copy`, `btn-pr-copy-text`, `pr-waiting`, `pr-waiting-text`, `pr-expires`, `pr-or-divider`, `pr-join-section`, `pr-join-label`, `pr-join-input`, `btn-pr-join`, `btn-pr-join-text`, `pr-join-error`
+  - `@keyframes mc-dot-wait` para animação do dot de espera
+- `html/index.html`: novo `<script>` que envolve `window.goMatchmaking` para popular `mm-found-my-rank` e `mm-my-nick` com rank do Session; MutationObserver em `mm-found-opp-nick` para popular `mm-found-opp-rank` ao detectar mudança
+
+### Bugs / Bloqueios Conhecidos
+- `opponentProfile.rank` vazio se o servidor não enviar campo `rank` no `oppProfile` — elemento `mm-found-opp-rank` ficará em branco (aceitável por ora)
+
+### Notas para próxima sessão
+- Próxima sessão: Design-D (Telas de partida: Draft · Posição · Revelação · Ação)
+
+---
+
+## [2026-04-19] Sessão Design-D — Telas de Partida (Draft · Posição · Revelação · Ação)
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- [x] 1. Redesenhar `#game-area`: novo topbar grid(1fr auto 1fr), 52px, border-bottom
+  - `.opp` com `#opp-dot` (dot 8px), `#opp-status`, `#opp-meta`
+  - `#phase-title` como pill (mono, accent, rounded)
+  - `#opp-pts` como timer (alinhado à direita)
+- [x] 2. Barra de etapas (DRAFT · POSIÇÃO · AÇÃO) não existia no HTML — nenhuma remoção necessária
+- [x] 3. Inventário do Draft redesenhado: `.inv-header` com label `#inv-label` + `#btn-reset-draft`
+  - Label usa `t('draft_return_hint')` via `updateUI()`
+  - Botão usa `t('draft_clear')` via `updateUI()`
+- [x] 4. Chaves i18n adicionadas: `draft_return_hint`, `draft_clear` em PT e EN
+- [x] 5. Aura das peças: override de `--white-glow` (laranja `rgba(245,98,0,0.8)`) e `--black-glow` (violeta `rgba(69,56,255,0.8)`) + override de `--mc-fx-glow-w` e `--mc-fx-glow-b` para `.mc-board .cell .p-w/.p-b`
+- [x] 6. Células `own-zone` no POSITION: `color-mix` com `--cell-light`/`--cell-dark` + accent 18%; classe adicionada em `syncBoard()` quando `state.phase === 'POSITION' && logicalY < 2`
+- [x] 7. Validação JS: 3 script blocks — 0 falhas
+
+### Arquivos alterados
+- `html/index.html`: novo `<style>` antes de `<!-- GAME AREA -->`, HTML de `#game-area` substituído, 2 linhas em `T.pt` e `T.en`, 4 linhas em `syncBoard()` e `updateUI()`
+
+### Bugs / Bloqueios Conhecidos
+- `opp-meta` (sub-texto do oponente) é atualizado apenas via `id` — o JS existente só usa `#opp-status`. O `#opp-meta` fica "aguardando…" a menos que futuras sessões adicionem atualização
+- `opp-dot.thinking` requer que o JS chame `document.getElementById('opp-dot').classList.toggle('thinking', ...)` — não implementado nesta sessão
+
+### Notas para próxima sessão
+- Próxima sessão: Design-E (Duelo + Game Over + Empate)
+
+---
+
+## [2026-04-19] Sessão Design-E — Duelo + Game Over + Empate
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- [x] 1. `#duel-modal` redesenhado com layout horizontal: dois `.duel-col` + `.duel-vs-sep` "VS" no meio
+  - `#duel-status` → pill (mono, danger-soft bg, danger color)
+  - `.duel-card` com tema claro (mc-surface, mc-rule border)
+  - Badges de nome: laranja para brancas, azul-violeta para pretas
+  - `.dice-interactive` com borda colorida por tema
+  - `#close-duel` com `mc-accent` bg
+  - Fundo `#duel-modal` → `mc-bg` (claro), sem fundo diagonal
+- [x] 2. `#game-over-screen` redesenhado: `.gameover` com peça grande `#go-piece-icon`, `.verdict`, `#game-over-result`, `.go-mmr`, `.go-actions`
+  - Fundo → `mc-bg` claro; sem linhas diagonais
+  - Botões usam `.go-btn.ghost` e `.go-btn.accent`
+  - Todos os IDs JS mantidos: `go-title`, `game-over-result`, `btn-go-menu`, `btn-go-again`
+- [x] 3. Estado de Empate: `#go-piece-icon` mostra ♔ + ♚ lado a lado (ambas com aura); `#go-pdl-delta` exibe `t('pdl_draw')` = "= 0 PdL"
+- [x] 4. Morte Súbita: `statusEl.classList.toggle('sudden-death')` ativa animação CSS de pulso vermelho; `statusEl.style.color` limpo (CSS cuida das cores)
+- [x] 5. i18n: `pdl_draw` adicionado em PT ("= 0 PdL") e EN ("= 0 LP")
+- [x] 6. Validação JS: 3 script blocks — 0 falhas
+
+### Arquivos alterados
+- `html/index.html`: novo `<style>` antes de `<!-- DUEL MODAL -->`, `#game-over-screen` HTML substituído, `#duel-modal` HTML atualizado, `renderDuelContent()` refatorado, bloco GAMEOVER em `updateUI()` expandido, 2 chaves i18n em T.pt/T.en
+
+### Bugs / Bloqueios Conhecidos
+- `#go-pdl-now` (rank do jogador após partida) populado via `Session.get()` — só funciona se usuário estiver logado
+- `#go-pdl-delta` permanece vazio para vitória/derrota até que o servidor emita evento com delta PdL (P-12 / sessão futura)
+
+### Notas para próxima sessão
+- Próxima sessão: Design-G (Modais de sistema: ban, logout, delete, change-pw, reconnect)
+
+---
+
+## [2026-04-19] Sessão Design-G — Modais de Sistema
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- [x] 1–5. Todos os 5 modais redesenhados com padrão unificado:
+  - `#ban-overlay` → warn border, ⏸ icon, eyebrow "Acesso restrito", timer + botão FECHAR
+  - `#logout-confirm` → simples, "Sair da conta?", row Cancelar / Sair (primary)
+  - `#delete-account-confirm` → danger border, eyebrow "Ação permanente", row Cancelar / Excluir (danger)
+  - `#change-password-modal` → eyebrow "Segurança", 3 campos `.mc-field`/`.mc-input`, `#cp-error`, row Cancelar / Salvar
+  - `#reconnect-overlay` → `.sysmodal-ring` com spinner warn, timer grande, sub-texto W.O.
+- [x] 6. Padrão: backdrop `rgba(245,243,238,0.88)` + `backdrop-filter:blur(10px)` + card `.sysmodal` centralizado
+- [x] 7. Todos os IDs e onclick mantidos (verificado via script de check — 0 ausentes)
+- [x] Validação JS: 3 script blocks — 0 falhas
+
+### Arquivos alterados
+- `html/index.html`: bloco `<style>` com sistema `.sysmodal-*`, HTML dos 5 modais substituído
+
+### Bugs / Bloqueios Conhecidos
+- `#ban-title` e `#ban-time-label` não mais usados separadamente (i18n via JS define `ban-title`; timer label integrado ao eyebrow). Se o JS atualizar `ban-title` via i18n, funciona; se não, mostra texto fixo PT.
+- `backdrop-filter:blur()` não funciona em Safari < 15.4 sem `-webkit-backdrop-filter` — adicionado prefix.
+
+### Notas para próxima sessão
+- Próxima sessão: Design-H (Perfil + Editar avatar/apelido)
+
+---
+
+## [2026-04-19] Sessão Design-H — Perfil + Editar
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- [x] 1. Redesenhado `#screen-profile`: topbar sticky (← · PERFIL · SALVAR), hero (avatar-xl + nome + rank + PdL), stats grid 2×2 + empates, winrate bar, avatar picker 2 fileiras, apelido input, ações
+- [x] 2. Stat "Empates" (`#stat-draws`) adicionado na grid (span 2 colunas)
+- [x] 3. `#avatar-grid` substituído por picker com 2 fileiras — Brancas (♔♕♖♗♘♙) e Pretas (♚♛♜♝♞♟), `data-piece` lowercase para pretas
+- [x] 4. Botão SALVAR movido para topbar direito (`.ph-save-btn`), removido do fundo
+- [x] 5. Convidado: card CTA "Criar conta" visível; `#ph-stats-section` oculto para guests
+- [x] 6. Chaves i18n adicionadas em todos os 9 idiomas: `draws`, `avatar_white`, `avatar_black`, `create_account`, `create_account_cta`
+- [x] 7. ELO visível = apenas nome do rank (`ph-elo-name`); nunca exibe número MMR bruto
+- [x] `PIECE_ICONS` expandido: + `k q r b n p` (peças pretas)
+- [x] `PIECE_MAP` em auth-frontend.js expandido: + peças pretas
+- [x] `selectAvatar()` atualiza `#ph-avatar-display` (cor de fundo branco/preto + ícone)
+- [x] `refreshProfileScreen()` reescrito: hero, winrate, guest/logged-in, draws, i18n completo
+- [x] `MenuPopulator.populate()` atualiza `ph-elo-name`, `ph-pdl-val`, `stat-draws`
+- [x] Validação JS: 3 script blocks — 0 falhas; todos 24 IDs presentes
+
+### Arquivos alterados
+- `html/index.html`: bloco `<style>` com 38 classes `.ph-*`, HTML de `#screen-profile` substituído, `PIECE_ICONS` expandido, `selectAvatar` e `refreshProfileScreen` atualizados, i18n 9 idiomas
+- `html/auth-frontend.js`: `PIECE_MAP` expandido, `MenuPopulator.populate` atualizado com draws + hero
+
+### Bugs / Bloqueios Conhecidos
+- Servidor precisa retornar `p.draws` no endpoint `GET /player/:id` para o contador de empates funcionar corretamente (campo já existe se DB foi atualizado em sessões anteriores)
+
+### Notas para próxima sessão
+- Próxima sessão: Design-I (Ranking + Leaderboard)
+
+---
+
+## [2026-04-19] Sessão Design-I — Ranking + Leaderboard
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- [x] 1. Redesenhado `#screen-ranking`: escada vertical dos 14 ranks (`.rk-group`/`.rk-row`/`.rk-piece`) com posição atual destacada (borda laranja + barra PdL + badge "Você · N PdL")
+- [x] 2. Redesenhado `#screen-leaderboard`: linhas compactas (`.lb-r`) com posição · avatar · nome+rank · W/L
+- [x] 3. Podium via classe CSS (`.rc-pos.gold/silver/bronze`) — ouro=#c18200, prata=#7a8a9a, bronze=#8a5a2a
+- [x] 4. Linha "você" (`#lb-you-strip`) fixada abaixo da tabela scrollável; mostra posição e PdL do próprio jogador
+- [x] 5. ELO = nome do rank apenas — `elo.name` sem MMR número
+- [x] 6. PdL exibido só para o dono: no strip e na linha "you"; demais jogadores veem só o nome do rank
+- [x] `_ELO_LADDER` array de 14 entradas definido no frontend, espelhando `server/elo.js RANKS`
+- [x] `refreshRankingScreen()` reescrito: gera ladder HTML com grupos e divisões, destaca posição do jogador via `mc_elo_rank`/`mc_elo_lp` no localStorage
+- [x] `Leaderboard.render()` em rank-ui.js reescrito: novo estilo light, podium, you-strip
+- [x] `MenuPopulator.populate()` salva `mc_elo_rank` e `mc_elo_lp` no localStorage ao buscar `/player/:id`
+- [x] Validação JS: 3 script blocks + rank-ui.js + auth-frontend.js — 0 falhas; 11 IDs presentes
+
+### Arquivos alterados
+- `html/index.html`: bloco `<style>` com 35 classes `.rk-*` e `.lb-*`, HTML de `#screen-ranking` e `#screen-leaderboard` substituídos, `_ELO_LADDER` e `refreshRankingScreen()` reescritos
+- `html/rank-ui.js`: `Leaderboard.render()` reescrito com novo estilo e you-strip
+- `html/auth-frontend.js`: `MenuPopulator.populate()` salva `mc_elo_rank`/`mc_elo_lp`
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima sessão: Design-J (Histórico + Replay)
+
+## [2026-04-19] Sessão Design-J — Histórico + Replay
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/server.js`: adicionado `recordTurn(..., { type:'position' })` no handler `position_ready` — Turno 0 agora gravado no replay
+- `html/index.html`: bloco CSS para `#screen-match-history` e `#screen-replay` (`.mh-*`, `.rp-*` classes com tokens `--mc-*`)
+- `html/index.html`: nova tela `#screen-match-history` com topbar + lista `#match-history-list`
+- `html/index.html`: nova tela `#screen-replay` com header de resumo, board 4×4, banner de duelo, controles
+- `html/index.html`: i18n `turn_positioning` adicionado em todos os 9 idiomas
+- `html/rank-ui.js`: `MatchHistory.render()` reescrito com classes light-theme (`.mh-result.win/lose/draw/wo`, `.mh-pdl.up/dn/eq`)
+- `html/replay-ui.js`: `ReplayViewer` completamente reescrito:
+  - `_displayTurns()`: inclui type='position' (turno 0) + type='action'
+  - `open()`: popula `#rp-match-res`, `#rp-match-opp`, `#rp-match-pdl` a partir de `_meta`
+  - `renderTurn()`: board com `.rp-cell`/`.rp-piece.pw/.pb`, labels `#rp-turn-label`/`#rp-turn-count`, banner de duelo `.rp-duel-banner.visible`
+  - Formato duel: "♘ Cavalo venceu ♛ Rainha · 7 (5+2) × 6 (2+4)"
+  - `play()`: toggle `.rp-ctrl.playing` no botão de auto-play
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima sessão: Design-K (Configurações + Como Jogar + Créditos + links externos P-B)
+
+## [2026-04-19] Sessão Design-K — Configurações + Como Jogar + Créditos
+
+**Status:** Completo (exceto URLs reais — pendente confirmação do usuário)
+**Branch:** main
+
+### Feito
+- `html/index.html`: bloco CSS Design-K (`.dk-*` classes com tokens `--mc-*`)
+- `html/index.html`: i18n — 4 novas chaves (`appearance`, `info`, `dark_theme`, `htp_bonus_title`) em todos os 9 idiomas
+- `html/index.html`: `#screen-settings` completamente redesenhado:
+  - `rk-topbar` com ← de volta ao menu
+  - Grid 3×3 de idiomas com `fi fi-xx fis` (flag-icons CSS, sem emoji)
+  - Toggle de tema escuro (`.dk-toggle`) com estado salvo em localStorage
+  - Action-rows para Perfil / Como Jogar / Créditos
+- `html/index.html`: `#screen-how-to-play` redesenhado:
+  - `rk-topbar` com ← de volta a configurações
+  - 4 cards numerados (1–4) usando fases existentes do i18n
+  - Tabela de bônus com valores corretos do servidor (Q+5, R+4, N+3, B+2, P+1, K+5)
+  - Nota de objetivo reutilizando `htp_intro`
+- `html/index.html`: `#screen-credits` redesenhado:
+  - `rk-topbar` com ← de volta a configurações
+  - Layout centrado com logo, versão, nome, estúdio, links
+  - Botão de feedback (mantém `href="#"` até URLs confirmadas)
+- `html/index.html`: `refreshSettingsScreen()` atualizado para novos IDs + sync do toggle
+- `html/index.html`: `renderHowToPlay()` reescrito com cards + tabela de bônus usando `CONFIG`
+- `html/index.html`: `window.toggleDarkTheme()` implementado + init de tema ao carregar
+
+### Bugs / Bloqueios Conhecidos
+- URLs reais (portfolio, site, instagram, itch.io, feedback) ainda com `href="#"` — aguardando confirmação do usuário
+
+### Notas para próxima sessão
+- Próxima sessão: Design-L (Estados de exceção: disconnect, AFK, Morte Súbita, sem conexão)
+- ⚠️ DEPENDÊNCIA P-B: confirmar URLs com o usuário antes de inserir
+
+## [2026-04-19] Sessão Design-L — Estados de Exceção
+
+**Status:** Completo
+**Branch:** main
+
+### O que foi feito
+
+#### CSS + HTML (index.html)
+- Bloco `<style>` com classes `.exc-banner`, `.exc-danger`, `.exc-warn`, `.exc-info`, `.exc-timer`, `.exc-pulse`, `.exc-blur-panel`
+- `#phase-title.sd-phase` — pílula vermelha pulsando durante Morte Súbita
+- `#pr-join-input.exc-err` — borda vermelha no input de código de sala privada
+- `#exc-no-conn` — tela cheia "Sem conexão" com botão retry
+- `#exc-leave-overlay` — sheet confirmação de W.O. ao sair durante partida
+- `#exc-reconn-banner` — banner âmbar fixo no topo "Reconectando…"
+- `#opp-dc-banner` (`.exc-danger`) — strip abaixo do topbar com countdown de reconexão do oponente
+- `#afk-banner` (`.exc-warn`) — strip âmbar com timer pulsando para AFK warning
+- `#sudden-death-banner` (`.exc-info`) — strip informativo durante Morte Súbita
+
+#### JS (index.html — script block Design-L)
+- `window.ExcBanners` — API centralizada: `showOppDc`, `hideOppDc`, `showAfk`, `hideAfk`, `showSuddenDeath`, `hideSuddenDeath`, `hideAll`
+- `window.showLeaveConfirm` / `hideLeaveConfirm` / `confirmLeave`
+- AFK tracker client-side: 45s countdown em ACTION phase; mostra banner quando ≤15s; para quando `ready[myColor]` = true
+- `window.quitGame` atualizado: exibe `#exc-leave-overlay` se `#game-area` estiver visível
+- `window.returnToMenu` atualizado: chama `ExcBanners.hideAll()`
+- `renderDuelContent` atualizado: sync de `showSuddenDeath` / `hideSuddenDeath` com o modal
+
+#### auth-frontend.js
+- `showDisconnectBanner()` reescrita: usa `#exc-reconn-banner` + `#exc-no-conn` (se não inGame) + `.exc-blur-panel` (se inGame)
+- `socket.on('connect')` atualizado: remove todos os novos elementos + remove blur
+- `ReconnectOverlay.show()`: usa `window.ExcBanners.showOppDc(remainMs)` em vez do modal bloqueante; fallback mantido
+- `ReconnectOverlay.hide()`: chama `ExcBanners.hideOppDc()` além do modal
+
+#### Sala privada
+- `_onError()`: adiciona `.exc-err` ao input + remove na próxima digitação via `{ once: true }`
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próximas sessões planejadas: **P-12** (balanceamento MMR empate) + **P-B** (URLs reais créditos)
+- ⚠️ DEPENDÊNCIA P-B: URLs reais ainda ausentes nos links de créditos (`#crd-portfolio`, `#crd-site`, `#crd-insta`, `#crd-itch`, `#crd-feedback-btn`)
+- **Sessões restantes: 2** (P-12 técnico + P-B rápido de URLs)
+
+## [2026-04-19] Sessão P-12 — Balanceamento MMR Empate + Fix Morte Súbita
+
+**Status:** Completo
+**Branch:** main
+
+### O que foi feito
+
+#### Bug fix — Morte Súbita incorreta (server/server.js)
+- Removido `suddenDeath: true` do Case f (linha ~554): duelo frontal entre duas peças de mesmo bônus que ambas atacam o Rei do oponente. **Morte Súbita não é essa situação** — é apenas quando os dois Reis são as últimas peças.
+- O `suddenDeath: true` permanece correto nos casos `checkFinalDuel` (linhas 643–649, 747–752)
+
+#### P-12 — Draw MMR (server/mmr.js + server/server.js)
+- `mmr.js`: adicionada função `calculateDraw(mmrA, mmrB)` — ELO padrão com score=0.5: `delta = K × (0.5 − expected)`. Floor de +1 para o jogador mais fraco quando o arredondamento produziria 0.
+- Exportada junto com `calculate` e `getRank`
+- `server.js`: importado `calculateDraw`
+- `_persistDB`: caso `draw` agora chama `calculateDraw` em vez de manter `wDelta=bDelta=0`
+- `_persistDB`: queries UPDATE adicionam `draws=draws+?` (coluna já existia no schema, nunca havia sido incrementada)
+- `finishDuel`: tie handling refatorado — King vs King tie agora dispara `persistMatchResult(room, 'draw', false)` + `phase = 'GAMEOVER'` em vez de eliminar o Rei preto por padrão
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima (e última) sessão planejada: **P-B** — inserir URLs reais nos links de créditos
+- ⚠️ DEPENDÊNCIA P-B: confirmar URLs com usuário
+- **Sessões restantes: 1** (P-B — rápido, só substituição de URLs)
+
+---
+
+## [2026-04-19] Sessão P-12B — PdL Empate + SD-1 Announce (Morte Súbita)
+
+**Status:** Completo
+**Branch:** main
+
+### O que foi feito
+
+#### P-12B — PdL em caso de empate (server/server.js)
+- `_persistDB` draw case: MMR calculado por `calculateDraw` (padrão ELO) — sem mudança
+- PdL calculado separadamente: jogador mais forte recebe 0 PdL, jogador mais fraco recebe `max(0, delta)` PdL
+- Introduzidas variáveis `wLpInput` / `bLpInput` para separar lógica de PdL do MMR no draw
+
+#### SD-1 — Fase SUDDEN_DEATH e overlay de anúncio (server.js + index.html)
+**server/server.js:**
+- `resolveAction` → `checkFinalDuel`: quando apenas dois Reis restam, define `phase = 'SUDDEN_DEATH'` e retorna cedo (sem criar duel imediatamente)
+- `action_ready` handler: após `resolveAction`, detecta `phase === 'SUDDEN_DEATH'` e agenda `setTimeout(3000)` que cria o duel King vs King com `suddenDeath: true` e faz `broadcast`
+- `finishDuel` → `checkFinalDuel`: mesmo padrão — fase SUDDEN_DEATH + broadcast + setTimeout 3s
+- `finishDuel` tie (King vs King empate de dados): chama `persistMatchResult(room, 'draw', false)` + `phase = 'GAMEOVER'`
+
+**html/index.html:**
+- Adicionado `#sd-overlay` (div fullscreen, `z-index:2500`, fundo `rgba(0,0,0,0.97)`) com ícones ♔ VS ♚, título "MORTE SÚBITA" em vermelho pulsante, subtítulo i18n
+- `PHASE_LABELS` atualizado: `SUDDEN_DEATH` incluído com label e sub
+- `handlePhaseChange`: chama `triggerSuddenDeathOverlay()` quando phase === 'SUDDEN_DEATH'; oculta overlay em outras fases
+- `triggerSuddenDeathOverlay()`: popula `#sd-sub` com texto i18n, exibe overlay, auto-oculta após 3s (sincronizado com servidor)
+- `updateUI`: `SUDDEN_DEATH` mapeado no `phaseMap`; desabilita `#btn-ready` durante essa fase; oculta `#sd-overlay` quando `duel.active && duel.suddenDeath`
+- `handleCellClick`: bloqueia input durante `SUDDEN_DEATH`
+- `window.returnToMenu`: oculta `#sd-overlay` explicitamente ao voltar ao menu
+- `renderDuelContent`: sincroniza ocultação do `#sudden-death-banner` ao entrar no duel de Morte Súbita
+- Chave `sd_subtitle` adicionada a todos os 9 idiomas (PT/EN/ES/DE/IT/RU/JA/KO/ZH)
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- ⚠️ DEPENDÊNCIA P-B: confirmar URLs reais dos links de créditos com usuário
+- **Sessões restantes: 1** (P-B — só substituição de URLs)
+
+---
+
+## [2026-04-19] Sessão OPT-A — Ganhos Rápidos (Twemoji + Fontes + GZIP)
+
+**Status:** Completo
+**Branch:** main
+
+### O que foi feito
+
+#### Removido Twemoji (~1.7MB)
+- `html/index.html`: removida tag `<script src="twemoji@14.0.2...">` do `<head>`
+- Confirmado antes: zero usos de `twemoji.*` em todo o código
+
+#### Reduzidos pesos de fonte (Google Fonts URL)
+- Cinzel: `400;600;700;900` → `400;700`
+- Inter: `300;400;500;600;700;800` → `400;600`
+- JetBrains Mono: `400;500;600;700` → `400;600`
+- Cinzel Decorative, IBM Plex Mono: sem alteração (já mínimos)
+
+#### Ativado GZIP no Express
+- `server/server.js`: `require('compression')` + `app.use(compression())` antes do `helmet`
+- `npm install compression` — adicionado ao `package.json`
+
+### Impacto esperado
+- Remoção Twemoji: ~1.7MB eliminados do carregamento inicial
+- GZIP: `index.html` ~180kb → ~40kb; `auth-frontend.js` ~18kb → ~5kb
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima: **OPT-B** — animação de peças transform vs left/top (risco médio-alto)
+
+---
+
+## [2026-04-19] Sessão P-12 (items 5-6) — Game-Over PdL delta real
+
+**Status:** Completo
+**Branch:** main
+
+### O que foi feito
+
+- `html/auth-frontend.js`: adicionada função `_updateGameOverPdl(lpDelta, elo)` que, quando o evento `mmr_update` chega enquanto `#game-over-screen` está visível, popula:
+  - `#go-pdl-delta` com `+N PdL` / `-N PdL` / `±0 PdL` e classes `.delta.up` / `.delta.dn` / `.delta.eq`
+  - `#go-pdl-now` com `{icon} {name} · {lp} PdL` (estado pós-partida)
+- `mmr_update` handler: chama `_updateGameOverPdl` imediatamente após `showMMRToast`
+- `html/index.html` `launchGame()`: reseta `#go-pdl-delta` e `#go-pdl-now` ao iniciar nova partida (evita valores residuais)
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- ⚠️ DEPENDÊNCIA P-B: confirmar URLs reais dos links de créditos com usuário
+- **Sessões restantes: 1** (P-B — só substituição de URLs)

@@ -4,12 +4,13 @@ const http       = require('http');
 const { Server } = require('socket.io');
 const crypto     = require('crypto');
 const path       = require('path');
-const rateLimit  = require('express-rate-limit');
-const helmet     = require('helmet');
+const rateLimit     = require('express-rate-limit');
+const helmet        = require('helmet');
+const compression   = require('compression');
 
 const { hashPassword, checkPassword, signToken, verifyToken } = require('./auth');
 const db = require('./db/database');
-const { calculate: calcMMR, getRank, getBanDuration } = require('./mmr');
+const { calculate: calcMMR, calculateDraw, getRank, getBanDuration } = require('./mmr');
 const { createReplayBuffer, recordTurn, buildTurnSnapshot, buildDuelSnapshot } = require('./replay');
 const { applyLPChange, getEloDisplay } = require('./elo');
 
@@ -18,6 +19,7 @@ const server = http.createServer(app);
 const io     = new Server(server, { cors: { origin: process.env.ALLOWED_ORIGIN || '*' } });
 const PORT   = process.env.PORT || 3000;
 
+app.use(compression());
 app.use(helmet({ contentSecurityPolicy: false })); // CSP off: Google Fonts CDN + Socket.io inline
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../html')));
@@ -329,18 +331,25 @@ const _persistDB = db.transaction((room, winnerColor, isWO) => {
             result = 'black';
         } else {
             result = 'draw';
+            // Standard ELO draw: score=0.5. Weaker player always gains ≥1 MMR.
+            ({ deltaA: wDelta, deltaB: bDelta } = calculateDraw(wRec.mmr, bRec.mmr));
         }
     }
 
-    const wLP = applyLPChange(wRec.elo_rank ?? 0, wRec.elo_lp ?? 0, wRec.elo_shield ?? 0, wDelta);
-    const bLP = applyLPChange(bRec.elo_rank ?? 0, bRec.elo_lp ?? 0, bRec.elo_shield ?? 0, bDelta);
+    const isDraw = result === 'draw';
+    // Draw: MMR changes by ELO formula, but PdL only rises (no loss).
+    // Stronger player gets 0 PdL; weaker player gets max(0, computed delta).
+    const wLpInput = isDraw ? (wRec.mmr <= bRec.mmr ? Math.max(0, wDelta) : 0) : wDelta;
+    const bLpInput = isDraw ? (bRec.mmr <= wRec.mmr ? Math.max(0, bDelta) : 0) : bDelta;
+    const wLP = applyLPChange(wRec.elo_rank ?? 0, wRec.elo_lp ?? 0, wRec.elo_shield ?? 0, wLpInput);
+    const bLP = applyLPChange(bRec.elo_rank ?? 0, bRec.elo_lp ?? 0, bRec.elo_shield ?? 0, bLpInput);
 
-    db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
+    db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, draws=draws+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
       .run(wDelta, result === 'white' ? 1 : 0, result === 'black' || result === 'wo_black' ? 1 : 0,
-           wLP.elo_rank, wLP.elo_lp, wLP.elo_shield, wp.uid);
-    db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
+           isDraw ? 1 : 0, wLP.elo_rank, wLP.elo_lp, wLP.elo_shield, wp.uid);
+    db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, draws=draws+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
       .run(bDelta, result === 'black' ? 1 : 0, result === 'white' || result === 'wo_white' ? 1 : 0,
-           bLP.elo_rank, bLP.elo_lp, bLP.elo_shield, bp.uid);
+           isDraw ? 1 : 0, bLP.elo_rank, bLP.elo_lp, bLP.elo_shield, bp.uid);
 
     const matchId = crypto.randomUUID();
     room._matchId = matchId;
@@ -551,7 +560,8 @@ function resolveAction(state) {
             duelQueue.push({ type: 'attack', attackerColor: 'black', wPiece: kingW, bPiece: pieceB, txW: kingW.x, tyW: kingW.y, txB: pB.tx, tyB: pB.ty, priority: pieceB.bonus });
             duelQueue.push({ type: 'attack', attackerColor: 'white', wPiece: pieceW, bPiece: kingB, txW: pW.tx, tyW: pW.ty, txB: kingB.x, tyB: kingB.y, priority: pieceW.bonus });
         } else {
-            duelQueue.push({ type: 'frontal', wPiece: pieceW, bPiece: pieceB, txW: pW.tx, tyW: pW.ty, txB: pB.tx, tyB: pB.ty, priority: pieceW.bonus, suddenDeath: true });
+            // Equal-bonus frontal — regular duel (not Morte Súbita; that only applies to King vs King final)
+            duelQueue.push({ type: 'frontal', wPiece: pieceW, bPiece: pieceB, txW: pW.tx, tyW: pW.ty, txB: pB.tx, tyB: pB.ty, priority: pieceW.bonus });
         }
     } else if (pW && pB && pieceW && pieceB && pW.tx === pB.tx && pW.ty === pB.ty) {
         // Case d: frontal clash (same destination)
@@ -641,12 +651,14 @@ function resolveAction(state) {
                         rolls:   { white: 0,     black: 0     } };
         remainingQueue = duelQueue.slice(1);
     } else if (checkFinalDuel(army)) {
-        const kW = army.find(k => k.color === 'white');
-        const kB = army.find(k => k.color === 'black');
-        currentDuel = { active: true, resolveTime: false, wPiece: kW, bPiece: kB,
-                        suddenDeath: true,
-                        pressed: { white: false, black: false },
-                        rolls:   { white: 0,     black: 0     } };
+        // Morte Súbita: show announcement phase first; caller schedules duel after 3s
+        state.army      = army;
+        state.planning  = { white: null, black: null };
+        state.ready     = { white: false, black: false };
+        state.duel      = emptyDuel;
+        state.duelQueue = [];
+        state.phase     = 'SUDDEN_DEATH';
+        return;
     }
 
     state.army      = army;
@@ -685,12 +697,28 @@ function finishDuel(room) {
             bAlive.x = d.txB; bAlive.y = d.tyB;
         }
     } else {
-        // Tie: King always survives
-        if (d.wPiece.type === 'K') {
+        // Tie resolution
+        if (d.wPiece.type === 'K' && d.bPiece.type === 'K') {
+            // Morte Súbita draw: both Kings tied — game ends in draw
+            state.army      = army;
+            state.duel      = { active: false };
+            state.duelQueue = [];
+            state.phase     = 'GAMEOVER';
+            room.resolving  = false;
+            clearAFKTimer(room, 'white');
+            clearAFKTimer(room, 'black');
+            persistMatchResult(room, 'draw', false);
+            broadcast(room);
+            scheduleRoomCleanup(room.id);
+            return;
+        } else if (d.wPiece.type === 'K') {
+            // Attacker loses to stationary King
             army = army.filter(a => a.id !== d.bPiece.id);
         } else if (d.bPiece.type === 'K') {
+            // Attacker loses to stationary King
             army = army.filter(a => a.id !== d.wPiece.id);
         } else {
+            // Both non-King pieces eliminated
             army = army.filter(a => a.id !== d.wPiece.id && a.id !== d.bPiece.id);
         }
     }
@@ -745,16 +773,27 @@ function finishDuel(room) {
     }
 
     if (checkFinalDuel(army)) {
-        const kW = army.find(k => k.color === 'white');
-        const kB = army.find(k => k.color === 'black');
+        // Morte Súbita: announce phase first, duel after 3s
         state.army      = army;
-        state.duel      = { active: true, resolveTime: false, wPiece: kW, bPiece: kB,
-                            suddenDeath: true,
-                            pressed: { white: false, black: false },
-                            rolls:   { white: 0,     black: 0     } };
+        state.duel      = { active: false };
         state.duelQueue = [];
+        state.phase     = 'SUDDEN_DEATH';
         room.resolving  = false;
         broadcast(room);
+        setTimeout(() => {
+            const r = rooms.get(room.id);
+            if (!r || r.state.phase !== 'SUDDEN_DEATH') return;
+            const kW = r.state.army.find(k => k.color === 'white');
+            const kB = r.state.army.find(k => k.color === 'black');
+            if (!kW || !kB) return;
+            r.state.duel = {
+                active: true, resolveTime: false, wPiece: kW, bPiece: kB,
+                suddenDeath: true,
+                pressed: { white: false, black: false },
+                rolls:   { white: 0,     black: 0     },
+            };
+            broadcast(r);
+        }, 3_000);
         return;
     }
 
@@ -1052,6 +1091,8 @@ io.on('connection', (socket) => {
         clearAFKTimer(room, playerColor);
         s.ready[playerColor] = true;
         if (s.ready.white && s.ready.black) {
+            // Turno 0: snapshot do posicionamento para replay
+            recordTurn(room._replay, { type: 'position', ...buildTurnSnapshot(s) });
             s.phase = 'REVEAL';
             s.ready = { white: false, black: false };
             setTimeout(() => {
@@ -1102,6 +1143,23 @@ io.on('connection', (socket) => {
             resolveAction(s);
             if (room._replay) {
                 recordTurn(room._replay, { type: 'action', planning: planningSnap, ...buildTurnSnapshot(s) });
+            }
+            // Morte Súbita: schedule King vs King duel after 3s announce phase
+            if (s.phase === 'SUDDEN_DEATH') {
+                setTimeout(() => {
+                    const r = rooms.get(room.id);
+                    if (!r || r.state.phase !== 'SUDDEN_DEATH') return;
+                    const kW = r.state.army.find(k => k.color === 'white');
+                    const kB = r.state.army.find(k => k.color === 'black');
+                    if (!kW || !kB) return;
+                    r.state.duel = {
+                        active: true, resolveTime: false, wPiece: kW, bPiece: kB,
+                        suddenDeath: true,
+                        pressed: { white: false, black: false },
+                        rolls:   { white: 0,     black: 0     },
+                    };
+                    broadcast(r);
+                }, 3_000);
             }
         }
         broadcast(room);
