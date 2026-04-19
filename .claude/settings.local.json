@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -v \"^\\\\s*//\")"
+      "Bash(grep -v \"^\\\\s*//\")",
+      "Bash(node ../testes/server/run-tests.js)",
+      "Bash(node testes/db-inspector.js)",
+      "Bash(node ../testes/db-inspector.js)"
     ]
   }
 }

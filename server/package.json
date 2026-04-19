@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --env-file=.env --watch server.js",
-    "db:setup": "node db/seed.js"
+    "db:setup": "node db/seed.js",
+    "test": "node ../testes/server/run-tests.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

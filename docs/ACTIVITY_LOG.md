@@ -1256,6 +1256,34 @@ O elemento `.piece` tem `width: 25%` do board. `translate(100%, 0)` move a peça
 
 ---
 
+## [2026-04-19] Sessão TESTES-A — Unit tests + db-inspector
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `testes/server/elo.test.js` — 20 testes para `elo.js` (RANKS, getRankById, applyLPChange, getEloDisplay) · 100% passando
+- `testes/server/mmr.test.js` — 16 testes para `mmr.js` (calculate, calculateDraw, getRank, getBanDuration) · 100% passando
+- `testes/server/run-tests.js` — runner que executa todos os `*.test.js` sequencialmente, exitCode 1 se algum falhar
+- `testes/db-inspector.js` — inspetor do banco SQLite: resumo, distribuição de resultados, top 10 por MMR, partidas recentes, detalhe de jogador por `--player <username>`
+- `server/package.json`: script `"test"` adicionado — `node ../testes/server/run-tests.js`
+
+### Como usar
+```
+# Rodar testes unitários (da pasta server/):
+npm test
+
+# Inspecionar banco (da raiz do projeto):
+node testes/db-inspector.js
+node testes/db-inspector.js --player dash_
+node testes/db-inspector.js --matches 20
+```
+
+### Notas para próxima sessão
+- Próxima: **TESTES-B** — Integration API + partida automatizada
+
+---
+
 ## [2026-04-19] Sessão P-12 (items 5-6) — Game-Over PdL delta real
 
 **Status:** Completo

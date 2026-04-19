@@ -310,7 +310,7 @@ curl http://localhost:3000/health
 | POL-Theme | Detecção automática prefers-color-scheme + matchMedia listener | ✅ Completo |
 | OPT-B | Animação de peças: transform vs left/top | ✅ Completo |
 | OPT-C | flag-icons inline + SW versioning + perMessageDeflate + CSS hints | ✅ Completo |
-| TESTES-A | Unit tests + db-inspector | ⏳ Pendente |
+| TESTES-A | Unit tests + db-inspector | ✅ Completo |
 | TESTES-B | Integration API + partida automatizada | ⏳ Pendente |
 | TESTES-C | 6 ferramentas de navegador | ⏳ Pendente |
 | TESTES-D | Cenários avançados + carga + replay validator | ⏳ Pendente |
