@@ -307,8 +307,9 @@ curl http://localhost:3000/health
 | P-12 | Balanceamento MMR para empate + fix Morte Súbita | ✅ Completo |
 | P-12B | PdL empate (só ganho) + SD-1 overlay Morte Súbita | ✅ Completo |
 | OPT-A | GZIP + remover Twemoji + reduzir pesos de fonte | ✅ Completo |
-| OPT-B | Animação de peças: transform vs left/top | ⏳ Pendente |
-| OPT-C | flag-icons inline + SW versioning + perMessageDeflate + CSS hints | ⏳ Pendente |
+| POL-Theme | Detecção automática prefers-color-scheme + matchMedia listener | ✅ Completo |
+| OPT-B | Animação de peças: transform vs left/top | ✅ Completo |
+| OPT-C | flag-icons inline + SW versioning + perMessageDeflate + CSS hints | ✅ Completo |
 | TESTES-A | Unit tests + db-inspector | ⏳ Pendente |
 | TESTES-B | Integration API + partida automatizada | ⏳ Pendente |
 | TESTES-C | 6 ferramentas de navegador | ⏳ Pendente |

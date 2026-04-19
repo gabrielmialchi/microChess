@@ -11,8 +11,22 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@700&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css">
+    <!-- flag-icons: apenas as 9 bandeiras usadas no seletor de idioma (inline — sem CDN) -->
+    <style>
+    .fi{background-size:contain;background-position:50%;background-repeat:no-repeat;display:inline-block}
+    .fis{width:1.333em;height:1em;line-height:1em}
+    .fi-br{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/br.svg")}
+    .fi-gb{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/gb.svg")}
+    .fi-es{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/es.svg")}
+    .fi-de{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/de.svg")}
+    .fi-it{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/it.svg")}
+    .fi-ru{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/ru.svg")}
+    .fi-jp{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/jp.svg")}
+    .fi-kr{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/kr.svg")}
+    .fi-cn{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/cn.svg")}
+    </style>
 
     <!-- ═══════════════════════════════════════════════════════════
          microChess Design System — tokens + componentes base
@@ -218,7 +232,7 @@
     .mc-topbar .back:hover{background:var(--mc-rule)}
 
     .mc-board{width:100%;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(4,1fr);background:var(--mc-surface);border:1px solid var(--mc-cell-border);border-radius:var(--mc-r-md);overflow:hidden;position:relative;user-select:none}
-    .mc-board .cell{position:relative;display:grid;place-items:center;font-family:var(--mc-font-sans);font-size:clamp(32px,11vw,56px);line-height:1;background:var(--mc-cell-light);transition:background var(--mc-dur-sm) var(--mc-ease-out)}
+    .mc-board .cell{position:relative;display:grid;place-items:center;font-family:var(--mc-font-sans);font-size:clamp(32px,11vw,56px);line-height:1;background:var(--mc-cell-light);transition:background var(--mc-dur-sm) var(--mc-ease-out);contain:layout style}
     .mc-board .cell.dk{background:var(--mc-cell-dark)}
     .mc-board .cell.hl{box-shadow:inset 0 0 0 3px var(--mc-cell-hl)}
     .mc-board .cell.last{background:var(--mc-cell-lastmove)}
@@ -519,21 +533,30 @@
 
         .piece {
             position: absolute;
+            left: 0; top: 0;
             width: 25%;
             height: 25%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 11vw;
-            /* LERP: spring easing on position, smooth on everything else */
+            /* GPU-composited positioning via CSS custom properties --px / --py.
+               translate(100%,0) = 1 cell right (piece width = 25% of board = 1 cell).
+               Spring easing on position; smooth on opacity/filter. */
+            transform: translate(var(--px, 0%), var(--py, 0%));
             transition:
-                left  0.45s cubic-bezier(0.34, 1.15, 0.64, 1),
-                top   0.45s cubic-bezier(0.34, 1.15, 0.64, 1),
-                transform  0.2s ease,
+                transform  0.45s cubic-bezier(0.34, 1.15, 0.64, 1),
                 opacity    0.25s ease,
                 filter     0.25s ease;
             pointer-events: none;
-            will-change: left, top;
+            will-change: transform;
+        }
+
+        /* Phase-hidden: opponent non-king during POSITION — invisible but tracked */
+        .piece.piece-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(var(--px, 0%), var(--py, 0%)) scale(0.4);
         }
 
         @media (min-width: 450px) { .piece { font-size: 50px; } }
@@ -559,7 +582,7 @@
         }
 
         .piece.selected {
-            transform: scale(1.22) translateY(-6%);
+            transform: translate(var(--px, 0%), var(--py, 0%)) scale(1.22) translateY(-6%);
             z-index: 20;
         }
 
@@ -573,10 +596,10 @@
 
         /* ── PIECE ENTRANCE ── */
         @keyframes piece-enter {
-            0%   { transform: scale(0.25) translateY(-15%); opacity: 0; filter: brightness(4); }
-            55%  { transform: scale(1.12) translateY(-2%); opacity: 1; }
-            80%  { transform: scale(0.97) translateY(0); }
-            100% { transform: scale(1)   translateY(0); }
+            0%   { transform: translate(var(--px,0%), var(--py,0%)) scale(0.25) translateY(-15%); opacity: 0; filter: brightness(4); }
+            55%  { transform: translate(var(--px,0%), var(--py,0%)) scale(1.12) translateY(-2%); opacity: 1; }
+            80%  { transform: translate(var(--px,0%), var(--py,0%)) scale(0.97) translateY(0); }
+            100% { transform: translate(var(--px,0%), var(--py,0%)) scale(1)    translateY(0); }
         }
 
         .piece-entering {
@@ -585,12 +608,12 @@
 
         /* ── PIECE CAPTURE ── */
         @keyframes piece-capture {
-            0%   { transform: scale(1) rotate(0deg);     opacity: 1;   filter: brightness(1); }
-            12%  { transform: scale(1.45) rotate(-9deg); opacity: 1;   filter: brightness(4) saturate(0.2); }
-            28%  { transform: scale(0.85) rotate(6deg);  opacity: 0.85; }
-            48%  { transform: scale(1.15) rotate(-4deg); opacity: 0.55; }
-            70%  { transform: scale(0.55) rotate(10deg); opacity: 0.2; }
-            100% { transform: scale(0)   rotate(22deg);  opacity: 0;   }
+            0%   { transform: translate(var(--px,0%), var(--py,0%)) scale(1)    rotate(0deg);   opacity: 1;    filter: brightness(1); }
+            12%  { transform: translate(var(--px,0%), var(--py,0%)) scale(1.45) rotate(-9deg);  opacity: 1;    filter: brightness(4) saturate(0.2); }
+            28%  { transform: translate(var(--px,0%), var(--py,0%)) scale(0.85) rotate(6deg);   opacity: 0.85; }
+            48%  { transform: translate(var(--px,0%), var(--py,0%)) scale(1.15) rotate(-4deg);  opacity: 0.55; }
+            70%  { transform: translate(var(--px,0%), var(--py,0%)) scale(0.55) rotate(10deg);  opacity: 0.2; }
+            100% { transform: translate(var(--px,0%), var(--py,0%)) scale(0)    rotate(22deg);  opacity: 0; }
         }
 
         .piece-capturing {
@@ -3844,10 +3867,24 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const toggle = document.getElementById('dk-theme-toggle');
         if (toggle) toggle.classList.toggle('on', next === 'dark');
     };
-    // Init theme from localStorage
+    // Init theme: saved preference → system preference → light
     (function() {
         const saved = localStorage.getItem('mc_theme');
-        if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        const mq    = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+        const apply = theme => {
+            document.documentElement.setAttribute('data-theme', theme);
+            const toggle = document.getElementById('dk-theme-toggle');
+            if (toggle) toggle.classList.toggle('on', theme === 'dark');
+        };
+        if (saved === 'dark' || saved === 'light') {
+            apply(saved);
+        } else if (mq && mq.matches) {
+            apply('dark');
+        }
+        // React to OS theme changes only when user has no saved preference
+        if (mq) mq.addEventListener('change', e => {
+            if (!localStorage.getItem('mc_theme')) apply(e.matches ? 'dark' : 'light');
+        });
     })();
 
     window.selectLanguage = function(lang) {
@@ -4516,9 +4553,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
             } else if (!displayedIds.has(id)) {
                 // Phase-hidden (opponent non-king in POSITION)
-                el.style.opacity = '0';
-                el.style.pointerEvents = 'none';
-                el.style.transform = 'scale(0.4)';
+                el.classList.add('piece-hidden');
             }
         });
 
@@ -4536,8 +4571,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 // New piece — create with entrance animation
                 el = document.createElement('div');
                 el.dataset.id = p.id;
-                el.style.left = `${visualX * 25}%`;
-                el.style.top  = `${visualY * 25}%`;
+                el.style.setProperty('--px', `${visualX * 100}%`);
+                el.style.setProperty('--py', `${visualY * 100}%`);
                 layerEl.appendChild(el);
                 pieceElements.set(p.id, el);
 
@@ -4550,16 +4585,14 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
             } else {
                 // Restore from phase-hidden state
-                if (el.style.opacity === '0') {
-                    el.style.opacity = '';
-                    el.style.pointerEvents = '';
-                    el.style.transform = '';
+                if (el.classList.contains('piece-hidden')) {
+                    el.classList.remove('piece-hidden');
                     el.classList.add('piece-entering');
                     setTimeout(() => el.classList.remove('piece-entering'), 500);
                 }
-                // LERP: update position, CSS transition handles the spring animation
-                el.style.left = `${visualX * 25}%`;
-                el.style.top  = `${visualY * 25}%`;
+                // GPU-composited spring animation: update custom properties
+                el.style.setProperty('--px', `${visualX * 100}%`);
+                el.style.setProperty('--py', `${visualY * 100}%`);
             }
 
             el.innerText = CONFIG[p.type].icon;

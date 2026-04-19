@@ -1181,6 +1181,81 @@ Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 
 ---
 
+## [2026-04-19] Sessão OPT-B — Animação de peças: transform vs left/top
+
+**Status:** Completo
+**Branch:** main
+
+### O que foi feito
+
+#### CSS — `.piece` (html/index.html)
+- Adicionado `left: 0; top: 0;` (âncora fixa no canto do board)
+- Adicionado `transform: translate(var(--px, 0%), var(--py, 0%))` como posicionamento base
+- `will-change: left, top` → `will-change: transform` (hint correto para o compositor)
+- `transition`: removido `left 0.45s` e `top 0.45s`, substituído por `transform 0.45s cubic-bezier(0.34,1.15,0.64,1)`; removido `transform 0.2s ease` (agora unificado)
+- Adicionada classe `.piece.piece-hidden` para o estado phase-hidden (substitui inline styles `opacity/pointerEvents/transform`)
+
+#### CSS — `.piece.selected`
+- `transform: scale(1.22) translateY(-6%)` → `transform: translate(var(--px,0%), var(--py,0%)) scale(1.22) translateY(-6%)`
+- Mantém posição correta ao selecionar
+
+#### CSS — `@keyframes piece-enter` e `@keyframes piece-capture`
+- Cada frame reescrito para incluir `translate(var(--px,0%), var(--py,0%))` como primeira transformação
+- Animações de entrada e captura mantêm a posição correta durante todo o keyframe
+
+#### JS — `syncBoard()` (html/index.html)
+- Criação de peça: `el.style.left/top = '${N*25}%'` → `el.style.setProperty('--px/--py', '${N*100}%')`
+- Phase-hidden: `el.style.opacity/pointerEvents/transform` diretos → `el.classList.add('piece-hidden')`
+- Restauração de phase-hidden: verificação `style.opacity === '0'` → `classList.contains('piece-hidden')`, remoção via `classList.remove`
+- Movimento: `el.style.left/top` → `el.style.setProperty('--px/--py', '${N*100}%')`
+- Nenhum `style.transform` inline restante nas peças
+
+### Por que N*100% em vez de N*25%
+O elemento `.piece` tem `width: 25%` do board. `translate(100%, 0)` move a peça pela sua própria largura = 25% do board = 1 célula. Logo, coluna N → `translate(N*100%, 0)`.
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima: **OPT-C** — flag-icons inline, SW versioning, perMessageDeflate, CSS hints
+
+---
+
+## [2026-04-19] Sessão OPT-C — flag-icons + perMessageDeflate + CSS hints
+
+**Status:** Completo
+**Branch:** main
+
+### O que foi feito
+
+#### flag-icons inline (html/index.html)
+- Removido `<link rel="stylesheet" href="cdn.../flag-icons.min.css">` (~60kb de CSS)
+- Adicionado `<style>` inline no `<head>` com apenas as 9 classes necessárias:
+  `.fi`, `.fis` (base) + `.fi-br/gb/es/de/it/ru/jp/kr/cn` (SVG via URL individual do CDN)
+- Cada bandeira carrega apenas 1 SVG (~2kb) ao invés de todo o CSS (~60kb)
+
+#### Preload da fonte Cinzel (html/index.html)
+- Adicionado `<link rel="preload" as="style">` para Cinzel antes do `<link>` principal
+- Fonte crítica para logo e títulos passa a ser descoberta antes pelo parser
+
+#### perMessageDeflate no Socket.io (server/server.js)
+- `new Server(server, { cors: ... })` expandido com `perMessageDeflate: { threshold: 1024 }`
+- Mensagens WebSocket > 1kb são comprimidas automaticamente
+
+#### `contain: layout style` nas células do board (html/index.html)
+- Adicionado à regra `.mc-board .cell`
+- Reflows dentro de uma célula não propagam para o restante da página
+
+#### SW — já em v2 (confirmado, não alterado)
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- Próxima: **TESTES-A** — unit tests + db-inspector
+
+---
+
 ## [2026-04-19] Sessão P-12 (items 5-6) — Game-Over PdL delta real
 
 **Status:** Completo
@@ -1231,3 +1306,24 @@ Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 - `#opp-dot.thinking` e `#opp-meta` não atualizados em tempo real (Design-D — low priority)
 - URLs reais nos créditos ainda `href="#"` (P-B — requer confirmação do usuário)
 - `p.draws` precisa ser retornado pelo servidor para o stat de empates no perfil
+
+---
+
+## [2026-04-19] Sessão POL-Theme — Detecção automática de tema do sistema
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- Atualizado init IIFE em `html/index.html`: prioridade `localStorage` → `prefers-color-scheme` → light
+- Adicionado `matchMedia.addEventListener('change')` para reagir a mudança do tema do SO em tempo real (só quando sem preferência salva)
+- Sincronização do botão toggle (`.on`) incluída no apply, além do `refreshSettingsScreen()` existente
+
+### Comportamento resultante
+| Situação | Tema aplicado |
+|----------|--------------|
+| Usuário tem preferência salva (`mc_theme`) | Usa a preferência salva |
+| SO em dark mode, sem preferência salva | Aplica dark automaticamente |
+| SO em light mode, sem preferência salva | Aplica light (padrão) |
+| Usuário muda tema no SO enquanto joga | Atualiza em tempo real (se sem preferência salva) |
+| Usuário usa o toggle no jogo | Salva em localStorage, sobrepõe sistema |
