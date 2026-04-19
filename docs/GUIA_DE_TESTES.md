@@ -79,7 +79,7 @@ O servidor precisa de um arquivo chamado `.env` para funcionar. **Sem ele, o ser
 ```
 JWT_SECRET=minha-chave-secreta-local-123456
 HMAC_SECRET=outra-chave-diferente-789012
-AES_KEY=exatamente32caracteresaqui12345
+AES_KEY=12345678901234567890123456789012
 NODE_ENV=development
 PORT=3000
 ```
@@ -87,6 +87,7 @@ PORT=3000
 > **Dicas:**
 > - Para criar sem extensão `.txt`, no Bloco de Notas vá em **Salvar como** → no campo "Tipo" escolha **Todos os arquivos** → nomeie como `.env`
 > - Os valores acima são para uso local apenas — não precisa ser seguro, só precisa existir
+> - `AES_KEY` precisa ter **exatamente 32 caracteres** — conte se precisar
 > - Nunca envie esse arquivo para o GitHub (já está no `.gitignore`)
 > - O arquivo `.env` fica dentro da pasta `server`, no mesmo nível do `server.js`
 

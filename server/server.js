@@ -136,7 +136,7 @@ app.post('/auth/register', authLimiter, async (req, res) => {
             return res.status(409).json({ error: 'Email já cadastrado' });
         db.prepare(
             'INSERT INTO players (id, username, email, email_hash, email_enc, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
-        ).run(id, uname, null, email_hash, email_enc, password_hash);
+        ).run(id, uname, email_enc, email_hash, email_enc, password_hash);
         const token = signToken({ id, username: uname, pv: 0 });
         res.json({ token, id, username: uname, mmr: 1500 });
     } catch (e) {

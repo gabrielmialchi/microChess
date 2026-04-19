@@ -1149,6 +1149,7 @@ Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 
 ## [2026-04-19] Sessão OPT-A — Ganhos Rápidos (Twemoji + Fontes + GZIP)
 
+
 **Status:** Completo
 **Branch:** main
 
@@ -1199,3 +1200,34 @@ Todas as 14 vulnerabilidades identificadas na revisão foram endereçadas:
 ### Notas para próxima sessão
 - ⚠️ DEPENDÊNCIA P-B: confirmar URLs reais dos links de créditos com usuário
 - **Sessões restantes: 1** (P-B — só substituição de URLs)
+
+---
+
+## [2026-04-19] Correções de bugs pós-redesign
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+
+#### Bug crítico — Auth (server/server.js)
+- `POST /auth/register` retornava 500: coluna `email TEXT NOT NULL` recebia `null` (regressão da Sessão 18 V-06)
+- Fix: INSERT agora passa `email_enc` na coluna legada `email`
+
+#### Bug crítico — Jogo voltava ao menu após GO (html/index.html)
+- `#screen-menu` tinha `style="display:flex"` inline (Design-B) — sobrepõe `.screen { display:none }` via CSS
+- Menu permanecia visível (z-index 4000) bloqueando o game-area (z-index 1)
+- Fix: `display:flex` removido do inline; layout movido para regra CSS `#screen-menu`
+
+#### Bug de UX — Tab bar sobrepunha o jogo (html/index.html)
+- `#mc-tabbar` tem `z-index:90`, `#game-area` tem `z-index:1` — tabbar visível durante partida
+- Fix: `launchGame()` esconde o tabbar; `returnToMenu()` restaura
+
+#### Bug de ambiente — npm run dev não carregava .env (server/package.json)
+- Script `dev` não passava `--env-file=.env`; `auth.js` faz `process.exit(1)` se JWT_SECRET ausente
+- Fix: script atualizado para `node --env-file=.env --watch server.js`
+
+### Gaps conhecidos (não bloqueadores)
+- `#opp-dot.thinking` e `#opp-meta` não atualizados em tempo real (Design-D — low priority)
+- URLs reais nos créditos ainda `href="#"` (P-B — requer confirmação do usuário)
+- `p.draws` precisa ser retornado pelo servidor para o stat de empates no perfil

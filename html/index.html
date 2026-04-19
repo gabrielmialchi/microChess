@@ -1126,7 +1126,10 @@
 
         /* ── MENU SCREEN ── */
         #screen-menu {
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: flex-start;
+            overflow-y: auto;
+            padding-bottom: 72px;
         }
 
         .menu-header {
@@ -1879,7 +1882,7 @@
 </div>
 
 <!-- MENU SCREEN -->
-<div id="screen-menu" class="screen" style="background:var(--mc-bg);display:flex;flex-direction:column;padding-bottom:72px;overflow-y:auto;">
+<div id="screen-menu" class="screen" style="background:var(--mc-bg);flex-direction:column;padding-bottom:72px;overflow-y:auto;">
 
   <!-- Player row -->
   <div style="padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--mc-rule);">
@@ -3932,7 +3935,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
     // ── SOCKET.IO CONNECTION ──────────────────────────────────────
     // LOCAL: conecta ao servidor local. PRODUÇÃO: troque pela URL do Railway.
-    const SERVER_URL = window.location.hostname === 'localhost' ? '' : 'microchess-production.up.railway.app';
+    const h = window.location.hostname;
+    const isLocal = h === 'localhost' || h.startsWith('192.168.') || h.startsWith('10.') || h.startsWith('172.');
+    const SERVER_URL = isLocal ? '' : 'microchess-production.up.railway.app';
     const socket = io(SERVER_URL);
     window._mcSocket = socket;
 
@@ -4031,6 +4036,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     function launchGame() {
         resultSaved = false;
         inGame = true;
+        const tabbar = document.getElementById('mc-tabbar');
+        if (tabbar) tabbar.style.display = 'none';
         if (myColor !== 'white') document.body.classList.add('theme-light');
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('game-area').style.display = 'flex';
@@ -4156,6 +4163,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
     window.returnToMenu = function() {
         inGame = false;
+        const tabbar = document.getElementById('mc-tabbar');
+        if (tabbar) tabbar.style.display = '';
         document.getElementById('game-area').style.display = 'none';
         document.getElementById('game-over-screen').style.display = 'none';
         const sdOv = document.getElementById('sd-overlay');
