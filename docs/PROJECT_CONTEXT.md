@@ -311,8 +311,10 @@ curl http://localhost:3000/health
 | OPT-B | Animação de peças: transform vs left/top | ✅ Completo |
 | OPT-C | flag-icons inline + SW versioning + perMessageDeflate + CSS hints | ✅ Completo |
 | TESTES-A | Unit tests + db-inspector | ✅ Completo |
-| TESTES-B | Integration API + partida automatizada | ⏳ Pendente |
-| TESTES-C | 6 ferramentas de navegador | ⏳ Pendente |
-| TESTES-D | Cenários avançados + carga + replay validator | ⏳ Pendente |
+| SEC-A | Bundling + minificação + obfuscação JS (pré-requisito Play Store) | ⏳ Pendente |
+| P-B | Links externos reais nos créditos | ⏸ Aguarda URLs do usuário |
+| TESTES-B | Integration API + partida automatizada | ⏸ Futuro (não bloqueia produção) |
+| TESTES-C | 6 ferramentas de navegador | ⏸ Futuro (não bloqueia produção) |
+| TESTES-D | Cenários avançados + carga + replay validator | ⏸ Futuro (não bloqueia produção) |
 
 *(Atualizar este arquivo ao concluir cada sessão)*
