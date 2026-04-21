@@ -30,6 +30,18 @@ Execute automaticamente estes passos, sem pedir confirmação adicional:
 - **Retrocompatibilidade**: o jogo deve funcionar sem conta criada
 - **Verificar** `docs/ACTIVITY_LOG.md` para saber o que JÁ foi feito antes de implementar
 
+## Subagentes disponíveis
+
+| Agente | Modelo | Uso |
+|--------|--------|-----|
+| `pesquisador` | haiku | Leitura e busca interna no projeto |
+| `explorador` | haiku | Pesquisa externa, docs de bibliotecas |
+| `programador` | sonnet | Implementação de código |
+| `designer` | sonnet | UI/UX e componentes visuais |
+
+Regra: apenas o Gerente (sessão principal) spawna subagentes. Subagentes não spawnam outros.
+Ao planejar uma sessão: reunir contexto via `pesquisador` antes de delegar execução.
+
 ## Quando o usuário disser "status do projeto"
 
 Leia `docs/ACTIVITY_LOG.md` e `docs/PROJECT_CONTEXT.md` e responda:
