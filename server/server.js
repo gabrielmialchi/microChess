@@ -17,8 +17,19 @@ const { isPathClear, isValidMove }     = require('./movegen');
 
 const app    = express();
 const server = http.createServer(app);
+// CORS — suporta lista separada por vírgula em ALLOWED_ORIGIN
+const _rawOrigins = process.env.ALLOWED_ORIGIN || '*';
+const _originList = _rawOrigins === '*' ? '*' : _rawOrigins.split(',').map(s => s.trim());
+const _checkOrigin = (origin) => {
+    if (_originList === '*' || !origin) return true;
+    return _originList.some(o => o === origin || (o.startsWith('*.') && origin.endsWith(o.slice(1))));
+};
+
 const io     = new Server(server, {
-    cors: { origin: process.env.ALLOWED_ORIGIN || '*' },
+    cors: {
+        origin: _originList === '*' ? '*' : (origin, cb) =>
+            _checkOrigin(origin) ? cb(null, true) : cb(new Error('CORS')),
+    },
     perMessageDeflate: { threshold: 1024 },
 });
 const PORT   = process.env.PORT || 3000;
@@ -26,9 +37,14 @@ const PORT   = process.env.PORT || 3000;
 app.use(compression());
 app.use(helmet({ contentSecurityPolicy: false })); // CSP off: Google Fonts CDN + Socket.io inline
 
-const _origin = process.env.ALLOWED_ORIGIN || '*';
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', _origin);
+    const origin = req.headers.origin;
+    if (_originList === '*') {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+    } else if (origin && _checkOrigin(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Vary', 'Origin');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
     if (req.method === 'OPTIONS') return res.sendStatus(204);
