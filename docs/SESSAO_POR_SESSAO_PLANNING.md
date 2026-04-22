@@ -2485,3 +2485,386 @@ Implementar cálculo de PdL para resultado de empate em `server/mmr.js`.
 [ ] 6. No cliente (index.html), adicionar listener `socket.on('pdl_result', ...)` que atualiza `#go-pdl-delta` e `#go-pdl-now` se a tela de game-over estiver visível
 [ ] 7. Testar: empate entre ranks iguais, empate fraco-vs-forte, empate em partida não-ranqueada
 ```
+
+---
+
+# SESSÃO PRE-OT-A: IDIOMA EN PADRÃO + PREFERÊNCIA POR USUÁRIO
+
+## Objetivo
+Tornar Inglês (EN) o idioma padrão da aplicação, implementar detecção de idioma do sistema, salvar preferência de idioma por usuário no banco, e reordenar o grid de idiomas no Settings para EN primeiro.
+
+## Prioridade: 🔴 Alta
+
+## Ler antes de iniciar
+`html/index.html` (linhas 3540-3560 para default de idioma; 2168-2178 para grid de idiomas)
+`server/db/schema.sql`
+`server/db/database.js`
+`server/server.js` (endpoint de profile/update)
+
+## Risco: 🟡 Médio — migration de DB adiciona coluna; testar retrocompatibilidade com registros existentes
+
+## Regras de prioridade de idioma (ordem de precedência)
+1. Preferência salva pelo usuário autenticado (banco de dados) — máxima prioridade
+2. Preferência salva em localStorage (não autenticado)
+3. Idioma do sistema (`navigator.language`) — se houver tradução disponível
+4. Inglês (EN) — fallback universal
+
+## Checklist
+
+```
+[ ] 1. Alterar default de idioma: `|| 'pt'` → `|| 'en'` em html/index.html (linha ~3547)
+[ ] 2. Adicionar coluna `lang VARCHAR(5) DEFAULT 'en'` à tabela `players` via migration em server/db/database.js
+[ ] 3. No login/carregamento de perfil: receber `player.lang` do servidor e aplicar como idioma ativo antes de renderizar screen-menu
+[ ] 4. No seletor de idioma (selectLanguage): se autenticado, enviar PATCH ao servidor para salvar `lang` na tabela players
+[ ] 5. Detecção de idioma do sistema: ler `navigator.language` → mapear para idioma suportado (pt/es/en/de/it/ru/ja/ko/zh) → aplicar se não há preferência salva
+[ ] 6. Preferência do usuário (autenticado ou localStorage) tem prioridade sobre detecção do sistema
+[ ] 7. Reordenar grid de idiomas em screen-settings: EN primeiro, depois PT, ES, DE, IT, RU, JA, KO, ZH
+[ ] 8. Garantir que após login o idioma salvo no servidor sobrescreve o idioma ativo antes do login
+```
+
+---
+
+# SESSÃO PRE-OT-B: MODO CASUAL + NOVO FLUXO DE NOVO JOGO
+
+## Objetivo
+Criar o modo Casual (partidas sem XP/MMR), nova tela intermediária de seleção de modo entre NOVO JOGO e matchmaking, e garantir que Salas Privadas são sempre Casual.
+
+## Prioridade: 🔴 Alta
+
+## Ler antes de iniciar
+`design/03 - Menu + Matchmaking.html` (Telas 03, 04 e 05)
+`html/index.html` (screen-menu, screen-matchmaking, screen-private-room, join_queue socket emit)
+`server/server.js` (evento join_queue, endMatch, _persistDB)
+
+## Risco: 🔴 Alto — nova tela + bifurcação no matchmaking + lógica condicional no servidor
+
+## Regras de negócio
+- CASUAL: sem variação de XP, sem variação de MMR; resultado gravado em `matches` normalmente para analytics
+- RANQUEADA: comportamento atual inalterado
+- Salas Privadas: sempre Casual, sem exibir tela de seleção de modo
+- Nova tela usa o mesmo sistema de temas (dark/light) e i18n existente
+
+## Checklist
+
+```
+[ ] 1. Criar `#screen-game-mode` em html/index.html (nova tela após clicar NOVO JOGO):
+       - Dois cards: CASUAL e RANQUEADA (referência visual: Telas 03/04/05 do design)
+       - Card inativo: borda var(--mc-rule), fundo neutro
+       - Card selecionado: borda 2px var(--mc-accent), fundo var(--mc-accent-soft), checkmark no canto superior direito
+       - Botão ENCONTRAR PARTIDA: desativado (opacity 0.4, pointer-events:none) até seleção
+       - Botão VOLTAR ao topo: padrão ← VOLTAR
+[ ] 2. Navegar: screen-menu (NOVO JOGO) → screen-game-mode → screen-matchmaking (com mode passado)
+[ ] 3. Passar `match_mode: 'casual'|'ranked'` no emit do evento `join_queue` via Socket.io
+[ ] 4. Servidor (server.js): receber e armazenar `match_mode` por jogador na estrutura da fila
+[ ] 5. Ao criar a partida (match start): propagar `match_mode` para o estado do jogo em memória
+[ ] 6. Ao finalizar partida (endMatch/_persistDB): se `match_mode === 'casual'`, pular cálculo de XP e variação de MMR
+[ ] 7. Adicionar coluna `match_mode TEXT DEFAULT 'ranked'` em `matches` (para analytics ANAL-B/C futuros)
+[ ] 8. Tela screen-matchmaking: exibir o modo selecionado ("Casual" ou "Ranqueada") como label visível
+[ ] 9. Salas Privadas: passar `match_mode: 'casual'` automaticamente, sem exibir screen-game-mode
+[ ] 10. Adicionar strings i18n para "Casual", "Ranqueada", "Encontrar Partida", "Modo de Jogo" nos 9 idiomas
+```
+
+---
+
+# SESSÃO PRE-OT-C: TERMINOLOGIA PdL→XP + TIMER VISÍVEL DESDE O INÍCIO
+
+## Objetivo
+Renomear globalmente "Pontos de Liga (PdL)" para "Pontos de Experiência (XP)" em todos os 9 idiomas, e tornar o timer de ação visível desde o início do turno (atualmente aparece só abaixo de 15s).
+
+## Prioridade: 🟡 Média
+
+## Ler antes de iniciar
+`html/index.html` (objeto `strings` completo; elementos com "PdL"; lógica do timer de turno — buscar "timer", "action", "countdown", "15")
+
+## Risco: 🟢 Baixo — mudanças de string e CSS. IMPORTANTE: manter nome interno `elo_lp` no DB e variáveis JS internas intactos.
+
+## Checklist
+
+```
+[ ] 1. No objeto `strings` de todos os 9 idiomas: substituir "Pontos de Liga", "PdL", "LP" (contexto de pontos de liga) pela versão localizada de "XP" / "Pontos de Experiência"
+[ ] 2. Em html/index.html: substituir todos os textos exibidos "PdL" → "XP" nos elementos HTML (header, screen-profile, game-over, screen-matchmaking, screen-leaderboard)
+[ ] 3. Verificar se o backend envia algum campo com texto "PdL" para o cliente — atualizar se necessário
+[ ] 4. Localizar o timer de ação no código do jogo (buscar "15", "timer", "action-timer", "countdown" na section game-area e lógica JS de fase ACTION)
+[ ] 5. Remover/ajustar a condição que oculta o timer acima de 15s — torná-lo visível desde t=0 do turno
+[ ] 6. Garantir que o estilo visual do timer segue o design pattern existente (sem criar novo componente)
+```
+
+---
+
+# SESSÃO PRE-OT-D: BUG FIXES — TEMA CLARO, CRIAR CONTA NO HEADER, RANK INCORRETO
+
+## Objetivo
+Corrigir 3 bugs visuais/lógicos: (1) tema claro não sobrescreve tema escuro do sistema; (2) botão "Criar Conta" aparece no header após login; (3) tela Perfil carrega com rank "Cavaleiro" padrão em vez do rank real.
+
+## Prioridade: 🔴 Alta — bugs visíveis no Open Test
+
+## Ler antes de iniciar
+`html/index.html` (CSS dark/light ~linhas 111-160; fluxo de login; populamento de menu-rank-badge; visibilidade de menu-guest-cta vs menu-logged-stats)
+`html/auth-frontend.js`
+
+## Risco: 🟡 Médio — bug de tema pode exigir auditoria de especificidade CSS
+
+## Diagnóstico esperado por bug
+- **Bug 8 (tema):** `prefers-color-scheme: dark` em media query provavelmente tem especificidade igual ou maior que `.theme-light` → sobrescreve variáveis CSS mesmo com classe manual aplicada
+- **Bug 10 (criar conta):** `menu-guest-cta` não é ocultado no mesmo ciclo do login — estado de UI fica desatualizado até próxima navegação
+- **Bug 11 (rank):** `menu-rank-badge` é populado com valor padrão hardcoded antes dos dados do servidor chegarem
+
+## Checklist
+
+```
+[ ] 1. [Bug 8] Auditar o bloco CSS de temas: verificar se `@media (prefers-color-scheme: dark)` está sem classe pai (sobrescreve qualquer classe manual)
+[ ] 2. [Bug 8] Refatorar: variáveis CSS de dark mode só aplicadas quando `.theme-dark` está no body — remover dependência de media query para variáveis de cor
+[ ] 3. [Bug 8] Testar: forçar tema claro enquanto sistema está em dark mode — verificar telas Perfil e Configurações especificamente
+[ ] 4. [Bug 10] Rastrear fluxo de login bem-sucedido em auth-frontend.js → identificar onde `menu-guest-cta` é ocultado
+[ ] 5. [Bug 10] Garantir que ao receber token de login, header atualiza imediatamente: ocultar `menu-guest-cta`, exibir `menu-logged-stats`
+[ ] 6. [Bug 11] Rastrear onde `menu-rank-badge` é populado → garantir que só é preenchido após receber dados reais do servidor (não com valor padrão hardcoded no HTML)
+[ ] 7. [Bug 11] Verificar se o mesmo problema ocorre em screen-matchmaking (Cavaleiro incorreto na tela de fila)
+```
+
+---
+
+# SESSÃO PRE-OT-E: DESIGN/UI — BOTÃO VOLTAR, CAIXA ALTA, NOVO HEADER
+
+## Objetivo
+Padronizar o botão Voltar em todas as telas, corrigir caixa alta no menu, e implementar o novo layout de 2 colunas do header do menu principal com estatísticas expandidas.
+
+## Prioridade: 🟡 Média
+
+## Ler antes de iniciar
+`html/index.html` (todas as ocorrências de "VOLTAR" ou variações; header linhas 1911-1932; screen-menu botões)
+`design/03 - Menu + Matchmaking.html`
+
+## Risco: 🟡 Médio — botão Voltar afeta múltiplas telas; header é componente compartilhado
+
+## Especificação do novo header (2 colunas independentes)
+- **Coluna esquerda:** Avatar (elemento próprio, fora do fluxo) + apelido (bold) + nome do elo com ícone Unicode inline + tier em itálico
+- **Coluna direita:** linha 1: `0W | 0L | 0D` · linha 2: saldo de XP (ex: "67 XP")
+- As duas colunas devem ser elementos `display:flex` independentes para evitar conflitos de layout
+
+## Mapeamento rank → Unicode
+♙ Peão (todos os tiers) · ♘ Cavaleiro · ♗ Bispo · ♖ Torre · ♕ Rainha · ♔ Rei
+
+## Checklist
+
+```
+[ ] 1. Auditar todas as telas: listar cada variação de botão Voltar existente (texto, estilo, posição)
+[ ] 2. Padronizar para o padrão da tela PERFIL ("← VOLTAR") em todas as telas divergentes
+[ ] 3. Corrigir caixa alta: botão CONFIGURAÇÕES no screen-menu → "Configurações" (title case)
+[ ] 4. Implementar função JS auxiliar: elo_rank (0-13) → caractere Unicode (♙♘♗♖♕♔)
+[ ] 5. Refatorar HTML do header (linhas 1911-1932) para layout de 2 colunas independentes:
+       - Coluna esquerda: avatar + stack de textos (apelido, elo+ícone, tier)
+       - Coluna direita: W|L|D separados por pipe + XP abaixo
+[ ] 6. Atualizar a função que popula o header para preencher os novos elementos (W, L, D separados + XP + tier)
+[ ] 7. Verificar que o novo header funciona em dark/light e nos breakpoints mobile
+[ ] 8. Garantir que o header de guest (sem login) mantém o comportamento atual
+```
+
+---
+
+# SESSÃO PRE-OT-F: AUDITORIA i18n 100% + PRIVACY POLICY COMO LINK EXTERNO
+
+## Objetivo
+Garantir cobertura completa de tradução em todos os 9 idiomas e converter a seção de Privacy Policy para um link externo (URL real fornecida via sessão P-B).
+
+## Prioridade: 🟡 Média
+
+## Ler antes de iniciar
+`html/index.html` (objeto `strings` completo — todas as chaves de todos os idiomas; telas de Settings e Créditos)
+
+## Risco: 🟡 Médio — auditoria pode revelar gaps significativos de tradução
+
+## Regras
+- PT é o idioma de referência — auditar os outros contra PT
+- Privacy Policy não entra como texto no jogo — apenas link `<a href>` externo
+- Placeholder da URL: `"#"` até P-B fornecer a URL real (P-B passa a incluir a Privacy Policy URL)
+- O texto do link deve ser localizado em todos os 9 idiomas
+
+## Checklist
+
+```
+[ ] 1. Extrair todas as chaves do objeto `strings['pt']` como referência
+[ ] 2. Para cada um dos outros 8 idiomas: identificar chaves ausentes ou com valor vazio
+[ ] 3. Adicionar todas as traduções ausentes com qualidade equivalente às já existentes
+[ ] 4. Varrer o HTML em busca de strings hardcoded fora do objeto `strings` — mover para i18n
+[ ] 5. Verificar telas com maior risco de gap: screen-profile, screen-settings, duel-modal, game-over-screen, mensagens de erro de auth
+[ ] 6. Privacy Policy: remover texto inline se existir → inserir link externo `<a href="#" id="link-privacy-policy" target="_blank">` localizado
+[ ] 7. Adicionar chave `privacy_policy` ao objeto `strings` em todos os 9 idiomas (texto do link âncora)
+[ ] 8. Registrar no checklist da sessão P-B: URL da Privacy Policy deve ser inserida no href de #link-privacy-policy
+```
+
+---
+
+# SESSÃO PRE-OT-G: PESQUISA — LEGISLAÇÃO DE PROTEÇÃO DE DADOS INTERNACIONAL
+
+## Objetivo
+Identificar obrigações legais de proteção de dados nos países-alvo do Open Test além de Brasil (LGPD) e Europa (GDPR), e documentar o que já está coberto vs. o que precisa de ajuste.
+
+## Prioridade: 🟢 Baixa
+
+## Agente: usar subagente `explorador` para pesquisa externa
+
+## Ler antes de iniciar
+`docs/DOSSIE_STAKEHOLDERS.md`
+
+## Risco: 🟢 Nenhum técnico — resultado é documento para decisão do usuário
+
+## Países/leis a pesquisar
+- EUA/California: CCPA
+- Canadá: PIPEDA
+- Japão: APPI
+- China: PIPL
+- Singapura/Tailândia: PDPA
+
+## Checklist
+
+```
+[ ] 1. Subagente explorador: pesquisar requisitos de cada lei para apps mobile/web de jogos online
+[ ] 2. Para cada lei: identificar (a) consentimento explícito? (b) right to delete? (c) age verification? (d) data residency?
+[ ] 3. Mapear o que o microChess já atende (delete account existe, consentimento no cadastro, etc.)
+[ ] 4. Identificar gaps e recomendar ações simples
+[ ] 5. Documentar resultado em docs/PRIVACIDADE_GLOBAL.md
+[ ] 6. Resumir por jurisdição: "já atende" / "atende parcialmente" / "não atende"
+```
+
+---
+
+# SESSÕES ANAL-A a ANAL-D: ANALYTICS — COLETA E EXTRAÇÃO DE DADOS PARA OPEN TEST
+
+## Contexto
+Sessões de instrumentação e extração de métricas para compor argumentos de venda após o Open Test.
+ANAL-A e ANAL-B devem ser implementadas ANTES do Open Test começar (sem dados coletados, não há o que extrair).
+ANAL-C e ANAL-D executam DURANTE ou logo APÓS o Open Test.
+
+---
+
+# SESSÃO ANAL-A: INSTRUMENTAÇÃO CORE DE MÉTRICAS
+
+## Objetivo
+Popular colunas já existentes na tabela `matches` que nunca foram preenchidas, e adicionar captura de métricas básicas sem nova tabela.
+
+## Prioridade: 🔴 Alta (deve rodar antes do Open Test)
+
+## Ler antes de iniciar
+`server/server.js` (função _persistDB e endMatch; lógica de matchmaking/queue)
+`server/db/schema.sql`
+
+## Risco: 🟢 Baixo — sem nova tabela; apenas popular colunas existentes
+
+## Checklist
+
+```
+[ ] 1. Popular `matches.duration_ms`: calcular (match_end_timestamp - match_start_timestamp) e salvar em _persistDB
+[ ] 2. Popular `matches.total_turns`: contar snapshots em turns_json ao salvar o replay
+[ ] 3. Salvar TTM (Time to Match): calcular delta entre timestamp de entrada na fila e match_start → salvar como `matches.ttm_ms` (adicionar coluna se não existir)
+[ ] 4. Adicionar timestamp a cada snapshot gravado em turns_json pelo replay.js (campo `ts: Date.now()`)
+[ ] 5. Persistir CCU: criar tabela `ccu_snapshots (ts INTEGER, count INTEGER)` e gravar snapshot a cada 5 minutos com o número de sockets conectados
+[ ] 6. Log de reconexão: gravar evento em nova tabela `events (id, ts, type, user_id, metadata)` para tipos `reconnect_success` e `reconnect_fail`
+```
+
+---
+
+# SESSÃO ANAL-B: TABELA DE EVENTOS — INSTRUMENTAÇÃO DE FLUXO
+
+## Objetivo
+Criar o arquivo `server/analytics.js` com a tabela `events` e instrumentar os pontos críticos de fluxo para capturar Draft Completion Rate, Churn por fase, e frequência de sessões.
+
+## Prioridade: 🔴 Alta (deve rodar antes do Open Test)
+
+## Ler antes de iniciar
+`server/server.js` (eventos Socket.io de login, draft, disconnect, game phases)
+`server/db/database.js`
+
+## Risco: 🟡 Médio — novo arquivo + ~8 pontos de instrumentação no server.js
+
+## Schema da tabela events
+```sql
+CREATE TABLE IF NOT EXISTS events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  user_id INTEGER,
+  match_id INTEGER,
+  metadata TEXT
+);
+```
+
+## Eventos a instrumentar
+- `session_start` / `session_end` — login/logout por usuário autenticado
+- `draft_start` / `draft_complete` — início e fim da fase de draft por partida
+- `phase_enter` — entrada em cada fase (DRAFT, POSITION, ACTION, GAMEOVER)
+- `disconnect_ingame` — desconexão durante partida ativa
+- `reconnect_success` / `reconnect_fail` — resultado de tentativa de reconexão
+
+## Checklist
+
+```
+[ ] 1. Criar server/analytics.js com: (a) criação da tabela events, (b) função logEvent(type, userId, matchId, metadata)
+[ ] 2. Importar analytics.js em server.js
+[ ] 3. Instrumentar: login bem-sucedido → logEvent('session_start', userId)
+[ ] 4. Instrumentar: logout / disconnect sem partida ativa → logEvent('session_end', userId)
+[ ] 5. Instrumentar: início da fase DRAFT → logEvent('draft_start', userId, matchId)
+[ ] 6. Instrumentar: fim da fase DRAFT (todos prontos) → logEvent('draft_complete', userId, matchId)
+[ ] 7. Instrumentar: entrada em cada fase de jogo → logEvent('phase_enter', userId, matchId, {phase})
+[ ] 8. Instrumentar: disconnect durante partida ativa → logEvent('disconnect_ingame', userId, matchId, {phase})
+[ ] 9. Instrumentar: resultado de reconexão → logEvent('reconnect_success'|'reconnect_fail', userId, matchId)
+```
+
+---
+
+# SESSÃO ANAL-C: EXTRAÇÃO — QUERIES SQL E SCRIPT DE RELATÓRIO
+
+## Objetivo
+Criar script de extração que roda queries SQL no microchess.db e gera relatório com as 14 métricas definidas para o argumento de venda.
+
+## Prioridade: 🟡 Média (executar durante ou após Open Test)
+
+## Ler antes de iniciar
+`server/db/schema.sql`
+`docs/ACTIVITY_LOG.md` (referência às 14 métricas alvo)
+
+## Risco: 🟢 Baixo — somente leitura do banco
+
+## Checklist
+
+```
+[ ] 1. Criar script `tools/extract-metrics.js` (Node.js, standalone, não importa server.js)
+[ ] 2. Implementar query: D1/D7/D30 (players com last_seen - created_at ≥ 1/7/30 dias)
+[ ] 3. Implementar query: Frequência de sessões (events session_start por user_id por dia)
+[ ] 4. Implementar query: ASL — média de matches.duration_ms por intervalo de tempo
+[ ] 5. Implementar query: TTM — média de matches.ttm_ms
+[ ] 6. Implementar query: Draft Completion Rate — events draft_complete / draft_start por match
+[ ] 7. Implementar query: Churn por fase — events disconnect_ingame agrupados por fase (metadata)
+[ ] 8. Implementar query: Delta de MMR — média de ABS(mmr_change_white - mmr_change_black)
+[ ] 9. Implementar query: Win Rate — COUNT por matches.result
+[ ] 10. Implementar query: Tempo médio por turno — via timestamps em turns_json (requires JSON parsing)
+[ ] 11. Implementar query: CCU pico — MAX(count) em ccu_snapshots por janela de tempo
+[ ] 12. Implementar query: Taxa de reconexão — reconnect_success / (reconnect_success + reconnect_fail)
+[ ] 13. Implementar query: Funil completo — counts em cada fase do events.type
+[ ] 14. Gerar output em formato legível (console.table ou JSON)
+```
+
+---
+
+# SESSÃO ANAL-D: INTERPRETAÇÃO — ARGUMENTO DE VENDA
+
+## Objetivo
+Rodar o script de extração com dados reais do Open Test, interpretar os números e redigir o argumento de venda estruturado.
+
+## Prioridade: 🟡 Média (executar após Open Test)
+
+## Ler antes de iniciar
+Output do script tools/extract-metrics.js
+`docs/DOSSIE_STAKEHOLDERS.md`
+
+## Risco: 🟢 Nenhum técnico
+
+## Checklist
+
+```
+[ ] 1. Rodar `node tools/extract-metrics.js` contra o banco de produção (ou cópia)
+[ ] 2. Identificar as métricas mais favoráveis para o pitch (retenção, engajamento, balanceamento)
+[ ] 3. Identificar anomalias ou pontos de atenção que o argumento deve contornar
+[ ] 4. Redigir argumento de venda em docs/ARGUMENTO_DE_VENDA.md com: métricas-chave, interpretação, contexto do Open Test
+[ ] 5. Calcular LTV projetado baseado em frequência × recorrência × duração média
+[ ] 6. Preparar formato para apresentação a stakeholders (tabela ou one-pager)
+```

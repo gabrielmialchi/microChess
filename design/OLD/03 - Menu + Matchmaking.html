@@ -330,7 +330,6 @@ html, body {
 .canvas[data-focus] .scene { display: none }
 .canvas[data-focus="all"] .scene { display: flex }
 .canvas[data-focus="menu"] .scene[data-tag="menu"] { display: flex }
-.canvas[data-focus="modo"] .scene[data-tag="modo"] { display: flex }
 .canvas[data-focus="mm"] .scene[data-tag="mm"] { display: flex }
 .canvas[data-focus="private"] .scene[data-tag="private"] { display: flex }
 </style>
@@ -354,7 +353,6 @@ html, body {
   <div class="chips" id="chips">
     <button class="on" data-f="all">Todas</button>
     <button data-f="menu">Menu</button>
-    <button data-f="modo">Modo de Jogo</button>
     <button data-f="mm">Matchmaking</button>
     <button data-f="private">Sala privada</button>
   </div>
@@ -445,145 +443,6 @@ const scenes = [
       <div class="tabbar">
         <button class="tab active"><span class="gl">⌂</span>Início</button>
         <button class="tab"><span class="gl">▶</span>Jogar</button>
-        <button class="tab"><span class="gl">◆</span>Ranking</button>
-        <button class="tab"><span class="gl">○</span>Perfil</button>
-      </div>
-    </div>`
-  },
-
-  // ── MODO DE JOGO ──────────────────────────────────────────
-  {
-    tag:'modo', num:'03', title:'Modo de Jogo · nenhum selecionado',
-    sub:'ENCONTRAR PARTIDA visível mas inativo até o jogador escolher um modo',
-    render: () => `
-    <div class="phone">
-      <div class="status-bar"><span>9:41</span><span>●●●● 5G</span></div>
-      <div class="menu-body">
-        <div class="player-row">
-          <div class="player-id">
-            <div class="avatar">M</div>
-            <div><div class="player-name">Marianna</div><div class="player-elo">Cavaleiro Aprendiz</div></div>
-          </div>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px">
-          <div>
-            <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:var(--mc-ls-wide);color:var(--mc-muted);margin-bottom:12px">Escolha o modo</div>
-            <div style="display:flex;flex-direction:column;gap:10px">
-              <button style="height:80px;border-radius:var(--mc-r-lg);border:1.5px solid var(--mc-rule-strong);background:var(--mc-surface);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 18px;gap:4px;cursor:pointer">
-                <div style="font-size:15px;font-weight:600">Casual</div>
-                <div style="font-size:12px;color:var(--mc-muted)">Sem impacto no ranking</div>
-              </button>
-              <button style="height:80px;border-radius:var(--mc-r-lg);border:1.5px solid var(--mc-rule-strong);background:var(--mc-surface);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 18px;gap:4px;cursor:pointer">
-                <div style="font-size:15px;font-weight:600">Ranqueada</div>
-                <div style="font-size:12px;color:var(--mc-muted)">ELO e PdL em jogo</div>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button class="menu-btn" style="height:52px;opacity:0.4;cursor:not-allowed;background:var(--mc-surface-2);border-color:transparent">
-            Encontrar Partida
-          </button>
-          <button class="menu-btn" onclick="" style="color:var(--mc-muted);font-size:13px">← Voltar</button>
-        </div>
-      </div>
-      <div class="tabbar">
-        <button class="tab"><span class="gl">⌂</span>Início</button>
-        <button class="tab active"><span class="gl">▶</span>Jogar</button>
-        <button class="tab"><span class="gl">◆</span>Ranking</button>
-        <button class="tab"><span class="gl">○</span>Perfil</button>
-      </div>
-    </div>`
-  },
-
-  {
-    tag:'modo', num:'04', title:'Modo de Jogo · Ranqueada selecionada',
-    sub:'Card selecionado com borda laranja + fundo suave. ENCONTRAR PARTIDA ativo.',
-    render: () => `
-    <div class="phone">
-      <div class="status-bar"><span>9:41</span><span>●●●● 5G</span></div>
-      <div class="menu-body">
-        <div class="player-row">
-          <div class="player-id">
-            <div class="avatar">M</div>
-            <div><div class="player-name">Marianna</div><div class="player-elo">Cavaleiro Aprendiz</div></div>
-          </div>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px">
-          <div>
-            <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:var(--mc-ls-wide);color:var(--mc-muted);margin-bottom:12px">Escolha o modo</div>
-            <div style="display:flex;flex-direction:column;gap:10px">
-              <button style="height:80px;border-radius:var(--mc-r-lg);border:1.5px solid var(--mc-rule-strong);background:var(--mc-surface);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 18px;gap:4px;cursor:pointer;opacity:0.55">
-                <div style="font-size:15px;font-weight:600">Casual</div>
-                <div style="font-size:12px;color:var(--mc-muted)">Sem impacto no ranking</div>
-              </button>
-              <button style="height:80px;border-radius:var(--mc-r-lg);border:2px solid var(--mc-accent);background:var(--mc-accent-soft);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 18px;gap:4px;cursor:pointer;position:relative">
-                <div style="font-size:15px;font-weight:600">Ranqueada</div>
-                <div style="font-size:12px;color:var(--mc-muted)">ELO e PdL em jogo</div>
-                <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:var(--mc-accent);display:grid;place-items:center">
-                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button class="menu-btn primary" style="height:52px">
-            Encontrar Partida <span style="margin-left:4px;opacity:0.8">→</span>
-          </button>
-          <button class="menu-btn" style="color:var(--mc-muted);font-size:13px">← Voltar</button>
-        </div>
-      </div>
-      <div class="tabbar">
-        <button class="tab"><span class="gl">⌂</span>Início</button>
-        <button class="tab active"><span class="gl">▶</span>Jogar</button>
-        <button class="tab"><span class="gl">◆</span>Ranking</button>
-        <button class="tab"><span class="gl">○</span>Perfil</button>
-      </div>
-    </div>`
-  },
-
-  {
-    tag:'modo', num:'05', title:'Modo de Jogo · Casual selecionada',
-    sub:'Mesmo padrão — ENCONTRAR PARTIDA ativo com tag casual visível',
-    render: () => `
-    <div class="phone">
-      <div class="status-bar"><span>9:41</span><span>●●●● 5G</span></div>
-      <div class="menu-body">
-        <div class="player-row">
-          <div class="player-id">
-            <div class="avatar">M</div>
-            <div><div class="player-name">Marianna</div><div class="player-elo">Cavaleiro Aprendiz</div></div>
-          </div>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px">
-          <div>
-            <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:var(--mc-ls-wide);color:var(--mc-muted);margin-bottom:12px">Escolha o modo</div>
-            <div style="display:flex;flex-direction:column;gap:10px">
-              <button style="height:80px;border-radius:var(--mc-r-lg);border:2px solid var(--mc-accent);background:var(--mc-accent-soft);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 18px;gap:4px;cursor:pointer;position:relative">
-                <div style="font-size:15px;font-weight:600">Casual</div>
-                <div style="font-size:12px;color:var(--mc-muted)">Sem impacto no ranking</div>
-                <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:var(--mc-accent);display:grid;place-items:center">
-                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-              </button>
-              <button style="height:80px;border-radius:var(--mc-r-lg);border:1.5px solid var(--mc-rule-strong);background:var(--mc-surface);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 18px;gap:4px;cursor:pointer;opacity:0.55">
-                <div style="font-size:15px;font-weight:600">Ranqueada</div>
-                <div style="font-size:12px;color:var(--mc-muted)">ELO e PdL em jogo</div>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button class="menu-btn primary" style="height:52px">
-            Encontrar Partida <span style="margin-left:4px;opacity:0.8">→</span>
-          </button>
-          <button class="menu-btn" style="color:var(--mc-muted);font-size:13px">← Voltar</button>
-        </div>
-      </div>
-      <div class="tabbar">
-        <button class="tab"><span class="gl">⌂</span>Início</button>
-        <button class="tab active"><span class="gl">▶</span>Jogar</button>
         <button class="tab"><span class="gl">◆</span>Ranking</button>
         <button class="tab"><span class="gl">○</span>Perfil</button>
       </div>
