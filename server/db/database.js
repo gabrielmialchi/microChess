@@ -5,7 +5,7 @@ const Database = require('better-sqlite3');
 const crypto = require('crypto');
 const fs = require('fs');
 
-const DB_PATH    = path.join(__dirname, 'microchess.db');
+const DB_PATH    = process.env.DB_PATH || path.join(__dirname, 'microchess.db');
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
 const db = new Database(DB_PATH);
@@ -33,6 +33,12 @@ function _encryptEmail(email) {
 }
 
 // ── MIGRATIONS ────────────────────────────────────────────────
+db.exec(`CREATE TABLE IF NOT EXISTS server_starts (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts           INTEGER NOT NULL,
+    node_version TEXT
+)`);
+
 const newCols = [
     'ALTER TABLE players ADD COLUMN email_hash  TEXT',
     'ALTER TABLE players ADD COLUMN email_enc   TEXT',
@@ -40,8 +46,11 @@ const newCols = [
     'ALTER TABLE players ADD COLUMN elo_lp      INTEGER DEFAULT 0',
     'ALTER TABLE players ADD COLUMN elo_shield  INTEGER DEFAULT 0',
     'ALTER TABLE players ADD COLUMN pw_version  INTEGER DEFAULT 0',
+    'ALTER TABLE players ADD COLUMN lang        TEXT DEFAULT \'en\'',
     'ALTER TABLE matches ADD COLUMN lp_change_white INTEGER DEFAULT 0',
     'ALTER TABLE matches ADD COLUMN lp_change_black INTEGER DEFAULT 0',
+    'ALTER TABLE matches ADD COLUMN match_mode      TEXT DEFAULT \'ranked\'',
+    'ALTER TABLE matches ADD COLUMN ttm_ms INTEGER DEFAULT 0',
 ];
 for (const sql of newCols) {
     try { db.exec(sql); } catch (_) {}
@@ -49,6 +58,20 @@ for (const sql of newCols) {
 try {
     db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_players_email_hash ON players(email_hash)');
 } catch (_) {}
+
+db.exec(`CREATE TABLE IF NOT EXISTS ccu_snapshots (
+    ts    INTEGER NOT NULL,
+    count INTEGER NOT NULL
+)`);
+
+db.exec(`CREATE TABLE IF NOT EXISTS events (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts       INTEGER NOT NULL,
+    type     TEXT NOT NULL,
+    user_id  TEXT,
+    match_id TEXT,
+    metadata TEXT
+)`);
 
 // Migrate existing users: hash + encrypt plaintext emails
 const pending = db.prepare('SELECT id, email FROM players WHERE email_hash IS NULL').all();

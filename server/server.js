@@ -13,6 +13,7 @@ const db = require('./db/database');
 const { calculate: calcMMR, calculateDraw, getRank, getBanDuration } = require('./mmr');
 const { createReplayBuffer, recordTurn, buildTurnSnapshot, buildDuelSnapshot } = require('./replay');
 const { applyLPChange, getEloDisplay } = require('./elo');
+const { logEvent } = require('./analytics');
 const { isPathClear, isValidMove }     = require('./movegen');
 
 const app    = express();
@@ -168,7 +169,7 @@ app.post('/auth/register', authLimiter, async (req, res) => {
             'INSERT INTO players (id, username, email, email_hash, email_enc, password_hash) VALUES (?, ?, ?, ?, ?, ?)'
         ).run(id, uname, email_enc, email_hash, email_enc, password_hash);
         const token = signToken({ id, username: uname, pv: 0 });
-        res.json({ token, id, username: uname, mmr: 1500 });
+        res.json({ token, id, username: uname, mmr: 1500, lang: 'en' });
     } catch (e) {
         if (e.message.includes('UNIQUE'))
             return res.status(409).json({ error: 'Username já cadastrado' });
@@ -186,7 +187,7 @@ app.post('/auth/login', authLimiter, async (req, res) => {
     const emailNorm  = String(email).toLowerCase().trim();
     const email_hash = hashEmail(emailNorm);
     const player = db.prepare(
-        'SELECT id, username, password_hash, mmr, pw_version FROM players WHERE email_hash = ?'
+        'SELECT id, username, password_hash, mmr, pw_version, lang, elo_rank, elo_lp FROM players WHERE email_hash = ?'
     ).get(email_hash);
     if (!player) {
         await checkPassword(password, _DUMMY_HASH);
@@ -196,7 +197,8 @@ app.post('/auth/login', authLimiter, async (req, res) => {
     if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' });
     db.prepare("UPDATE players SET last_seen = datetime('now') WHERE id = ?").run(player.id);
     const token = signToken({ id: player.id, username: player.username, pv: player.pw_version ?? 0 });
-    res.json({ token, id: player.id, username: player.username, mmr: player.mmr });
+    res.json({ token, id: player.id, username: player.username, mmr: player.mmr, lang: player.lang || 'en', elo: getEloDisplay(player.elo_rank ?? 0, player.elo_lp ?? 0) });
+    logEvent('session_start', player.id, null, null);
 });
 
 // ── PROFILE / ACCOUNT ENDPOINTS ──────────────────────────────
@@ -216,6 +218,16 @@ app.patch('/auth/profile', async (req, res) => {
             return res.status(409).json({ error: 'Username já em uso' });
         res.status(500).json({ error: 'Erro interno' });
     }
+});
+
+app.patch('/auth/lang', (req, res) => {
+    const decoded = requireAuth(req.headers.authorization);
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    const SUPPORTED = ['pt','es','en','de','it','ru','ja','ko','zh'];
+    const lang = req.body?.lang;
+    if (!lang || !SUPPORTED.includes(lang)) return res.status(400).json({ error: 'Idioma inválido' });
+    db.prepare('UPDATE players SET lang=? WHERE id=?').run(lang, decoded.id);
+    res.json({ ok: true });
 });
 
 app.patch('/auth/password', authLimiter, async (req, res) => {
@@ -332,6 +344,8 @@ const _persistDB = db.transaction((room, winnerColor, isWO) => {
     const bp = room.players.black;
     if (!wp?.uid || !bp?.uid) return null;
 
+    const isCasual = room.match_mode === 'casual';
+
     const wRec = db.prepare('SELECT mmr, wo_count, elo_rank, elo_lp, elo_shield FROM players WHERE id=?').get(wp.uid);
     const bRec = db.prepare('SELECT mmr, wo_count, elo_rank, elo_lp, elo_shield FROM players WHERE id=?').get(bp.uid);
     if (!wRec || !bRec) return null;
@@ -341,18 +355,18 @@ const _persistDB = db.transaction((room, winnerColor, isWO) => {
     if (isWO) {
         if (winnerColor === 'white') {
             result = 'wo_black';
-            wDelta = K_WO_BONUS;
+            if (!isCasual) wDelta = K_WO_BONUS;
             db.prepare('UPDATE players SET wo_count=wo_count+1 WHERE id=?').run(bp.uid);
             db.prepare('UPDATE players SET wo_against=wo_against+1 WHERE id=?').run(wp.uid);
             applyBan(bp.uid, bRec.wo_count + 1);
         } else {
             result = 'wo_white';
-            bDelta = K_WO_BONUS;
+            if (!isCasual) bDelta = K_WO_BONUS;
             db.prepare('UPDATE players SET wo_count=wo_count+1 WHERE id=?').run(wp.uid);
             db.prepare('UPDATE players SET wo_against=wo_against+1 WHERE id=?').run(bp.uid);
             applyBan(wp.uid, wRec.wo_count + 1);
         }
-    } else {
+    } else if (!isCasual) {
         if (winnerColor === 'white') {
             ({ winnerDelta: wDelta, loserDelta: bDelta } = calcMMR(wRec.mmr, bRec.mmr));
             result = 'white';
@@ -364,15 +378,25 @@ const _persistDB = db.transaction((room, winnerColor, isWO) => {
             // Standard ELO draw: score=0.5. Weaker player always gains ≥1 MMR.
             ({ deltaA: wDelta, deltaB: bDelta } = calculateDraw(wRec.mmr, bRec.mmr));
         }
+    } else {
+        // casual: record result without MMR movement
+        if (winnerColor === 'white')      result = 'white';
+        else if (winnerColor === 'black') result = 'black';
+        else                              result = 'draw';
     }
 
     const isDraw = result === 'draw';
-    // Draw: MMR changes by ELO formula, but PdL only rises (no loss).
-    // Stronger player gets 0 PdL; weaker player gets max(0, computed delta).
-    const wLpInput = isDraw ? (wRec.mmr <= bRec.mmr ? Math.max(0, wDelta) : 0) : wDelta;
-    const bLpInput = isDraw ? (bRec.mmr <= wRec.mmr ? Math.max(0, bDelta) : 0) : bDelta;
-    const wLP = applyLPChange(wRec.elo_rank ?? 0, wRec.elo_lp ?? 0, wRec.elo_shield ?? 0, wLpInput);
-    const bLP = applyLPChange(bRec.elo_rank ?? 0, bRec.elo_lp ?? 0, bRec.elo_shield ?? 0, bLpInput);
+
+    // LP/ELO: only update in ranked mode
+    let wLP = { elo_rank: wRec.elo_rank ?? 0, elo_lp: wRec.elo_lp ?? 0, elo_shield: wRec.elo_shield ?? 0, lpDelta: 0 };
+    let bLP = { elo_rank: bRec.elo_rank ?? 0, elo_lp: bRec.elo_lp ?? 0, elo_shield: bRec.elo_shield ?? 0, lpDelta: 0 };
+    if (!isCasual) {
+        // Draw: MMR changes by ELO formula, but LP only rises (no loss).
+        const wLpInput = isDraw ? (wRec.mmr <= bRec.mmr ? Math.max(0, wDelta) : 0) : wDelta;
+        const bLpInput = isDraw ? (bRec.mmr <= wRec.mmr ? Math.max(0, bDelta) : 0) : bDelta;
+        wLP = applyLPChange(wRec.elo_rank ?? 0, wRec.elo_lp ?? 0, wRec.elo_shield ?? 0, wLpInput);
+        bLP = applyLPChange(bRec.elo_rank ?? 0, bRec.elo_lp ?? 0, bRec.elo_shield ?? 0, bLpInput);
+    }
 
     db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, draws=draws+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
       .run(wDelta, result === 'white' ? 1 : 0, result === 'black' || result === 'wo_black' ? 1 : 0,
@@ -383,8 +407,10 @@ const _persistDB = db.transaction((room, winnerColor, isWO) => {
 
     const matchId = crypto.randomUUID();
     room._matchId = matchId;
-    db.prepare('INSERT INTO matches (id,player_white_id,player_black_id,result,mmr_change_white,mmr_change_black,lp_change_white,lp_change_black) VALUES (?,?,?,?,?,?,?,?)')
-      .run(matchId, wp.uid, bp.uid, result, wDelta, bDelta, wLP.lpDelta ?? 0, bLP.lpDelta ?? 0);
+    const durationMs = room._startedAt ? Date.now() - room._startedAt : 0;
+    const totalTurns = room._replay?.turns?.length ?? 0;
+    db.prepare('INSERT INTO matches (id,player_white_id,player_black_id,result,mmr_change_white,mmr_change_black,lp_change_white,lp_change_black,match_mode,duration_ms,total_turns,ttm_ms) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+      .run(matchId, wp.uid, bp.uid, result, wDelta, bDelta, wLP.lpDelta ?? 0, bLP.lpDelta ?? 0, room.match_mode || 'ranked', durationMs, totalTurns, room._ttmMs ?? 0);
 
     if (room._replay) {
         const replayId = crypto.randomUUID();
@@ -797,13 +823,15 @@ function finishDuel(room) {
 io.on('connection', (socket) => {
     let playerRoom       = null;
     let playerColor      = null;
+    let socketUserId     = null;
     let invalidMoveCount = 0;
 
     const getRoom = () => playerRoom ? rooms.get(playerRoom) : null;
 
     // ── MATCHMAKING ──────────────────────────────────────────────
     socket.on('queue_join', (profile) => {
-        let { uid, nickname, avatar, token, mmr: clientMMR } = profile || {};
+        let { uid, nickname, avatar, token, mmr: clientMMR, match_mode } = profile || {};
+        const queueMode = match_mode === 'casual' ? 'casual' : 'ranked';
         let playerId  = uid;
         let playerMMR = clientMMR || 1500;
 
@@ -812,9 +840,10 @@ io.on('connection', (socket) => {
             if (decoded) {
                 const rec = db.prepare('SELECT mmr, ban_until, username FROM players WHERE id = ?').get(decoded.id);
                 if (rec) {
-                    playerId  = decoded.id;
-                    playerMMR = rec.mmr;
-                    nickname  = rec.username; // always use DB username for authenticated players
+                    playerId     = decoded.id;
+                    playerMMR    = rec.mmr;
+                    nickname     = rec.username; // always use DB username for authenticated players
+                    socketUserId = decoded.id;
                     if (rec.ban_until) {
                         const banDate = new Date(rec.ban_until);
                         if (banDate > new Date()) {
@@ -837,28 +866,36 @@ io.on('connection', (socket) => {
         const existing = queue.findIndex(p => p.uid === playerId);
         if (existing > -1) queue.splice(existing, 1);
 
-        queue.push({ uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: safeAvatar, timestamp: Date.now(), socketId: socket.id });
+        queue.push({ uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: safeAvatar, timestamp: Date.now(), socketId: socket.id, match_mode: queueMode });
 
         if (queue.length >= 2) {
             const p1 = queue.shift();
             const p2 = queue.shift();
             const roomId = crypto.randomBytes(3).toString('hex');
+            // Use p1's mode preference; both should agree since mode is chosen before queuing
+            const roomMode = p1.match_mode || 'ranked';
 
+            const _matchStartTs = Date.now();
             const newRoom = {
-                id:        roomId,
-                players:   { white: p1, black: p2 },
-                state:     createState(),
-                resolving: false,
-                timeouts:  {},
-                _replay:   createReplayBuffer(),
+                id:         roomId,
+                players:    { white: p1, black: p2 },
+                state:      createState(),
+                resolving:  false,
+                timeouts:   {},
+                _replay:    createReplayBuffer(),
+                match_mode: roomMode,
+                _startedAt: _matchStartTs,
+                _ttmMs:     Math.round(((p1.timestamp ? _matchStartTs - p1.timestamp : 0) + (p2.timestamp ? _matchStartTs - p2.timestamp : 0)) / 2),
             };
             rooms.set(roomId, newRoom);
             startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
             startAFKTimer(newRoom, 'black', AFK_PREPARE_MS, 'draft');
 
-            const isRanked = !p1.uid.startsWith('g_') && !p2.uid.startsWith('g_');
+            const isRanked = !p1.uid.startsWith('g_') && !p2.uid.startsWith('g_') && roomMode !== 'casual';
             io.to(p1.socketId).emit('match_found', { myColor: 'white', oppProfile: { nickname: p2.nickname, avatar: p2.avatar }, roomId, isRanked });
             io.to(p2.socketId).emit('match_found', { myColor: 'black', oppProfile: { nickname: p1.nickname, avatar: p1.avatar }, roomId, isRanked });
+            logEvent('draft_start', p1.uid, roomId, null);
+            logEvent('draft_start', p2.uid, roomId, null);
         }
     });
 
@@ -955,18 +992,19 @@ io.on('connection', (socket) => {
 
         const roomId  = crypto.randomBytes(3).toString('hex');
         const newRoom = {
-            id:        roomId,
-            players:   { white, black },
-            state:     createState(),
-            resolving: false,
-            timeouts:  {},
-            _replay:   createReplayBuffer(),
+            id:         roomId,
+            players:    { white, black },
+            state:      createState(),
+            resolving:  false,
+            timeouts:   {},
+            _replay:    createReplayBuffer(),
+            match_mode: 'casual', // private rooms are always casual
         };
         rooms.set(roomId, newRoom);
         startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
         startAFKTimer(newRoom, 'black', AFK_PREPARE_MS, 'draft');
 
-        const isRanked = !white.uid.startsWith('g_') && !black.uid.startsWith('g_');
+        const isRanked = false; // private rooms never ranked
         io.to(white.socketId).emit('match_found', { myColor: 'white', oppProfile: { nickname: black.nickname, avatar: black.avatar }, roomId, isRanked });
         io.to(black.socketId).emit('match_found', { myColor: 'black', oppProfile: { nickname: white.nickname, avatar: white.avatar }, roomId, isRanked });
     });
@@ -1028,8 +1066,12 @@ io.on('connection', (socket) => {
         clearAFKTimer(room, playerColor);
         s.ready[playerColor] = true;
         if (s.ready.white && s.ready.black) {
+            logEvent('draft_complete', room.players.white?.uid, room.id, null);
+            logEvent('draft_complete', room.players.black?.uid, room.id, null);
             s.phase = 'POSITION';
             s.ready = { white: false, black: false };
+            logEvent('phase_enter', room.players.white?.uid, room.id, { phase: 'POSITION' });
+            logEvent('phase_enter', room.players.black?.uid, room.id, { phase: 'POSITION' });
             startAFKTimer(room, 'white', AFK_PREPARE_MS, 'position');
             startAFKTimer(room, 'black', AFK_PREPARE_MS, 'position');
         }
@@ -1175,6 +1217,7 @@ io.on('connection', (socket) => {
 
     // ── DISCONNECT ───────────────────────────────────────────────
     socket.on('disconnect', () => {
+        if (socketUserId) logEvent('session_end', socketUserId, null, null);
         const qi = queue.findIndex(p => p.socketId === socket.id);
         if (qi > -1) queue.splice(qi, 1);
 
@@ -1212,6 +1255,7 @@ io.on('connection', (socket) => {
             }, RECONNECT_MS);
 
             pendingReconnects.set(playerUid, { roomId: playerRoom, color: playerColor, timer: reconnectTimer });
+            logEvent('disconnect_ingame', playerUid, room._matchId || room.id, { phase: room.state.phase });
             const opp = room.players[oppColor];
             if (opp) io.to(opp.socketId).emit('opponent_reconnecting', { remainMs: RECONNECT_MS });
             console.log(`[RECONNECT] ${playerUid} desconectou — aguardando 60s`);
@@ -1234,7 +1278,7 @@ io.on('connection', (socket) => {
         if (!decoded) return;
 
         const pending = pendingReconnects.get(decoded.id);
-        if (!pending) { socket.emit('rejoin_failed', { reason: 'no_pending' }); return; }
+        if (!pending) { logEvent('reconnect_fail', decoded.id, null, { reason: 'no_pending' }); socket.emit('rejoin_failed', { reason: 'no_pending' }); return; }
 
         clearTimeout(pending.timer);
         pendingReconnects.delete(decoded.id);
@@ -1263,8 +1307,16 @@ io.on('connection', (socket) => {
 
         socket.emit('game_state', room.state);
         socket.emit('rejoin_success', { roomId: pending.roomId, color: pending.color });
+        logEvent('reconnect_success', decoded.id, room._matchId || pending.roomId, { roomId: pending.roomId });
         console.log(`[RECONNECT] ${decoded.id} reconectado à sala ${pending.roomId}`);
     });
 });
 
-server.listen(PORT, () => console.log(`microChess server running on port ${PORT}`));
+setInterval(() => {
+    db.prepare('INSERT INTO ccu_snapshots (ts, count) VALUES (?, ?)').run(Date.now(), io.engine.clientsCount ?? 0);
+}, 5 * 60 * 1000);
+
+server.listen(PORT, () => {
+    console.log(`microChess server running on port ${PORT}`);
+    db.prepare('INSERT INTO server_starts (ts, node_version) VALUES (?, ?)').run(Date.now(), process.version);
+});

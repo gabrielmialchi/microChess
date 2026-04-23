@@ -24,9 +24,17 @@ const MenuPopulator = {
         if (el('menu-avatar-icon')) el('menu-avatar-icon').textContent = PIECE_MAP[session.avatar || 'K'];
         if (el('nick-input'))       el('nick-input').value             = session.username || '';
 
-        const rank = session.rank || { name: 'Cavaleiro', icon: '♞' };
-        if (el('menu-rank-badge'))
-            el('menu-rank-badge').textContent = `${rank.icon} ${rank.name} · ${session.mmr || 1500} MMR`;
+        const _guestCta    = document.getElementById('menu-guest-cta');
+        const _loggedStats = document.getElementById('menu-logged-stats');
+        if (_guestCta)    _guestCta.style.display    = 'none';
+        if (_loggedStats) _loggedStats.style.display  = 'flex';
+
+        if (session.elo && el('menu-rank-badge')) {
+            el('menu-rank-badge').textContent = `${session.elo.icon} ${session.elo.name}`;
+        } else if (el('menu-rank-badge')) {
+            const rank = session.rank || { name: '—', icon: '' };
+            el('menu-rank-badge').textContent = `${rank.icon} ${rank.name}`.trim() || '—';
+        }
 
         localStorage.setItem('mc_uid',      session.id || '');
         localStorage.setItem('mc_nickname', session.username || 'Guerreiro');
@@ -37,17 +45,19 @@ const MenuPopulator = {
             const p = await res.json();
             if (el('menu-stat-w'))  el('menu-stat-w').textContent  = p.wins || 0;
             if (el('menu-stat-l'))  el('menu-stat-l').textContent  = p.losses || 0;
+            if (el('menu-stat-d'))  el('menu-stat-d').textContent  = p.draws || 0;
+            if (el('menu-xp-val'))  el('menu-xp-val').textContent  = (p.elo ? p.elo.lp : '—') + ' XP';
             if (el('stat-wins'))    el('stat-wins').textContent    = p.wins || 0;
             if (el('stat-losses'))  el('stat-losses').textContent  = p.losses || 0;
             if (el('stat-wo-w'))    el('stat-wo-w').textContent    = p.wo_against || 0;
             if (el('stat-wo-l'))    el('stat-wo-l').textContent    = p.wo_count || 0;
             // ELO badge (uses visible Liga rank, not hidden MMR)
             if (p.elo && el('menu-rank-badge'))
-                el('menu-rank-badge').textContent = `${p.elo.icon} ${p.elo.name} · ${p.elo.lp} PdL`;
+                el('menu-rank-badge').textContent = `${p.elo.icon} ${p.elo.name}`;
             // profile hero elo + PdL
             if (p.elo) {
                 if (el('ph-elo-name')) el('ph-elo-name').textContent = p.elo.name;
-                if (el('ph-pdl-val'))  el('ph-pdl-val').textContent  = p.elo.lp + ' PdL';
+                if (el('ph-pdl-val'))  el('ph-pdl-val').textContent  = p.elo.lp + ' XP';
             }
             if (el('stat-draws')) el('stat-draws').textContent = p.draws || 0;
             // save elo rank+lp for ranking ladder highlight
@@ -86,12 +96,14 @@ const AuthUI = {
             const el = document.getElementById(id);
             if (el) el.classList.remove('error');
         });
-        ['login-email-hint','login-password-hint','reg-username-hint','reg-email-hint','reg-password-hint'].forEach(id => {
+        ['login-email-hint','login-password-hint','reg-username-hint','reg-email-hint','reg-password-hint','reg-age-gate-hint'].forEach(id => {
             const el = document.getElementById(id);
             if (el) { el.textContent = ''; el.style.display = 'none'; }
         });
         const err = document.getElementById('auth-error');
         if (err) err.textContent = '';
+        const _ageCheck = document.getElementById('reg-age-gate');
+        if (_ageCheck) _ageCheck.checked = false;
     },
 
     _fieldError(inputId, hintId, msg) {
@@ -113,6 +125,12 @@ const AuthUI = {
             if (!username) { this._fieldError('reg-username', 'reg-username-hint', 'Preencha o apelido.'); return; }
             if (!email)    { this._fieldError('reg-email',    'reg-email-hint',    'Preencha o email.'); return; }
             if (!password) { this._fieldError('reg-password', 'reg-password-hint', 'Preencha a senha.'); return; }
+            const ageGate = document.getElementById('reg-age-gate');
+            const ageHint = document.getElementById('reg-age-gate-hint');
+            if (!ageGate || !ageGate.checked) {
+                if (ageHint) { ageHint.textContent = (window.t && window.t('age_gate_error')) || 'Você precisa ter 13 anos ou mais para criar uma conta.'; ageHint.style.display = 'block'; }
+                return;
+            }
             url  = (window.API_BASE||'') + '/auth/register';
             body = { username, email, password };
         } else {
@@ -139,10 +157,12 @@ const AuthUI = {
                 username: data.username,
                 mmr:      data.mmr || 1500,
                 rank:     data.rank || { name: 'Cavaleiro', icon: '♞' },
+                elo:      data.elo  || null,
                 avatar:   localStorage.getItem('mc_avatar') || 'K',
             };
             Session.save(session);
             this.hide();
+            if (data.lang && window.selectLanguage) window.selectLanguage(data.lang, true);
             await MenuPopulator.populate(session);
         } catch {
             if (err) err.textContent = 'Erro de conexão com o servidor.';
@@ -324,12 +344,12 @@ function _updateGameOverPdl(lpDelta, elo) {
     const deltaEl = document.getElementById('go-pdl-delta');
     if (deltaEl && lpDelta != null) {
         const sign = lpDelta > 0 ? '+' : '';
-        deltaEl.textContent = `${sign}${lpDelta} PdL`;
+        deltaEl.textContent = `${sign}${lpDelta} XP`;
         deltaEl.className   = lpDelta > 0 ? 'delta up' : lpDelta < 0 ? 'delta dn' : 'delta eq';
     }
     const nowEl = document.getElementById('go-pdl-now');
     if (nowEl && elo) {
-        nowEl.textContent = `${elo.icon || ''} ${elo.name || ''} · ${elo.lp ?? 0} PdL`.trim();
+        nowEl.textContent = `${elo.icon || ''} ${elo.name || ''} · ${elo.lp ?? 0} XP`.trim();
     }
 }
 
@@ -351,7 +371,7 @@ function showMMRToast(delta, isWO, lpDelta, elo, promoted, demoted) {
         positive = false;
     } else if (elo && lpDelta != null) {
         const sign = lpDelta >= 0 ? '+' : '';
-        text = isWO ? `W.O. — ${sign}${lpDelta} PdL` : `${sign}${lpDelta} PdL`;
+        text = isWO ? `W.O. — ${sign}${lpDelta} XP` : `${sign}${lpDelta} XP`;
         positive = lpDelta >= 0;
     } else {
         const sign = delta >= 0 ? '+' : '';

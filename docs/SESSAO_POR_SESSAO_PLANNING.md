@@ -2486,6 +2486,40 @@ Implementar cálculo de PdL para resultado de empate em `server/mmr.js`.
 [ ] 7. Testar: empate entre ranks iguais, empate fraco-vs-forte, empate em partida não-ranqueada
 ```
 
+# SESSÃO INFRA-A: RAILWAY VOLUME + PERSISTÊNCIA DO BANCO + MONITORAMENTO
+
+## Objetivo
+Garantir que o arquivo SQLite sobreviva a restarts e deploys no Railway, e configurar monitoramento de uptime antes do Open Test.
+
+## Prioridade: 🔴 Alta — bloqueador para Open Test (sem isso, todos os dados dos testes são apagados a cada deploy)
+
+## Ler antes de iniciar
+`server/db/database.js`
+`server/server.js` (linha 1 — início do arquivo, ponto de boot)
+
+## Risco: 🟡 Médio — mudança de path do banco; testar que o arquivo é criado corretamente no volume antes de usar em produção
+
+## Contexto
+O Railway usa containers efêmeros: sem um Volume montado, o arquivo `microchess.db` é destruído a cada deploy ou restart por limite de cota. A solução é montar um Volume persistente e apontar o banco para ele via variável de ambiente.
+
+## Checklist
+
+```
+[ ] 1. No painel do Railway: criar um Volume, montar em /data no serviço do microChess
+[ ] 2. No painel do Railway: adicionar variável de ambiente DB_PATH=/data/microchess.db
+[ ] 3. Em server/db/database.js: alterar o path do banco para usar process.env.DB_PATH como fallback:
+       const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'microchess.db');
+[ ] 4. Em server/server.js: ao iniciar o servidor (após DB conectar), gravar um registro na tabela server_starts:
+       - Criar tabela: CREATE TABLE IF NOT EXISTS server_starts (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, node_version TEXT)
+       - Inserir: INSERT INTO server_starts (ts, node_version) VALUES (Date.now(), process.version)
+[ ] 5. Fazer deploy no Railway e verificar: (a) o arquivo /data/microchess.db existe, (b) dados sobrevivem a um restart manual
+[ ] 6. Configurar UptimeRobot (uptimerobot.com — gratuito):
+       - Criar monitor tipo HTTP(s) apontando para https://<url-railway>/health
+       - Intervalo: 5 minutos
+       - Ativar alertas por email
+       - Exportar relatório de downtime ao final do Open Test para usar no planejamento de expansão
+```
+
 ---
 
 # SESSÃO PRE-OT-A: IDIOMA EN PADRÃO + PREFERÊNCIA POR USUÁRIO

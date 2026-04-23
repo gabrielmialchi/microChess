@@ -1355,3 +1355,223 @@ node testes/db-inspector.js --matches 20
 | SO em light mode, sem preferência salva | Aplica light (padrão) |
 | Usuário muda tema no SO enquanto joga | Atualiza em tempo real (se sem preferência salva) |
 | Usuário usa o toggle no jogo | Salva em localStorage, sobrepõe sistema |
+
+---
+
+## [2026-04-23] Sessão INFRA-A — Railway Volume + Persistência do Banco + Monitoramento
+
+**Status:** Parcialmente concluído — itens de código feitos; itens de infraestrutura aguardam ação do usuário
+**Branch:** main
+
+### Feito
+- `server/db/database.js` linha 8: `DB_PATH` agora usa `process.env.DB_PATH` com fallback local
+- `server/db/database.js`: tabela `server_starts (id, ts, node_version)` criada via `CREATE TABLE IF NOT EXISTS` junto às migrations
+- `server/server.js` callback de `server.listen`: INSERT em `server_starts` no boot com `Date.now()` e `process.version`
+- Sintaxe validada com `node --check` em ambos os arquivos
+
+### Pendente (requer ação do usuário)
+- [x] **Railway:** Volume criado, montado em `/data` no serviço microChess
+- [x] **Railway:** variável de ambiente `DB_PATH=/data/microchess.db` configurada
+- [x] **Deploy:** redeploy feito e persistência validada
+- [x] **UptimeRobot:** monitor HTTP em `https://microchess-production.up.railway.app/health`, intervalo 5 min
+
+---
+
+## [2026-04-23] Sessão PRE-OT-A — Idioma EN padrão + preferência por usuário
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/db/database.js`: migration `lang TEXT DEFAULT 'en'` adicionada à tabela `players`
+- `server/server.js`: login e register passam a retornar `lang` na resposta JSON
+- `server/server.js`: novo endpoint `PATCH /auth/lang` — salva idioma preferido do jogador autenticado
+- `html/index.html` linha ~3547: detecção de idioma substituída por lógica de 3 camadas (localStorage → idioma do sistema → EN)
+- `html/index.html` `selectLanguage`: passa a fazer `PATCH /auth/lang` em background quando autenticado; parâmetro `_skipServer=true` evita loop no login
+- `html/auth-frontend.js`: após login bem-sucedido, aplica `data.lang` do servidor via `selectLanguage(lang, true)`
+- `html/index.html` grid de idiomas: reordenado para EN primeiro (EN, PT, ES, DE, IT, RU, JA, KO, ZH)
+- Sintaxe validada com `node --check`
+
+### Comportamento resultante de prioridade de idioma
+| Situação | Idioma aplicado |
+|----------|----------------|
+| Usuário autenticado com lang salvo no servidor | Idioma do servidor (sobrescreve tudo) |
+| Usuário sem conta, com preferência salva no dispositivo | Preferência do localStorage |
+| Primeiro acesso, sistema em PT/ES/DE/IT/RU/JA/KO/ZH | Idioma do sistema |
+| Primeiro acesso, sistema sem idioma suportado | Inglês (EN) |
+
+---
+
+## [2026-04-21] Sessão PRE-OT-B — Modo Casual + novo fluxo NOVO JOGO
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `html/index.html` strings (9 idiomas): adicionadas chaves `mode_title`, `mode_casual`, `mode_ranked`, `mode_casual_desc`, `mode_ranked_desc`, `mode_find_match` em todos os blocos de idioma
+- `html/index.html` botão `btn-novo-jogo`: agora chama `showScreen('game-mode')` em vez de ir direto ao matchmaking
+- `html/index.html`: inserido `#screen-game-mode` com dois cards (CASUAL / RANQUEADA), botão ENCONTRAR PARTIDA desabilitado até seleção, botão voltar ao menu
+- `html/index.html`: adicionadas funções `selectGameMode()`, `startMatchmakingWithMode()`, `refreshGameModeScreen()`
+- `html/index.html` `showScreen()`: reseta estado da tela de modo ao navegar
+- `html/index.html` `selectLanguage`: chama `refreshGameModeScreen()` para atualizar textos ao trocar idioma
+- `html/index.html` `goMatchmaking()`: aceita parâmetro `mode`, passa `match_mode` no emit `queue_join`
+- `server/server.js` `_persistDB()`: lógica `isCasual` — partidas casuais gravam resultado mas não alteram MMR/XP/LP
+- `server/server.js` `queue_join`: extrai `match_mode` do perfil; propaga para sala criada
+- `server/server.js` salas privadas: sempre criadas com `match_mode: 'casual'` e `isRanked: false`
+- `server/db/database.js`: migration `match_mode TEXT DEFAULT 'ranked'` adicionada à tabela `matches`
+
+### Comportamento resultante
+| Situação | Modo | MMR/XP muda? |
+|----------|------|-------------|
+| Matchmaking → Casual | casual | Não |
+| Matchmaking → Ranqueada | ranked | Sim |
+| Sala Privada (qualquer) | casual | Não |
+| Guest vs Guest | ranked no código, mas `isRanked=false` | Não |
+
+---
+
+## [2026-04-23] Sessão PRE-OT-C — Terminologia PdL→XP + Timer visível desde t=0
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `html/index.html` strings PT: `ranking_desc` substituído ("Pontos de Liga (PdL)" → "Pontos de Experiência (XP)"); `pdl_draw` substituído ("= 0 PdL" → "= 0 XP")
+- `html/index.html` strings EN: `ranking_desc` substituído ("League Points (LP)" → "Experience Points (XP)"); `pdl_draw` substituído ("= 0 LP" → "= 0 XP")
+- `html/index.html` strings ES: `ranking_desc` substituído ("Puntos de Liga (PdL)" → "Puntos de Experiencia (XP)")
+- `html/index.html` strings DE: `ranking_desc` substituído ("Ligapunkte (LP)" → "Erfahrungspunkte (XP)")
+- `html/index.html` strings IT: `ranking_desc` substituído ("Punti Lega (PL)" → "Punti Esperienza (XP)")
+- `html/index.html` strings RU: `ranking_desc` substituído ("Очков Лиги (ОЛ)" → "Очков опыта (XP)")
+- `html/index.html` strings JA: `ranking_desc` substituído ("リーグポイント（LP）" → "経験値（XP）")
+- `html/index.html` strings KO: `ranking_desc` substituído ("리그 포인트 (LP)" → "경험치 (XP)")
+- `html/index.html` strings ZH: `ranking_desc` substituído ("联赛积分 (LP)" → "经验值 (XP)")
+- `html/index.html` ~linha 1862: modal de exclusão de conta — "PdL" → "XP"
+- `html/index.html` ~linha 3834: badge de leaderboard — `${youLp} PdL` → `${youLp} XP`
+- `html/index.html` `_startAfkTimer()`: timer agora chama `showAfk` imediatamente ao iniciar (t=45) e a cada segundo — removida condição `<= AFK_WARN_AT`
+- Confirmado: ES, DE, IT, RU, JA, KO, ZH não possuíam chave `pdl_draw` — nenhuma ação necessária
+- Confirmado: 3 ocorrências restantes de "PdL" são comentários internos de código — não são texto visível ao usuário
+
+---
+
+## [2026-04-23] Sessão PRE-OT-D — Bug Fixes: tema claro, Criar Conta no header, rank incorreto
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `html/index.html`: bloco CSS `[data-theme="light"], .theme-light-ui` inserido com todas as variáveis `--mc-*` e `--bg/--accent` para tema claro — tema claro agora funciona mesmo com sistema em dark mode
+- `html/auth-frontend.js` `MenuPopulator.populate()`: visibilidade de `menu-guest-cta` (hide) e `menu-logged-stats` (show) atualizada imediatamente após login
+- `html/auth-frontend.js` `MenuPopulator.populate()`: badge de rank exibe dados de ELO reais se disponíveis; fallback para `—` em vez de "Cavaleiro" padrão
+- `html/auth-frontend.js` login: `session` agora inclui campo `elo` recebido do servidor
+- `server/server.js` `/auth/login`: query ampliada com `elo_rank, elo_lp`; response inclui `elo: getEloDisplay(...)` — cliente recebe ELO correto imediatamente ao logar
+- `html/auth-frontend.js`: todos os "PdL" residuais substituídos por "XP" (linhas 46, 50, 328, 333, 355)
+- `node --check server/server.js` passou sem erros
+
+---
+
+## [2026-04-23] Sessão PRE-OT-E — Design/UI: botão Voltar, novo header
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `html/index.html` strings: chave `back` já existia nos 9 idiomas — nenhuma adição necessária
+- `html/index.html` back buttons: 7 botões `.screen-back-btn` padronizados para `← <span class="back-label">VOLTAR</span>` (htp, crd, set, prof, mh, rp, rk)
+- `html/index.html` screen-game-mode: back button convertido de estilo inline para `.screen-back-btn` padrão com `class="back-label"` no span interno
+- `html/index.html` CSS `.rk-topbar .rk-title`: removido `flex:1`, adicionado `position:absolute;left:0;right:0;pointer-events:none` — título sempre centrado independente da largura do botão Voltar
+- `html/index.html` `selectLanguage`: adicionado `querySelectorAll('.back-label').forEach(...)` para refresh automático dos botões ao trocar idioma
+- `html/index.html` header `menu-logged-stats`: adicionado `menu-stat-d` (empates) na linha W·L·D e `menu-xp-val` entre stats e botão logout
+- `html/auth-frontend.js` `MenuPopulator.populate()`: `menu-rank-badge` agora exibe apenas ícone + nome ELO (sem XP); `menu-stat-d` e `menu-xp-val` populados via fetch de `/player/:id`
+
+### Comportamento resultante
+| Elemento | Antes | Depois |
+|---------|-------|--------|
+| Back buttons | `←` (sem texto) | `← VOLTAR` / `← BACK` (i18n automático) |
+| Header direito | `0W · 0L` | `0W · 0L · 0D` + `N XP` |
+| Header esquerdo (rank badge) | `♟ Peão · 45 XP` | `♟ Peão` |
+
+---
+
+## [2026-04-23] Sessão PRE-OT-F — Auditoria i18n + Privacy Policy
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- Auditoria i18n: 154 chaves PT verificadas contra 8 idiomas — apenas 3 gaps encontrados
+- `html/index.html` strings ES/DE/IT/RU/JA/KO/ZH: adicionadas chaves `draft_clear`, `draft_return_hint`, `pdl_draw` (estavam ausentes em 7 idiomas)
+- `html/index.html` strings (9 idiomas): adicionada chave `privacy_policy` com texto traduzido em cada idioma
+- `html/index.html` tela Configurações: adicionado link `#link-privacy-policy` com `href="#"` (URL será preenchida na sessão P-B) e span `#pp-link-text` para i18n
+- `html/index.html` `refreshSettingsScreen()`: atualiza `pp-link-text` automaticamente ao trocar idioma
+
+### Estado
+- Privacy Policy link: `href="#"` (placeholder) — URL real pendente da sessão P-B
+
+---
+
+## [2026-04-23] Sessão PRE-OT-G — Pesquisa: Legislação de Proteção de Dados
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- Subagente `explorador` pesquisou CCPA, PIPEDA, APPI, PIPL, PDPA (Singapura e Tailândia)
+- Criado `docs/PRIVACIDADE_GLOBAL.md` com análise completa por jurisdição
+- Mapeado o que microChess já atende vs. gaps
+
+### Conclusões principais
+- ✅ microChess já atende: right to delete, dados mínimos, e-mail criptografado, sem SDKs de rastreamento
+- 🔴 **China (PIPL):** data residency impossível para indie com servidor no exterior → recomendação: não promover na China
+- 🟡 **Gaps para Open Test global:** age gate no cadastro + checkbox de transferência de dados (JP)
+- 🟡 **Gaps médios:** Privacy Policy URL, versão em francês (pós launch)
+
+---
+
+## [2026-04-23] Sessão ANAL-A — Instrumentação Core de Métricas
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/replay.js` `recordTurn`: adicionado `ts: Date.now()` em cada snapshot gravado em `turns_json`
+- `server/db/database.js` migrações: adicionada coluna `matches.ttm_ms INTEGER DEFAULT 0`
+- `server/db/database.js`: criadas tabelas `ccu_snapshots (ts, count)` e `events (id, ts, type, user_id, match_id, metadata)` no startup
+- `server/server.js` `_persistDB`: INSERT de matches expandido para gravar `duration_ms` (Date.now() - room._startedAt), `total_turns` (room._replay.turns.length), `ttm_ms` (média dos tempos de espera na fila)
+- `server/server.js` `queue_join`: `newRoom` recebe `_startedAt: Date.now()` e `_ttmMs: média(ttm_white, ttm_black)` (timestamps de entrada na fila já existiam em p1/p2)
+- `server/server.js` disconnect handler: grava `disconnect_ingame` em `events` com fase atual
+- `server/server.js` `rejoin_game`: grava `reconnect_success` em `events` ao reconectar com sucesso
+- `server/server.js` `rejoin_game`: grava `reconnect_fail` em `events` ao falhar reconexão
+- `server/server.js`: setInterval de 5 minutos grava CCU em `ccu_snapshots` via `io.engine.clientsCount`
+
+### Notas
+- `room._matchId` é populado dentro de `_persistDB` — antes do fim da partida vale `null` nos eventos de disconnect/reconnect
+- CCU snapshot usa `io.engine.clientsCount` (total de sockets conectados, não apenas em partida)
+
+---
+
+## [2026-04-23] Sessão ANAL-B — Tabela de Eventos: Instrumentação de Fluxo
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/analytics.js` criado: prepared statement singleton + `logEvent(type, userId, matchId, metadata)` com try/catch silencioso
+- `server/server.js`: import de `{ logEvent }` adicionado
+- `server/server.js`: variável `socketUserId` adicionada ao escopo do socket; capturada no `queue_join` autenticado
+- `session_start` logado após login bem-sucedido (POST /auth/login)
+- `session_end` logado no início do disconnect handler (quando socketUserId existe)
+- `draft_start` logado (x2, white+black) quando match é encontrado na fila
+- `draft_complete` + `phase_enter {phase: 'POSITION'}` logados (x2) quando ambos os jogadores confirmam o draft
+- Os 3 `db.prepare` diretos de ANAL-A migrados para `logEvent`: `disconnect_ingame`, `reconnect_fail`, `reconnect_success`
+
+### Eventos instrumentados (tabela events)
+| Evento | Ponto | Dados |
+|--------|-------|-------|
+| session_start | POST /auth/login | user_id |
+| session_end | disconnect | user_id |
+| draft_start | match_found (queue) | user_id, match_id=roomId |
+| draft_complete | draft_ready (ambos prontos) | user_id, match_id=roomId |
+| phase_enter | draft_ready → POSITION | user_id, match_id, {phase} |
+| disconnect_ingame | disconnect com partida ativa | user_id, match_id, {phase} |
+| reconnect_success | rejoin_game bem-sucedido | user_id, match_id |
+| reconnect_fail | rejoin_game sem pending | user_id |

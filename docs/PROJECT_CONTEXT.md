@@ -311,20 +311,22 @@ curl http://localhost:3000/health
 | OPT-B | Animação de peças: transform vs left/top | ✅ Completo |
 | OPT-C | flag-icons inline + SW versioning + perMessageDeflate + CSS hints | ✅ Completo |
 | TESTES-A | Unit tests + db-inspector | ✅ Completo |
-| PRE-OT-A | Idioma EN padrão + detecção de sistema + preferência por usuário | ⏳ Pendente |
-| PRE-OT-B | Modo Casual + novo fluxo NOVO JOGO | ⏳ Pendente |
-| PRE-OT-C | Renomear PdL→XP + timer visível desde início do turno | ⏳ Pendente |
-| PRE-OT-D | Bug fixes: tema claro, botão Criar Conta, rank incorreto | ⏳ Pendente |
-| PRE-OT-E | Design/UI: padronizar botão Voltar, caixa alta, novo header | ⏳ Pendente |
-| PRE-OT-F | Auditoria i18n 100% + Privacy Policy como link externo | ⏳ Pendente |
-| PRE-OT-G | Pesquisa legislação proteção de dados internacional | ⏳ Pendente |
+| INFRA-A | Railway Volume + persistência do SQLite + monitoramento de uptime | ✅ Completo |
+| MANUT-A | Limpeza de contas de teste antes do Open Test | ⏳ Pendente |
+| PRE-OT-A | Idioma EN padrão + detecção de sistema + preferência por usuário | ✅ Completo |
+| PRE-OT-B | Modo Casual + novo fluxo NOVO JOGO | ✅ Completo |
+| PRE-OT-C | Renomear PdL→XP + timer visível desde início do turno | ✅ Completo |
+| PRE-OT-D | Bug fixes: tema claro, botão Criar Conta, rank incorreto | ✅ Completo |
+| PRE-OT-E | Design/UI: padronizar botão Voltar, caixa alta, novo header | ✅ Completo |
+| PRE-OT-F | Auditoria i18n 100% + Privacy Policy como link externo | ✅ Completo |
+| PRE-OT-G | Pesquisa legislação proteção de dados internacional | ✅ Completo |
 | SEC-A | Bundling + minificação + obfuscação JS (pré-requisito Play Store) | ⏳ Pendente |
 | P-B | Links externos reais nos créditos (inclui URL da Privacy Policy) | ⏸ Aguarda URLs do usuário |
 | TESTES-B | Integration API + partida automatizada | ⏸ Futuro |
 | TESTES-C | 6 ferramentas de navegador | ⏸ Futuro |
 | TESTES-D | Cenários avançados + carga + replay validator | ⏸ Futuro |
-| ANAL-A | Instrumentação core de métricas (pré Open Test) | ⏳ Pendente |
-| ANAL-B | Tabela de eventos — instrumentação de fluxo (pré Open Test) | ⏳ Pendente |
+| ANAL-A | Instrumentação core de métricas (pré Open Test) | ✅ Completo |
+| ANAL-B | Tabela de eventos — instrumentação de fluxo (pré Open Test) | ✅ Completo |
 | ANAL-C | Extração — queries SQL e script de relatório | ⏸ Aguarda Open Test |
 | ANAL-D | Interpretação — argumento de venda | ⏸ Aguarda Open Test |
 

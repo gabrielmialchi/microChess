@@ -5,7 +5,7 @@ function createReplayBuffer() {
 }
 
 function recordTurn(buffer, turnData) {
-    buffer.turns.push({ turn: buffer.turns.length + 1, ...turnData });
+    buffer.turns.push({ turn: buffer.turns.length + 1, ts: Date.now(), ...turnData });
 }
 
 function buildTurnSnapshot(state) {

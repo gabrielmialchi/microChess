@@ -147,6 +147,64 @@
       --mc-sh-pop: 0 20px 48px -12px rgba(0,0,0,0.6);
     }
 
+    [data-theme="light"], .theme-light-ui {
+      --mc-bg:          #f7f2e8;
+      --mc-surface:     #ede4d6;
+      --mc-surface-2:   #e5daca;
+      --mc-ink:         #18130c;
+      --mc-ink-2:       #4a3728;
+      --mc-muted:       rgba(24,19,12,0.56);
+      --mc-faint:       rgba(24,19,12,0.32);
+      --mc-rule:        rgba(24,19,12,0.10);
+      --mc-rule-strong: rgba(24,19,12,0.20);
+      --mc-accent:        #b06a10;
+      --mc-accent-hover:  #c87820;
+      --mc-accent-ink:    #fff8f0;
+      --mc-accent-soft:   rgba(176,106,16,0.12);
+      --mc-accent-glow:   rgba(176,106,16,0.30);
+      --mc-success:       #22a85e;
+      --mc-success-soft:  rgba(34,168,94,0.15);
+      --mc-danger:        #c0392b;
+      --mc-danger-soft:   rgba(192,57,43,0.15);
+      --mc-warn:          #c07a10;
+      --mc-warn-soft:     rgba(192,122,16,0.15);
+      --mc-white:        #18130c;
+      --mc-white-line:   #f7f2e8;
+      --mc-black-p:      #f7f2e8;
+      --mc-you:          #18130c;
+      --mc-opp:          #4a3728;
+      --mc-cell-light:   #d9c9ae;
+      --mc-cell-dark:    #a08c70;
+      --mc-cell-hl:      var(--mc-accent);
+      --mc-cell-move:    rgba(176,106,16,0.25);
+      --mc-cell-lastmove:rgba(176,106,16,0.15);
+      --mc-cell-check:   rgba(192,57,43,0.25);
+      --mc-cell-border:  rgba(24,19,12,0.12);
+      --mc-sh-1: 0 1px 2px rgba(0,0,0,0.10);
+      --mc-sh-2: 0 4px 12px rgba(0,0,0,0.08);
+      --mc-sh-3: 0 12px 30px -8px rgba(0,0,0,0.12);
+      --mc-sh-pop: 0 20px 48px -12px rgba(0,0,0,0.15);
+      --bg: #ede4d6;
+      --bg2: #e5daca;
+      --panel-bg: #f4ede2;
+      --panel-border: rgba(0,0,0,0.10);
+      --text-color: #1a1206;
+      --text-muted: rgba(26,18,6,0.4);
+      --board-gap: #b8a48a;
+      --cell-light: #d9c9ae;
+      --cell-dark: #a08c70;
+      --topbar-bg: #e8ddc8;
+      --accent: #b06a10;
+      --accent-glow: rgba(176,106,16,0.3);
+      --accent-dim: rgba(176,106,16,0.12);
+      --success: #22a85e;
+      --danger: #c0392b;
+      --white-p: #f8f4ee;
+      --black-p: #0d0a06;
+      --white-glow: drop-shadow(0 0 7px rgba(52,130,210,0.9)) drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+      --black-glow: drop-shadow(0 0 8px rgba(140,80,190,0.85)) drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    }
+
     /* ── COMPONENTS ─────────────────────────────────────────── */
     .mc-screen{width:100%;max-width:var(--mc-max-screen);margin:0 auto;padding:var(--mc-s-5) var(--mc-s-5) var(--mc-s-6);display:flex;flex-direction:column;gap:var(--mc-s-5)}
 
@@ -1791,6 +1849,15 @@
         <span id="reg-password-hint" style="font-size:11px;color:var(--mc-danger);margin-top:2px;display:none;"></span>
       </div>
       <div style="flex:1;min-height:8px;"></div>
+      <!-- Age Gate -->
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:4px 0;">
+        <input type="checkbox" id="reg-age-gate"
+          style="margin-top:2px;accent-color:var(--mc-accent);width:16px;height:16px;flex-shrink:0;cursor:pointer;">
+        <label for="reg-age-gate"
+          style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);cursor:pointer;line-height:1.5;"
+          id="reg-age-gate-label">Confirmo que tenho 13 anos ou mais</label>
+      </div>
+      <span id="reg-age-gate-hint" style="font-size:11px;color:var(--mc-danger);margin-top:-4px;display:none;"></span>
       <button onclick="AuthUI.handleSubmit('register')"
         style="height:52px;border:0;border-radius:var(--mc-r-md);background:var(--mc-accent);color:var(--mc-accent-ink);font:600 13px var(--mc-font-sans);letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;flex-shrink:0;">CRIAR CONTA</button>
       <div style="text-align:center;font-size:13px;color:var(--mc-muted);flex-shrink:0;">
@@ -1859,7 +1926,7 @@
   <div class="sysmodal danger">
     <div class="sysmodal-eyebrow">Ação permanente</div>
     <div class="sysmodal-title" id="delete-confirm-title">Excluir conta?</div>
-    <div class="sysmodal-body" id="delete-confirm-desc">Todo o seu histórico, rank e PdL serão apagados.<br><strong style="color:var(--mc-ink,#18130c)">Isso não pode ser desfeito.</strong></div>
+    <div class="sysmodal-body" id="delete-confirm-desc">Todo o seu histórico, rank e XP serão apagados.<br><strong style="color:var(--mc-ink,#18130c)">Isso não pode ser desfeito.</strong></div>
     <div class="sysmodal-row">
       <button class="sysmodal-btn" id="delete-cancel-btn" onclick="window.hideDeleteConfirm && window.hideDeleteConfirm()">Cancelar</button>
       <button class="sysmodal-btn danger" id="btn-delete-confirm" onclick="window.doDeleteAccount && window.doDeleteAccount()">Excluir</button>
@@ -1919,8 +1986,9 @@
     <!-- Logged-in: W/L + logout -->
     <div id="menu-logged-stats" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
       <div style="font-family:var(--mc-font-mono);font-size:12px;color:var(--mc-ink-2);">
-        <span id="menu-stat-w">0</span>W · <span id="menu-stat-l">0</span>L
+        <span id="menu-stat-w">0</span>W · <span id="menu-stat-l">0</span>L · <span id="menu-stat-d">0</span>D
       </div>
+      <span style="font-family:var(--mc-font-mono);font-size:12px;color:var(--mc-muted);" id="menu-xp-val">— XP</span>
       <button id="btn-logout-header" onclick="window.confirmLogout && window.confirmLogout()"
         style="background:transparent;border:none;padding:2px 4px;cursor:pointer;color:var(--mc-muted);font-size:15px;line-height:1;" title="Sair">⏻</button>
     </div>
@@ -1936,7 +2004,7 @@
     <div style="font-family:var(--mc-font-sans);font-weight:800;font-size:40px;color:var(--mc-ink);letter-spacing:-1.5px;line-height:1;">micro<em style="font-style:normal;color:var(--mc-accent);">Chess</em><span style="color:var(--mc-accent);">.</span></div>
     <div style="font-family:var(--mc-font-sans);font-size:13px;color:var(--mc-muted);margin-top:8px;" id="menu-version-sub">v1.0 · ONLINE</div>
     <nav style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin-top:40px;">
-      <button class="mc-btn primary full" id="btn-novo-jogo" onclick="window.goMatchmaking()">Jogar ranqueada</button>
+      <button class="mc-btn primary full" id="btn-novo-jogo" onclick="showScreen('game-mode')">NOVO JOGO</button>
       <button class="mc-btn full" id="btn-sala-privada" onclick="window.privateRoom.open()">Sala privada</button>
       <button class="mc-btn full" id="btn-ranking" onclick="showScreen('ranking')">Ranking</button>
       <button class="mc-btn full" id="btn-configuracoes" onclick="showScreen('settings')">Configurações</button>
@@ -1950,6 +2018,29 @@
 
   <!-- Legacy btn — mantido para retrocompat de scripts externos -->
   <button id="btn-sair" onclick="window.quitGame()" style="display:none;position:absolute;visibility:hidden;"></button>
+</div>
+
+<!-- GAME MODE SCREEN -->
+<div id="screen-game-mode" class="screen" style="background:var(--mc-bg);flex-direction:column;align-items:stretch;">
+  <div style="padding:14px 20px;display:flex;align-items:center;">
+    <button class="screen-back-btn" onclick="showScreen('menu')">← <span id="gm-back-label" class="back-label">VOLTAR</span></button>
+  </div>
+  <div style="padding:0 20px 20px;text-align:center;">
+    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="gm-title">GAME MODE</div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;gap:12px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
+    <button id="gm-card-casual" onclick="window.selectGameMode('casual')" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
+      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-casual-label">Casual</div>
+      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="gm-casual-desc">Play without affecting your XP</div>
+      <div id="gm-check-casual" style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mc-accent);place-items:center;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </button>
+    <button id="gm-card-ranked" onclick="window.selectGameMode('ranked')" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
+      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-ranked-label">Ranked</div>
+      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="gm-ranked-desc">Compete for XP and climb the ranks</div>
+      <div id="gm-check-ranked" style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mc-accent);place-items:center;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </button>
+    <button id="gm-find-btn" onclick="window.startMatchmakingWithMode()" disabled style="margin-top:8px;width:100%;height:52px;border:none;border-radius:var(--mc-r-md);background:var(--mc-accent);color:var(--mc-accent-ink);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:not-allowed;opacity:0.4;transition:opacity 0.2s;"><span id="gm-find-label">FIND MATCH</span></button>
+  </div>
 </div>
 
 <!-- MATCHMAKING SCREEN -->
@@ -2117,7 +2208,7 @@
 <!-- HOW TO PLAY SCREEN -->
 <div id="screen-how-to-play" class="screen">
     <div class="rk-topbar">
-        <button class="screen-back-btn" onclick="showScreen('settings')" id="htp-back-btn">←</button>
+        <button class="screen-back-btn" onclick="showScreen('settings')" id="htp-back-btn">← <span class="back-label">VOLTAR</span></button>
         <span class="rk-title" id="htp-title">COMO JOGAR</span>
         <div style="width:36px;"></div>
     </div>
@@ -2129,7 +2220,7 @@
 <!-- CREDITS SCREEN -->
 <div id="screen-credits" class="screen">
     <div class="rk-topbar">
-        <button class="screen-back-btn" onclick="showScreen('settings')" id="crd-back-btn">←</button>
+        <button class="screen-back-btn" onclick="showScreen('settings')" id="crd-back-btn">← <span class="back-label">VOLTAR</span></button>
         <span class="rk-title" id="crd-thanks">CRÉDITOS</span>
         <div style="width:36px;"></div>
     </div>
@@ -2159,7 +2250,7 @@
 <!-- SETTINGS SCREEN -->
 <div id="screen-settings" class="screen">
     <div class="rk-topbar">
-        <button class="screen-back-btn" onclick="showScreen('menu')" id="set-back-btn">←</button>
+        <button class="screen-back-btn" onclick="showScreen('menu')" id="set-back-btn">← <span class="back-label">VOLTAR</span></button>
         <span class="rk-title" id="set-title">CONFIGURAÇÕES</span>
         <div style="width:36px;"></div>
     </div>
@@ -2167,9 +2258,9 @@
         <div style="display:flex;flex-direction:column;gap:8px;">
             <div class="dk-sec-label" id="set-lang-label">IDIOMA</div>
             <div class="dk-lang-grid" id="flag-grid">
+                <button class="dk-lang-btn" data-lang="en" onclick="selectLanguage('en')"><span class="dk-flag fi fi-gb fis"></span>EN</button>
                 <button class="dk-lang-btn" data-lang="pt" onclick="selectLanguage('pt')"><span class="dk-flag fi fi-br fis"></span>PT</button>
                 <button class="dk-lang-btn" data-lang="es" onclick="selectLanguage('es')"><span class="dk-flag fi fi-es fis"></span>ES</button>
-                <button class="dk-lang-btn" data-lang="en" onclick="selectLanguage('en')"><span class="dk-flag fi fi-gb fis"></span>EN</button>
                 <button class="dk-lang-btn" data-lang="de" onclick="selectLanguage('de')"><span class="dk-flag fi fi-de fis"></span>DE</button>
                 <button class="dk-lang-btn" data-lang="it" onclick="selectLanguage('it')"><span class="dk-flag fi fi-it fis"></span>IT</button>
                 <button class="dk-lang-btn" data-lang="ru" onclick="selectLanguage('ru')"><span class="dk-flag fi fi-ru fis"></span>RU</button>
@@ -2194,6 +2285,9 @@
             </div>
         </div>
         <div class="dk-ver">microChess v1.0 · o6 games</div>
+        <div style="text-align:center;padding:4px 0 8px;">
+          <a href="#" id="link-privacy-policy" target="_blank" style="font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;color:var(--mc-muted);text-decoration:none;opacity:0.7;"><span id="pp-link-text">Política de Privacidade</span></a>
+        </div>
     </div>
 </div>
 
@@ -2242,7 +2336,7 @@
 <!-- PROFILE SCREEN -->
 <div id="screen-profile" class="screen">
     <div class="ph-topbar">
-        <button class="screen-back-btn" onclick="showScreen('settings')" id="prof-back-btn">←</button>
+        <button class="screen-back-btn" onclick="showScreen('settings')" id="prof-back-btn">← <span class="back-label">VOLTAR</span></button>
         <span class="ph-title" id="prof-title">PERFIL</span>
         <button class="ph-save-btn" id="prof-save-btn" onclick="window.saveProfile()">SALVAR</button>
     </div>
@@ -2398,7 +2492,7 @@
 <!-- MATCH HISTORY SCREEN -->
 <div id="screen-match-history" class="screen">
     <div class="rk-topbar">
-        <button class="screen-back-btn" onclick="showScreen('profile')" id="mh-back-btn">←</button>
+        <button class="screen-back-btn" onclick="showScreen('profile')" id="mh-back-btn">← <span class="back-label">VOLTAR</span></button>
         <span class="rk-title" id="mh-title">HISTÓRICO</span>
         <div style="width:36px;"></div>
     </div>
@@ -2408,7 +2502,7 @@
 <!-- REPLAY SCREEN -->
 <div id="screen-replay" class="screen">
     <div class="rk-topbar">
-        <button class="screen-back-btn" onclick="ReplayViewer.close()" id="rp-back-btn">←</button>
+        <button class="screen-back-btn" onclick="ReplayViewer.close()" id="rp-back-btn">← <span class="back-label">VOLTAR</span></button>
         <span class="rk-title" id="replay-title-el">REPLAY</span>
         <div style="width:36px;"></div>
     </div>
@@ -2442,7 +2536,7 @@
 #screen-ranking{justify-content:flex-start;padding:0;overflow-y:auto;align-items:stretch;}
 #screen-leaderboard{justify-content:flex-start;padding:0;overflow-y:hidden;align-items:stretch;}
 .rk-topbar{height:52px;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--mc-rule,rgba(24,19,12,0.08));background:var(--mc-bg,#f7f2e8);flex-shrink:0;position:sticky;top:0;z-index:10;}
-.rk-topbar .rk-title{font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;font-weight:700;flex:1;text-align:center;color:var(--mc-ink,#18130c);}
+.rk-topbar .rk-title{font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;font-weight:700;position:absolute;left:0;right:0;text-align:center;color:var(--mc-ink,#18130c);pointer-events:none;}
 .rk-scroll{display:flex;flex-direction:column;gap:0;max-width:480px;margin:0 auto;width:100%;padding-bottom:24px;}
 .rk-explainer{margin:12px 16px;padding:12px 14px;background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,8px);font-size:12px;color:var(--mc-muted,rgba(24,19,12,0.56));line-height:1.6;}
 .rk-explainer strong{color:var(--mc-ink,#18130c);}
@@ -2494,7 +2588,7 @@
 <!-- RANKING SCREEN (explicação dos ranks + acesso ao leaderboard) -->
 <div id="screen-ranking" class="screen">
     <div class="rk-topbar">
-        <button class="screen-back-btn" onclick="showScreen('menu')" id="rk-back-btn">←</button>
+        <button class="screen-back-btn" onclick="showScreen('menu')" id="rk-back-btn">← <span class="back-label">VOLTAR</span></button>
         <span class="rk-title" id="ranking-title">RANKING</span>
         <div style="width:36px;"></div>
     </div>
@@ -2896,7 +2990,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             turn_label:'Turno', turn_positioning:'Posicionamento', replay_prev:'⏮ ANTERIOR', replay_auto:'▶ AUTO', replay_next:'PRÓXIMO ⏭',
             // Ranking
             how_it_works:'COMO FUNCIONA',
-            ranking_desc:'Cada divisão tem <span style="color:#d4a832;">0–100 Pontos de Liga (PdL)</span>.<br>Vença partidas para acumular PdL e subir de divisão.<br>Ao atingir 100 PdL, você é <span style="color:#2ecc71;">promovido</span> automaticamente.<br>Ao subir de <em>grupo</em>, você recebe um <span style="color:#d4a832;">Escudo ×3</span> que absorve rebaixamentos.',
+            ranking_desc:'Cada divisão tem <span style="color:#d4a832;">0–100 Pontos de Experiência (XP)</span>.<br>Vença partidas para acumular XP e subir de divisão.<br>Ao atingir 100 XP, você é <span style="color:#2ecc71;">promovido</span> automaticamente.<br>Ao subir de <em>grupo</em>, você recebe um <span style="color:#d4a832;">Escudo ×3</span> que absorve rebaixamentos.',
             divisions:'DIVISÕES', single_div:'Divisão única', max_rank:'Rank máximo · Divisão única',
             div_apprentice:'Aprendiz', div_hardworking:'Esforçado', div_elite:'Elite',
             rank_pawn:'PEÃO', rank_bishop:'BISPO', rank_knight:'CAVALO', rank_rook:'TORRE', rank_queen:'RAINHA', rank_king:'REI',
@@ -2930,6 +3024,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'Nenhum jogador ainda.', no_matches_yet:'Nenhuma partida registrada.',
             match_result_win:'VITÓRIA', match_result_loss:'DERROTA', match_result_wo:'W.O.',
             unranked_match:'PARTIDA NÃO RANQUEADA',
+            mode_title:'MODO DE JOGO', mode_casual:'Casual', mode_ranked:'Ranqueada',
+            mode_casual_desc:'Jogue sem afetar seu XP', mode_ranked_desc:'Dispute XP e suba no ranking',
+            mode_find_match:'ENCONTRAR PARTIDA',
             htp_intro:'microChess Online é um duelo tático onde o xadrez clássico encontra a incerteza do campo de batalha. O objetivo é simples: Capture o Rei adversário.',
             htp_flow_title:'O FLUXO DO JOGO',
             htp_draft:'Recrutamento (Draft): Você tem 5 pontos para montar seu exército. Escolha entre Rainhas poderosas ou uma massa de Peões e Cavalos.',
@@ -2946,7 +3043,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             htp_special:'O MicroChess prioriza a defesa do Rei através da iniciativa. Se um Peão Branco atacar seu Rei, mas seu Cavalo Preto atacar esse mesmo Peão no mesmo turno, o Cavalo intercepta o Peão primeiro. Se o Cavalo vencer o duelo, ele destrói o invasor e salva o seu Rei antes mesmo do ataque inimigo acontecer.',
             draft_return_hint:'Inventário · toque para devolver',
             draft_clear:'Limpar ✕',
-            pdl_draw:'= 0 PdL',
+            pdl_draw:'= 0 XP',
+            privacy_policy:'Política de Privacidade',
+            age_gate:'Confirmo que tenho 13 anos ou mais',
+            age_gate_error:'Você precisa ter 13 anos ou mais para criar uma conta.',
             appearance:'APARÊNCIA', info:'INFORMAÇÕES', dark_theme:'Tema escuro', htp_bonus_title:'BÔNUS POR PEÇA',
         },
         en: {
@@ -2971,7 +3071,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             leaderboard_title:'LEADERBOARD', leaderboard_global:'🏆 GLOBAL LEADERBOARD',
             turn_label:'Turn', turn_positioning:'Positioning', replay_prev:'⏮ PREV', replay_auto:'▶ AUTO', replay_next:'NEXT ⏭',
             how_it_works:'HOW IT WORKS',
-            ranking_desc:'Each division has <span style="color:#d4a832;">0–100 League Points (LP)</span>.<br>Win matches to gain LP and climb divisions.<br>Reaching 100 LP <span style="color:#2ecc71;">promotes</span> you automatically.<br>When crossing a <em>group</em>, you receive a <span style="color:#d4a832;">×3 Shield</span> that absorbs demotions.',
+            ranking_desc:'Each division has <span style="color:#d4a832;">0–100 Experience Points (XP)</span>.<br>Win matches to gain XP and climb divisions.<br>Reaching 100 XP <span style="color:#2ecc71;">promotes</span> you automatically.<br>When crossing a <em>group</em>, you receive a <span style="color:#d4a832;">×3 Shield</span> that absorbs demotions.',
             divisions:'DIVISIONS', single_div:'Single division', max_rank:'Max rank · Single division',
             div_apprentice:'Apprentice', div_hardworking:'Hardworking', div_elite:'Elite',
             rank_pawn:'PAWN', rank_bishop:'BISHOP', rank_knight:'KNIGHT', rank_rook:'ROOK', rank_queen:'QUEEN', rank_king:'KING',
@@ -2998,6 +3098,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'No players yet.', no_matches_yet:'No matches recorded.',
             match_result_win:'VICTORY', match_result_loss:'DEFEAT', match_result_wo:'W.O.',
             unranked_match:'UNRANKED MATCH',
+            mode_title:'GAME MODE', mode_casual:'Casual', mode_ranked:'Ranked',
+            mode_casual_desc:'Play without affecting your XP', mode_ranked_desc:'Compete for XP and climb the ranks',
+            mode_find_match:'FIND MATCH',
             htp_intro:'microChess Online is a tactical duel where classic chess meets battlefield uncertainty. The goal is simple: Capture the enemy King.',
             htp_flow_title:'GAME FLOW',
             htp_draft:'Recruitment (Draft): You have 5 points to build your army. Choose between powerful Queens or a mass of Pawns and Knights.',
@@ -3014,7 +3117,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             htp_special:'MicroChess prioritizes King defense through initiative. If a White Pawn attacks your King, but your Black Knight attacks that same Pawn in the same turn, the Knight intercepts first. If the Knight wins the duel, it destroys the invader and saves your King before the attack happens.',
             draft_return_hint:'Inventory · tap to return',
             draft_clear:'Clear ✕',
-            pdl_draw:'= 0 LP',
+            pdl_draw:'= 0 XP',
+            privacy_policy:'Privacy Policy',
+            age_gate:'I confirm I am 13 years of age or older',
+            age_gate_error:'You must be 13 or older to create an account.',
             appearance:'APPEARANCE', info:'INFO', dark_theme:'Dark theme', htp_bonus_title:'PIECE BONUS',
         },
         es: {
@@ -3042,7 +3148,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             turn_label:'Turno', turn_positioning:'Posicionamiento', replay_prev:'⏮ ANTERIOR', replay_auto:'▶ AUTO', replay_next:'SIGUIENTE ⏭',
             // Ranking
             how_it_works:'CÓMO FUNCIONA',
-            ranking_desc:'Cada división tiene <span style="color:#d4a832;">0–100 Puntos de Liga (PdL)</span>.<br>Gana partidas para acumular PdL y subir de división.<br>Al alcanzar 100 PdL, serás <span style="color:#2ecc71;">promovido</span> automáticamente.<br>Al subir de <em>grupo</em>, recibes un <span style="color:#d4a832;">Escudo ×3</span> que absorbe descensos.',
+            ranking_desc:'Cada división tiene <span style="color:#d4a832;">0–100 Puntos de Experiencia (XP)</span>.<br>Gana partidas para acumular XP y subir de división.<br>Al alcanzar 100 XP, serás <span style="color:#2ecc71;">promovido</span> automáticamente.<br>Al subir de <em>grupo</em>, recibes un <span style="color:#d4a832;">Escudo ×3</span> que absorbe descensos.',
             divisions:'DIVISIONES', single_div:'División única', max_rank:'Rango máximo · División única',
             div_apprentice:'Aprendiz', div_hardworking:'Trabajador', div_elite:'Élite',
             rank_pawn:'PEÓN', rank_bishop:'ALFIL', rank_knight:'CABALLO', rank_rook:'TORRE', rank_queen:'REINA', rank_king:'REY',
@@ -3076,6 +3182,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'Ningún jugador todavía.', no_matches_yet:'Ninguna partida registrada.',
             match_result_win:'VICTORIA', match_result_loss:'DERROTA', match_result_wo:'W.O.',
             unranked_match:'PARTIDA NO CLASIFICATORIA',
+            mode_title:'MODO DE JUEGO', mode_casual:'Casual', mode_ranked:'Competitiva',
+            mode_casual_desc:'Juega sin afectar tu XP', mode_ranked_desc:'Compite por XP y sube en el ranking',
+            mode_find_match:'BUSCAR PARTIDA',
             htp_intro:'microChess Online es un duelo táctico donde el ajedrez clásico se encuentra con la incertidumbre del campo de batalla. El objetivo es simple: Captura al Rey enemigo.',
             htp_flow_title:'FLUJO DEL JUEGO',
             htp_draft:'Reclutamiento (Draft): Tienes 5 puntos para formar tu ejército. Elige entre Reinas poderosas o una masa de Peones y Caballos.',
@@ -3090,6 +3199,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             htp_duel_desc:'Cuando el conflicto es inevitable, la suerte y la fuerza entran en juego. Lanza el dado (1D6) y suma el Bono de Pieza.\nVictoria: Capturas la pieza enemiga y dominas la casilla.\nDerrota: Tu pieza es eliminada y el enemigo conquista el espacio.\nEmpate: Ambas piezas son eliminadas (vacío). Excepción: El Rey siempre gana empates.',
             htp_special_title:'SITUACIONES ESPECIALES (Contraataque)',
             htp_special:'MicroChess prioriza la defensa del Rey mediante la iniciativa. Si un Peón Blanco ataca a tu Rey, pero tu Caballo Negro ataca ese mismo Peón en el mismo turno, el Caballo intercepta primero. Si el Caballo gana el duelo, destruye al invasor y salva a tu Rey antes de que ocurra el ataque enemigo.',
+            draft_return_hint:'Inventario · toca para devolver',
+            draft_clear:'Limpiar ✕',
+            pdl_draw:'= 0 XP',
+            privacy_policy:'Política de Privacidad',
+            age_gate:'Confirmo que tengo 13 años o más',
+            age_gate_error:'Debes tener 13 años o más para crear una cuenta.',
             appearance:'APARIENCIA', info:'INFO', dark_theme:'Tema oscuro', htp_bonus_title:'BONO POR PIEZA',
         },
         de: {
@@ -3117,7 +3232,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             turn_label:'Zug', turn_positioning:'Aufstellung', replay_prev:'⏮ ZURÜCK', replay_auto:'▶ AUTO', replay_next:'WEITER ⏭',
             // Rangliste
             how_it_works:'WIE ES FUNKTIONIERT',
-            ranking_desc:'Jede Division hat <span style="color:#d4a832;">0–100 Ligapunkte (LP)</span>.<br>Gewinne Partien, um LP zu sammeln und aufzusteigen.<br>Mit 100 LP wirst du <span style="color:#2ecc71;">automatisch aufgestiegen</span>.<br>Beim Wechsel einer <em>Gruppe</em> erhältst du einen <span style="color:#d4a832;">×3 Schild</span>, der Abstiege absorbiert.',
+            ranking_desc:'Jede Division hat <span style="color:#d4a832;">0–100 Erfahrungspunkte (XP)</span>.<br>Gewinne Partien, um XP zu sammeln und aufzusteigen.<br>Mit 100 XP wirst du <span style="color:#2ecc71;">automatisch aufgestiegen</span>.<br>Beim Wechsel einer <em>Gruppe</em> erhältst du einen <span style="color:#d4a832;">×3 Schild</span>, der Abstiege absorbiert.',
             divisions:'DIVISIONEN', single_div:'Einzelne Division', max_rank:'Höchster Rang · Einzelne Division',
             div_apprentice:'Lehrling', div_hardworking:'Fleißig', div_elite:'Elite',
             rank_pawn:'BAUER', rank_bishop:'LÄUFER', rank_knight:'SPRINGER', rank_rook:'TURM', rank_queen:'DAME', rank_king:'KÖNIG',
@@ -3151,6 +3266,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'Noch keine Spieler.', no_matches_yet:'Keine Spiele aufgezeichnet.',
             match_result_win:'SIEG', match_result_loss:'NIEDERLAGE', match_result_wo:'W.O.',
             unranked_match:'UNGEWERTETES SPIEL',
+            mode_title:'SPIELMODUS', mode_casual:'Gelegentlich', mode_ranked:'Gewertet',
+            mode_casual_desc:'Spielen ohne XP zu verlieren', mode_ranked_desc:'Kämpfe um XP und steige auf',
+            mode_find_match:'SPIEL FINDEN',
             htp_intro:'microChess Online ist ein taktisches Duell, bei dem klassisches Schach auf die Ungewissheit des Schlachtfelds trifft. Das Ziel ist einfach: Capture den feindlichen König.',
             htp_flow_title:'SPIELABLAUF',
             htp_draft:'Rekrutierung (Draft): Du hast 5 Punkte, um deine Armee aufzubauen. Wähle zwischen mächtigen Damen oder einer Masse an Bauern und Springern.',
@@ -3165,6 +3283,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             htp_duel_desc:'Wenn der Konflikt unvermeidlich ist, kommen Glück und Stärke ins Spiel. Würfle (1W6) und addiere den Figurenbonus.\nSieg: Du schlägst die feindliche Figur und beherrschst das Feld.\nNiederlage: Deine Figur wird entfernt und der Feind übernimmt den Platz.\nUnentschieden: Beide Figuren werden entfernt (Vakuum). Ausnahme: Der König gewinnt immer bei Unentschieden.',
             htp_special_title:'BESONDERE SITUATIONEN (Gegenangriff)',
             htp_special:'MicroChess priorisiert die Königsverteidigung durch Initiative. Greift ein weißer Bauer deinen König an, aber dein schwarzer Springer greift denselben Bauern im gleichen Zug an, fängt der Springer zuerst ab. Gewinnt der Springer das Duell, vernichtet er den Eindringling und rettet deinen König, bevor der feindliche Angriff stattfindet.',
+            draft_return_hint:'Inventar · tippen zum Zurückgeben',
+            draft_clear:'Leeren ✕',
+            pdl_draw:'= 0 XP',
+            privacy_policy:'Datenschutzrichtlinie',
+            age_gate:'Ich bestätige, dass ich 13 Jahre alt oder älter bin',
+            age_gate_error:'Du musst mindestens 13 Jahre alt sein, um ein Konto zu erstellen.',
             appearance:'ERSCHEINUNGSBILD', info:'INFO', dark_theme:'Dunkles Design', htp_bonus_title:'FIGURENBONUS',
         },
         it: {
@@ -3192,7 +3316,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             turn_label:'Turno', turn_positioning:'Posizionamento', replay_prev:'⏮ PRECEDENTE', replay_auto:'▶ AUTO', replay_next:'SUCCESSIVO ⏭',
             // Classifica
             how_it_works:'COME FUNZIONA',
-            ranking_desc:'Ogni divisione ha <span style="color:#d4a832;">0–100 Punti Lega (PL)</span>.<br>Vinci partite per accumulare PL e salire di divisione.<br>Raggiungendo 100 PL verrai <span style="color:#2ecc71;">promosso</span> automaticamente.<br>Passando di <em>gruppo</em>, ricevi uno <span style="color:#d4a832;">Scudo ×3</span> che assorbe le retrocessioni.',
+            ranking_desc:'Ogni divisione ha <span style="color:#d4a832;">0–100 Punti Esperienza (XP)</span>.<br>Vinci partite per accumulare XP e salire di divisione.<br>Raggiungendo 100 XP verrai <span style="color:#2ecc71;">promosso</span> automaticamente.<br>Passando di <em>gruppo</em>, ricevi uno <span style="color:#d4a832;">Scudo ×3</span> che assorbe le retrocessioni.',
             divisions:'DIVISIONI', single_div:'Divisione unica', max_rank:'Rango massimo · Divisione unica',
             div_apprentice:'Apprendista', div_hardworking:'Impegnato', div_elite:'Elite',
             rank_pawn:'PEDONE', rank_bishop:'ALFIERE', rank_knight:'CAVALLO', rank_rook:'TORRE', rank_queen:'REGINA', rank_king:'RE',
@@ -3226,6 +3350,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'Nessun giocatore ancora.', no_matches_yet:'Nessuna partita registrata.',
             match_result_win:'VITTORIA', match_result_loss:'SCONFITTA', match_result_wo:'W.O.',
             unranked_match:'PARTITA NON CLASSIFICATA',
+            mode_title:'MODALITÀ DI GIOCO', mode_casual:'Casuale', mode_ranked:'Classificata',
+            mode_casual_desc:'Gioca senza influenzare la tua XP', mode_ranked_desc:'Combatti per XP e scala la classifica',
+            mode_find_match:'TROVA PARTITA',
             htp_intro:'microChess Online è un duello tattico dove gli scacchi classici incontrano l\'incertezza del campo di battaglia. L\'obiettivo è semplice: Cattura il Re nemico.',
             htp_flow_title:'FLUSSO DI GIOCO',
             htp_draft:'Reclutamento (Draft): Hai 5 punti per costruire il tuo esercito. Scegli tra potenti Regine o una massa di Pedoni e Cavalieri.',
@@ -3240,6 +3367,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             htp_duel_desc:'Quando il conflitto è inevitabile, fortuna e forza entrano in gioco. Lancia il dado (1D6) e aggiungi il Bonus Pezzo.\nVittoria: Catturi il pezzo nemico e controlli la casella.\nSconfitta: Il tuo pezzo viene rimosso e il nemico conquista lo spazio.\nPareggio: Entrambi i pezzi vengono rimossi (vuoto). Eccezione: Il Re vince sempre i pareggi.',
             htp_special_title:'SITUAZIONI SPECIALI (Contrattacco)',
             htp_special:'MicroChess dà priorità alla difesa del Re attraverso l\'iniziativa. Se un Pedone Bianco attacca il tuo Re, ma il tuo Cavallo Nero attacca quello stesso Pedone nello stesso turno, il Cavallo intercetta per primo. Se il Cavallo vince il duello, distrugge l\'invasore e salva il tuo Re prima che l\'attacco nemico avvenga.',
+            draft_return_hint:'Inventario · tocca per restituire',
+            draft_clear:'Cancella ✕',
+            pdl_draw:'= 0 XP',
+            privacy_policy:'Informativa sulla Privacy',
+            age_gate:'Confermo di avere 13 anni o più',
+            age_gate_error:'Devi avere almeno 13 anni per creare un account.',
             appearance:'ASPETTO', info:'INFO', dark_theme:'Tema scuro', htp_bonus_title:'BONUS PEZZO',
         },
         ru: {
@@ -3267,7 +3400,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             turn_label:'Ход', turn_positioning:'Расстановка', replay_prev:'⏮ НАЗАД', replay_auto:'▶ АВТО', replay_next:'ДАЛЕЕ ⏭',
             // Рейтинг
             how_it_works:'КАК ЭТО РАБОТАЕТ',
-            ranking_desc:'В каждом дивизионе <span style="color:#d4a832;">0–100 Очков Лиги (ОЛ)</span>.<br>Побеждайте в матчах, чтобы накапливать ОЛ и подниматься.<br>Достигнув 100 ОЛ, вы <span style="color:#2ecc71;">автоматически повышаетесь</span>.<br>При переходе в новую <em>группу</em> вы получаете <span style="color:#d4a832;">Щит ×3</span>, поглощающий понижения.',
+            ranking_desc:'В каждом дивизионе <span style="color:#d4a832;">0–100 Очков опыта (XP)</span>.<br>Побеждайте в матчах, чтобы накапливать XP и подниматься.<br>Достигнув 100 XP, вы <span style="color:#2ecc71;">автоматически повышаетесь</span>.<br>При переходе в новую <em>группу</em> вы получаете <span style="color:#d4a832;">Щит ×3</span>, поглощающий понижения.',
             divisions:'ДИВИЗИОНЫ', single_div:'Единый дивизион', max_rank:'Макс. ранг · Единый дивизион',
             div_apprentice:'Ученик', div_hardworking:'Трудолюбивый', div_elite:'Элита',
             rank_pawn:'ПЕШКА', rank_bishop:'СЛОН', rank_knight:'КОНЬ', rank_rook:'ЛАДЬЯ', rank_queen:'ФЕРЗЬ', rank_king:'КОРОЛЬ',
@@ -3301,6 +3434,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'Пока нет игроков.', no_matches_yet:'Матчи не записаны.',
             match_result_win:'ПОБЕДА', match_result_loss:'ПОРАЖЕНИЕ', match_result_wo:'В.О.',
             unranked_match:'НЕРАНГОВЫЙ МАТЧ',
+            mode_title:'РЕЖИМ ИГРЫ', mode_casual:'Обычный', mode_ranked:'Рейтинговый',
+            mode_casual_desc:'Играйте без изменения XP', mode_ranked_desc:'Соревнуйтесь за XP и рейтинг',
+            mode_find_match:'НАЙТИ МАТЧ',
             htp_intro:'microChess Online — это тактический дуэль, где классические шахматы встречаются с непредсказуемостью поля боя. Цель проста: захватите Короля противника.',
             htp_flow_title:'ИГРОВОЙ ПРОЦЕСС',
             htp_draft:'Рекрутинг (Draft): У вас 5 очков для формирования армии. Выбирайте между мощными Ферзями или массой Пешек и Коней.',
@@ -3315,6 +3451,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             htp_duel_desc:'Когда конфликт неизбежен, вступают в игру удача и сила. Бросьте кубик (1D6) и добавьте Бонус Фигуры.\nПобеда: Вы захватываете вражескую фигуру и занимаете клетку.\nПоражение: Ваша фигура удаляется, враг занимает место.\nНичья: Обе фигуры удаляются (пустота). Исключение: Король всегда побеждает при ничьей.',
             htp_special_title:'ОСОБЫЕ СИТУАЦИИ (Контратака)',
             htp_special:'MicroChess приоритизирует защиту Короля через инициативу. Если Белая Пешка атакует вашего Короля, но ваш Чёрный Конь атакует ту же Пешку в том же ходу, Конь перехватывает первым. Если Конь выигрывает дуэль, он уничтожает захватчика и спасает вашего Короля до того, как произойдёт вражеская атака.',
+            draft_return_hint:'Инвентарь · нажмите, чтобы вернуть',
+            draft_clear:'Очистить ✕',
+            pdl_draw:'= 0 XP',
+            privacy_policy:'Политика конфиденциальности',
+            age_gate:'Подтверждаю, что мне 13 лет или больше',
+            age_gate_error:'Вам должно быть не менее 13 лет для создания аккаунта.',
             appearance:'ВИД', info:'ИНФО', dark_theme:'Тёмная тема', htp_bonus_title:'БОНУС ФИГУР',
         },
         ja: {
@@ -3342,7 +3484,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             turn_label:'ターン', turn_positioning:'配置', replay_prev:'⏮ 前へ', replay_auto:'▶ 自動', replay_next:'次へ ⏭',
             // ランキング
             how_it_works:'仕組み',
-            ranking_desc:'各ディビジョンには<span style="color:#d4a832;">0〜100リーグポイント（LP）</span>があります。<br>試合に勝ってLPを貯め、ディビジョンを上がりましょう。<br>100LPに達すると自動的に<span style="color:#2ecc71;">昇格</span>します。<br><em>グループ</em>を跨ぐと<span style="color:#d4a832;">×3シールド</span>を獲得し、降格を吸収します。',
+            ranking_desc:'各ディビジョンには<span style="color:#d4a832;">0〜100経験値（XP）</span>があります。<br>試合に勝ってXPを貯め、ディビジョンを上がりましょう。<br>100XPに達すると自動的に<span style="color:#2ecc71;">昇格</span>します。<br><em>グループ</em>を跨ぐと<span style="color:#d4a832;">×3シールド</span>を獲得し、降格を吸収します。',
             divisions:'ディビジョン', single_div:'単一ディビジョン', max_rank:'最高ランク・単一ディビジョン',
             div_apprentice:'見習い', div_hardworking:'努力家', div_elite:'エリート',
             rank_pawn:'ポーン', rank_bishop:'ビショップ', rank_knight:'ナイト', rank_rook:'ルーク', rank_queen:'クイーン', rank_king:'キング',
@@ -3376,6 +3518,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'まだプレイヤーがいません。', no_matches_yet:'記録された試合はありません。',
             match_result_win:'勝利', match_result_loss:'敗北', match_result_wo:'W.O.',
             unranked_match:'非ランク戦',
+            mode_title:'ゲームモード', mode_casual:'カジュアル', mode_ranked:'ランク戦',
+            mode_casual_desc:'XPに影響しない対戦', mode_ranked_desc:'XPを争いランクを上げる',
+            mode_find_match:'マッチ検索',
             htp_intro:'microChess Onlineは、クラシックなチェスと戦場の不確実性が融合した戦術的決闘です。目標はシンプル：敵のキングを捕獲せよ。',
             htp_flow_title:'ゲームの流れ',
             htp_draft:'募集（ドラフト）：5ポイントで軍隊を編成します。強力なクイーンか、ポーンとナイトの大群を選んでください。',
@@ -3390,6 +3535,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             htp_duel_desc:'衝突が避けられないとき、運と力が登場します。サイコロ（1D6）を振り、駒のボーナスを加算します。\n勝利：敵の駒を捕獲してマスを支配します。\n敗北：あなたの駒が除去され、敵がスペースを占領します。\n引き分け：両方の駒が除去されます（空白）。例外：キングは常に引き分けに勝ちます。',
             htp_special_title:'特殊状況（カウンターアタック）',
             htp_special:'MicroChessはイニシアチブによってキングの防御を優先します。白のポーンがあなたのキングを攻撃しても、あなたの黒のナイトが同じターンにそのポーンを攻撃すれば、ナイトが先に介入します。ナイトがデュエルに勝てば、敵の攻撃が起きる前に侵入者を倒してキングを救います。',
+            draft_return_hint:'インベントリー・タップして戻す',
+            draft_clear:'クリア ✕',
+            pdl_draw:'= 0 XP',
+            privacy_policy:'プライバシーポリシー',
+            age_gate:'13歳以上であることを確認します',
+            age_gate_error:'アカウントを作成するには13歳以上である必要があります。',
             appearance:'外観', info:'情報', dark_theme:'ダークモード', htp_bonus_title:'コマのボーナス',
         },
         ko: {
@@ -3417,7 +3568,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             turn_label:'턴', turn_positioning:'배치', replay_prev:'⏮ 이전', replay_auto:'▶ 자동', replay_next:'다음 ⏭',
             // 랭킹
             how_it_works:'작동 방식',
-            ranking_desc:'각 디비전에는 <span style="color:#d4a832;">0–100 리그 포인트 (LP)</span>가 있습니다.<br>매치에서 승리하여 LP를 쌓고 디비전을 올리세요.<br>100 LP에 도달하면 자동으로 <span style="color:#2ecc71;">승급</span>됩니다.<br><em>그룹</em>을 건너뛸 때 강등을 흡수하는 <span style="color:#d4a832;">×3 방패</span>를 받습니다.',
+            ranking_desc:'각 디비전에는 <span style="color:#d4a832;">0–100 경험치 (XP)</span>가 있습니다.<br>매치에서 승리하여 XP를 쌓고 디비전을 올리세요.<br>100 XP에 도달하면 자동으로 <span style="color:#2ecc71;">승급</span>됩니다.<br><em>그룹</em>을 건너뛸 때 강등을 흡수하는 <span style="color:#d4a832;">×3 방패</span>를 받습니다.',
             divisions:'디비전', single_div:'단일 디비전', max_rank:'최고 랭크 · 단일 디비전',
             div_apprentice:'견습생', div_hardworking:'노력가', div_elite:'엘리트',
             rank_pawn:'폰', rank_bishop:'비숍', rank_knight:'나이트', rank_rook:'룩', rank_queen:'퀸', rank_king:'킹',
@@ -3451,6 +3602,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'아직 플레이어가 없습니다.', no_matches_yet:'기록된 매치가 없습니다.',
             match_result_win:'승리', match_result_loss:'패배', match_result_wo:'W.O.',
             unranked_match:'비랭크 매치',
+            mode_title:'게임 모드', mode_casual:'캐주얼', mode_ranked:'랭크전',
+            mode_casual_desc:'XP에 영향 없이 플레이', mode_ranked_desc:'XP를 걸고 랭크에 도전',
+            mode_find_match:'매치 찾기',
             htp_intro:'microChess Online은 클래식 체스와 전쟁터의 불확실성이 만나는 전술적 결투입니다. 목표는 간단합니다: 적의 킹을 잡아라.',
             htp_flow_title:'게임 흐름',
             htp_draft:'모집 (드래프트): 5포인트로 군대를 구성합니다. 강력한 퀸 또는 폰과 나이트의 대군 중 선택하세요.',
@@ -3465,6 +3619,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             htp_duel_desc:'충돌이 불가피할 때, 운과 힘이 등장합니다. 주사위(1D6)를 굴리고 말 보너스를 더합니다.\n승리: 적의 말을 포획하고 칸을 지배합니다.\n패배: 당신의 말이 제거되고 적이 공간을 차지합니다.\n무승부: 두 말 모두 제거됩니다 (공백). 예외: 킹은 항상 무승부에서 이깁니다.',
             htp_special_title:'특수 상황 (역습)',
             htp_special:'MicroChess는 주도권을 통해 킹 방어를 우선시합니다. 백의 폰이 당신의 킹을 공격하더라도, 당신의 흑 나이트가 같은 턴에 그 폰을 공격하면 나이트가 먼저 개입합니다. 나이트가 결투에서 이기면 적의 공격이 일어나기 전에 침략자를 제거하고 킹을 구합니다.',
+            draft_return_hint:'인벤토리 · 탭하여 반환',
+            draft_clear:'지우기 ✕',
+            pdl_draw:'= 0 XP',
+            privacy_policy:'개인정보 처리방침',
+            age_gate:'만 13세 이상임을 확인합니다',
+            age_gate_error:'계정을 만들려면 만 13세 이상이어야 합니다.',
             appearance:'화면', info:'정보', dark_theme:'다크 모드', htp_bonus_title:'기물 보너스',
         },
         zh: {
@@ -3492,7 +3652,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             turn_label:'回合', turn_positioning:'布局', replay_prev:'⏮ 上一步', replay_auto:'▶ 自动', replay_next:'下一步 ⏭',
             // 排名
             how_it_works:'如何运作',
-            ranking_desc:'每个分区有 <span style="color:#d4a832;">0–100 联赛积分 (LP)</span>。<br>赢得比赛积累LP并晋升分区。<br>达到100 LP后<span style="color:#2ecc71;">自动晋级</span>。<br>跨越<em>组别</em>时获得<span style="color:#d4a832;">×3 护盾</span>，可吸收降级。',
+            ranking_desc:'每个分区有 <span style="color:#d4a832;">0–100 经验值 (XP)</span>。<br>赢得比赛积累XP并晋升分区。<br>达到100 XP后<span style="color:#2ecc71;">自动晋级</span>。<br>跨越<em>组别</em>时获得<span style="color:#d4a832;">×3 护盾</span>，可吸收降级。',
             divisions:'分区', single_div:'单一分区', max_rank:'最高段位 · 单一分区',
             div_apprentice:'学徒', div_hardworking:'勤奋', div_elite:'精英',
             rank_pawn:'兵', rank_bishop:'象', rank_knight:'马', rank_rook:'车', rank_queen:'后', rank_king:'王',
@@ -3526,6 +3686,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'暂无玩家。', no_matches_yet:'没有记录的对局。',
             match_result_win:'胜利', match_result_loss:'失败', match_result_wo:'W.O.',
             unranked_match:'非排名对局',
+            mode_title:'游戏模式', mode_casual:'休闲', mode_ranked:'排名赛',
+            mode_casual_desc:'不影响XP的对局', mode_ranked_desc:'争夺XP并提升排名',
+            mode_find_match:'查找对局',
             htp_intro:'microChess Online是一场战术决斗，经典国际象棋与战场的不确定性相遇。目标很简单：捕获敌方国王。',
             htp_flow_title:'游戏流程',
             htp_draft:'招募（选秀）：你有5点来组建军队。在强大的后或大量兵和马之间做出选择。',
@@ -3540,11 +3703,22 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             htp_duel_desc:'当冲突不可避免时，运气和力量进入游戏。掷骰子（1D6）并加上棋子加成。\n胜利：你捕获敌方棋子并控制格子。\n失败：你的棋子被移除，敌人占领空间。\n平局：两个棋子都被移除（真空）。例外：国王在平局中始终获胜。',
             htp_special_title:'特殊情况（反击）',
             htp_special:'MicroChess通过主动权优先保护国王。如果白兵攻击你的国王，但你的黑马在同一回合攻击那匹兵，马会先行拦截。如果马赢得决斗，它在敌方攻击发生之前消灭入侵者并拯救你的国王。',
+            draft_return_hint:'背包 · 点击退还',
+            draft_clear:'清除 ✕',
+            pdl_draw:'= 0 XP',
+            privacy_policy:'隐私政策',
+            age_gate:'我确认我已年满13岁',
+            age_gate_error:'您必须年满13岁才能创建账户。',
             appearance:'外观', info:'信息', dark_theme:'深色主题', htp_bonus_title:'棋子加成',
         },
     };
 
-    let currentLang = localStorage.getItem('mc_lang') || 'pt';
+    const _SUPPORTED_LANGS = ['pt','es','en','de','it','ru','ja','ko','zh'];
+    const _savedLang = localStorage.getItem('mc_lang');
+    const _sysLang   = (navigator.language || '').split('-')[0].toLowerCase();
+    let currentLang = (_savedLang && _SUPPORTED_LANGS.includes(_savedLang)) ? _savedLang
+                    : _SUPPORTED_LANGS.includes(_sysLang) ? _sysLang
+                    : 'en';
     function t(key) { return (T[currentLang] && T[currentLang][key]) || (T['en'] && T['en'][key]) || T['pt'][key] || key; }
     window.t = t; // expose for rank-ui.js and auth-frontend.js
 
@@ -3585,6 +3759,20 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (id === 'match-history') refreshHistoryScreen();
         if (id === 'replay')        refreshReplayScreen();
         if (id === 'private-room')  refreshPrivateRoomScreen();
+        if (id === 'game-mode') {
+            _selectedMode = null;
+            const cardCasual = document.getElementById('gm-card-casual');
+            const cardRanked = document.getElementById('gm-card-ranked');
+            if (cardCasual) { cardCasual.style.border = '1.5px solid var(--mc-rule)'; cardCasual.style.background = 'var(--mc-surface)'; }
+            if (cardRanked) { cardRanked.style.border = '1.5px solid var(--mc-rule)'; cardRanked.style.background = 'var(--mc-surface)'; }
+            const checkCasual = document.getElementById('gm-check-casual');
+            const checkRanked = document.getElementById('gm-check-ranked');
+            if (checkCasual) checkCasual.style.display = 'none';
+            if (checkRanked) checkRanked.style.display = 'none';
+            const findBtn = document.getElementById('gm-find-btn');
+            if (findBtn) { findBtn.disabled = true; findBtn.style.opacity = '0.4'; findBtn.style.cursor = 'not-allowed'; }
+            refreshGameModeScreen();
+        }
         refreshOverlays();
     };
 
@@ -3603,6 +3791,17 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const loggedIn = typeof Session !== 'undefined' && Session.isValid();
         if (el('menu-logged-stats')) el('menu-logged-stats').style.display = loggedIn ? 'flex' : 'none';
         if (el('menu-guest-cta'))    el('menu-guest-cta').style.display    = loggedIn ? 'none' : 'block';
+    }
+
+    function refreshGameModeScreen() {
+        const el = id => document.getElementById(id);
+        if (el('gm-title'))       el('gm-title').textContent       = t('mode_title');
+        if (el('gm-back-label'))  el('gm-back-label').textContent  = t('back') || 'Back';
+        if (el('gm-casual-label'))el('gm-casual-label').textContent = t('mode_casual');
+        if (el('gm-casual-desc')) el('gm-casual-desc').textContent  = t('mode_casual_desc');
+        if (el('gm-ranked-label'))el('gm-ranked-label').textContent = t('mode_ranked');
+        if (el('gm-ranked-desc')) el('gm-ranked-desc').textContent  = t('mode_ranked_desc');
+        if (el('gm-find-label'))  el('gm-find-label').textContent  = t('mode_find_match');
     }
 
     function refreshProfileScreen() {
@@ -3683,6 +3882,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (_se('set-profile-label'))  _se('set-profile-label').textContent  = t('profile');
         if (_se('set-howtoplay-label')) _se('set-howtoplay-label').textContent = t('how_to_play');
         if (_se('set-credits-label'))  _se('set-credits-label').textContent  = t('credits');
+        if (_se('pp-link-text'))       _se('pp-link-text').textContent       = t('privacy_policy');
         // sync dark mode toggle
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const toggle = _se('dk-theme-toggle');
@@ -3751,7 +3951,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                         ${isYou ? `<div class="rk-pdl-bar"><div class="rk-pdl-fill" style="width:${youLp}%"></div></div>` : ''}
                     </div>
                     ${isYou
-                        ? `<span class="rk-badge you">${t('you')} · ${youLp} PdL</span>`
+                        ? `<span class="rk-badge you">${t('you')} · ${youLp} XP</span>`
                         : isKingGroup ? `<span class="rk-badge top">★ ${t('max_rank').split('·')[0].trim()}</span>` : ''}
                 </div>`;
             });
@@ -3887,9 +4087,19 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         });
     })();
 
-    window.selectLanguage = function(lang) {
+    window.selectLanguage = function(lang, _skipServer) {
         currentLang = lang;
         localStorage.setItem('mc_lang', lang);
+        if (!_skipServer) {
+            const _sess = window.Session && window.Session.get ? window.Session.get() : null;
+            if (_sess && _sess.token) {
+                fetch((window.API_BASE||'') + '/auth/lang', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _sess.token },
+                    body: JSON.stringify({ lang }),
+                }).catch(() => {});
+            }
+        }
         refreshSettingsScreen();
         refreshMenuScreen();
         refreshOverlays();
@@ -3899,6 +4109,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (currentScreen === 'match-history') refreshHistoryScreen();
         if (currentScreen === 'replay')       refreshReplayScreen();
         if (currentScreen === 'private-room') refreshPrivateRoomScreen();
+        if (currentScreen === 'game-mode') refreshGameModeScreen();
+        document.querySelectorAll('.back-label').forEach(function(el) { el.textContent = t('back'); });
+        const _ageLabel = document.getElementById('reg-age-gate-label');
+        if (_ageLabel) _ageLabel.textContent = t('age_gate');
     };
 
     window.selectAvatar = function(piece) {
@@ -3990,7 +4204,41 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     let myUid           = null;
     let opponentProfile = null;
 
-    window.goMatchmaking = function() {
+    let _selectedMode = null;
+
+    window.selectGameMode = function(mode) {
+        _selectedMode = mode;
+        const cardCasual  = document.getElementById('gm-card-casual');
+        const cardRanked  = document.getElementById('gm-card-ranked');
+        const checkCasual = document.getElementById('gm-check-casual');
+        const checkRanked = document.getElementById('gm-check-ranked');
+        const findBtn     = document.getElementById('gm-find-btn');
+        // Reset both cards
+        cardCasual.style.border = '1.5px solid var(--mc-rule)';
+        cardCasual.style.background = 'var(--mc-surface)';
+        cardRanked.style.border = '1.5px solid var(--mc-rule)';
+        cardRanked.style.background = 'var(--mc-surface)';
+        checkCasual.style.display = 'none';
+        checkRanked.style.display = 'none';
+        // Highlight selected
+        const selCard  = mode === 'casual' ? cardCasual  : cardRanked;
+        const selCheck = mode === 'casual' ? checkCasual : checkRanked;
+        selCard.style.border = '2px solid var(--mc-accent)';
+        selCard.style.background = 'var(--mc-accent-soft)';
+        selCheck.style.display = 'grid';
+        // Enable find button
+        findBtn.disabled = false;
+        findBtn.style.opacity = '1';
+        findBtn.style.cursor = 'pointer';
+    };
+
+    window.startMatchmakingWithMode = function() {
+        if (!_selectedMode) return;
+        window.goMatchmaking(_selectedMode);
+    };
+
+    window.goMatchmaking = function(mode) {
+        const _mode = (mode === 'casual' || mode === 'ranked') ? mode : 'ranked';
         const p = getProfile();
         myUid = p.uid;
         document.getElementById('mm-my-avatar').textContent    = PIECE_ICONS[p.avatar] || '♔';
@@ -4006,7 +4254,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         document.getElementById('mm-vs-label-opp').textContent    = t('opponent');
         setMMState('lobby');
         showScreen('matchmaking');
-        socket.emit('queue_join', getQueueProfile({ uid: myUid, nickname: p.nickname, avatar: p.avatar }));
+        socket.emit('queue_join', getQueueProfile({ uid: myUid, nickname: p.nickname, avatar: p.avatar, match_mode: _mode }));
     };
 
     function setMMState(st) {
@@ -4995,11 +5243,10 @@ if ('serviceWorker' in navigator) {
     function _startAfkTimer() {
         if (_afkInterval) clearInterval(_afkInterval);
         _afkRemain = AFK_TOTAL;
+        window.ExcBanners.showAfk(_afkRemain);
         _afkInterval = setInterval(() => {
             _afkRemain--;
-            if (_afkRemain <= AFK_WARN_AT) {
-                window.ExcBanners.showAfk(_afkRemain);
-            }
+            window.ExcBanners.showAfk(_afkRemain);
             if (_afkRemain <= 0) { clearInterval(_afkInterval); _afkInterval = null; }
         }, 1000);
     }
