@@ -1575,3 +1575,40 @@ node testes/db-inspector.js --matches 20
 | disconnect_ingame | disconnect com partida ativa | user_id, match_id, {phase} |
 | reconnect_success | rejoin_game bem-sucedido | user_id, match_id |
 | reconnect_fail | rejoin_game sem pending | user_id |
+
+---
+
+## [2026-04-24] Sessão BUG-A — Correções Backend
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `server/server.js` `stateView`: lógica estava **invertida** — mostrava o planejamento do oponente enquanto ele ainda pensava; agora sempre oculta independente do `ready`
+- `server/server.js` `startAFKTimer`: timer do próprio jogador que sofreu AFK não era limpo ao disparar; adicionado `clearAFKTimer(roomNow, color)` antes de limpar o oponente
+- `server/server.js`: criado `apiLimiter` (60 req/min) e aplicado nas rotas `/leaderboard`, `/player/:id`, `/match/:id/replay`, `/player/:id/matches`
+
+---
+
+## [2026-04-24] Sessão BUG-B — Correções Frontend Críticas
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `html/index.html` `launchGame()`: `lastDuelKey = null` adicionado — duelos com mesmo key agora aparecem em novas partidas
+- `html/auth-frontend.js` `handleSubmit`: flag `_busy` impede duplo-submit em login e registro
+- `html/index.html` `privateRoom.join()`: timeout de 8s chama `_onError` automaticamente se servidor não responder; limpo ao receber `match_found`
+
+---
+
+## [2026-04-24] Sessão BUG-C — Correções Frontend Médias
+
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `html/index.html` `setMMState`: null check adicionado — não crasha mais se estado inválido chegar do servidor
+- `html/index.html` campos de auth: `maxlength="254"` em emails, `maxlength="100"` em senhas (login e registro)
+- `html/index.html`: handler `rejoin_success` adicionado — reseta `localSelection` e chama `updateUI()` ao reconectar
+- `html/auth-frontend.js`: fallback "Guerreiro" agora passa por `window.t('warrior')` quando disponível

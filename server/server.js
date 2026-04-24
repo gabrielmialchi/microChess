@@ -112,6 +112,13 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
     message: { error: 'Muitas tentativas. Aguarde 1 minuto.' },
 });
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Muitas requisições. Aguarde 1 minuto.' },
+});
 
 // ── EMAIL CRYPTO ──────────────────────────────────────────────
 const HMAC_SECRET = process.env.HMAC_SECRET || 'mc-hmac-dev-secret-key';
@@ -267,7 +274,7 @@ app.delete('/auth/account', (req, res) => {
 });
 
 // ── LEADERBOARD / PLAYER ENDPOINTS ───────────────────────────
-app.get('/leaderboard', (_, res) => {
+app.get('/leaderboard', apiLimiter, (_, res) => {
     const rows = db.prepare(
         'SELECT id, username, mmr, wins, losses, draws, wo_count, elo_rank, elo_lp FROM players ORDER BY elo_rank DESC, elo_lp DESC LIMIT 50'
     ).all();
@@ -278,7 +285,7 @@ app.get('/leaderboard', (_, res) => {
     })));
 });
 
-app.get('/player/:id', (req, res) => {
+app.get('/player/:id', apiLimiter, (req, res) => {
     const auth    = (req.headers.authorization || '').split(' ')[1];
     const decoded = auth ? verifyToken(auth) : null;
     const isSelf  = decoded?.id === req.params.id;
@@ -297,7 +304,7 @@ app.get('/player/:id', (req, res) => {
     res.json(pub);
 });
 
-app.get('/match/:id/replay', (req, res) => {
+app.get('/match/:id/replay', apiLimiter, (req, res) => {
     const replay = db.prepare('SELECT * FROM replays WHERE match_id = ?').get(req.params.id);
     if (!replay) return res.status(404).json({ error: 'Replay não encontrado' });
     if (new Date(replay.expires_at) < new Date())
@@ -309,7 +316,7 @@ app.get('/match/:id/replay', (req, res) => {
     }
 });
 
-app.get('/player/:id/matches', (req, res) => {
+app.get('/player/:id/matches', apiLimiter, (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
     const matches = db.prepare(`
         SELECT m.*, r.id as replay_id,
@@ -461,6 +468,7 @@ function startAFKTimer(room, color, ms, reason) {
         if (!roomNow || roomNow.state.phase === 'GAMEOVER') return;
         console.log(`[AFK] ${color} inativo (${reason}). WO decretado.`);
         const oppColor = color === 'white' ? 'black' : 'white';
+        clearAFKTimer(roomNow, color);
         clearAFKTimer(roomNow, color === 'white' ? 'black' : 'white');
         roomNow.state.phase = 'GAMEOVER';
         roomNow.state.wo    = true;
@@ -529,8 +537,7 @@ function createState() {
 
 function stateView(state, color) {
     const opp = color === 'white' ? 'black' : 'white';
-    // Hide opponent's planning until both have confirmed (ready), preventing WebSocket snooping
-    if (!state.ready[opp]) return state;
+    // Always hide opponent's planning to prevent WebSocket snooping
     return { ...state, planning: { ...state.planning, [opp]: null } };
 }
 

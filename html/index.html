@@ -1797,13 +1797,13 @@
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:28px;flex:1;">
       <div style="display:flex;flex-direction:column;gap:5px;">
         <label for="login-email" style="font-family:var(--mc-font-sans);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;color:var(--mc-muted);">Email</label>
-        <input id="login-email" class="auth-fi" type="email" placeholder="voce@email.com" autocomplete="email"
+        <input id="login-email" class="auth-fi" type="email" placeholder="voce@email.com" autocomplete="email" maxlength="254"
           style="height:50px;padding:0 14px;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-md);font-family:var(--mc-font-sans);font-size:15px;color:var(--mc-ink);width:100%;transition:border-color 0.15s,box-shadow 0.15s;">
         <span id="login-email-hint" style="font-size:11px;color:var(--mc-danger);margin-top:2px;display:none;"></span>
       </div>
       <div style="display:flex;flex-direction:column;gap:5px;">
         <label for="login-password" style="font-family:var(--mc-font-sans);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;color:var(--mc-muted);">Senha</label>
-        <input id="login-password" class="auth-fi" type="password" placeholder="••••••••" autocomplete="current-password"
+        <input id="login-password" class="auth-fi" type="password" placeholder="••••••••" autocomplete="current-password" maxlength="100"
           style="height:50px;padding:0 14px;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-md);font-family:var(--mc-font-sans);font-size:15px;color:var(--mc-ink);width:100%;transition:border-color 0.15s,box-shadow 0.15s;">
         <span id="login-password-hint" style="font-size:11px;color:var(--mc-danger);margin-top:2px;display:none;"></span>
       </div>
@@ -1838,13 +1838,13 @@
       </div>
       <div style="display:flex;flex-direction:column;gap:5px;">
         <label for="reg-email" style="font-family:var(--mc-font-sans);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;color:var(--mc-muted);">Email</label>
-        <input id="reg-email" class="auth-fi" type="email" placeholder="voce@email.com" autocomplete="email"
+        <input id="reg-email" class="auth-fi" type="email" placeholder="voce@email.com" autocomplete="email" maxlength="254"
           style="height:50px;padding:0 14px;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-md);font-family:var(--mc-font-sans);font-size:15px;color:var(--mc-ink);width:100%;transition:border-color 0.15s,box-shadow 0.15s;">
         <span id="reg-email-hint" style="font-size:11px;color:var(--mc-danger);margin-top:2px;display:none;"></span>
       </div>
       <div style="display:flex;flex-direction:column;gap:5px;">
         <label for="reg-password" style="font-family:var(--mc-font-sans);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;color:var(--mc-muted);">Senha</label>
-        <input id="reg-password" class="auth-fi" type="password" placeholder="mínimo 6 caracteres" autocomplete="new-password"
+        <input id="reg-password" class="auth-fi" type="password" placeholder="mínimo 6 caracteres" autocomplete="new-password" maxlength="100"
           style="height:50px;padding:0 14px;background:var(--mc-surface);border:1px solid var(--mc-rule-strong);border-radius:var(--mc-r-md);font-family:var(--mc-font-sans);font-size:15px;color:var(--mc-ink);width:100%;transition:border-color 0.15s,box-shadow 0.15s;">
         <span id="reg-password-hint" style="font-size:11px;color:var(--mc-danger);margin-top:2px;display:none;"></span>
       </div>
@@ -4259,7 +4259,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
     function setMMState(st) {
         document.querySelectorAll('.mm-state').forEach(s => s.classList.remove('active'));
-        document.getElementById(`mm-${st}`).classList.add('active');
+        const _mEl = document.getElementById(`mm-${st}`); if (_mEl) _mEl.classList.add('active');
     }
 
     // match_found comes from server
@@ -4322,6 +4322,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     function launchGame() {
         resultSaved = false;
         inGame = true;
+        lastDuelKey = null;
         const tabbar = document.getElementById('mc-tabbar');
         if (tabbar) tabbar.style.display = 'none';
         if (myColor !== 'white') document.body.classList.add('theme-light');
@@ -4402,6 +4403,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                     nickname: localStorage.getItem('mc_nickname') || 'Guerreiro',
                     avatar: localStorage.getItem('mc_avatar') || 'K',
                 }) : {};
+                const _joinTimeout = setTimeout(() => window.privateRoom._onError(t('connection_error') || 'Erro de conexão.'), 8000);
+                const _origOnError = window.privateRoom._onError.bind(window.privateRoom);
+                window.privateRoom._onError = (msg) => { clearTimeout(_joinTimeout); window.privateRoom._onError = _origOnError; _origOnError(msg); };
+                socket.on('match_found', () => clearTimeout(_joinTimeout), { once: true });
                 socket.emit('private_room_join', { code, profile });
             },
 
@@ -4446,6 +4451,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     });
     socket.on('private_room_expired', () => window.privateRoom._onExpired());
     socket.on('private_room_error',   ({ error }) => window.privateRoom._onError(error));
+    socket.on('rejoin_success', () => { localSelection = null; if (state) updateUI(); });
 
     window.returnToMenu = function() {
         inGame = false;

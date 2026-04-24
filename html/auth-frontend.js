@@ -114,6 +114,8 @@ const AuthUI = {
     },
 
     async handleSubmit(mode) {
+        if (this._busy) return;
+        this._busy = true;
         this._clearErrors();
         const err = document.getElementById('auth-error');
         let url, body;
@@ -166,6 +168,8 @@ const AuthUI = {
             await MenuPopulator.populate(session);
         } catch {
             if (err) err.textContent = 'Erro de conexão com o servidor.';
+        } finally {
+            this._busy = false;
         }
     },
 
@@ -192,7 +196,7 @@ window.doLogout = function () {
     const badge = document.getElementById('menu-rank-badge');
     if (badge) badge.textContent = 'RANK —';
     const name = document.getElementById('menu-player-name');
-    if (name) name.textContent = 'Guerreiro';
+    if (name) name.textContent = (window.t && window.t('warrior')) || 'Guerreiro';
     const statW = document.getElementById('menu-stat-w');
     const statL = document.getElementById('menu-stat-l');
     if (statW) statW.textContent = '0';
