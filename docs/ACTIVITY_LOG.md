@@ -27,6 +27,81 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-04-24] Sessão DES-B — Consolidação de Back Buttons
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- Removido CSS órfão `.htp-back-btn` (classe não usada em nenhum elemento; todos os back buttons de telas já usam `.screen-back-btn`)
+- `#lb-back-btn` (leaderboard) padronizado: agora tem `← <span class="back-label">VOLTAR</span>` consistente com os demais, recebendo i18n via `querySelectorAll('.back-label')` em `setLanguage`
+- `.mm-back-btn` mantida como variante legítima (matchmaking usa "← cancelar", não "VOLTAR", e tem estética distinta por design)
+
+### Notas para próxima sessão
+- Todos os botões VOLTAR agora compartilham o mesmo pattern visual (`.screen-back-btn`) e o mesmo label dinâmico
+
+---
+
+## [2026-04-24] Sessão DES-C — Desambiguação de theme-light
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- Removidas duas referências de `document.body.classList.add/remove('theme-light')` em `launchGame`/`returnToMenu` (html/index.html). Esse toggle ativava indevidamente o tema claro da UI quando o jogador preto entrava em partida — flip do tabuleiro já é feito por JS via swap de coordenadas (logicalX/logicalY em 4825-4878)
+- 10 regras CSS `body.theme-light` → `[data-theme="light"]` (agora alinhadas com `documentElement.setAttribute('data-theme', ...)` que é setado pelo toggle em Configurações):
+  - `body.theme-light { tokens… }` → `[data-theme="light"] body, [data-theme="light"] { tokens… }`
+  - `body.theme-light::before` → `[data-theme="light"] body::before`
+  - `body.theme-light .panel` → `[data-theme="light"] .panel`
+  - `body.theme-light .board` → `[data-theme="light"] .board`
+  - `body.theme-light .shop-btns button` (+ hover) → `[data-theme="light"] .shop-btns button`
+  - `body.theme-light .inv-piece` → `[data-theme="light"] .inv-piece`
+  - `body.theme-light .btn-ready:disabled` → `[data-theme="light"] .btn-ready:disabled`
+  - `body.theme-light #reveal-flash.active` → `[data-theme="light"] #reveal-flash.active`
+  - `body.theme-light .screen` → `[data-theme="light"] .screen`
+- Resultado: alternância UI light/dark em Configurações agora se propaga corretamente para todos os overrides legados (`--bg`, `--panel-bg`, `--board-gap`, etc.), e não é mais ativada acidentalmente quando um jogador preto entra em partida.
+
+### Notas para próxima sessão
+- Se aparecer necessidade futura de uma classe específica para perspectiva do preto (ex: inverter gradient background), criar `body.player-inverted` — não reusar `.theme-light`
+
+---
+
+## [2026-04-24] Sessão BUG-G — i18n Refresh Completo
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- Menu principal: `refreshMenuScreen` agora atualiza `btn-novo-jogo`, `btn-sala-privada`, `btn-ranking`, `btn-configuracoes`, `footer-feedback` via `t(...)` — antes apenas avatar/nick/stats eram atualizados, deixando os botões em PT mesmo após troca de idioma
+- Credits screen: adicionado refresh de `crd-thanks` (t('credits')) e `crd-feedback-btn` (t('feedback')) tanto em `showScreen('credits')` quanto em `setLanguage` (caso usuário esteja na tela ao trocar idioma)
+
+### Notas para próxima sessão
+- Auditoria confirma que demais botões dinâmicos (btn-ready, btn-go-menu, btn-go-again, close-duel, btn-reset-draft, btn-mm-cancel) já são atualizados em seus respectivos flows de renderização
+
+---
+
+## [2026-04-24] Sessão BUG-F — AFK Banner Threshold
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `_startAfkTimer` (html/index.html ~5291): adicionado threshold `AFK_WARN_THRESHOLD = 10`. Agora o banner de aviso só aparece quando restam ≤10s; acima disso, `hideAfk()` é chamado. Elimina reclamação de banner "vai esgotar" visível desde os 60s iniciais.
+
+### Notas para próxima sessão
+- Tick de 500ms mantido para suavidade do countdown; banner animará apenas nos últimos 10 ticks
+
+---
+
+## [2026-04-24] Sessão BUG-E — Age Gate + _busy Reset
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `_clearErrors` (html/auth-frontend.js): removidas linhas que zeravam `reg-age-gate.checked = false` a cada submit, fazendo com que o check do usuário fosse sempre perdido antes da validação
+- `handleSubmit`: adicionado `this._busy = false;` antes de cada early-return de validação (5 pontos), evitando que falha de validação travasse o lock `_busy`, silenciando submissões subsequentes
+
+### Notas para próxima sessão
+- Fluxo de cadastro agora permite corrigir e reenviar após erro de validação sem recarregar a tela
+
+---
+
 ## [2026-04-24] Sessão DES-A — Design Token Compliance
 **Status:** Completo
 **Branch:** main

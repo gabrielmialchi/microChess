@@ -332,7 +332,7 @@
             --black-glow: drop-shadow(0 0 9px rgba(165,105,210,0.95)) drop-shadow(0 3px 6px rgba(0,0,0,0.7));
         }
 
-        body.theme-light {
+        [data-theme="light"] body, [data-theme="light"] {
             --bg: #ede4d6;
             --bg2: #e5daca;
             --panel-bg: #f4ede2;
@@ -382,7 +382,7 @@
             z-index: 0;
         }
 
-        body.theme-light::before {
+        [data-theme="light"] body::before {
             background:
                 radial-gradient(ellipse 80% 50% at 50% 0%, rgba(176,106,16,0.06) 0%, transparent 70%),
                 radial-gradient(ellipse 100% 80% at 50% 110%, rgba(0,0,0,0.12) 0%, transparent 60%);
@@ -499,7 +499,7 @@
             box-shadow: 0 8px 40px rgba(0,0,0,0.4);
         }
 
-        body.theme-light .panel {
+        [data-theme="light"] .panel {
             box-shadow: 0 4px 20px rgba(0,0,0,0.12);
         }
 
@@ -530,7 +530,7 @@
             transition: border-color 0.4s, background 0.4s, box-shadow 0.6s;
         }
 
-        body.theme-light .board {
+        [data-theme="light"] .board {
             box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.08);
         }
 
@@ -712,12 +712,12 @@
             transform: translateY(-1px);
         }
 
-        body.theme-light .shop-btns button {
+        [data-theme="light"] .shop-btns button {
             background: rgba(0,0,0,0.05);
             border-color: rgba(0,0,0,0.12);
         }
 
-        body.theme-light .shop-btns button:hover:not(:disabled) {
+        [data-theme="light"] .shop-btns button:hover:not(:disabled) {
             background: var(--accent-dim);
             border-color: rgba(176,106,16,0.4);
         }
@@ -764,7 +764,7 @@
             transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
         }
 
-        body.theme-light .inv-piece { background: rgba(0,0,0,0.04); }
+        [data-theme="light"] .inv-piece { background: rgba(0,0,0,0.04); }
 
         .inv-piece:hover {
             transform: translateY(-2px);
@@ -812,7 +812,7 @@
             cursor: not-allowed;
         }
 
-        body.theme-light .btn-ready:disabled {
+        [data-theme="light"] .btn-ready:disabled {
             background: rgba(0,0,0,0.08);
             color: rgba(0,0,0,0.22);
         }
@@ -891,7 +891,7 @@
             100% { background: transparent; }
         }
 
-        body.theme-light #reveal-flash.active {
+        [data-theme="light"] #reveal-flash.active {
             animation: reveal-bloom-light 0.7s ease both;
         }
 
@@ -1201,7 +1201,7 @@
         }
         .screen.active { display: flex; }
 
-        body.theme-light .screen {
+        [data-theme="light"] .screen {
             background: radial-gradient(ellipse at 50% 30%, #e8dcc8 0%, #c8b898 100%);
         }
 
@@ -1512,18 +1512,6 @@
             flex-shrink: 0;
             color: var(--accent); font-weight: 600; width: 18px;
         }
-
-        .htp-back-btn {
-            flex-shrink: 0;
-            padding: 8px 18px;
-            font-family: 'Cinzel', serif; font-size: 0.7rem;
-            font-weight: 700; letter-spacing: 3px;
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.12);
-            color: var(--text-muted);
-            border-radius: 6px; cursor: pointer; transition: all 0.15s;
-        }
-        .htp-back-btn:hover { border-color: var(--accent); color: var(--accent); }
 
         /* ── CREDITS SCREEN ── */
         #screen-credits { justify-content: center; }
@@ -2614,7 +2602,7 @@
 <!-- LEADERBOARD SCREEN -->
 <div id="screen-leaderboard" class="screen">
     <div class="rk-topbar">
-        <button class="screen-back-btn" onclick="showScreen('ranking')" id="lb-back-btn">←</button>
+        <button class="screen-back-btn" onclick="showScreen('ranking')" id="lb-back-btn">← <span class="back-label">VOLTAR</span></button>
         <span class="rk-title" id="lb-title">LEADERBOARD</span>
         <div style="width:36px;"></div>
     </div>
@@ -3800,6 +3788,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (id === 'match-history') refreshHistoryScreen();
         if (id === 'replay')        refreshReplayScreen();
         if (id === 'private-room')  refreshPrivateRoomScreen();
+        if (id === 'credits') {
+            const _thanks = document.getElementById('crd-thanks');
+            if (_thanks) _thanks.textContent = t('credits');
+            const _fbBtn = document.getElementById('crd-feedback-btn');
+            if (_fbBtn) _fbBtn.textContent = t('feedback');
+        }
         if (id === 'game-mode') {
             _selectedMode = null;
             ['gm-card-casual','gm-card-ranked','gm-card-train'].forEach(cid => {
@@ -3825,6 +3819,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (el('menu-stat-l'))       el('menu-stat-l').textContent       = p.stats.losses || 0;
         if (el('menu-rank-badge'))   el('menu-rank-badge').textContent   = 'RANK —';
         if (el('btn-novo-jogo'))     el('btn-novo-jogo').textContent     = t('new_game');
+        if (el('btn-sala-privada'))  el('btn-sala-privada').textContent  = t('private_room_title');
+        if (el('btn-ranking'))       el('btn-ranking').textContent       = t('ranking_title');
         if (el('btn-configuracoes')) el('btn-configuracoes').textContent = t('settings');
         if (el('footer-feedback'))   el('footer-feedback').textContent   = t('feedback');
         // guest vs logged-in
@@ -4154,6 +4150,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (currentScreen === 'replay')       refreshReplayScreen();
         if (currentScreen === 'private-room') refreshPrivateRoomScreen();
         if (currentScreen === 'game-mode') refreshGameModeScreen();
+        if (currentScreen === 'credits') {
+            const _thanks = document.getElementById('crd-thanks');
+            if (_thanks) _thanks.textContent = t('credits');
+            const _fbBtn = document.getElementById('crd-feedback-btn');
+            if (_fbBtn) _fbBtn.textContent = t('feedback');
+        }
         document.querySelectorAll('.back-label').forEach(function(el) { el.textContent = t('back'); });
         const _ageLabel = document.getElementById('reg-age-gate-label');
         if (_ageLabel) _ageLabel.textContent = t('age_gate');
@@ -4370,7 +4372,6 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         lastDuelKey = null;
         const tabbar = document.getElementById('mc-tabbar');
         if (tabbar) tabbar.style.display = 'none';
-        if (myColor !== 'white') document.body.classList.add('theme-light');
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('game-area').style.display = 'flex';
         // Reset PdL fields so previous match values don't bleed into next game-over
@@ -4506,7 +4507,6 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         document.getElementById('game-over-screen').style.display = 'none';
         const sdOv = document.getElementById('sd-overlay');
         if (sdOv) sdOv.style.display = 'none';
-        document.body.classList.remove('theme-light');
         window.ExcBanners && window.ExcBanners.hideAll();
         pieceElements.forEach(el => el.remove());
         pieceElements.clear();
@@ -5288,11 +5288,13 @@ if ('serviceWorker' in navigator) {
     let _prevReady    = false;
     let _myColor      = null;
 
+    const AFK_WARN_THRESHOLD = 10;
     function _startAfkTimer(deadlineMs) {
         if (_afkInterval) clearInterval(_afkInterval);
         const tick = () => {
             const remain = deadlineMs ? Math.max(0, Math.round((deadlineMs - Date.now()) / 1000)) : 0;
-            window.ExcBanners.showAfk(remain);
+            if (remain <= AFK_WARN_THRESHOLD) window.ExcBanners.showAfk(remain);
+            else                              window.ExcBanners.hideAfk();
             if (remain <= 0) { clearInterval(_afkInterval); _afkInterval = null; }
         };
         tick();

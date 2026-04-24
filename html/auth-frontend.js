@@ -102,8 +102,6 @@ const AuthUI = {
         });
         const err = document.getElementById('auth-error');
         if (err) err.textContent = '';
-        const _ageCheck = document.getElementById('reg-age-gate');
-        if (_ageCheck) _ageCheck.checked = false;
     },
 
     _fieldError(inputId, hintId, msg) {
@@ -124,13 +122,14 @@ const AuthUI = {
             const username = document.getElementById('reg-username').value.trim();
             const email    = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
-            if (!username) { this._fieldError('reg-username', 'reg-username-hint', 'Preencha o apelido.'); return; }
-            if (!email)    { this._fieldError('reg-email',    'reg-email-hint',    'Preencha o email.'); return; }
-            if (!password) { this._fieldError('reg-password', 'reg-password-hint', 'Preencha a senha.'); return; }
+            if (!username) { this._fieldError('reg-username', 'reg-username-hint', 'Preencha o apelido.'); this._busy = false; return; }
+            if (!email)    { this._fieldError('reg-email',    'reg-email-hint',    'Preencha o email.'); this._busy = false; return; }
+            if (!password) { this._fieldError('reg-password', 'reg-password-hint', 'Preencha a senha.'); this._busy = false; return; }
             const ageGate = document.getElementById('reg-age-gate');
             const ageHint = document.getElementById('reg-age-gate-hint');
             if (!ageGate || !ageGate.checked) {
                 if (ageHint) { ageHint.textContent = (window.t && window.t('age_gate_error')) || 'Você precisa ter 13 anos ou mais para criar uma conta.'; ageHint.style.display = 'block'; }
+                this._busy = false;
                 return;
             }
             url  = (window.API_BASE||'') + '/auth/register';
@@ -138,8 +137,8 @@ const AuthUI = {
         } else {
             const email    = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
-            if (!email)    { this._fieldError('login-email',    'login-email-hint',    'Preencha o email.'); return; }
-            if (!password) { this._fieldError('login-password', 'login-password-hint', 'Preencha a senha.'); return; }
+            if (!email)    { this._fieldError('login-email',    'login-email-hint',    'Preencha o email.'); this._busy = false; return; }
+            if (!password) { this._fieldError('login-password', 'login-password-hint', 'Preencha a senha.'); this._busy = false; return; }
             url  = (window.API_BASE||'') + '/auth/login';
             body = { email, password };
         }
