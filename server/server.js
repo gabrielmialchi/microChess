@@ -15,6 +15,7 @@ const { createReplayBuffer, recordTurn, buildTurnSnapshot, buildDuelSnapshot } =
 const { applyLPChange, getEloDisplay } = require('./elo');
 const { logEvent } = require('./analytics');
 const { isPathClear, isValidMove }     = require('./movegen');
+const { createBotPlayer, processBotTurn } = require('./bot');
 
 const app    = express();
 const server = http.createServer(app);
@@ -459,10 +460,13 @@ function clearAFKTimer(room, color) {
         clearTimeout(room.timeouts[color]);
         room.timeouts[color] = null;
     }
+    if (room.state?.afkDeadline) room.state.afkDeadline[color] = null;
 }
 
 function startAFKTimer(room, color, ms, reason) {
     clearAFKTimer(room, color);
+    if (!room.state.afkDeadline) room.state.afkDeadline = {};
+    room.state.afkDeadline[color] = Date.now() + ms;
     room.timeouts[color] = setTimeout(() => {
         const roomNow = rooms.get(room.id);
         if (!roomNow || roomNow.state.phase === 'GAMEOVER') return;
@@ -493,9 +497,23 @@ const CONFIG = {
 const queue            = [];         // { uid, nickname, avatar, timestamp, socketId }
 const rooms            = new Map();  // roomId → { id, players, state, resolving }
 const pendingReconnects = new Map(); // uid → { roomId, color, timer }
-const privateRooms     = new Map();  // code → { profile, socketId, timer }
+const privateRooms     = new Map();  // code → { profile, socketId, timer, createdAt }
 const RECONNECT_MS     = 60_000;
 const PRIVATE_ROOM_MS  = 5 * 60_000; // 5 minutes expiry
+
+// ── SOCKET RATE LIMITER ───────────────────────────────────────
+// Per-socket sliding-window counter. Returns true if within limit.
+const _socketRateLimits = new WeakMap();
+function checkSocketRate(socket, event, maxPerWindow, windowMs) {
+    let limits = _socketRateLimits.get(socket);
+    if (!limits) { limits = {}; _socketRateLimits.set(socket, limits); }
+    const now = Date.now();
+    const entry = limits[event] || { count: 0, windowStart: now };
+    if (now - entry.windowStart > windowMs) { entry.count = 0; entry.windowStart = now; }
+    entry.count++;
+    limits[event] = entry;
+    return entry.count <= maxPerWindow;
+}
 
 // ── MAINTENANCE ───────────────────────────────────────────────
 function cleanExpiredReplays() {
@@ -545,6 +563,12 @@ function broadcast(room) {
     const { white, black } = room.players;
     io.to(white.socketId).emit('game_state', stateView(room.state, 'white'));
     io.to(black.socketId).emit('game_state', stateView(room.state, 'black'));
+    if (room._botColor && room.state.phase !== 'GAMEOVER') {
+        setImmediate(() => {
+            const r = rooms.get(room.id);
+            if (r && r.state.phase !== 'GAMEOVER') processBotTurn(r, r._botColor, (ev, data) => handleBotEvent(r, ev, data));
+        });
+    }
 }
 
 // ── GAME LOGIC ────────────────────────────────────────────────
@@ -826,6 +850,134 @@ function finishDuel(room) {
     broadcast(room);
 }
 
+// ── BOT EVENT HANDLER ─────────────────────────────────────────
+function handleBotEvent(room, event, data) {
+    const botColor = room._botColor;
+    const s = room.state;
+    if (!s || s.phase === 'GAMEOVER') return;
+
+    if (event === 'draft_buy') {
+        const type = data;
+        const cfg = CONFIG[type];
+        if (!cfg || !cfg.cost || s.ready[botColor] || s.budget[botColor] < cfg.cost) return;
+        clearAFKTimer(room, botColor);
+        s.budget[botColor] -= cfg.cost;
+        s.inventory[botColor].push({ type, color: botColor, id: `p_${Date.now()}_${crypto.randomBytes(2).toString('hex')}` });
+        startAFKTimer(room, botColor, AFK_PREPARE_MS, 'draft');
+        broadcast(room);
+        return;
+    }
+    if (event === 'draft_ready') {
+        if (s.phase !== 'DRAFT' || s.ready[botColor]) return;
+        clearAFKTimer(room, botColor);
+        s.ready[botColor] = true;
+        if (s.ready.white && s.ready.black) {
+            s.phase = 'POSITION';
+            s.ready = { white: false, black: false };
+            startAFKTimer(room, 'white', AFK_PREPARE_MS, 'position');
+            startAFKTimer(room, 'black', AFK_PREPARE_MS, 'position');
+        }
+        broadcast(room);
+        return;
+    }
+    if (event === 'position_place') {
+        const { pieceId, x, y } = data;
+        if (s.phase !== 'POSITION' || s.ready[botColor]) return;
+        if (botColor === 'black' && y <= 1) return;
+        if (x < 0 || x > 3 || y < 0 || y > 3) return;
+        if (s.army.some(p => p.x === x && p.y === y)) return;
+        const invIdx = s.inventory[botColor].findIndex(p => p.id === pieceId);
+        if (invIdx === -1) return;
+        clearAFKTimer(room, botColor);
+        const piece = s.inventory[botColor].splice(invIdx, 1)[0];
+        s.army.push({ id: piece.id, type: piece.type, color: botColor, x, y, bonus: CONFIG[piece.type].bonus, buffed: false });
+        startAFKTimer(room, botColor, AFK_PREPARE_MS, 'position');
+        broadcast(room);
+        return;
+    }
+    if (event === 'position_ready') {
+        if (s.phase !== 'POSITION' || s.ready[botColor]) return;
+        clearAFKTimer(room, botColor);
+        s.ready[botColor] = true;
+        if (s.ready.white && s.ready.black) {
+            recordTurn(room._replay, { type: 'position', ...buildTurnSnapshot(s) });
+            s.phase = 'REVEAL';
+            s.ready = { white: false, black: false };
+            setTimeout(() => {
+                const r = rooms.get(room.id);
+                if (r && r.state.phase === 'REVEAL') {
+                    r.state.phase = 'ACTION';
+                    startAFKTimer(r, 'white', AFK_ACTION_MS, 'action');
+                    startAFKTimer(r, 'black', AFK_ACTION_MS, 'action');
+                    broadcast(r);
+                }
+            }, 3000);
+        }
+        broadcast(room);
+        return;
+    }
+    if (event === 'action_plan') {
+        const { pieceId, tx, ty } = data;
+        if (s.phase !== 'ACTION' || s.ready[botColor] || s.duel.active) return;
+        const piece = s.army.find(p => p.id === pieceId && p.color === botColor);
+        if (!piece || !isValidMove(piece, tx, ty, s.army)) return;
+        clearAFKTimer(room, botColor);
+        s.planning[botColor] = { pieceId, tx, ty };
+        startAFKTimer(room, botColor, AFK_ACTION_MS, 'action');
+        broadcast(room);
+        return;
+    }
+    if (event === 'action_ready') {
+        if (s.phase !== 'ACTION' || s.ready[botColor] || s.duel.active) return;
+        clearAFKTimer(room, botColor);
+        s.ready[botColor] = true;
+        if (s.ready.white && s.ready.black) {
+            clearAFKTimer(room, 'white');
+            clearAFKTimer(room, 'black');
+            const planningSnap = {
+                white: s.planning.white ? { ...s.planning.white } : null,
+                black: s.planning.black ? { ...s.planning.black } : null,
+            };
+            resolveAction(s);
+            if (room._replay) recordTurn(room._replay, { type: 'action', planning: planningSnap, ...buildTurnSnapshot(s) });
+            if (s.phase === 'SUDDEN_DEATH') {
+                setTimeout(() => {
+                    const r = rooms.get(room.id);
+                    if (!r || r.state.phase !== 'SUDDEN_DEATH') return;
+                    const kW = r.state.army.find(k => k.color === 'white');
+                    const kB = r.state.army.find(k => k.color === 'black');
+                    if (!kW || !kB) return;
+                    r.state.duel = {
+                        active: true, resolveTime: false, wPiece: kW, bPiece: kB,
+                        suddenDeath: true,
+                        pressed: { white: false, black: false },
+                        rolls:   { white: 0,     black: 0     },
+                    };
+                    broadcast(r);
+                }, 3_000);
+            }
+        }
+        broadcast(room);
+        return;
+    }
+    if (event === 'roll_dice') {
+        const d = s.duel;
+        if (!d.active || d.resolveTime || d.pressed[botColor]) return;
+        d.rolls[botColor]   = crypto.randomInt(1, 7);
+        d.pressed[botColor] = true;
+        if (d.pressed.white && d.pressed.black) d.resolveTime = true;
+        broadcast(room);
+        return;
+    }
+    if (event === 'duel_resolve') {
+        if (room.resolving) return;
+        const d = s.duel;
+        if (!d?.resolveTime) return;
+        room.resolving = true;
+        finishDuel(room);
+    }
+}
+
 // ── SOCKET.IO ─────────────────────────────────────────────────
 io.on('connection', (socket) => {
     let playerRoom       = null;
@@ -837,6 +989,7 @@ io.on('connection', (socket) => {
 
     // ── MATCHMAKING ──────────────────────────────────────────────
     socket.on('queue_join', (profile) => {
+        if (!checkSocketRate(socket, 'queue_join', 3, 5000)) return; // max 3 per 5s
         let { uid, nickname, avatar, token, mmr: clientMMR, match_mode } = profile || {};
         const queueMode = match_mode === 'casual' ? 'casual' : 'ranked';
         let playerId  = uid;
@@ -911,6 +1064,56 @@ io.on('connection', (socket) => {
         if (idx > -1) queue.splice(idx, 1);
     });
 
+    // ── TRAINING MODE (vs Bot) ────────────────────────────────────
+    socket.on('queue_train', (profile) => {
+        if (!checkSocketRate(socket, 'queue_train', 3, 5000)) return;
+        let { uid, nickname, avatar, token } = profile || {};
+        let playerId = uid;
+        if (token) {
+            const decoded = verifyToken(token);
+            if (decoded) {
+                const rec = db.prepare('SELECT ban_until, username FROM players WHERE id=?').get(decoded.id);
+                if (rec) {
+                    if (rec.ban_until && new Date(rec.ban_until) > new Date()) {
+                        socket.emit('banned', { until: rec.ban_until, remainMs: new Date(rec.ban_until) - Date.now() });
+                        return;
+                    }
+                    playerId = decoded.id;
+                    nickname = rec.username;
+                    socketUserId = decoded.id;
+                }
+            }
+        }
+        if (!playerId) return;
+        const VALID_AVATARS = new Set(['K', 'Q', 'R', 'B', 'N', 'P']);
+        const safeAvatar    = VALID_AVATARS.has(avatar) ? avatar : 'K';
+        const roomId  = crypto.randomBytes(3).toString('hex');
+        const bot     = createBotPlayer(roomId);
+        const human   = { uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: safeAvatar, socketId: socket.id, timestamp: Date.now(), match_mode: 'casual' };
+        const newRoom = {
+            id:         roomId,
+            players:    { white: human, black: bot },
+            state:      createState(),
+            resolving:  false,
+            timeouts:   {},
+            _replay:    createReplayBuffer(),
+            match_mode: 'casual',
+            _startedAt: Date.now(),
+            _ttmMs:     0,
+            _botColor:  'black',
+        };
+        rooms.set(roomId, newRoom);
+        playerRoom  = roomId;
+        playerColor = 'white';
+        socket.join(roomId);
+        socket.emit('match_found', { myColor: 'white', oppProfile: { nickname: bot.nickname, avatar: bot.avatar }, roomId, isRanked: false });
+        startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
+        setImmediate(() => {
+            const r = rooms.get(roomId);
+            if (r) processBotTurn(r, 'black', (ev, data) => handleBotEvent(r, ev, data));
+        });
+    });
+
     // ── PRIVATE ROOM ─────────────────────────────────────────────
     socket.on('private_room_create', (profile) => {
         // Cancel any existing room created by this socket
@@ -959,6 +1162,7 @@ io.on('connection', (socket) => {
             profile: { uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: safeAvatar, mmr: playerMMR },
             socketId: socket.id,
             timer,
+            createdAt: Date.now(),
         });
         socket.emit('private_room_created', { code });
     });
@@ -1038,6 +1242,7 @@ io.on('connection', (socket) => {
 
     // ── DRAFT ────────────────────────────────────────────────────
     socket.on('draft_buy', (type) => {
+        if (!checkSocketRate(socket, 'draft_buy', 10, 2000)) return; // max 10 per 2s
         const room = getRoom();
         if (!room || room.state.phase !== 'DRAFT' || !playerColor) return;
         const s   = room.state;
@@ -1145,6 +1350,7 @@ io.on('connection', (socket) => {
 
     // ── ACTION ───────────────────────────────────────────────────
     socket.on('action_plan', ({ pieceId, tx, ty }) => {
+        if (!checkSocketRate(socket, 'action_plan', 5, 1000)) return; // max 5 per 1s
         const room = getRoom();
         if (!room || room.state.phase !== 'ACTION' || !playerColor) return;
         const s = room.state;
@@ -1202,6 +1408,7 @@ io.on('connection', (socket) => {
 
     // ── DUEL ─────────────────────────────────────────────────────
     socket.on('roll_dice', () => {
+        if (!checkSocketRate(socket, 'roll_dice', 3, 2000)) return; // max 3 per 2s
         const room = getRoom();
         if (!room || !playerColor) return;
         const s = room.state;
@@ -1214,6 +1421,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('duel_resolve', () => {
+        if (!checkSocketRate(socket, 'duel_resolve', 3, 2000)) return;
         const room = getRoom();
         if (!room || room.resolving) return;
         const d = room.state?.duel;
@@ -1238,6 +1446,15 @@ io.on('connection', (socket) => {
         if (!playerRoom || !playerColor) return;
         const room = rooms.get(playerRoom);
         if (!room || room.state.phase === 'GAMEOVER') return;
+
+        // Bot room: just end silently, no WO or reconnect
+        if (room._botColor) {
+            clearAFKTimer(room, 'white');
+            clearAFKTimer(room, 'black');
+            room.state.phase = 'GAMEOVER';
+            scheduleRoomCleanup(playerRoom);
+            return;
+        }
 
         const oppColor  = playerColor === 'white' ? 'black' : 'white';
         const playerUid = room.players[playerColor]?.uid;
@@ -1322,6 +1539,39 @@ io.on('connection', (socket) => {
 setInterval(() => {
     db.prepare('INSERT INTO ccu_snapshots (ts, count) VALUES (?, ?)').run(Date.now(), io.engine.clientsCount ?? 0);
 }, 5 * 60 * 1000);
+
+// ── ORPHAN CLEANUP: privateRooms ──────────────────────────────
+// Belt-and-suspenders sweep; individual entries already have 5-min timers.
+setInterval(() => {
+    const stale = Date.now() - PRIVATE_ROOM_MS - 60_000;
+    for (const [code, entry] of privateRooms.entries()) {
+        if ((entry.createdAt || 0) < stale) {
+            clearTimeout(entry.timer);
+            privateRooms.delete(code);
+        }
+    }
+}, 10 * 60_000);
+
+// ── GRACEFUL SHUTDOWN ─────────────────────────────────────────
+function gracefulShutdown(signal) {
+    console.log(`[SHUTDOWN] ${signal} recebido — encerrando graciosamente`);
+    io.emit('server_restart', { message: 'Servidor reiniciando. Reconecte em instantes.' });
+    server.close(() => {
+        try { db.close(); } catch (_) {}
+        process.exit(0);
+    });
+    setTimeout(() => process.exit(1), 15_000).unref();
+}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT',  () => gracefulShutdown('SIGINT'));
+
+// ── EXCEPTION GUARDS ──────────────────────────────────────────
+process.on('uncaughtException', (err) => {
+    console.error('[CRASH] uncaughtException:', err);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('[CRASH] unhandledRejection:', reason);
+});
 
 server.listen(PORT, () => {
     console.log(`microChess server running on port ${PORT}`);

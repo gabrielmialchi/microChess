@@ -4,7 +4,11 @@
       "Bash(grep -v \"^\\\\s*//\")",
       "Bash(node ../testes/server/run-tests.js)",
       "Bash(node testes/db-inspector.js)",
-      "Bash(node ../testes/db-inspector.js)"
+      "Bash(node ../testes/db-inspector.js)",
+      "Bash(node --check \"e:/Projetos/o6/FAST IP/microChess/server/server.js\")",
+      "Bash(node --check \"e:/Projetos/o6/FAST IP/microChess/server/bot.js\")",
+      "Bash(node -e \"require\\('e:/Projetos/o6/FAST IP/microChess/html/auth-frontend.js'\\)\")",
+      "Bash(node --check \"e:/Projetos/o6/FAST IP/microChess/html/auth-frontend.js\")"
     ]
   }
 }

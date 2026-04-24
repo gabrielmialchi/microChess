@@ -2902,3 +2902,65 @@ Output do script tools/extract-metrics.js
 [ ] 5. Calcular LTV projetado baseado em frequência × recorrência × duração média
 [ ] 6. Preparar formato para apresentação a stakeholders (tabela ou one-pager)
 ```
+
+
+---
+
+# SESSÃO BOT-A: TREINO — MODO FÁCIL (IMPLEMENTADO)
+
+## Objetivo
+Bot simples para Modo Treino. Implementado em 2026-04-23.
+
+## Status: ✅ Concluído
+
+### O que foi feito
+- `server/bot.js`: bot AI com heurística Manhattan distance para ACTION, compra N+P+P no DRAFT, posiciona em slots disponíveis no POSITION, joga duel automaticamente
+- `server/server.js`: `handleBotEvent`, `queue_train`, modificação em `broadcast` para chamar `processBotTurn` via `setImmediate`, graceful disconnect para bot rooms
+- `html/index.html`: card TREINAR, i18n em 9 idiomas, `selectGameMode`/`goMatchmaking`/`showScreen` atualizados
+
+---
+
+# SESSÃO BOT-B: TREINO — MODO MÉDIO (FUTURO)
+
+## Objetivo
+Adicionar nível de dificuldade Médio ao bot. Executar após Open Test.
+
+## Prioridade: 🟡 Baixa (pós Open Test)
+
+## Pré-requisito: BOT-A concluído
+
+## Checklist
+
+```
+[ ] 1. Adicionar campo `difficulty` ao objeto do bot e ao `queue_train` payload
+[ ] 2. No DRAFT: bot Médio compra melhor composição (ex: Q se disponível)
+[ ] 3. No ACTION: adicionar avaliação de ameaça — bot considera se peça está em perigo antes de mover
+[ ] 4. No POSITION: posicionamento tático (ex: N na frente, P atrás)
+[ ] 5. Adicionar card "Médio" na tela de seleção de Modo Treino (sub-tela)
+[ ] 6. Atualizar i18n: mode_train_medium / mode_train_medium_desc em 9 idiomas
+[ ] 7. Testar fluxo completo Fácil vs Médio
+```
+
+---
+
+# SESSÃO BOT-C: TREINO — MODO DIFÍCIL (FUTURO)
+
+## Objetivo
+Adicionar nível de dificuldade Difícil ao bot. Executar após BOT-B.
+
+## Prioridade: 🟡 Baixa (pós Open Test)
+
+## Pré-requisito: BOT-B concluído
+
+## Checklist
+
+```
+[ ] 1. Implementar minimax 2-ply simples ou lookup table para ACTION
+[ ] 2. Bot Difícil: avalia captura, defesa do próprio King e avanço coordenado
+[ ] 3. No DRAFT: composição ótima baseada em tabela de win-rate simulada
+[ ] 4. No POSITION: posicionamento baseado em abertura pré-definida (ex: N central, K protegido)
+[ ] 5. Adicionar card "Difícil" na sub-tela de Modo Treino
+[ ] 6. Atualizar i18n: mode_train_hard / mode_train_hard_desc em 9 idiomas
+[ ] 7. Testar balanceamento: jogador novo deve perder ~70% no Difícil
+[ ] 8. Testar fluxo completo Fácil / Médio / Difícil
+```

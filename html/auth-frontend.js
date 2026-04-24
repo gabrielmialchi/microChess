@@ -20,7 +20,7 @@ const PIECE_MAP = { K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙', k:'♚
 const MenuPopulator = {
     async populate(session) {
         const el = id => document.getElementById(id);
-        if (el('menu-player-name')) el('menu-player-name').textContent = session.username || 'Guerreiro';
+        if (el('menu-player-name')) el('menu-player-name').textContent = session.username || (window.t && window.t('warrior')) || 'Guerreiro';
         if (el('menu-avatar-icon')) el('menu-avatar-icon').textContent = PIECE_MAP[session.avatar || 'K'];
         if (el('nick-input'))       el('nick-input').value             = session.username || '';
 
@@ -151,7 +151,7 @@ const AuthUI = {
                 body: JSON.stringify(body),
             });
             const data = await res.json();
-            if (!res.ok) { if (err) err.textContent = data.error || 'Erro desconhecido.'; return; }
+            if (!res.ok) { if (err) err.textContent = data.error || (window.t && window.t('err_unknown')) || 'Erro desconhecido.'; return; }
 
             const session = {
                 token:    data.token,
@@ -167,7 +167,7 @@ const AuthUI = {
             if (data.lang && window.selectLanguage) window.selectLanguage(data.lang, true);
             await MenuPopulator.populate(session);
         } catch {
-            if (err) err.textContent = 'Erro de conexão com o servidor.';
+            if (err) err.textContent = (window.t && window.t('err_connection')) || 'Erro de conexão com o servidor.';
         } finally {
             this._busy = false;
         }
@@ -267,11 +267,11 @@ window.doChangePassword = async function () {
     const newPwd   = document.getElementById('cp-new')?.value      || '';
     const confirm  = document.getElementById('cp-confirm')?.value  || '';
     if (!current || !newPwd || !confirm) {
-        if (err) err.textContent = 'Preencha todos os campos.';
+        if (err) err.textContent = (window.t && window.t('err_fill_fields')) || 'Preencha todos os campos.';
         return;
     }
     if (newPwd !== confirm) {
-        if (err) err.textContent = 'As senhas não coincidem.';
+        if (err) err.textContent = (window.t && window.t('err_passwords_mismatch')) || 'As senhas não coincidem.';
         return;
     }
     const btn = document.getElementById('btn-cp-confirm');
@@ -286,7 +286,7 @@ window.doChangePassword = async function () {
         });
         const data = await res.json();
         if (!res.ok) {
-            if (err) err.textContent = data.error || 'Erro ao alterar senha.';
+            if (err) err.textContent = data.error || (window.t && window.t('err_change_password')) || 'Erro ao alterar senha.';
             if (btn) { btn.textContent = 'SALVAR'; btn.disabled = false; }
             return;
         }
@@ -296,7 +296,7 @@ window.doChangePassword = async function () {
             if (session) Session.save({ ...session, token: data.token });
         }
     } catch {
-        if (err) err.textContent = 'Erro de conexão.';
+        if (err) err.textContent = (window.t && window.t('err_connection')) || 'Erro de conexão.';
         if (btn) { btn.textContent = 'SALVAR'; btn.disabled = false; }
         return;
     }

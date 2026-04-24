@@ -27,6 +27,78 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-04-24] Sessão DES-A — Design Token Compliance
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- `rgba(46,204,113,*)` board highlights (`.cell.highlight`) → `color-mix(in srgb, var(--success) X%, transparent)`
+- `rgba(212,168,50,*)` board buff indicator (`.cell.planned`) → `color-mix(in srgb, var(--accent) X%, transparent)`
+- `color:#e53e3e` inline MORTE SÚBITA title → `color:var(--mc-danger)` + shadow tokenizado
+- `#4CAF50`/`#F56200` no `.opp-dot` → `var(--success)` / `var(--accent)`
+- `color:#2ecc71`/`color:#e74c3c` em `.win-text`/`.lose-text` → `var(--success)` / `var(--danger)`
+- `@keyframes title-glow`, `winner-radiate`, `reveal-bloom` — rgba → color-mix
+- `.dice-interactive.winner-pulse` border e shadow → var(--accent) + color-mix
+- Todos os `rgba(212,168,50,*)` em menus, matchmaking, replay, leaderboard, avatar, credits → color-mix
+- `.rp-cell.last-move` → `var(--mc-cell-lastmove)` (token já theme-aware)
+- `.lb-you-strip` fallback e border → mc-accent com color-mix
+- 9 blocos de `ranking_desc` (todas as línguas): `color:#d4a832` → `color:var(--accent)`, `color:#2ecc71` → `color:var(--success)` (replace_all)
+
+### Notas para próxima sessão
+- Próxima prioridade: TESTES-B (smoke test integrado) ou OBS-A (observabilidade)
+
+---
+
+## [2026-04-24] Sessão SEC-B — Server Hardening
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- Rate limiter por socket (`checkSocketRate`) com WeakMap por evento: queue_join/train (3/5s), draft_buy (10/2s), action_plan (5/1s), roll_dice (3/2s), duel_resolve (3/2s)
+- Graceful shutdown: SIGTERM/SIGINT emite `server_restart` para todos os clientes, fecha HTTP server, fecha SQLite, `process.exit(0)` com fallback de 15s
+- `uncaughtException` e `unhandledRejection` handlers — evita crash silencioso do processo
+- Orphan cleanup periódico de `privateRooms` a cada 10 min (belt-and-suspenders sobre os timers individuais de 5 min)
+- `createdAt` timestamp adicionado ao objeto `privateRooms` para viabilizar o sweep
+
+### Bugs / Bloqueios Conhecidos
+- Nenhum
+
+### Notas para próxima sessão
+- DES-A: Compliance de tokens de cor (50 hardcodes identificados → var(--mc-accent/success/danger))
+
+---
+
+## [2026-04-24] Sessão BUG-D — i18n Completo + AFK Sync
+**Status:** ✅ Completo
+**Branch:** main
+
+### Feito
+- **Bug #6 (Guerreiro hardcoded)**: todos os 4 fallbacks em `index.html` e 1 em `auth-frontend.js` passam agora por `t('warrior') || 'Guerreiro'`
+- **Bug #7 (AFK timer desync)**: `startAFKTimer` agora grava `state.afkDeadline[color] = Date.now() + ms`; `clearAFKTimer` limpa o deadline; cliente usa o deadline do servidor (`_startAfkTimer(deadline)` com `setInterval` a 500ms calculando `deadline - Date.now()`), eliminando deriva por lag
+- **i18n novas chaves em 9 idiomas**: `warrior`, `afk_warn`, `err_unknown`, `err_connection`, `err_fill_fields`, `err_passwords_mismatch`, `err_change_password`
+- **AFK banner texto**: `<span id="afk-warn-text">` agora é atualizado por `refreshOverlays()` via `t('afk_warn')`
+- **`· ranqueada` hardcoded** (linha 5322): substituído por `t('mode_ranked') || 'Ranked'`
+- **`auth-frontend.js` mensagens de erro**: todas as 5 mensagens de erro usam `(window.t && window.t('err_*')) || 'fallback PT'`
+
+---
+
+## [2026-04-23] Sessão BOT-A — Modo Treino (vs Bot)
+**Status:** ✅ Completo
+**Branch:** main
+
+### Feito
+- `server/bot.js` criado: `createBotPlayer`, `processBotTurn` com lógica para DRAFT/POSITION/ACTION/SUDDEN_DEATH; heurística Manhattan distance; flag `_botBusy` anti-double-scheduling
+- `server/server.js`: import do bot.js; `broadcast` modificado com `setImmediate` → `processBotTurn`; `handleBotEvent` para despachar ações do bot; `socket.on('queue_train', ...)` cria sala imediata sem matchmaking; disconnect handler pula WO/reconnect em bot rooms
+- `html/index.html`: card TREINAR com subtítulo "Aprenda jogando contra um bot no modo fácil"; i18n `mode_train`/`mode_train_desc` em 9 idiomas; `selectGameMode` atualizado para 3 cards; `goMatchmaking` emite `queue_train`; `showScreen` reseta o card train ao voltar para game-mode
+- `docs/SESSAO_POR_SESSAO_PLANNING.md`: sessões BOT-B (Médio) e BOT-C (Difícil) mapeadas para execução pós-Open Test
+
+### Design
+- Bot é sempre preto, humano sempre branco
+- Composição do bot: N(3) + P(1) + P(1) = 5pts — fácil de vencer
+- Partida modo 'casual', sem impacto em MMR/XP
+
+---
+
 ## [2026-04-17] Sessão 0 — Planejamento e Organização
 
 **Status:** Completo
