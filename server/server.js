@@ -603,8 +603,16 @@ function resolveAction(state) {
             duelQueue.push({ type: 'attack', attackerColor: 'black', wPiece: kingW, bPiece: pieceB, txW: kingW.x, tyW: kingW.y, txB: pB.tx, tyB: pB.ty, priority: pieceB.bonus });
             duelQueue.push({ type: 'attack', attackerColor: 'white', wPiece: pieceW, bPiece: kingB, txW: pW.tx, tyW: pW.ty, txB: kingB.x, tyB: kingB.y, priority: pieceW.bonus });
         } else {
-            // Equal-bonus frontal — regular duel (not Morte Súbita; that only applies to King vs King final)
-            duelQueue.push({ type: 'frontal', wPiece: pieceW, bPiece: pieceB, txW: pW.tx, tyW: pW.ty, txB: pB.tx, tyB: pB.ty, priority: pieceW.bonus });
+            // Case f.1: equal-bonus pieces (any type) contesting opposite Kings.
+            // Duel 1: attacker vs attacker. Duel 2 (chained in finishDuel): winner vs enemy King.
+            duelQueue.push({
+                type: 'contested_king',
+                wPiece: pieceW, bPiece: pieceB,
+                txW: pW.tx, tyW: pW.ty, txB: pB.tx, tyB: pB.ty,
+                kingTargetW: { id: kingB.id, x: kingB.x, y: kingB.y },
+                kingTargetB: { id: kingW.id, x: kingW.x, y: kingW.y },
+                priority: pieceW.bonus,
+            });
         }
     } else if (pW && pB && pieceW && pieceB && pW.tx === pB.tx && pW.ty === pB.ty) {
         // Case d: frontal clash (same destination)
@@ -730,13 +738,14 @@ function finishDuel(room) {
     if (totW > totB) {
         if (idxB > -1) army.splice(idxB, 1);
         const wAlive = army.find(a => a.id === d.wPiece.id);
-        if (wAlive && (d.type === 'frontal' || d.attackerColor === 'white')) {
+        // contested_king: winner does not advance here — the follow-up duel vs enemy King decides final position
+        if (wAlive && (d.type === 'frontal' || (d.type === 'attack' && d.attackerColor === 'white'))) {
             wAlive.x = d.txW; wAlive.y = d.tyW;
         }
     } else if (totB > totW) {
         if (idxW > -1) army.splice(idxW, 1);
         const bAlive = army.find(a => a.id === d.bPiece.id);
-        if (bAlive && (d.type === 'frontal' || d.attackerColor === 'black')) {
+        if (bAlive && (d.type === 'frontal' || (d.type === 'attack' && d.attackerColor === 'black'))) {
             bAlive.x = d.txB; bAlive.y = d.tyB;
         }
     } else {
@@ -766,6 +775,35 @@ function finishDuel(room) {
         }
     }
 
+    // Case f.1 follow-up: winner of contested_king now duels the enemy King
+    if (d.type === 'contested_king' && (totW !== totB)) {
+        const queue = JSON.parse(JSON.stringify(state.duelQueue || []));
+        if (totW > totB) {
+            const wAlive = army.find(a => a.id === d.wPiece.id);
+            const kingB  = army.find(p => p.type === 'K' && p.color === 'black');
+            if (wAlive && kingB) {
+                queue.unshift({
+                    type: 'attack', attackerColor: 'white',
+                    wPiece: wAlive, bPiece: kingB,
+                    txW: kingB.x, tyW: kingB.y, txB: kingB.x, tyB: kingB.y,
+                    priority: wAlive.bonus,
+                });
+            }
+        } else {
+            const bAlive = army.find(a => a.id === d.bPiece.id);
+            const kingW  = army.find(p => p.type === 'K' && p.color === 'white');
+            if (bAlive && kingW) {
+                queue.unshift({
+                    type: 'attack', attackerColor: 'black',
+                    wPiece: kingW, bPiece: bAlive,
+                    txW: kingW.x, tyW: kingW.y, txB: kingW.x, tyB: kingW.y,
+                    priority: bAlive.bonus,
+                });
+            }
+        }
+        state.duelQueue = queue;
+    }
+
     const wk = army.find(p => p.type === 'K' && p.color === 'white');
     const bk = army.find(p => p.type === 'K' && p.color === 'black');
     if (!wk || !bk) {
@@ -791,7 +829,7 @@ function finishDuel(room) {
         let   valid   = false;
 
         if (stillW && stillB) {
-            if (nd.type === 'frontal') valid = true;
+            if (nd.type === 'frontal' || nd.type === 'contested_king') valid = true;
             else if (nd.type === 'attack') {
                 if (nd.attackerColor === 'white' && stillB.x === nd.txB && stillB.y === nd.tyB) valid = true;
                 if (nd.attackerColor === 'black' && stillW.x === nd.txW && stillW.y === nd.tyW) valid = true;

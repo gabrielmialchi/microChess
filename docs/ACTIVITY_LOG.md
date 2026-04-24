@@ -27,6 +27,29 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-04-24] Sessão BUG-H — Cascata de Duelo no Caso f.1 (contested_king)
+**Status:** Completo
+**Branch:** main
+
+### Contexto
+Bug reportado: duas Rainhas (mesmo bônus) atacando os Reis opostos no mesmo turno rolavam apenas **um** duelo Rainha×Rainha; a vencedora avançava para a casa do Rei adversário e ficava sobreposta ao Rei, sem novo duelo. Violava a regra f.1 (peças iguais atacando Reis adversários: duelo 1 entre atacantes, duelo 2 entre vencedor e Rei adversário).
+
+### Feito
+- Novo tipo de duelo `contested_king` em `resolveAction` (`server/server.js`), substituindo o `frontal` único do branch f.1. Carrega `kingTargetW`/`kingTargetB` com id+posição dos Reis alvo de cada lado.
+- Em `finishDuel`, vencedor de `contested_king` não avança mais na hora: o movimento é adiado para o duelo 2 (ataque explícito contra o Rei adversário), que é `unshift`-ado no topo de `state.duelQueue`.
+- Empate em `contested_king` cai no tratamento existente "Both non-King pieces eliminated" — ambas removidas; Morte Súbita só dispara se de fato sobrarem apenas os 2 Reis (confirmado: `checkFinalDuel` verifica `army.length === 2 && ambos type === 'K'`).
+- Loop de processamento da fila (linha 831) aceita `contested_king` como tipo válido para revalidação.
+- Ordenação da fila não é afetada (resolveAction só gera 1 duelo em f.1; duelo 2 é inserido dinamicamente após resolução).
+
+### Cobertura das regras a–g
+- Todas as regras a–g mapeadas; única divergência era f.1, agora corrigida.
+- Frontend (`index.html`) não discrimina tipos de duelo — renderiza só com `wPiece/bPiece`, então a UX já mostra automaticamente "Rainha × Rainha" seguido de "Rainha × Rei" sem mudança de código.
+
+### Notas para próxima sessão
+- Se algum dia for necessário sinalizar visualmente "Duelo 1 de 2" no card, adicionar badge conforme `state.duel.type === 'contested_king'` e presença de follow-up na queue.
+
+---
+
 ## [2026-04-24] Sessão DES-B — Consolidação de Back Buttons
 **Status:** Completo
 **Branch:** main
