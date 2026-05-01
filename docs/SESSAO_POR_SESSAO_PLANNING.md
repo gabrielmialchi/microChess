@@ -2964,3 +2964,30 @@ Adicionar nível de dificuldade Difícil ao bot. Executar após BOT-B.
 [ ] 7. Testar balanceamento: jogador novo deve perder ~70% no Difícil
 [ ] 8. Testar fluxo completo Fácil / Médio / Difícil
 ```
+
+> **NOTA (2026-04-30):** As sessões BOT-B e BOT-C acima foram **substituídas pelo epic SP** (Single Player com 15 fases). Não executar BOT-B/BOT-C — seguir o roteiro em `docs/SP_PLANNING.md`.
+
+---
+
+# SESSÕES SP-1.1..SP-9.4 — SINGLE PLAYER EXPANSION
+
+## Status: ⏳ Em andamento (planejamento concluído em 2026-04-30)
+
+## Doc detalhado
+**Todo o roteiro está em `docs/SP_PLANNING.md`.** Este arquivo apenas registra a existência do epic.
+
+## Como executar uma sessão SP
+1. Abrir `docs/SP_PLANNING.md` §10 (Tabela de status das subtarefas)
+2. Pegar a primeira linha com ⏳ Pendente respeitando dependências
+3. Ler a seção correspondente em §7 do mesmo arquivo (objetivo, arquivos, checklist, subagente recomendado)
+4. Executar o checklist
+5. Marcar ✅ em §10 + entrada em `docs/ACTIVITY_LOG.md`
+
+## Próxima sessão recomendada
+**SP-1.1** — Terminologia × 9 idiomas (sem pré-requisito, destrava várias outras)
+
+## Subagentes
+- `pesquisador` (haiku) — localizar pontos de inserção em arquivos grandes
+- `programador` (sonnet) — implementação de código
+- `designer` (sonnet) — HTML/CSS de telas novas
+

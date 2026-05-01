@@ -329,5 +329,6 @@ curl http://localhost:3000/health
 | ANAL-B | Tabela de eventos — instrumentação de fluxo (pré Open Test) | ✅ Completo |
 | ANAL-C | Extração — queries SQL e script de relatório | ⏸ Aguarda Open Test |
 | ANAL-D | Interpretação — argumento de venda | ⏸ Aguarda Open Test |
+| **SP** | **Single Player: 15 fases com bots de estratégias diferentes — ver `docs/SP_PLANNING.md`** | ⏳ Em andamento |
 
 *(Atualizar este arquivo ao concluir cada sessão)*

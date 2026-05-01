@@ -1782,3 +1782,26 @@ node testes/db-inspector.js --matches 20
 - `html/index.html` campos de auth: `maxlength="254"` em emails, `maxlength="100"` em senhas (login e registro)
 - `html/index.html`: handler `rejoin_success` adicionado — reseta `localSelection` e chama `updateUI()` ao reconectar
 - `html/auth-frontend.js`: fallback "Guerreiro" agora passa por `window.t('warrior')` quando disponível
+
+---
+
+## [2026-04-30] Planejamento SP — Single Player Expansion (15 fases)
+
+**Status:** Planejamento concluído — implementação em ⏳ Pendente
+**Branch:** main
+**Doc principal:** `docs/SP_PLANNING.md`
+
+### Decisões aprovadas pelo usuário
+- Terminologia: **SOLO/ONLINE** (tela "Novo Jogo"), **CONTINUAR/NOVO** (hub Solo), **CASUAL/RANQUEADA** (hub Online — já existe)
+- 15 fases com nomes provisórios: Recruta, Aprendiz, Defensor, Atirador, Cavaleiro, Bispeiro, Tanque, Caçador, Estrategista, Duelista, Cercador, Iscador, Rainha, Mestre, Lenda
+- Convidados (sem login) **não salvam progresso** — Solo exige conta
+- Plano em arquivo novo (`docs/SP_PLANNING.md`) para economizar leitura nas sessões existentes
+
+### Estrutura criada
+- `docs/SP_PLANNING.md` (~440 linhas): autocontido — overview, decisões, arquitetura, 9 EPICs (SP-1..SP-9), 38 subtarefas detalhadas com checklist e subagente recomendado, mapa de dependências, tabela de status §10
+- `docs/PROJECT_CONTEXT.md` tabela de progresso: linha "SP — Single Player Expansion ⏳ Em andamento" adicionada
+- `docs/SESSAO_POR_SESSAO_PLANNING.md`: nota marcando BOT-B/BOT-C como obsoletas + seção apontando para SP_PLANNING.md
+- Sessões antigas BOT-B e BOT-C ficam preservadas mas marcadas como substituídas
+
+### Próxima sessão
+**SP-1.1** — produzir `docs/SP_TERMS.md` com chaves i18n × 9 idiomas (sem pré-requisito; destrava SP-4.2/SP-5.3/SP-6.5/SP-7.4)
