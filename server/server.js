@@ -16,6 +16,7 @@ const { applyLPChange, getEloDisplay } = require('./elo');
 const { logEvent } = require('./analytics');
 const { isPathClear, isValidMove }     = require('./movegen');
 const { createBotPlayer, processBotTurn } = require('./bot');
+const sp = require('./singleplayer');
 
 const app    = express();
 const server = http.createServer(app);
@@ -331,6 +332,30 @@ app.get('/player/:id/matches', apiLimiter, (req, res) => {
         ORDER BY m.created_at DESC LIMIT ?
     `).all(req.params.id, req.params.id, limit);
     res.json(matches);
+});
+
+// ── SINGLE PLAYER ENDPOINTS ───────────────────────────────────
+app.get('/sp/progress', apiLimiter, (req, res) => {
+    const decoded = requireAuth(req.headers.authorization);
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    res.json({ max_level_completed: sp.getProgress(decoded.id) });
+});
+
+app.post('/sp/level-complete', apiLimiter, (req, res) => {
+    const decoded = requireAuth(req.headers.authorization);
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    const level = req.body?.level;
+    if (!sp.validateLevelProgress(decoded.id, level))
+        return res.status(400).json({ error: 'Nível inválido ou fora de sequência' });
+    sp.markLevelCompleted(decoded.id, level);
+    res.json({ ok: true, max_level_completed: sp.getProgress(decoded.id) });
+});
+
+app.post('/sp/reset', apiLimiter, (req, res) => {
+    const decoded = requireAuth(req.headers.authorization);
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    sp.resetProgress(decoded.id);
+    res.json({ ok: true });
 });
 
 // ── MMR / BAN / AFK ───────────────────────────────────────────
@@ -1145,6 +1170,73 @@ io.on('connection', (socket) => {
         playerColor = 'white';
         socket.join(roomId);
         socket.emit('match_found', { myColor: 'white', oppProfile: { nickname: bot.nickname, avatar: bot.avatar }, roomId, isRanked: false });
+        startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
+        setImmediate(() => {
+            const r = rooms.get(roomId);
+            if (r) processBotTurn(r, 'black', (ev, data) => handleBotEvent(r, ev, data));
+        });
+    });
+
+    // ── SINGLE PLAYER MODE (15 estratégias) ───────────────────────
+    socket.on('single_player_start', (profile) => {
+        if (!checkSocketRate(socket, 'single_player_start', 3, 5000)) return;
+        let { uid, nickname, avatar, token, level } = profile || {};
+
+        if (typeof level !== 'number' || !Number.isInteger(level) || level < 1 || level > 15) {
+            socket.emit('sp_error', { error: 'invalid_level' });
+            return;
+        }
+
+        let playerId = uid;
+        let isGuest  = true;
+        if (token) {
+            const decoded = verifyToken(token);
+            if (decoded) {
+                const rec = db.prepare('SELECT ban_until, username FROM players WHERE id=?').get(decoded.id);
+                if (rec) {
+                    if (rec.ban_until && new Date(rec.ban_until) > new Date()) {
+                        socket.emit('banned', { until: rec.ban_until, remainMs: new Date(rec.ban_until) - Date.now() });
+                        return;
+                    }
+                    if (!sp.validateLevelProgress(decoded.id, level)) {
+                        socket.emit('sp_error', { error: 'level_locked' });
+                        return;
+                    }
+                    playerId     = decoded.id;
+                    nickname     = rec.username;
+                    socketUserId = decoded.id;
+                    isGuest      = false;
+                }
+            }
+        }
+        if (!playerId) return;
+
+        const VALID_AVATARS = new Set(['K', 'Q', 'R', 'B', 'N', 'P']);
+        const safeAvatar    = VALID_AVATARS.has(avatar) ? avatar : 'K';
+        const roomId  = crypto.randomBytes(3).toString('hex');
+        const bot     = createBotPlayer(roomId);
+        const human   = { uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: safeAvatar, socketId: socket.id, timestamp: Date.now(), match_mode: 'casual' };
+        const newRoom = {
+            id:              roomId,
+            players:         { white: human, black: bot },
+            state:           createState(),
+            resolving:       false,
+            timeouts:        {},
+            _replay:         createReplayBuffer(),
+            match_mode:      'casual',
+            _startedAt:      Date.now(),
+            _ttmMs:          0,
+            _botColor:       'black',
+            _botStrategy:    level,
+            _isSinglePlayer: true,
+            _spLevel:        level,
+            _spIsGuest:      isGuest,
+        };
+        rooms.set(roomId, newRoom);
+        playerRoom  = roomId;
+        playerColor = 'white';
+        socket.join(roomId);
+        socket.emit('match_found', { myColor: 'white', oppProfile: { nickname: bot.nickname, avatar: bot.avatar }, roomId, isRanked: false, sp: { level, isGuest } });
         startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
         setImmediate(() => {
             const r = rooms.get(roomId);

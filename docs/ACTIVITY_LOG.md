@@ -1805,3 +1805,506 @@ node testes/db-inspector.js --matches 20
 
 ### Próxima sessão
 **SP-1.1** — produzir `docs/SP_TERMS.md` com chaves i18n × 9 idiomas (sem pré-requisito; destrava SP-4.2/SP-5.3/SP-6.5/SP-7.4)
+
+### Refinamento SP-6.4 (decisão posterior, mesma data)
+- Convidados **podem** jogar Solo (sem persistência: progresso só em memória da sessão; F5 reseta)
+- Botão "NOVO" — logado: `POST /sp/reset` zera `max_level_completed` no DB; convidado: apenas `window.spProgress = 0` em memória
+- Adicionado endpoint `POST /sp/reset` em SP-2.3 e função `resetProgress(uid)` em SP-2.2
+- SP-3.7 ajustado para aceitar `single_player_start` sem token (convidado)
+- SP-3.8 ajustado para não persistir vitória se for convidado
+
+---
+
+## [2026-05-04] Sessão SP-1.1 — Terminologia i18n × 9 idiomas
+
+**Status:** Completo
+**Branch:** main
+**Output:** `docs/SP_TERMS.md`
+
+### Feito
+- 23 chaves i18n catalogadas para o epic Single Player: `sp_solo`, `sp_online`, `sp_solo_desc`, `sp_online_desc`, `sp_continue`, `sp_new`, `sp_continue_desc`, `sp_new_desc`, `sp_phase`, `sp_completed_all`, `sp_map_title`, `sp_locked`, `sp_completed`, `sp_current`, `sp_play`, `sp_back_to_map`, `sp_victory`, `sp_defeat`, `sp_next_level`, `sp_retry`, `sp_phase_unlocked` (com `{N}`), `sp_new_confirm_logged`, `sp_new_confirm_guest`
+- Cada chave traduzida para 9 idiomas (pt, en, es, de, it, ru, ja, ko, zh)
+- Comprimento validado: maior label de botão é "TENTAR DE NOVO" / "Voltar ao Mapa" (14 chars) — todos dentro do limite
+- Snippet pronto para colar em `html/index.html` (T.{lang}) gerado em §4 do SP_TERMS.md
+- Mapeamento de quais chaves cada sessão dependente usa (SP-4.2, SP-5.3, SP-6.5, SP-7.4, SP-7.5, SP-8.1) gerado em §5
+- Confirmado que SP-5.3 (multiplayer-mode) **não cria** chaves novas — reaproveita `mode_casual`/`mode_ranked`/`mode_find_match` da PRE-OT-B
+- 15 nomes de fase (`sp_lvl1_name`..`sp_lvl15_name`) deixados para SP-7.4 conforme planejado
+
+### Próxima sessão
+**SP-1.2** — Spec textual das 15 estratégias → `docs/SP_STRATEGIES.md`
+
+---
+
+## [2026-05-04] Sessão SP-1.2 — Spec funcional das 15 estratégias do bot
+
+**Status:** Completo
+**Branch:** main
+**Output:** `docs/SP_STRATEGIES.md`
+
+### Feito
+- Recap de regras do jogo embutido no doc (4×4, custos das peças, movimentos válidos) — implementador não precisa abrir outras docs
+- Definida interface obrigatória que cada estratégia deve exportar (`chooseDraft`, `choosePosition`, `chooseAction`)
+- Lista de **helpers comuns** que SP-3.1 deve criar em `server/bot-strategies/_helpers.js` (randomChoice, legalMoves, manhattanDist, findKing, pieceBonus, isPieceUnderThreat, enemyAt, dirForward)
+- Pseudocódigo declarativo das 15 estratégias com 3 sub-blocos (DRAFT/POSITION/ACTION) cada
+- Composições de DRAFT validadas contra orçamento de 5 pontos
+- Tabela §5 de validação cruzada confirmando que cada estratégia é **distinguível** (sem duplicatas funcionais)
+- Estratégia 8 (Caçador) marcada explicitamente como **port direto** do `bot.js` atual — economia de implementação em SP-3.4
+- Estratégia 14 (Mestre) com lookahead 2-ply e nota de performance (alvo <100ms)
+- Estratégia 15 (Lenda) = Mestre + 20% aleatoriedade só entre top 3 — distinguível do Recruta (100% random)
+- Tabela §6 de notas por sessão SP-3.* (qual sessão pega quais estratégias e cuidados)
+- Tabela §7 de balanceamento esperado para SP-9.1 (win-rate de novato por fase)
+- Delays UX padronizados em §4 (700ms-1800ms para criar sensação de "bot pensando")
+
+### Notas
+- O helper `isPieceUnderThreat` será usado em SP-3.4 (estratégia 9), SP-3.5 (10/11) e SP-3.6 (13/14/15) — vale priorizar implementação cuidadosa em SP-3.1
+- Lookahead 2-ply do Mestre simplifica resolução de duel via valor médio (3.5) em vez de simular o random — evita explosão combinatória
+- Estratégia 12 (Iscador) usa `state.turn % 3` como máquina de estado — confirmar que `state.turn` é exposto pelo server (verificar em SP-3.5)
+
+### Próxima sessão
+**SP-1.3** — Wireframes textuais das 4 telas → `docs/SP_WIREFRAMES.md`
+
+---
+
+## [2026-05-04] Sessão SP-1.3 — Wireframes textuais das 4 telas
+
+**Status:** Completo
+**Branch:** main
+**Output:** `docs/SP_WIREFRAMES.md`
+
+### Feito
+- §0 Convenções comuns: header padrão, card grande padrão, CTA primário padrão, modal padrão (todos referenciando tokens `--mc-*` já existentes)
+- §1 `#screen-game-mode` (REFORMATADA): 2 cards SOLO/ONLINE — ASCII layout + hierarquia HTML completa + 6 IDs novos + 3 handlers + nota para comentar (não deletar) os 3 cards atuais
+- §2 `#screen-multiplayer-mode` (NOVA): extração dos cards Casual/Ranqueada + FIND MATCH — confirmado que reaproveita 7 i18n keys existentes (PRE-OT-B), sem duplicatas
+- §3 `#screen-solo-hub` (NOVA): cards CONTINUAR (label dinâmico "Fase X") + NOVO + modal de confirmação com texto contextual (logado vs convidado)
+- §4 `#screen-sp-map` (NOVA): grid 3-colunas mobile (5 desktop) com 15 cards, 3 estados visuais (completed/current/locked), modal de iniciar fase com estrelas de dificuldade, geração via JS recomendada
+- §5 Tabela consolidada de 17 funções `window.*` a expor, indicando qual sessão (SP-4..SP-8) cria cada uma
+- §6 Diagrama de fluxo de navegação completo (menu → game-mode → solo-hub → sp-map → game → game-over)
+- §7 Notas de implementação: ordem recomendada (SP-4 → SP-5 → SP-7.1+2 → SP-6 → SP-8), papel da feature flag `SP_ENABLED`, requisitos de acessibilidade, breakpoints mobile
+
+### Decisões de design tomadas durante o wireframe
+- Geração dos 15 cards do mapa **via JS** em vez de 15 blocos repetidos no HTML — economia de tokens nas sessões de implementação
+- Tabela `SP_DIFFICULTY` hardcoded em SP-7.1 (1-3:★, 4-6:★★, 7-10:★★★, 11-13:★★★★, 14-15:★★★★★) — bate com tabela §5 do SP_PLANNING
+- Animação de unlock (SP-7.5) via `@keyframes` inline dentro de `<style>` próprio do `#screen-sp-map` — não tocar no `<style>` global
+- Estados visuais não dependem só de cor (ícones ✓/▶/🔒 são distintos) — acessibilidade
+
+### Notas para sessões SP-4..SP-8
+- SP-4.1 redireciona `gm-card-solo` para placeholder até SP-6.2 (proteção da feature flag)
+- SP-5.2 deve **preservar** `selectGameMode()` e `startMatchmakingWithMode()` antigos (legado ainda referenciado)
+- SP-7.1 implementa `buildSPMap()` (1× ao entrar) + `refreshSPMap()` (em toda navegação para a tela)
+- SP-7.5 usa fila `queuedUnlock` para tocar animação só quando o usuário voltar à sp-map (não imediatamente no game-over)
+
+### EPIC SP-1 concluído
+Os 3 docs autocontidos (`SP_TERMS.md`, `SP_STRATEGIES.md`, `SP_WIREFRAMES.md`) cobrem TODAS as decisões necessárias para SP-2..SP-9. Sessões de código não precisam mais de novas decisões de produto — só executar.
+
+### Próxima sessão
+**SP-2.1** — Migration SQLite (tabela `singleplayer_progress`). Primeiro código real do epic. Pode ir em paralelo com SP-3.1 (refator do `bot.js`).
+
+---
+
+## [2026-05-04] Sessão SP-2.1 — Migration SQLite: singleplayer_progress
+
+**Status:** Completo
+**Branch:** main
+**Arquivo modificado:** `server/db/database.js`
+
+### Feito
+- Inserido bloco `db.exec(\`CREATE TABLE IF NOT EXISTS singleplayer_progress (...)\`)` em `server/db/database.js` na seção MIGRATIONS, logo após a tabela `events` (linha ~75)
+- Schema final:
+  ```sql
+  CREATE TABLE IF NOT EXISTS singleplayer_progress (
+      player_id           TEXT PRIMARY KEY,
+      max_level_completed INTEGER NOT NULL DEFAULT 0,
+      updated_at          INTEGER NOT NULL,
+      FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+  )
+  ```
+- Validado com `node --check server/db/database.js` → OK
+- Validado funcionalmente: rodado `node -e "require('./db/database.js')"` + PRAGMA table_info — confirmado que tabela aparece em `sqlite_master`, com 3 colunas e FK CASCADE correta
+
+### Correção de spec
+- **SP_PLANNING.md §4 estava com `player_uid REFERENCES players(uid)`** — coluna PK em `players` se chama `id`, não `uid`. Corrigido no plano:
+  - Coluna real: `player_id TEXT PRIMARY KEY`
+  - FK: `REFERENCES players(id) ON DELETE CASCADE`
+  - Adicionada nota explícita no §4 do SP_PLANNING.md sobre a convenção dual (JS usa `uid`, DB usa `player_id`)
+- ON DELETE CASCADE adicionado: se conta for deletada, progresso vai junto (consistente com expectativa do usuário)
+
+### Notas para SP-2.2
+- Funções recebem `uid` como parâmetro (mantendo convenção JS) mas gravam coluna `player_id` no DB
+- `updated_at` é INTEGER (Unix ms, `Date.now()`) — segue padrão de `events.ts` e `ccu_snapshots.ts`
+- Tabela já populada com 0 linhas (criação idempotente via `IF NOT EXISTS`); reinício do servidor ou primeira chamada de função em SP-2.2 vai inserir registros conforme uso
+
+### Próxima sessão
+**SP-2.2** — `server/singleplayer.js` com 4 funções. Em paralelo: **SP-3.1** (refator `bot.js`).
+
+---
+
+## [2026-05-04] Sessão SP-2.2 — Módulo server/singleplayer.js
+
+**Status:** Completo
+**Branch:** main
+**Arquivo criado:** `server/singleplayer.js` (66 linhas)
+
+### Feito
+- Padrão seguido: `analytics.js` (prepared statements no topo, try/catch silencioso, default values)
+- 3 prepared statements: `_selectStmt` (SELECT max), `_upsertStmt` (UPSERT com `ON CONFLICT DO UPDATE`), `_resetStmt` (UPSERT para 0)
+- Helper privado `_isValidLevel(level)`: aceita só inteiro 1..15 (rejeita `0`, `16`, `1.5`, `'1'`, `null`, `undefined`)
+- 4 funções públicas exportadas conforme spec:
+  - `getProgress(uid)` — retorna `max_level_completed` ou 0
+  - `validateLevelProgress(uid, level)` — true se `level <= max+1` e level válido; convidado (uid null) só pode level=1
+  - `markLevelCompleted(uid, level)` — UPSERT só se `level > current` (não regride); aceita skip (chamador valida sequência via validateLevelProgress)
+  - `resetProgress(uid)` — UPSERT max=0 (cria registro se não existe; idempotente)
+- Constante `MAX_LEVEL = 15` exportada
+- Validado com `node --check` → OK
+- Smoke test isolado com `DB_PATH=':memory:'`: **25/25 PASS** cobrindo:
+  - new uid retorna 0
+  - validate lvl 1 OK / lvl 2 bloqueado quando max=0
+  - mark lvl 1 → max=1, repetir não atualiza
+  - mark lvl 5 (skip) → atualiza (markLevelCompleted não valida sequência por design)
+  - mark lvl 3 quando max=5 → não regride
+  - validate lvl 16/0/1.5/'1' → todos false (range + tipo)
+  - reset → max=0; getProgress confirma
+  - uid null: getProgress=0, validate lvl1=true, validate lvl2=false, mark/reset retornam false
+
+### Decisão de design
+- `validateLevelProgress` (regra de negócio: não pular) e `markLevelCompleted` (persistência: não regredir) têm **responsabilidades separadas**. Endpoint POST /sp/level-complete em SP-2.3 deve chamar validateLevelProgress ANTES de markLevelCompleted.
+- Convidado (`uid === null`) em `validateLevelProgress`: aceita level=1, rejeita >1. Coerente com decisão §2 SP_PLANNING (convidado começa sempre da fase 1, sem persistência).
+- Try/catch silencioso em todas as funções (padrão `analytics.js`): falhas de DB não derrubam o servidor; retorna `false`/`0`.
+
+### Próxima sessão
+**SP-2.3** — 3 endpoints HTTP em `server/server.js`. Em paralelo: **SP-3.1** (refator bot.js).
+
+---
+
+## [2026-05-04] Sessão SP-2.3 — Endpoints HTTP de Single Player
+
+**Status:** Completo
+**Branch:** main
+**Arquivo modificado:** `server/server.js`
+
+### Feito
+- `require('./singleplayer')` adicionado no topo (linha 19, junto com `bot`)
+- 3 endpoints inseridos após `/player/:id/matches` (linha ~336), antes do bloco `// ── MMR / BAN / AFK`:
+  - `GET  /sp/progress` — autenticado; retorna `{ max_level_completed }`
+  - `POST /sp/level-complete` — autenticado; valida via `sp.validateLevelProgress` (rejeita pulo de fase com 400); aceita body `{ level }`; retorna `{ ok, max_level_completed }`
+  - `POST /sp/reset` — autenticado; chama `sp.resetProgress(decoded.id)`; retorna `{ ok }`
+- Todos os 3 endpoints usam `apiLimiter` (60 req/min) consistente com `/leaderboard`, `/player/:id`
+- Auth via `requireAuth(req.headers.authorization)` (mesmo padrão de `/auth/profile`, `/auth/lang`, `/auth/account`)
+- `node --check server/server.js` → OK
+
+### Decisão de design
+- Endpoints expostos publicamente apesar de SP-3.8 marcar level via `markLevelCompleted` direto no servidor (sem passar pela rota). Rota pública é defensiva: se cliente malicioso chamar `POST /sp/level-complete {level: 15}` direto, `validateLevelProgress` rejeita.
+- Body parsing: Express já tem `express.json()` middleware ativo (verificado em outros endpoints como `/auth/profile`). Não precisei adicionar.
+- Sem smoke test E2E nesta sessão: lógica das funções já validada em SP-2.2 (25/25 PASS); as rotas são wrappers thin (decoded + validate + chamada do módulo). Validação E2E formal acontece em SP-9.3.
+
+### EPIC SP-2 concluído
+Backend de progresso single-player está completo:
+- Tabela `singleplayer_progress` no DB (SP-2.1)
+- Módulo `server/singleplayer.js` com 4 funções (SP-2.2)
+- 3 endpoints REST autenticados com rate limit (SP-2.3)
+
+### Próxima sessão
+**SP-3.1** — Refator `server/bot.js` + criação de `server/bot-strategies/` com registry e estratégia 0 (= comportamento atual). Inicia o EPIC SP-3 (multi-estratégia).
+
+---
+
+## [2026-05-04] Sessão SP-3.1 — Refator bot.js + registry bot-strategies/
+
+**Status:** Completo
+**Branch:** main
+**Arquivos criados:** `server/bot-strategies/_helpers.js`, `server/bot-strategies/00-default.js`, `server/bot-strategies/index.js`
+**Arquivo modificado:** `server/bot.js` (refatorado preservando assinatura)
+
+### Feito
+- **`_helpers.js` (12 helpers)** conforme spec do SP_STRATEGIES.md §1:
+  - `randomChoice`, `weightedChoice`, `manhattanDist`, `pieceBonus`, `findKing`, `findPiece`, `dirForward`, `enemyAt`, `legalMoves`, `isPieceUnderThreat`, `isCellThreatened`, constante `BONUS`
+  - `legalMoves(piece, state)` itera tabuleiro 4×4 chamando `isValidMove` de `movegen.js`
+  - `isPieceUnderThreat(piece, state)` itera peças inimigas + `isValidMove` para casa da peça
+- **`00-default.js`** (= comportamento legacy do bot atual):
+  - `chooseDraft`: N → 2P → ready (idêntico ao bot.js antigo)
+  - `choosePosition`: primeiro slot vazio em row-major scan (idêntico)
+  - `chooseAction`: heurística Manhattan dist ao oppKing (idêntico)
+  - Cada função retorna `{ event, payload?, delayMs }` (interface síncrona)
+- **`index.js`** registry: `getStrategy(id)` com fallback para 0; `listStrategies()` para introspecção
+- **`bot.js` refatorado** (de 126 → 80 linhas):
+  - Lógica de DUEL/SUDDEN_DEATH genérica (compartilhada por todas estratégias) fica no `bot.js`
+  - DRAFT/POSITION/ACTION fora de duel → dispatch para `strategy.choose*`
+  - Helper `schedule(decision)` aplica `setTimeout(decision.delayMs)` + `onAction(event, payload)` + libera `_botBusy`
+  - `room._botStrategy` define qual estratégia usar (default 0)
+- Validação:
+  - `node --check` em todos os 4 arquivos → OK
+  - Smoke test do registry: `getStrategy(0)/(undefined)/(99)` retornam estratégia válida (fallback funciona)
+  - Smoke test da estratégia 0: 3 chamadas de `chooseDraft` reproduzem N → P → ready conforme bot original
+  - `bot.js` exports inalterados (`createBotPlayer`, `processBotTurn` com mesma assinatura)
+
+### Retrocompat preservada
+- `server.js:18` ainda importa `{ createBotPlayer, processBotTurn } = require('./bot')` — sem mudança
+- Chamadas existentes de `processBotTurn(room, color, onAction)` em server.js (linhas 569, 1151) continuam funcionando: `room._botStrategy` é `undefined` nessas chamadas → fallback para estratégia 0 = comportamento idêntico ao anterior
+- `queue_train` (modo Tutorial atual) continua jogando contra o bot legacy sem nenhuma alteração
+
+### Decisões de design
+- **Interface síncrona** das estratégias (`choose*` retorna decisão sem `setTimeout`): facilita teste isolado e separa "decidir" de "executar com delay". `bot.js` aplica o `delayMs` via `schedule()`.
+- **Helpers em arquivo separado** (`_helpers.js`, com underscore prefix para separar visualmente do registry e estratégias numeradas)
+- **Estratégia 0 explicitamente "default"** para deixar claro que é retrocompat do antigo bot, não uma "estratégia tutorial"
+- `legalMoves` retorna `[{tx, ty}]` (sem incluir a própria peça por conveniência) — formato amigável para os loops das estratégias
+
+### Próxima sessão
+**SP-3.2** — Implementar estratégias 1 (Recruta), 2 (Aprendiz), 3 (Defensor). Cada uma em `server/bot-strategies/0N-nome.js` + registrar no `index.js`.
+
+---
+
+## [2026-05-04] Sessão SP-3.2 — Estratégias 1/2/3 (Recruta, Aprendiz, Defensor)
+
+**Status:** Completo
+**Branch:** main
+**Arquivos criados:** `server/bot-strategies/01-recruta.js`, `02-aprendiz.js`, `03-defensor.js`
+**Arquivo modificado:** `server/bot-strategies/index.js` (registry expandido para incluir 1, 2, 3)
+
+### Feito
+- **01-recruta.js (`★`)** — agressividade aleatória total:
+  - DRAFT: filtra peças que cabem no budget restante e escolhe uma random; ready quando budget esgota (cobre todos os custos: Q=5, R=4, N=3, B=2, P=1)
+  - POSITION: slot aleatório dos livres na própria metade
+  - ACTION: enumera todos os moves de todas as peças, escolhe um random; ready se vazio
+- **02-aprendiz.js (`★`)** — só peões, nunca captura:
+  - DRAFT: 5 peões; ready
+  - POSITION: King no centro da fileira de trás; peões na fileira frontal primeiro, depois fileira de trás (5º peão)
+  - ACTION: filtro triplo — (a) tx===pawn.x (sem diagonal), (b) ty - pawn.y === dirForward(color) (só pra frente), (c) sem inimigo na casa de destino. Random entre candidatos válidos.
+- **03-defensor.js (`★`)** — cerca o King, nunca cruza meio:
+  - DRAFT: 2B + 1P (5 pontos exatos); ready
+  - POSITION: K em (1,back), B em cantos da fileira de trás, P à frente do K
+  - ACTION: filtra moves cuja ty fique na própria metade (white: y<=1, black: y>=2); escolhe destino com menor manhattanDist ao próprio King
+- Index expandido: `_strategies = { 0, 1, 2, 3 }`
+- `node --check` em 4 arquivos → OK
+- Smoke test extenso:
+  - Recruta DRAFT em 20 trials viu Q/R/N/B/P (todas as 5 opções) — aleatoriedade confirmada
+  - Recruta POSITION viu ~7 slots distintos em 30 trials — aleatoriedade confirmada
+  - Aprendiz DRAFT cumpre 5P → ready
+  - Aprendiz ACTION em 4 cenários: livre→avança, bloqueado→ready, peão preto→y diminui, borda→ready
+  - Defensor DRAFT progride B→B→P→ready
+  - Defensor POSITION K em (1,0), B em (0,0)
+  - Defensor ACTION com B em (3,1) e King em (1,0): destino (2,0) — y<=1 e perto do King (correto)
+
+### ⚠️ Bug encontrado e corrigido durante o smoke test
+- **Aprendiz** estava aceitando peão recuar! Causa: `movegen.js` permite peão mover ±1 vertical sem captura (não apenas para frente). No 4×4 do microChess isso é uma característica do jogo, não bug — peões podem recuar.
+- Correção no Aprendiz: adicionado filtro `ty - pawn.y === dirForward(color)` para forçar avanço.
+- **Anotado em SP_PLANNING.md §10** "Descoberta de SP-3.2": estratégias com peões em SP-3.3 (Atirador) e SP-3.5 (Iscador) também precisam filtrar `dirForward` se quiserem comportamento "só pra frente".
+
+### Próxima sessão
+**SP-3.3** — Estratégias 4 (Atirador), 5 (Cavaleiro), 6 (Bispeiro). Atenção: aplicar filtro `dirForward` em peões do Atirador.
+
+---
+
+## [2026-05-04] Sessão SP-3.3 — Estratégias 4/5/6 (Atirador, Cavaleiro, Bispeiro)
+
+**Status:** Completo
+**Branch:** main
+**Arquivos criados:** `server/bot-strategies/04-atirador.js`, `05-cavaleiro.js`, `06-bispeiro.js`
+**Arquivo modificado:** `server/bot-strategies/index.js` (registry expandido para 7 estratégias)
+
+### Feito
+- **04-atirador.js (★★)** — peões agressivos:
+  - DRAFT: 5P (igual Aprendiz)
+  - POSITION: 4P frontal + K canto da fileira de trás + 5º P fileira de trás
+  - ACTION: 2 passadas — (1ª) prefere captura diagonal pra frente, (2ª) avanço frontal. Peões ordenados mais avançados primeiro
+  - **Diferença vs Aprendiz:** Atirador captura, Aprendiz não
+- **05-cavaleiro.js (★★)** — Cavalo agressivo + peões de suporte:
+  - DRAFT: N + 2P (3+1+1=5)
+  - POSITION: N centro frontal (1, front), K em canto da fileira de trás, P nas frontais adjacentes
+  - ACTION: 1ª prioridade — Cavalo rumo ao oppKing escolhendo destinos seguros via `isCellThreatened` (filtra ameaças); 2ª — peões de suporte avançam frontalmente
+- **06-bispeiro.js (★★)** — 2 bispos dominam diagonais:
+  - DRAFT: 2B + 1P (igual Defensor mas comportamento diferente)
+  - POSITION: B em (0,back) e (3,back); K em (1,back); P em (2,back)
+  - ACTION: enumera moves de AMBOS os bispos e escolhe o que aproxima mais do oppKing (em vez de alternância por turno — `state.turn` não é exposto). Fallback: peão avança
+- Index expandido: `_strategies = { 0..6 }`
+- `node --check` em 4 arquivos → OK
+- Smoke test 7 cenários:
+  - Atirador: livre→ty=2; captura diagonal→tx=2,ty=2; bloqueado→tenta próximo peão (sorting funcional)
+  - Cavaleiro: N (1,1) salta direto para (2,3) onde está oppKing (movimento L)
+  - Bispeiro: B1 (0,0) escolhido sobre B2 (3,0) por manhattan=1 vs 2
+
+### Decisões de design
+- **Bispeiro sem alternância de turno**: spec original previa `state.turn % 2` mas `state.turn` não está em `state`. Substituído por "escolhe o bispo cujo melhor move aproxima mais do oppKing". Identidade preservada (joga com 2 bispos, foca diagonais).
+- **Atirador captura diagonal antes de avançar frontal**: aproveita característica única do peão no microChess (captura diagonal forward apenas). Diferencia do Aprendiz que nunca captura.
+- **Cavaleiro evita casas ameaçadas**: usa novo helper `isCellThreatened(x,y,state,color)` antes de mover. Faz com que o Cavaleiro recue se o avanço deixaria a peça em risco.
+
+### Próxima sessão
+**SP-3.4** — Estratégias 7 (Tanque), 8 (Caçador), 9 (Estrategista). **Atalho:** Caçador (8) = port direto da estratégia 0 (já em `00-default.js`); basta duplicar e mudar id/name.
+
+---
+
+## [2026-05-04] Sessão SP-3.4 — Estratégias 7/8/9 (Tanque, Caçador, Estrategista)
+
+**Status:** Completo
+**Branch:** main
+**Arquivos criados:** `server/bot-strategies/07-tanque.js`, `08-cacador.js`, `09-estrategista.js`
+**Arquivo modificado:** `server/bot-strategies/index.js` (10 estratégias registradas: 0..9)
+
+### Feito
+- **07-tanque.js (★★★)** — Torre + peão, marcha frontal:
+  - DRAFT: R + P (4+1=5)
+  - POSITION: R em (1,front), K em canto da fileira de trás, P em canto oposto
+  - ACTION: 1ª prioridade Torre — destino mais avançado, desempate menor manhattan ao oppKing; 2ª prioridade peão avança frontalmente
+- **08-cacador.js (★★★)** — port direto via wrapper:
+  - 11 linhas; importa `00-default.js` e re-exporta com id=8, name=`cacador`
+  - Smoke test confirma `chooseDraft` e `chooseAction` retornam exatamente os mesmos objetos da estratégia 0
+- **09-estrategista.js (★★★)** — defensivo + agressivo:
+  - DRAFT: N + B (3+2=5)
+  - POSITION: N em (1,front), B em (1 ou 2, back), K em canto
+  - ACTION fase 1: filtra `myPieces` por `isPieceUnderThreat`, ordena por `pieceBonus` desc, tenta destinos `!isCellThreatened` ordenados por proximidade ao oppKing. Se peça mais valiosa pode fugir para casa segura → move ela.
+  - ACTION fase 2 (sem ameaças OU sem fuga viável): heurística Caçador (Manhattan ao oppKing)
+- Index expandido: 10 estratégias (0..9)
+- `node --check` em 4 arquivos → OK
+- Smoke test:
+  - Tanque DRAFT R→P→ready; ACTION torre em (1,1) avança para (1,3) — máximo possível
+  - Caçador iguais à estratégia 0 (validação JSON.stringify equality)
+  - Estrategista DRAFT N→B→ready; com peça em risco recua para casa segura; sem ameaça vai como Caçador
+
+### Decisões de design
+- **Caçador como wrapper, não cópia** — economiza linhas e mantém consistência: se 00-default for ajustado no futuro, Caçador acompanha automaticamente. Trade-off: leitor precisa abrir 2 arquivos para entender 8.
+- **Estrategista "sem fuga segura" cai para fase 2** — em vez de ficar parado, tenta avançar com outra peça. É derrotista mas consistente com identidade "estrategista" que aceita perdas pra avançar.
+- **Tanque "mais avançado" definido como `advance = white ? ty : -ty`** — funciona pra ambos os lados sem ifs especiais nos sorts.
+
+### EPIC SP-3 progresso
+Estratégias implementadas: **0..9** (10 de 16, contando o default). Faltam: 10..15 (Duelista, Cercador, Iscador, Rainha, Mestre, Lenda) + integração socket+gameOver (SP-3.7, SP-3.8).
+
+### Próxima sessão
+**SP-3.5** — Estratégias 10 (Duelista), 11 (Cercador), 12 (Iscador). **Atenção:** Iscador era especificado com `state.turn % 3` mas `state.turn` não é exposto — usar máquina de estado baseada em condições do tabuleiro.
+
+---
+
+## [2026-05-04] Sessão SP-3.5 — Estratégias 10/11/12 (Duelista, Cercador, Iscador)
+
+**Status:** Completo
+**Branch:** main
+**Arquivos criados:** `server/bot-strategies/10-duelista.js`, `11-cercador.js`, `12-iscador.js`
+**Arquivo modificado:** `server/bot-strategies/index.js` (13 estratégias: 0..12)
+
+### Feito
+- **10-duelista.js (★★★)** — confronto seletivo:
+  - DRAFT: Q (5)
+  - POSITION: Q em (1 ou 2, front), K escondido em canto da fileira de trás
+  - ACTION 3 fases: (1) busca duelos com `myBonus >= enemyBonus` ordenados por gain DESC; (2) se Q sob ameaça e nenhum duelo vencível, recua para casa segura; (3) avança Q rumo ao oppKing por Manhattan
+- **11-cercador.js (★★★★)** — ataque por flancos:
+  - DRAFT: 2B + P (igual Defensor/Bispeiro mas comportamento bem diferente)
+  - POSITION: B em (0,back) e (3,back), K em (1,back), P em (2,back)
+  - ACTION: filtra moves cuja `tx ∈ {0, 3}` (flancos), ordena por menor Manhattan ao oppKing; fallback Caçador genérico se sem opções de flanco
+- **12-iscador.js (★★★★)** — sacrifício planejado:
+  - DRAFT: R + P (4+1=5)
+  - POSITION: P em (1,front) — peão isca; R atrás dele em (1,back); K em (3,back)
+  - ACTION 3 fases sem `state.turn`: (1) R sob ameaça → recua para casa segura (proteger peça forte); (2) peão vivo → avança peão (sacrifício); (3) peão morto/bloqueado → R avança rumo ao oppKing
+- Index: 13 estratégias registradas (0..12)
+- `node --check` em 4 arquivos → OK
+- Smoke test em 12 cenários:
+  - Duelista DRAFT Q→ready; ACTION com 2 alvos prioriza maior gain; sob ameaça **captura atacante** (não foge — duelo vencível tem prioridade)
+  - Cercador POSITION B em (0,0)/(3,0); ACTION B em (0,0) move para (3,3) (flanco diagonal)
+  - Iscador POSITION P em (1,1) e R em (1,0); ACTION peão vivo→avança P; peão morto→R avança máximo
+
+### Decisões de design
+- **Duelista NÃO foge primeiro** — fase 1 (duelo vencível) tem prioridade sobre fase 2 (recuar). Se Q pode capturar o atacante (Q+5 vs B+2 = vence), captura. Coerente com "duelista quer brigar".
+- **Iscador sem `state.turn` cíclico** — substituído por máquina de estado baseada em entidades vivas: P vivo → avança P; P morto → avança R. R tem prioridade defensiva sobre tudo (recua se ameaçada).
+- **Cercador: tx ∈ {0, 3}** — peão em (2, back) está fora dos flancos; serve só como suporte e fallback Caçador.
+
+### EPIC SP-3 progresso
+Estratégias implementadas: **0..12** (13 de 16). Faltam: 13/14/15 + integração socket (SP-3.7) e gameOver (SP-3.8).
+
+### Próxima sessão
+**SP-3.6** — Estratégias 13 (Rainha), 14 (Mestre), 15 (Lenda). **Atenção:** 14 e 15 usam lookahead 2-ply; medir performance (alvo <100ms por chamada).
+
+---
+
+## [2026-05-04] Sessão SP-3.6 — Estratégias 13/14/15 (Rainha, Mestre, Lenda)
+
+**Status:** Completo
+**Branch:** main
+**Arquivos criados:** `13-rainha.js`, `_minimax.js`, `14-mestre.js`, `15-lenda.js`
+**Arquivo modificado:** `server/bot-strategies/index.js` (16 estratégias: 0..15) — registry completo
+
+### Feito
+- **13-rainha.js (★★★★)** — Q sozinha, agressividade total:
+  - DRAFT: Q (5)
+  - POSITION: Q em (1 ou 2, front), K em canto
+  - ACTION: scoring composto na Queen — capturar oppKing (-100), capturar peça inimiga (-3), Manhattan dist ao oppKing, penalidade +5 só se casa exposta sem ganho. Fallback: se Q cercada/morta, mexe King.
+- **_minimax.js (helper compartilhado)** — engine de lookahead:
+  - `getAllMoves(state, color)` — enumera moves de todas as peças
+  - `simulateMove(state, move, color)` — clone shallow + resolve duel via heurística (`myBonus >= enemyBonus` = atacante vence)
+  - `evaluate(state, color)` — material × 1.5 + king safety + king threat. King morto = ±1000 (catastrófico/vitória)
+  - `scoreMoves(state, color)` — minimax 2-ply puro: para cada moveA, simula pior moveB do oponente, retorna `[{ move, score }]` ordenado DESC
+- **14-mestre.js (★★★★★)** — usa `scoreMoves` e pega o melhor:
+  - DRAFT: N + B (3+2=5)
+  - POSITION: N em (1, front), B em (1 ou 2, back), K em canto
+  - ACTION: `scoreMoves[0]` — minimax otimizando o pior caso após resposta inimiga
+- **15-lenda.js (★★★★★)** — Mestre + variabilidade:
+  - DRAFT/POSITION: importa de `14-mestre.js` (compartilhamento literal de funções)
+  - ACTION: 80% pega `scoreMoves[0]`; 20% escolhe random entre top 3
+- Index atualizado: 16 estratégias registradas (0..15)
+
+### Performance medida (smoke test)
+| Cenário | Tempo |
+|---|---|
+| Realista (6 peças) | 1ms |
+| Worst case (8 peças) | 3ms |
+| Extreme (12 peças) | 3ms |
+
+**Alvo era <100ms.** Performance está ~30× melhor que o orçamento. Razão: 4×4 tem search space muito limitado, peças têm ~4 destinos médios em vez dos 16 estimados na spec.
+
+### Comportamentos validados (smoke test)
+- **Rainha**: dado oppKing acessível diagonalmente, Q vai direto pra capturá-lo
+- **Mestre**: Cavalo em (1,1) salta para (0,3) onde está oppKing → captura via minimax
+- **Lenda em 100 trials**: 85 iguais ao Mestre / 15 variações (esperado ~80/20 — dentro da margem aceitável)
+
+### Decisões de design
+- **`_minimax.js` separado em vez de inline em 14/15** — facilita SP-9.1 (balanceamento) caso queira ajustar evaluate ou pesos sem mexer em ambas as estratégias.
+- **Lenda compartilha `chooseDraft` e `choosePosition` por referência** (não cópia) — se Mestre for ajustado, Lenda acompanha automaticamente (consistência).
+- **`simulateMove` resolve duel via expected value** (não amostragem aleatória) — bate com a spec do SP_STRATEGIES.md §3 (estratégia 14: "valor médio de dado = 3.5"). Determinístico → testável.
+- **Penalidade de casa ameaçada na Rainha (+5) só se sem ganho** — se a casa tem inimigo capturável, Q vai mesmo se a casa estiver "ameaçada" (porque ela vence o duel imediato).
+
+### 🏆 EPIC SP-3 — todas as 16 estratégias implementadas
+Lista final do registry: `0:default`, `1:recruta`, `2:aprendiz`, `3:defensor`, `4:atirador`, `5:cavaleiro`, `6:bispeiro`, `7:tanque`, `8:cacador`, `9:estrategista`, `10:duelista`, `11:cercador`, `12:iscador`, `13:rainha`, `14:mestre`, `15:lenda`.
+
+Faltam apenas SP-3.7 (handler socket `single_player_start`) e SP-3.8 (gameOver → markLevelCompleted).
+
+### Próxima sessão
+**SP-3.7** — Handler socket `single_player_start({ level, token? })` no `server/server.js`. Cria sala bot com `room._botStrategy = level`, valida progresso se autenticado, marca `room._isSinglePlayer` e `room._spLevel`.
+
+---
+
+## [2026-05-04] Sessão SP-3.7 — Socket handler `single_player_start`
+
+**Status:** Completo
+**Branch:** main
+**Arquivo modificado:** `server/server.js` (handler inserido após `queue_train`, antes do bloco `// ── PRIVATE ROOM ──`)
+
+### Feito
+- Handler `single_player_start(profile)` inserido em `server/server.js` (~linha 1180)
+- Recebe payload `{ uid, nickname, avatar, token, level }`
+- **Validação de range** logo no início: rejeita `level` fora de 1..15 (ou não-inteiro) com `sp_error: { error: 'invalid_level' }`
+- **Token opcional**:
+  - Se presente e válido → autentica, checa ban (emite `banned` se banido, idêntico a queue_train), valida progresso via `sp.validateLevelProgress(decoded.id, level)` — rejeita pulo de fase com `sp_error: { error: 'level_locked' }`. Marca `isGuest = false`
+  - Se ausente ou inválido → `isGuest = true`, qualquer level 1..15 é aceito
+- Cria room similar a `queue_train` com 4 campos extras:
+  - `_botStrategy: level` — bot.js dispatcha para a estratégia 1..15 (registry agora tem 16 estratégias)
+  - `_isSinglePlayer: true` — para SP-3.8 identificar partidas solo no gameOver
+  - `_spLevel: level` — para `markLevelCompleted(uid, level)`
+  - `_spIsGuest: isGuest` — para SP-3.8 não persistir vitória de convidado
+- `match_found` enviado inclui campo extra `sp: { level, isGuest }` para o cliente exibir UI específica de solo
+- Rate limit: `checkSocketRate(socket, 'single_player_start', 3, 5000)` — mesmo padrão de queue_train
+- `node --check server/server.js` → OK
+
+### Erros emitidos pelo handler
+| Evento | Motivo |
+|---|---|
+| `sp_error: { error: 'invalid_level' }` | level não-inteiro ou fora de 1..15 |
+| `sp_error: { error: 'level_locked' }` | autenticado tentou pular fase (validateLevelProgress falhou) |
+| `banned: { until, remainMs }` | usuário autenticado banido (mesmo formato que queue_train) |
+
+### Decisões de design
+- **Validação de level vem ANTES da autenticação** — evita carga de DB se payload já é inválido. Defensivo contra cliente malicioso.
+- **Convidado sem token = silenciosamente isGuest** — não retorna erro. Cliente que não passar token é assumido convidado.
+- **Não chamar `singleplayer.markLevelCompleted` aqui** — SP-3.7 só CRIA a partida. SP-3.8 vai marcar vitória no gameOver.
+- **Não emitir match_found para o "bot"** — bot não é socket real. Padrão idêntico a queue_train.
+- **`socketUserId` é setado se autenticado** — necessário para `disconnect_ingame` e outros eventos de analytics chamados em outros handlers.
+
+### Próxima sessão
+**SP-3.8** — No `gameOver` (ou `_persistDB` / lugar onde a partida termina), se `room._isSinglePlayer && humano venceu`:
+- Se `!room._spIsGuest` → `sp.markLevelCompleted(humanUid, room._spLevel)`
+- Emitir `sp_level_completed { level }` para o cliente em ambos os casos (cliente atualiza `window.spProgress`)
+- NÃO afetar MMR/LP (modo solo não conta para ranking)

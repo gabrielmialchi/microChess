@@ -18,7 +18,8 @@ Transformar a opção "Tutorial" da tela Novo Jogo em um modo **SOLO** robusto, 
 | Botões do hub Solo | **CONTINUAR** ↔ **NOVO** |
 | Botões do hub Online | **CASUAL** ↔ **RANQUEADA** (já existem; reaproveitar) |
 | Lista das 15 fases | Recruta → Lenda (ver tabela §5) |
-| Convidados (sem login) | **NÃO salvam progresso**. Ao tentar Solo sem login, redireciona para auth. |
+| Convidados (sem login) | **Podem jogar Solo**, mas progresso **nunca é salvo** — toda sessão de convidado começa da fase 1. Apenas usuários autenticados têm progresso persistido no servidor. |
+| Botão "NOVO" do hub Solo | **Logado:** volta para fase 1 e zera `max_level_completed=0` no servidor (reset persistido). **Convidado:** apenas começa da fase 1 (não há nada para resetar). |
 | Onde salva o doc do plano | `docs/SP_PLANNING.md` (este arquivo) |
 
 ---
@@ -71,20 +72,26 @@ module.exports = {
 
 **Feature flag**: `window.SP_ENABLED = false` (default) até SP-8.4. Telas novas existem mas ficam ocultas.
 
-### Banco
+### Banco (criado em SP-2.1)
 ```sql
 CREATE TABLE singleplayer_progress (
-  player_uid TEXT PRIMARY KEY REFERENCES players(uid),
+  player_id           TEXT PRIMARY KEY,
   max_level_completed INTEGER NOT NULL DEFAULT 0,
-  updated_at INTEGER NOT NULL
+  updated_at          INTEGER NOT NULL,
+  FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
 );
 ```
 
+> **Atenção convenção:** a coluna se chama `player_id` (consistente com `matches.player_white_id`/`black_id`). No código JS, a chave do jogador é referida como `uid` (`socket.uid`, `player.uid`) — isso é apenas convenção de nomenclatura. Em `server/singleplayer.js` (SP-2.2) as funções recebem `uid` como parâmetro mas gravam como `player_id` no DB. Não criar coluna `player_uid`.
+
 ### Endpoints REST
 ```
-GET  /sp/progress                  → { max_level_completed: 0..15 }
-POST /sp/level-complete  { level } → { ok: true } ou erro 400 se pular
+GET  /sp/progress                  → { max_level_completed: 0..15 }   (autenticado)
+POST /sp/level-complete  { level } → { ok: true } ou erro 400 se pular (autenticado)
+POST /sp/reset                     → { ok: true } zera max_level_completed (autenticado)
 ```
+
+> Convidados não chamam estes endpoints; tratam progresso 100% no cliente como `window.spProgress = { max_level_completed: 0 }` em memória, sem persistência.
 
 ---
 
@@ -195,25 +202,29 @@ POST /sp/level-complete  { level } → { ok: true } ou erro 400 se pular
 - **Arquivos:** criar `server/singleplayer.js`
 - **Checklist:**
   ```
-  [ ] 1. Criar server/singleplayer.js com 3 funções: getProgress(uid), markLevelCompleted(uid, level), validateLevelProgress(uid, level)
+  [ ] 1. Criar server/singleplayer.js com 4 funções: getProgress(uid), markLevelCompleted(uid, level), validateLevelProgress(uid, level), resetProgress(uid)
   [ ] 2. validateLevelProgress: rejeita se level > max+1 (não pode pular)
   [ ] 3. markLevelCompleted: só atualiza se level > max atual
-  [ ] 4. Exportar todas as 3 funções
-  [ ] 5. Validar sintaxe: node --check server/singleplayer.js
+  [ ] 4. resetProgress: UPDATE para max_level_completed=0 (faz INSERT OR REPLACE se não existe registro)
+  [ ] 5. Exportar todas as 4 funções
+  [ ] 6. Validar sintaxe: node --check server/singleplayer.js
   ```
 
 #### SP-2.3 — Endpoints HTTP
 - **Pré-requisito:** SP-2.2
 - **Subagente:** `pesquisador` (encontrar local certo no server.js para inserir rotas) → `programador`
-- **Arquivos:** `server/server.js` (apenas inserir 2 rotas + require)
+- **Arquivos:** `server/server.js` (apenas inserir 3 rotas + require)
 - **Checklist:**
   ```
   [ ] 1. require server/singleplayer.js no topo do server.js
   [ ] 2. Inserir GET /sp/progress (autenticado via middleware existente)
   [ ] 3. Inserir POST /sp/level-complete (autenticado)
-  [ ] 4. Aplicar apiLimiter (60 req/min) em ambas
-  [ ] 5. Validar sintaxe: node --check server/server.js
+  [ ] 4. Inserir POST /sp/reset (autenticado) — chama singleplayer.resetProgress(uid)
+  [ ] 5. Aplicar apiLimiter (60 req/min) nas três rotas
+  [ ] 6. Validar sintaxe: node --check server/server.js
   ```
+
+> Adicionar também a função `resetProgress(uid)` em SP-2.2 (`server/singleplayer.js`) — UPDATE singleplayer_progress SET max_level_completed=0, updated_at=? WHERE player_uid=?
 
 ---
 
@@ -264,10 +275,12 @@ POST /sp/level-complete  { level } → { ok: true } ou erro 400 se pular
 - **Arquivos:** `server/server.js`
 - **Checklist:**
   ```
-  [ ] 1. Adicionar handler socket.on('single_player_start', ({level, ...}))
-  [ ] 2. Validar level via singleplayer.validateLevelProgress(uid, level)
-  [ ] 3. Criar room similar a queue_train, mas com room._botStrategy = level
-  [ ] 4. Marcar room._isSinglePlayer = true para identificar no gameOver
+  [ ] 1. Adicionar handler socket.on('single_player_start', ({level, token?, ...}))
+  [ ] 2. Se token presente → autenticar e validar level via singleplayer.validateLevelProgress(uid, level)
+  [ ] 3. Se sem token (convidado) → aceitar qualquer level (cliente controla via UI; impossibilitar ainda assim level<1 ou level>15)
+  [ ] 4. Criar room similar a queue_train, mas com room._botStrategy = level
+  [ ] 5. Marcar room._isSinglePlayer = true e room._spLevel = level
+  [ ] 6. Marcar room._spIsGuest = (token == null) para uso em SP-3.8
   ```
 
 #### SP-3.8 — Marcar level completed no gameOver
@@ -276,8 +289,11 @@ POST /sp/level-complete  { level } → { ok: true } ou erro 400 se pular
 - **Arquivos:** `server/server.js`
 - **Checklist:**
   ```
-  [ ] 1. No fim de partida, se room._isSinglePlayer && human venceu → markLevelCompleted(uid, level)
-  [ ] 2. Emitir evento socket 'sp_level_completed' { level } para o cliente
+  [ ] 1. No fim de partida, se room._isSinglePlayer && human venceu:
+        - se !room._spIsGuest → markLevelCompleted(humanUid, room._spLevel)
+        - se convidado → não persiste nada (cliente cuida)
+  [ ] 2. Emitir evento socket 'sp_level_completed' { level } para o cliente em ambos os casos
+        (cliente atualiza window.spProgress; se convidado, fica só em memória)
   [ ] 3. NÃO afetar MMR/LP (modo solo não conta para ranking)
   ```
 
@@ -364,9 +380,10 @@ POST /sp/level-complete  { level } → { ok: true } ou erro 400 se pular
 - **Checklist:**
   ```
   [ ] 1. Função loadSPProgress() faz fetch('/sp/progress') com auth header
-  [ ] 2. Se !logado → mostrar overlay/redirect para auth
-  [ ] 3. Salva resultado em window.spProgress = { max_level_completed }
+  [ ] 2. Se !logado → window.spProgress = { max_level_completed: 0, isGuest: true } (NÃO faz fetch; mantém em memória apenas)
+  [ ] 3. Se logado → salva resultado do servidor em window.spProgress = { max_level_completed, isGuest: false }
   [ ] 4. Atualiza label "CONTINUAR — Fase X" baseado em spProgress
+  [ ] 5. Para convidado, label CONTINUAR sempre mostra "Fase 1" (não há progresso prévio)
   ```
 
 #### SP-6.3 — Botão CONTINUAR
@@ -379,13 +396,20 @@ POST /sp/level-complete  { level } → { ok: true } ou erro 400 se pular
   ```
 
 #### SP-6.4 — Botão NOVO + confirmação
-- **Pré-requisito:** SP-6.1
+- **Pré-requisito:** SP-6.1, SP-2.3 (precisa do endpoint /sp/reset)
 - **Subagente:** `programador`
+- **Comportamento:**
+  - **Logado:** confirma → `POST /sp/reset` → `window.spProgress.max_level_completed = 0` → vai para fase 1
+  - **Convidado:** confirma → `window.spProgress.max_level_completed = 0` localmente → vai para fase 1 (não há nada para resetar no servidor)
 - **Checklist:**
   ```
-  [ ] 1. onclick NOVO → modal de confirmação ("Reiniciar perderá progresso")
-  [ ] 2. Se confirmar → POST /sp/reset (NOTA: este endpoint não existe ainda; confirmar comportamento — ou simplesmente jogar fase 1 novamente sem resetar)
-  [ ] 3. Decisão de UX: "NOVO" significa reset total OU significa "começar da fase 1"? Confirmar com usuário antes de implementar.
+  [ ] 1. onclick NOVO → modal de confirmação:
+        - logado: "Reiniciar zera seu progresso permanentemente. Confirmar?"
+        - convidado: "Começar nova jornada Solo a partir da Fase 1?" (sem aviso de perda — não há progresso salvo)
+  [ ] 2. Se logado e confirmar → fetch POST /sp/reset com auth header
+  [ ] 3. Atualizar window.spProgress.max_level_completed = 0 (memória)
+  [ ] 4. Iniciar fase 1 imediatamente (chamar single_player_start com level=1) OU navegar para sp-map
+  [ ] 5. i18n separados para os 2 textos do modal (sp_new_confirm_logged / sp_new_confirm_guest)
   ```
 
 #### SP-6.5 — i18n
@@ -501,9 +525,11 @@ POST /sp/level-complete  { level } → { ok: true } ou erro 400 se pular
 #### SP-9.2 — Walk-through guest
 - **Checklist:**
   ```
-  [ ] 1. Sem login, tentar Novo Jogo → SOLO
-  [ ] 2. Confirmar redirect/overlay para auth
-  [ ] 3. (Conforme decisão §2: convidados não jogam Solo)
+  [ ] 1. Sem login, abrir Novo Jogo → SOLO → solo-hub
+  [ ] 2. CONTINUAR sempre mostra "Fase 1" (não há progresso salvo)
+  [ ] 3. Jogar fase 1 e vencer; confirmar que sp-map mostra fase 2 desbloqueada NA SESSÃO ATUAL
+  [ ] 4. Atualizar a página (F5); confirmar que progresso foi perdido — tudo volta para fase 1
+  [ ] 5. Confirmar que NENHUMA chamada de fetch /sp/* aconteceu como convidado (ver Network tab)
   ```
 
 #### SP-9.3 — Validação de segurança
@@ -562,19 +588,19 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 
 | ID | Subtarefa | Pré-req | Status |
 |---|---|---|---|
-| SP-1.1 | Terminologia × 9 idiomas → `docs/SP_TERMS.md` | — | ⏳ Pendente |
-| SP-1.2 | Spec das 15 estratégias → `docs/SP_STRATEGIES.md` | — | ⏳ Pendente |
-| SP-1.3 | Wireframes textuais → `docs/SP_WIREFRAMES.md` | SP-1.1 | ⏳ Pendente |
-| SP-2.1 | Migration tabela `singleplayer_progress` | — | ⏳ Pendente |
-| SP-2.2 | Módulo `server/singleplayer.js` | SP-2.1 | ⏳ Pendente |
-| SP-2.3 | Endpoints `/sp/progress` + `/sp/level-complete` | SP-2.2 | ⏳ Pendente |
-| SP-3.1 | Refator `bot.js` + registry `bot-strategies/` | — | ⏳ Pendente |
-| SP-3.2 | Estratégias 1, 2, 3 (Recruta/Aprendiz/Defensor) | SP-3.1, SP-1.2 | ⏳ Pendente |
-| SP-3.3 | Estratégias 4, 5, 6 (Atirador/Cavaleiro/Bispeiro) | SP-3.1, SP-1.2 | ⏳ Pendente |
-| SP-3.4 | Estratégias 7, 8, 9 (Tanque/Caçador/Estrategista) | SP-3.1, SP-1.2 | ⏳ Pendente |
-| SP-3.5 | Estratégias 10, 11, 12 (Duelista/Cercador/Iscador) | SP-3.1, SP-1.2 | ⏳ Pendente |
-| SP-3.6 | Estratégias 13, 14, 15 (Rainha/Mestre/Lenda) | SP-3.1, SP-1.2 | ⏳ Pendente |
-| SP-3.7 | Socket evento `single_player_start` | SP-3.1 | ⏳ Pendente |
+| SP-1.1 | Terminologia × 9 idiomas → `docs/SP_TERMS.md` | — | ✅ Completo (2026-05-04) |
+| SP-1.2 | Spec das 15 estratégias → `docs/SP_STRATEGIES.md` | — | ✅ Completo (2026-05-04) |
+| SP-1.3 | Wireframes textuais → `docs/SP_WIREFRAMES.md` | SP-1.1 | ✅ Completo (2026-05-04) |
+| SP-2.1 | Migration tabela `singleplayer_progress` | — | ✅ Completo (2026-05-04) |
+| SP-2.2 | Módulo `server/singleplayer.js` | SP-2.1 | ✅ Completo (2026-05-04) |
+| SP-2.3 | Endpoints `/sp/progress` + `/sp/level-complete` + `/sp/reset` | SP-2.2 | ✅ Completo (2026-05-04) |
+| SP-3.1 | Refator `bot.js` + registry `bot-strategies/` | — | ✅ Completo (2026-05-04) |
+| SP-3.2 | Estratégias 1, 2, 3 (Recruta/Aprendiz/Defensor) | SP-3.1, SP-1.2 | ✅ Completo (2026-05-04) |
+| SP-3.3 | Estratégias 4, 5, 6 (Atirador/Cavaleiro/Bispeiro) | SP-3.1, SP-1.2 | ✅ Completo (2026-05-04) |
+| SP-3.4 | Estratégias 7, 8, 9 (Tanque/Caçador/Estrategista) | SP-3.1, SP-1.2 | ✅ Completo (2026-05-04) |
+| SP-3.5 | Estratégias 10, 11, 12 (Duelista/Cercador/Iscador) | SP-3.1, SP-1.2 | ✅ Completo (2026-05-04) |
+| SP-3.6 | Estratégias 13, 14, 15 (Rainha/Mestre/Lenda) | SP-3.1, SP-1.2 | ✅ Completo (2026-05-04) |
+| SP-3.7 | Socket evento `single_player_start` | SP-3.1 | ✅ Completo (2026-05-04) |
 | SP-3.8 | Marcar level completed no gameOver | SP-3.7, SP-2.2 | ⏳ Pendente |
 | SP-4.1 | Reformatar `#screen-game-mode` (2 cards) | SP-1.3 | ⏳ Pendente |
 | SP-4.2 | i18n da nova game-mode | SP-4.1, SP-1.1 | ⏳ Pendente |
@@ -601,7 +627,12 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 | SP-9.4 | Atualizar PROJECT_CONTEXT + ACTIVITY_LOG | SP-9.1..3 | ⏳ Pendente |
 
 ### Próxima sessão sugerida
-**SP-1.1** — Terminologia × 9 idiomas. É a sessão com **menor pré-requisito** e produz output (`docs/SP_TERMS.md`) que destrava SP-4.2, SP-5.3, SP-6.5, SP-7.4.
+**SP-3.8** — No fim de partida solo, se humano venceu, chamar `singleplayer.markLevelCompleted(uid, level)` (apenas se !`_spIsGuest`). Emitir `sp_level_completed` para o cliente em ambos os casos. Encerra o EPIC SP-3.
+
+### ⚠️ Descobertas durante SP-3.2 e SP-3.3 (relevantes para SP-3.4..SP-3.6)
+1. **Peões podem mover ±1 vertical sem captura** — peões podem recuar. Estratégias que querem comportamento "só pra frente" precisam filtrar `ty - pawn.y === dirForward(color)`. Aplicado em Aprendiz/Atirador/Cavaleiro/Bispeiro. Aplicar em SP-3.4 (Tanque) e SP-3.5 (Iscador).
+2. **Peões só capturam diagonalmente, nunca frontal** — para tornar Atirador distinto do Aprendiz, Atirador prioriza captura diagonal antes de avanço frontal. Mesmo padrão pode ser usado em outras estratégias agressivas com peões.
+3. **`state.turn` não é exposto às estratégias** — comportamentos cíclicos (ex: Iscador no SP-3.5) não podem depender de contador de turnos vindo do state. Alternativas: usar paridade de `state.army.length`, total de peças mortas (calculado a partir do inventory inicial), ou simplesmente máquina de estado baseada em condições do tabuleiro.
 
 ---
 

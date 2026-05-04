@@ -73,6 +73,13 @@ db.exec(`CREATE TABLE IF NOT EXISTS events (
     metadata TEXT
 )`);
 
+db.exec(`CREATE TABLE IF NOT EXISTS singleplayer_progress (
+    player_id           TEXT PRIMARY KEY,
+    max_level_completed INTEGER NOT NULL DEFAULT 0,
+    updated_at          INTEGER NOT NULL,
+    FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+)`);
+
 // Migrate existing users: hash + encrypt plaintext emails
 const pending = db.prepare('SELECT id, email FROM players WHERE email_hash IS NULL').all();
 if (pending.length > 0) {
