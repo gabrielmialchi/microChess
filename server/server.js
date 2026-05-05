@@ -457,6 +457,20 @@ const _persistDB = db.transaction((room, winnerColor, isWO) => {
 });
 
 function persistMatchResult(room, winnerColor, isWO = false) {
+    // Single player mode: don't touch MMR/LP/matches; emit level completion if human won.
+    if (room._isSinglePlayer) {
+        const humanColor = room._botColor === 'black' ? 'white' : 'black';
+        const humanWon   = winnerColor === humanColor && !isWO;
+        const human      = room.players[humanColor];
+        if (humanWon && human?.socketId) {
+            const level = room._spLevel;
+            if (!room._spIsGuest && human.uid) {
+                sp.markLevelCompleted(human.uid, level);
+            }
+            io.to(human.socketId).emit('sp_level_completed', { level });
+        }
+        return;
+    }
     let data;
     try {
         data = _persistDB(room, winnerColor, isWO);

@@ -601,19 +601,19 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 | SP-3.5 | Estratégias 10, 11, 12 (Duelista/Cercador/Iscador) | SP-3.1, SP-1.2 | ✅ Completo (2026-05-04) |
 | SP-3.6 | Estratégias 13, 14, 15 (Rainha/Mestre/Lenda) | SP-3.1, SP-1.2 | ✅ Completo (2026-05-04) |
 | SP-3.7 | Socket evento `single_player_start` | SP-3.1 | ✅ Completo (2026-05-04) |
-| SP-3.8 | Marcar level completed no gameOver | SP-3.7, SP-2.2 | ⏳ Pendente |
-| SP-4.1 | Reformatar `#screen-game-mode` (2 cards) | SP-1.3 | ⏳ Pendente |
-| SP-4.2 | i18n da nova game-mode | SP-4.1, SP-1.1 | ⏳ Pendente |
-| SP-5.1 | Criar `#screen-multiplayer-mode` | SP-1.3 | ⏳ Pendente |
-| SP-5.2 | Migrar lógica de matchmaking | SP-5.1 | ⏳ Pendente |
-| SP-5.3 | i18n da multiplayer-mode | SP-5.1, SP-1.1 | ⏳ Pendente |
-| SP-6.1 | Criar `#screen-solo-hub` | SP-1.3 | ⏳ Pendente |
-| SP-6.2 | Lógica fetch de progresso | SP-6.1, SP-2.3 | ⏳ Pendente |
+| SP-3.8 | Marcar level completed no gameOver | SP-3.7, SP-2.2 | ✅ Completo (2026-05-04) |
+| SP-4.1 | Reformatar `#screen-game-mode` (2 cards) | SP-1.3 | ✅ Completo (2026-05-04) |
+| SP-4.2 | i18n da nova game-mode | SP-4.1, SP-1.1 | ✅ Completo (2026-05-05) |
+| SP-5.1 | Criar `#screen-multiplayer-mode` | SP-1.3 | ✅ Completo (2026-05-05) |
+| SP-5.2 | Migrar lógica de matchmaking | SP-5.1 | ✅ Completo (2026-05-05) |
+| SP-5.3 | i18n da multiplayer-mode | SP-5.1, SP-1.1 | ✅ Completo (2026-05-05) |
+| SP-6.1 | Criar `#screen-solo-hub` | SP-1.3 | ✅ Completo (2026-05-05) |
+| SP-6.2 | Lógica fetch de progresso | SP-6.1, SP-2.3 | ✅ Completo (2026-05-05) |
 | SP-6.3 | Botão CONTINUAR | SP-6.2, SP-7.1 | ⏳ Pendente |
-| SP-6.4 | Botão NOVO + confirmação | SP-6.1 | ⏳ Pendente |
+| SP-6.4 | Botão NOVO + confirmação | SP-6.1 | ✅ Completo (2026-05-05) |
 | SP-6.5 | i18n do solo-hub | SP-6.1, SP-1.1 | ⏳ Pendente |
-| SP-7.1 | Criar `#screen-sp-map` | SP-1.3 | ⏳ Pendente |
-| SP-7.2 | Estados visuais dos cards | SP-7.1 | ⏳ Pendente |
+| SP-7.1 | Criar `#screen-sp-map` | SP-1.3 | ✅ Completo (2026-05-05) |
+| SP-7.2 | Estados visuais dos cards | SP-7.1 | ✅ Completo (2026-05-05) |
 | SP-7.3 | Click em card → start fase | SP-7.1, SP-3.7 | ⏳ Pendente |
 | SP-7.4 | i18n dos 15 nomes × 9 idiomas | SP-1.1 | ⏳ Pendente |
 | SP-7.5 | Animação de fase desbloqueada | SP-7.1, SP-7.2, SP-3.8 | ⏳ Pendente |
@@ -627,7 +627,15 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 | SP-9.4 | Atualizar PROJECT_CONTEXT + ACTIVITY_LOG | SP-9.1..3 | ⏳ Pendente |
 
 ### Próxima sessão sugerida
-**SP-3.8** — No fim de partida solo, se humano venceu, chamar `singleplayer.markLevelCompleted(uid, level)` (apenas se !`_spIsGuest`). Emitir `sp_level_completed` para o cliente em ambos os casos. Encerra o EPIC SP-3.
+**SP-7.3** — Substituir os 3 stubs (`openSPLevel`, `closeSPStartModal`, `confirmStartSPLevel`) por implementação real:
+- `openSPLevel(n)`: se card[n].dataset.state === 'locked' → return. Senão: armazena `_spPendingLevel = n`, atualiza `sm-start-title` ("Fase N — Nome"), `sm-start-difficulty` ("★" × SP_DIFFICULTY[n]), exibe modal `sm-start-modal` (display:flex)
+- `closeSPStartModal()`: já idempotente (fecha + limpa pendingLevel)
+- `confirmStartSPLevel()`: pega `_spPendingLevel`, fecha modal, set `window.spActiveLevel = level`, emite `socket.emit('single_player_start', { level, token: Session.get()?.token, uid, nickname, avatar })` — handler servidor (SP-3.7) cria a partida; client transiciona para matchmaking via match_found event existente
+- Dependências: SP-3.7 ✅ (handler servidor) + SP-7.1 ✅ (modal) → todas satisfeitas
+
+🏆 **EPIC SP-3 COMPLETO** — 16 estratégias de bot + handler `single_player_start` + completion no gameOver. Backend 100% pronto.
+✅ **EPIC SP-4 COMPLETO** — Tela `#screen-game-mode` reformatada com 2 cards (SOLO/ONLINE) + i18n × 9 idiomas.
+✅ **EPIC SP-5 COMPLETO** — Tela `#screen-multiplayer-mode` extraída + handlers reais + reset hook + i18n.
 
 ### ⚠️ Descobertas durante SP-3.2 e SP-3.3 (relevantes para SP-3.4..SP-3.6)
 1. **Peões podem mover ±1 vertical sem captura** — peões podem recuar. Estratégias que querem comportamento "só pra frente" precisam filtrar `ty - pawn.y === dirForward(color)`. Aplicado em Aprendiz/Atirador/Cavaleiro/Bispeiro. Aplicar em SP-3.4 (Tanque) e SP-3.5 (Iscador).

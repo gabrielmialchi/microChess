@@ -2016,23 +2016,113 @@
   <div style="padding:0 20px 20px;text-align:center;">
     <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="gm-title">GAME MODE</div>
   </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;gap:14px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
+    <!-- SP-4.1: 2-card layout (SOLO / ONLINE). i18n keys aplicados em SP-4.2: gm-solo-label/desc, gm-online-label/desc. -->
+    <button id="gm-card-solo" onclick="window.openSoloHub()" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
+      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-solo-label">SOLO</div>
+      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="gm-solo-desc">15 fases contra a CPU</div>
+    </button>
+    <button id="gm-card-online" onclick="window.spGoOnline()" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
+      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-online-label">ONLINE</div>
+      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="gm-online-desc">Jogadores reais online</div>
+    </button>
+    <!-- SP-4.1: layout legado (3 cards Casual/Ranqueada/Tutorial + botao FIND MATCH) removido daqui. Rollback via git history (commit pre-SP-4.1). Funcoes selectGameMode e startMatchmakingWithMode permanecem em JS pois SP-5.2 ira renomea-las para o fluxo de multiplayer-mode. Delecao definitiva da JS em SP-8.3. -->
+  </div>
+</div>
+
+<!-- MULTIPLAYER MODE SCREEN — SP-5.1 (Casual/Ranqueada + FIND MATCH). Handlers em SP-5.2. -->
+<div id="screen-multiplayer-mode" class="screen" style="background:var(--mc-bg);flex-direction:column;align-items:stretch;">
+  <div style="padding:14px 20px;display:flex;align-items:center;">
+    <button class="screen-back-btn" onclick="showScreen('game-mode')">← <span id="mp-back-label" class="back-label">VOLTAR</span></button>
+  </div>
+  <div style="padding:0 20px 20px;text-align:center;">
+    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="mp-title">ONLINE</div>
+  </div>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;gap:12px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
-    <button id="gm-card-casual" onclick="window.selectGameMode('casual')" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
-      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-casual-label">Casual</div>
-      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="gm-casual-desc">Play without affecting your XP</div>
-      <div id="gm-check-casual" style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mc-accent);place-items:center;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <button id="mp-card-casual" onclick="window.selectMultiplayerMode('casual')" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
+      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="mp-casual-label">Casual</div>
+      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="mp-casual-desc">Jogue sem afetar seu XP</div>
+      <div id="mp-check-casual" style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mc-accent);place-items:center;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     </button>
-    <button id="gm-card-ranked" onclick="window.selectGameMode('ranked')" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
-      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-ranked-label">Ranked</div>
-      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="gm-ranked-desc">Compete for XP and climb the ranks</div>
-      <div id="gm-check-ranked" style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mc-accent);place-items:center;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <button id="mp-card-ranked" onclick="window.selectMultiplayerMode('ranked')" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
+      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="mp-ranked-label">Ranqueada</div>
+      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="mp-ranked-desc">Compete por XP e suba no ranking</div>
+      <div id="mp-check-ranked" style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mc-accent);place-items:center;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     </button>
-    <button id="gm-card-train" onclick="window.selectGameMode('train')" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
-      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-train-label">Tutorial</div>
-      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="gm-train-desc">Aprenda jogando contra um bot no modo fácil</div>
-      <div id="gm-check-train" style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mc-accent);place-items:center;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <button id="mp-find-btn" onclick="window.startMatchmakingMP()" disabled style="margin-top:8px;width:100%;height:52px;border:none;border-radius:var(--mc-r-md);background:var(--mc-accent);color:var(--mc-accent-ink);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:not-allowed;opacity:0.4;transition:opacity 0.2s;"><span id="mp-find-label">FIND MATCH</span></button>
+  </div>
+</div>
+
+<!-- SOLO HUB SCREEN — SP-6.1 (CONTINUAR + NOVO). Handlers reais em SP-6.2/6.3/6.4; i18n em SP-6.5. -->
+<div id="screen-solo-hub" class="screen" style="background:var(--mc-bg);flex-direction:column;align-items:stretch;">
+  <div style="padding:14px 20px;display:flex;align-items:center;">
+    <button class="screen-back-btn" onclick="showScreen('game-mode')">← <span id="sh-back-label" class="back-label">VOLTAR</span></button>
+  </div>
+  <div style="padding:0 20px 20px;text-align:center;">
+    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="sh-title">SOLO</div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;gap:14px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
+    <button id="sh-card-continue" onclick="window.continueSolo()" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
+      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);"><span id="sh-continue-label">CONTINUAR</span> — <span id="sh-continue-phase">Fase 1</span></div>
+      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="sh-continue-desc">Retomar de onde parou</div>
     </button>
-    <button id="gm-find-btn" onclick="window.startMatchmakingWithMode()" disabled style="margin-top:8px;width:100%;height:52px;border:none;border-radius:var(--mc-r-md);background:var(--mc-accent);color:var(--mc-accent-ink);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:not-allowed;opacity:0.4;transition:opacity 0.2s;"><span id="gm-find-label">FIND MATCH</span></button>
+    <button id="sh-card-new" onclick="window.openNewSoloModal()" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
+      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="sh-new-label">NOVO</div>
+      <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="sh-new-desc">Começar do início (Fase 1)</div>
+    </button>
+  </div>
+</div>
+
+<!-- SOLO HUB — Modal de confirmação NOVO. SP-6.1: estrutura; SP-6.4: lógica de reset; SP-6.5: i18n. -->
+<div id="sh-new-confirm" style="display:none;position:fixed;inset:0;z-index:9999;" class="sysmodal-bg">
+  <div class="sysmodal">
+    <div class="sysmodal-eyebrow" id="sh-new-confirm-eyebrow">Solo</div>
+    <div class="sysmodal-title" id="sh-new-confirm-title">Reiniciar jornada?</div>
+    <div class="sysmodal-body" id="sh-new-confirm-text">Reiniciar zera seu progresso permanentemente. Confirmar?</div>
+    <div class="sysmodal-row">
+      <button class="sysmodal-btn" id="sh-new-confirm-cancel" onclick="window.closeNewSoloModal()">Cancelar</button>
+      <button class="sysmodal-btn primary" id="sh-new-confirm-ok" onclick="window.confirmNewSolo()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SP-MAP — estilos dos estados (SP-7.2). Classes aplicadas por refreshSPMap; @keyframes para pulse no card current. -->
+<style>
+@keyframes sp-pulse {
+  0%, 100% { box-shadow: 0 0 10px var(--mc-accent-glow); }
+  50%      { box-shadow: 0 0 22px var(--mc-accent-glow); }
+}
+#sm-grid > button { transition: transform 0.15s, border-color 0.15s, box-shadow 0.2s, background 0.15s, opacity 0.15s; }
+#sm-grid > button.sp-card-locked    { background: var(--mc-surface); border: 1.5px solid var(--mc-rule); cursor: not-allowed; opacity: 0.4; }
+#sm-grid > button.sp-card-completed { background: var(--mc-success-soft, var(--mc-surface)); border: 1.5px solid var(--mc-success, var(--mc-rule)); cursor: pointer; opacity: 1; }
+#sm-grid > button.sp-card-current   { background: var(--mc-surface); border: 2px solid var(--mc-accent); cursor: pointer; opacity: 1; animation: sp-pulse 2.4s ease-in-out infinite; }
+#sm-grid > button.sp-card-completed:hover,
+#sm-grid > button.sp-card-current:hover { transform: translateY(-2px); border-color: var(--mc-accent); }
+</style>
+
+<!-- SP-MAP SCREEN — SP-7.1 (grid 15 fases). Estados visuais polidos em SP-7.2; handlers reais em SP-7.3; i18n nomes em SP-7.4. -->
+<div id="screen-sp-map" class="screen" style="background:var(--mc-bg);flex-direction:column;align-items:stretch;">
+  <div style="padding:14px 20px;display:flex;align-items:center;">
+    <button class="screen-back-btn" onclick="showScreen('solo-hub')">← <span id="sm-back-label" class="back-label">VOLTAR</span></button>
+  </div>
+  <div style="padding:0 20px 20px;text-align:center;">
+    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="sm-title">MAPA SOLO</div>
+  </div>
+  <div id="sm-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px 80px;max-width:600px;width:100%;margin:0 auto;box-sizing:border-box;">
+    <!-- 15 cards inseridos via window.buildSPMap() na primeira entrada -->
+  </div>
+</div>
+
+<!-- SP-MAP — Modal de iniciar fase. SP-7.3 substitui handlers reais; SP-7.4 ajusta texto via i18n. -->
+<div id="sm-start-modal" style="display:none;position:fixed;inset:0;z-index:9999;" class="sysmodal-bg">
+  <div class="sysmodal">
+    <div class="sysmodal-eyebrow" id="sm-start-eyebrow">Solo</div>
+    <div class="sysmodal-title" id="sm-start-title">Fase X — Nome</div>
+    <div class="sysmodal-body" id="sm-start-difficulty">★★★</div>
+    <div class="sysmodal-row">
+      <button class="sysmodal-btn" id="sm-start-cancel" onclick="window.closeSPStartModal()">Cancelar</button>
+      <button class="sysmodal-btn primary" id="sm-start-play" onclick="window.confirmStartSPLevel()">Jogar</button>
+    </div>
   </div>
 </div>
 
@@ -3024,6 +3114,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             mode_title:'MODO DE JOGO', mode_casual:'Casual', mode_ranked:'Ranqueada', mode_train:'Tutorial',
             mode_casual_desc:'Jogue sem afetar seu XP', mode_ranked_desc:'Dispute XP e suba no ranking', mode_train_desc:'Aprenda jogando contra um bot no modo fácil',
             mode_find_match:'ENCONTRAR PARTIDA',
+            sp_solo:'SOLO', sp_online:'ONLINE', sp_solo_desc:'15 fases contra a CPU', sp_online_desc:'Jogadores reais online',
             htp_intro:'microChess Online é um duelo tático onde o xadrez clássico encontra a incerteza do campo de batalha. O objetivo é simples: Capture o Rei adversário.',
             htp_flow_title:'O FLUXO DO JOGO',
             htp_draft:'Recrutamento (Draft): Você tem 5 pontos para montar seu exército. Escolha entre Rainhas poderosas ou uma massa de Peões e Cavalos.',
@@ -3102,6 +3193,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             mode_title:'GAME MODE', mode_casual:'Casual', mode_ranked:'Ranked', mode_train:'Tutorial',
             mode_casual_desc:'Play without affecting your XP', mode_ranked_desc:'Compete for XP and climb the ranks', mode_train_desc:'Learn by playing against an easy bot',
             mode_find_match:'FIND MATCH',
+            sp_solo:'SOLO', sp_online:'ONLINE', sp_solo_desc:'15 stages vs CPU', sp_online_desc:'Real players online',
             htp_intro:'microChess Online is a tactical duel where classic chess meets battlefield uncertainty. The goal is simple: Capture the enemy King.',
             htp_flow_title:'GAME FLOW',
             htp_draft:'Recruitment (Draft): You have 5 points to build your army. Choose between powerful Queens or a mass of Pawns and Knights.',
@@ -3190,6 +3282,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             mode_title:'MODO DE JUEGO', mode_casual:'Casual', mode_ranked:'Competitiva', mode_train:'Tutorial',
             mode_casual_desc:'Juega sin afectar tu XP', mode_ranked_desc:'Compite por XP y sube en el ranking', mode_train_desc:'Aprende jugando contra un bot fácil',
             mode_find_match:'BUSCAR PARTIDA',
+            sp_solo:'SOLO', sp_online:'ONLINE', sp_solo_desc:'15 fases contra la CPU', sp_online_desc:'Jugadores reales online',
             htp_intro:'microChess Online es un duelo táctico donde el ajedrez clásico se encuentra con la incertidumbre del campo de batalla. El objetivo es simple: Captura al Rey enemigo.',
             htp_flow_title:'FLUJO DEL JUEGO',
             htp_draft:'Reclutamiento (Draft): Tienes 5 puntos para formar tu ejército. Elige entre Reinas poderosas o una masa de Peones y Caballos.',
@@ -3278,6 +3371,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             mode_title:'SPIELMODUS', mode_casual:'Gelegentlich', mode_ranked:'Gewertet', mode_train:'Tutorial',
             mode_casual_desc:'Spielen ohne XP zu verlieren', mode_ranked_desc:'Kämpfe um XP und steige auf', mode_train_desc:'Lerne mit einem einfachen Bot zu spielen',
             mode_find_match:'SPIEL FINDEN',
+            sp_solo:'SOLO', sp_online:'ONLINE', sp_solo_desc:'15 Stufen gegen die CPU', sp_online_desc:'Echte Spieler online',
             htp_intro:'microChess Online ist ein taktisches Duell, bei dem klassisches Schach auf die Ungewissheit des Schlachtfelds trifft. Das Ziel ist einfach: Capture den feindlichen König.',
             htp_flow_title:'SPIELABLAUF',
             htp_draft:'Rekrutierung (Draft): Du hast 5 Punkte, um deine Armee aufzubauen. Wähle zwischen mächtigen Damen oder einer Masse an Bauern und Springern.',
@@ -3366,6 +3460,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             mode_title:'MODALITÀ DI GIOCO', mode_casual:'Casuale', mode_ranked:'Classificata', mode_train:'Tutorial',
             mode_casual_desc:'Gioca senza influenzare la tua XP', mode_ranked_desc:'Combatti per XP e scala la classifica', mode_train_desc:'Impara giocando contro un bot facile',
             mode_find_match:'TROVA PARTITA',
+            sp_solo:'SOLO', sp_online:'ONLINE', sp_solo_desc:'15 livelli contro la CPU', sp_online_desc:'Giocatori reali online',
             htp_intro:'microChess Online è un duello tattico dove gli scacchi classici incontrano l\'incertezza del campo di battaglia. L\'obiettivo è semplice: Cattura il Re nemico.',
             htp_flow_title:'FLUSSO DI GIOCO',
             htp_draft:'Reclutamento (Draft): Hai 5 punti per costruire il tuo esercito. Scegli tra potenti Regine o una massa di Pedoni e Cavalieri.',
@@ -3454,6 +3549,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             mode_title:'РЕЖИМ ИГРЫ', mode_casual:'Обычный', mode_ranked:'Рейтинговый', mode_train:'Туториал',
             mode_casual_desc:'Играйте без изменения XP', mode_ranked_desc:'Соревнуйтесь за XP и рейтинг', mode_train_desc:'Учитесь, играя против лёгкого бота',
             mode_find_match:'НАЙТИ МАТЧ',
+            sp_solo:'СОЛО', sp_online:'ОНЛАЙН', sp_solo_desc:'15 уровней против ИИ', sp_online_desc:'Игроки в реальном времени',
             htp_intro:'microChess Online — это тактический дуэль, где классические шахматы встречаются с непредсказуемостью поля боя. Цель проста: захватите Короля противника.',
             htp_flow_title:'ИГРОВОЙ ПРОЦЕСС',
             htp_draft:'Рекрутинг (Draft): У вас 5 очков для формирования армии. Выбирайте между мощными Ферзями или массой Пешек и Коней.',
@@ -3542,6 +3638,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             mode_title:'ゲームモード', mode_casual:'カジュアル', mode_ranked:'ランク戦', mode_train:'チュートリアル',
             mode_casual_desc:'XPに影響しない対戦', mode_ranked_desc:'XPを争いランクを上げる', mode_train_desc:'簡単なボットで学ぼう',
             mode_find_match:'マッチ検索',
+            sp_solo:'ソロ', sp_online:'オンライン', sp_solo_desc:'CPUと15ステージ', sp_online_desc:'オンライン対戦',
             htp_intro:'microChess Onlineは、クラシックなチェスと戦場の不確実性が融合した戦術的決闘です。目標はシンプル：敵のキングを捕獲せよ。',
             htp_flow_title:'ゲームの流れ',
             htp_draft:'募集（ドラフト）：5ポイントで軍隊を編成します。強力なクイーンか、ポーンとナイトの大群を選んでください。',
@@ -3630,6 +3727,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             mode_title:'게임 모드', mode_casual:'캐주얼', mode_ranked:'랭크전', mode_train:'튜토리얼',
             mode_casual_desc:'XP에 영향 없이 플레이', mode_ranked_desc:'XP를 걸고 랭크에 도전', mode_train_desc:'쉬운 봇과 플레이하며 배우기',
             mode_find_match:'매치 찾기',
+            sp_solo:'솔로', sp_online:'온라인', sp_solo_desc:'CPU와 15단계', sp_online_desc:'실시간 온라인 대전',
             htp_intro:'microChess Online은 클래식 체스와 전쟁터의 불확실성이 만나는 전술적 결투입니다. 목표는 간단합니다: 적의 킹을 잡아라.',
             htp_flow_title:'게임 흐름',
             htp_draft:'모집 (드래프트): 5포인트로 군대를 구성합니다. 강력한 퀸 또는 폰과 나이트의 대군 중 선택하세요.',
@@ -3718,6 +3816,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             mode_title:'游戏模式', mode_casual:'休闲', mode_ranked:'排名赛', mode_train:'教程',
             mode_casual_desc:'不影响XP的对局', mode_ranked_desc:'争夺XP并提升排名', mode_train_desc:'与简单机器人对局学习',
             mode_find_match:'查找对局',
+            sp_solo:'单人', sp_online:'在线', sp_solo_desc:'15 关对战 CPU', sp_online_desc:'真人在线对战',
             htp_intro:'microChess Online是一场战术决斗，经典国际象棋与战场的不确定性相遇。目标很简单：捕获敌方国王。',
             htp_flow_title:'游戏流程',
             htp_draft:'招募（选秀）：你有5点来组建军队。在强大的后或大量兵和马之间做出选择。',
@@ -3807,6 +3906,28 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             if (findBtn) { findBtn.disabled = true; findBtn.style.opacity = '0.4'; findBtn.style.cursor = 'not-allowed'; }
             refreshGameModeScreen();
         }
+        if (id === 'multiplayer-mode') {
+            // SP-5.2: reset estado da tela ONLINE ao entrar (cards desselecionados, FIND MATCH desabilitado)
+            _selectedMPMode = null;
+            ['mp-card-casual','mp-card-ranked'].forEach(cid => {
+                const c = document.getElementById(cid);
+                if (c) { c.style.border = '1.5px solid var(--mc-rule)'; c.style.background = 'var(--mc-surface)'; }
+            });
+            ['mp-check-casual','mp-check-ranked'].forEach(cid => {
+                const c = document.getElementById(cid); if (c) c.style.display = 'none';
+            });
+            const findBtn = document.getElementById('mp-find-btn');
+            if (findBtn) { findBtn.disabled = true; findBtn.style.opacity = '0.4'; findBtn.style.cursor = 'not-allowed'; }
+            refreshMultiplayerModeScreen();
+        }
+        if (id === 'solo-hub') {
+            // SP-6.2: refresh de progresso ao entrar (atualiza label "CONTINUAR — Fase X")
+            if (typeof window.loadSPProgress === 'function') window.loadSPProgress();
+        }
+        if (id === 'sp-map') {
+            // SP-7.1: build 1× + refresh estado dos cards baseado em window.spProgress
+            if (typeof window.refreshSPMap === 'function') window.refreshSPMap();
+        }
         refreshOverlays();
     };
 
@@ -3833,6 +3954,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const el = id => document.getElementById(id);
         if (el('gm-title'))       el('gm-title').textContent       = t('mode_title');
         if (el('gm-back-label'))  el('gm-back-label').textContent  = t('back') || 'Back';
+        // SP-4.2: novos IDs do layout 2-card (SOLO/ONLINE)
+        if (el('gm-solo-label'))   el('gm-solo-label').textContent   = t('sp_solo');
+        if (el('gm-solo-desc'))    el('gm-solo-desc').textContent    = t('sp_solo_desc');
+        if (el('gm-online-label')) el('gm-online-label').textContent = t('sp_online');
+        if (el('gm-online-desc'))  el('gm-online-desc').textContent  = t('sp_online_desc');
+        // Legado (3 cards): IDs comentados em SP-4.1; guards mantêm seguro até remoção em SP-8.3
         if (el('gm-casual-label'))el('gm-casual-label').textContent = t('mode_casual');
         if (el('gm-casual-desc')) el('gm-casual-desc').textContent  = t('mode_casual_desc');
         if (el('gm-ranked-label'))el('gm-ranked-label').textContent = t('mode_ranked');
@@ -3840,6 +3967,18 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (el('gm-train-label')) el('gm-train-label').textContent  = t('mode_train');
         if (el('gm-train-desc'))  el('gm-train-desc').textContent   = t('mode_train_desc');
         if (el('gm-find-label'))  el('gm-find-label').textContent  = t('mode_find_match');
+    }
+
+    // SP-5.3: i18n de screen-multiplayer-mode. Reaproveita chaves existentes (PRE-OT-B); zero chaves novas.
+    function refreshMultiplayerModeScreen() {
+        const el = id => document.getElementById(id);
+        if (el('mp-title'))        el('mp-title').textContent        = t('mode_title');
+        if (el('mp-back-label'))   el('mp-back-label').textContent   = t('back') || 'Back';
+        if (el('mp-casual-label')) el('mp-casual-label').textContent = t('mode_casual');
+        if (el('mp-casual-desc'))  el('mp-casual-desc').textContent  = t('mode_casual_desc');
+        if (el('mp-ranked-label')) el('mp-ranked-label').textContent = t('mode_ranked');
+        if (el('mp-ranked-desc'))  el('mp-ranked-desc').textContent  = t('mode_ranked_desc');
+        if (el('mp-find-label'))   el('mp-find-label').textContent   = t('mode_find_match');
     }
 
     function refreshProfileScreen() {
@@ -4150,6 +4289,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (currentScreen === 'replay')       refreshReplayScreen();
         if (currentScreen === 'private-room') refreshPrivateRoomScreen();
         if (currentScreen === 'game-mode') refreshGameModeScreen();
+        if (currentScreen === 'multiplayer-mode') refreshMultiplayerModeScreen();
         if (currentScreen === 'credits') {
             const _thanks = document.getElementById('crd-thanks');
             if (_thanks) _thanks.textContent = t('credits');
@@ -4251,6 +4391,233 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     let opponentProfile = null;
 
     let _selectedMode = null;
+    let _selectedMPMode = null; // SP-5.2: modo selecionado em screen-multiplayer-mode
+
+    // SP-4.1: handlers placeholder dos cards SOLO/ONLINE.
+    // openSoloHub: stub até SP-6.2 implementar (verifica se solo-hub screen existe; senão alerta).
+    // spGoOnline: navega para multiplayer-mode (criada em SP-5.1); fallback alerta enquanto a screen não existe.
+    if (typeof window.openSoloHub !== 'function') {
+        window.openSoloHub = function() {
+            if (document.getElementById('screen-solo-hub')) { showScreen('solo-hub'); return; }
+            alert('Modo Solo em desenvolvimento.');
+        };
+    }
+    window.spGoOnline = function() {
+        if (document.getElementById('screen-multiplayer-mode')) { showScreen('multiplayer-mode'); return; }
+        alert('Fluxo Online em desenvolvimento.');
+    };
+
+    // SP-5.2: implementação real dos handlers de screen-multiplayer-mode.
+    // Espelha selectGameMode/startMatchmakingWithMode mas só com Casual/Ranqueada (sem train).
+    window.selectMultiplayerMode = function(mode) {
+        _selectedMPMode = mode;
+        const cardCasual  = document.getElementById('mp-card-casual');
+        const cardRanked  = document.getElementById('mp-card-ranked');
+        const checkCasual = document.getElementById('mp-check-casual');
+        const checkRanked = document.getElementById('mp-check-ranked');
+        const findBtn     = document.getElementById('mp-find-btn');
+        // Reset both cards
+        [cardCasual, cardRanked].forEach(c => { if (c) { c.style.border = '1.5px solid var(--mc-rule)'; c.style.background = 'var(--mc-surface)'; } });
+        [checkCasual, checkRanked].forEach(c => { if (c) c.style.display = 'none'; });
+        // Highlight selected
+        const selCard  = mode === 'casual' ? cardCasual : cardRanked;
+        const selCheck = mode === 'casual' ? checkCasual : checkRanked;
+        if (selCard)  { selCard.style.border = '2px solid var(--mc-accent)'; selCard.style.background = 'var(--mc-accent-soft)'; }
+        if (selCheck) selCheck.style.display = 'grid';
+        // Enable find button
+        if (findBtn) {
+            findBtn.disabled = false;
+            findBtn.style.opacity = '1';
+            findBtn.style.cursor = 'pointer';
+        }
+    };
+
+    window.startMatchmakingMP = function() {
+        if (!_selectedMPMode) return;
+        window.goMatchmaking(_selectedMPMode);
+    };
+
+    // SP-6.1: stub idempotente de continueSolo. SP-6.3 substituirá pela navegação real (sp-map / startSPLevel).
+    if (typeof window.continueSolo !== 'function') {
+        window.continueSolo = function() {
+            alert('Modo Solo em desenvolvimento.');
+        };
+    }
+
+    // SP-6.4: handlers reais do modal NOVO no screen-solo-hub.
+    // openNewSoloModal: ajusta texto baseado em spProgress.isGuest (logged: aviso de perda; guest: prompt amigável).
+    // confirmNewSolo: se logado, POST /sp/reset (auth header). Sempre zera spProgress local + refresca label.
+    // closeNewSoloModal: fecha overlay (já funcional desde SP-6.1).
+    window.openNewSoloModal = function() {
+        const m = document.getElementById('sh-new-confirm');
+        const txtEl = document.getElementById('sh-new-confirm-text');
+        if (txtEl) {
+            // SP-6.5 substituirá por t('sp_new_confirm_logged') / t('sp_new_confirm_guest')
+            txtEl.textContent = (window.spProgress && window.spProgress.isGuest)
+                ? 'Começar nova jornada Solo a partir da Fase 1?'
+                : 'Reiniciar zera seu progresso permanentemente. Confirmar?';
+        }
+        if (m) m.style.display = 'flex';
+    };
+
+    window.closeNewSoloModal = function() {
+        const m = document.getElementById('sh-new-confirm');
+        if (m) m.style.display = 'none';
+    };
+
+    window.confirmNewSolo = async function() {
+        const m = document.getElementById('sh-new-confirm');
+        if (m) m.style.display = 'none';
+        // Logado: chama servidor para zerar persistência. Convidado: skip (sem nada para resetar no DB).
+        if (window.spProgress && !window.spProgress.isGuest) {
+            const session = (typeof Session !== 'undefined' && Session.get) ? Session.get() : null;
+            if (session && session.token) {
+                try {
+                    await fetch((window.API_BASE || '') + '/sp/reset', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.token },
+                    });
+                } catch (_) { /* degrada gracefully — local state ainda é zerado abaixo */ }
+            }
+        }
+        // Atualização local imediata (mesmo se POST falhar)
+        if (window.spProgress) window.spProgress.max_level_completed = 0;
+        const phaseEl = document.getElementById('sh-continue-phase');
+        // SP-6.5 trocará por t('sp_phase') + ' 1'
+        if (phaseEl) phaseEl.textContent = 'Fase 1';
+        // Auto-navegação para fase 1 fica para SP-6.3 (sp-map ainda não existe; continueSolo hoje é stub).
+    };
+
+    // SP-6.2: progresso de Single Player.
+    // Estado em window.spProgress = { max_level_completed: 0..15, isGuest: bool }
+    // Convidados (sem login) → progresso só em memória, sem fetch. Logados → fetch /sp/progress (endpoint SP-2.3).
+    // i18n dos labels é responsabilidade de SP-6.5; aqui usamos defaults em PT (Fase / Todas as fases completas).
+    window.spProgress = window.spProgress || { max_level_completed: 0, isGuest: true };
+
+    window.loadSPProgress = async function() {
+        const session = (typeof Session !== 'undefined' && Session.get) ? Session.get() : null;
+        const updateLabel = () => {
+            const phaseEl = document.getElementById('sh-continue-phase');
+            if (!phaseEl) return;
+            const max = window.spProgress.max_level_completed;
+            if (max >= 15) {
+                // SP-6.5 trocará por t('sp_completed_all')
+                phaseEl.textContent = 'Todas as fases completas';
+            } else {
+                // SP-6.5 trocará por t('sp_phase') + ' ' + (max + 1)
+                phaseEl.textContent = 'Fase ' + (max + 1);
+            }
+        };
+        if (!session || !session.token) {
+            window.spProgress = { max_level_completed: 0, isGuest: true };
+            updateLabel();
+            return;
+        }
+        try {
+            const r = await fetch((window.API_BASE || '') + '/sp/progress', {
+                headers: { 'Authorization': 'Bearer ' + session.token },
+            });
+            if (!r.ok) throw new Error('http_' + r.status);
+            const data = await r.json();
+            window.spProgress = { max_level_completed: Number(data.max_level_completed) || 0, isGuest: false };
+        } catch (_) {
+            // Degrada gracefully: usuário continua autenticado, mas assume max=0
+            window.spProgress = { max_level_completed: 0, isGuest: false };
+        }
+        updateLabel();
+    };
+
+    // SP-6.2: substitui o stub idempotente de SP-4.1 pela implementação real.
+    // O fetch acontece via hook de showScreen('solo-hub'), que dispara loadSPProgress() ao entrar.
+    window.openSoloHub = function() {
+        if (!document.getElementById('screen-solo-hub')) {
+            alert('Modo Solo em desenvolvimento.');
+            return;
+        }
+        showScreen('solo-hub');
+    };
+
+    // SP-7.1: estrutura do mapa de 15 fases.
+    // buildSPMap: gera os cards uma vez (idempotente via flag).
+    // refreshSPMap: atualiza estado visual de cada card (SP-7.2 polirá os estilos).
+    // openSPLevel/closeSPStartModal/confirmStartSPLevel são stubs (SP-7.3 implementa lógica real + emit single_player_start).
+    const SP_DIFFICULTY = { 1:1,2:1,3:1, 4:2,5:2,6:2, 7:3,8:3,9:3,10:3, 11:4,12:4,13:4, 14:5,15:5 };
+    // PT defaults; SP-7.4 substituirá por t('sp_lvl' + n + '_name')
+    const SP_LEVEL_NAMES_PT = {
+        1:'Recruta', 2:'Aprendiz', 3:'Defensor',
+        4:'Atirador', 5:'Cavaleiro', 6:'Bispeiro',
+        7:'Tanque', 8:'Caçador', 9:'Estrategista',
+        10:'Duelista', 11:'Cercador', 12:'Iscador',
+        13:'Rainha', 14:'Mestre', 15:'Lenda'
+    };
+    let _spMapBuilt = false;
+    let _spPendingLevel = null;
+
+    window.buildSPMap = function() {
+        const grid = document.getElementById('sm-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        for (let n = 1; n <= 15; n++) {
+            const btn = document.createElement('button');
+            btn.id = 'sm-card-' + n;
+            btn.dataset.level = String(n);
+            btn.dataset.state = 'locked';
+            btn.className = 'sp-card-locked'; // SP-7.2: estado visual via classe; refreshSPMap troca pra completed/current
+            btn.onclick = (function(level) { return function() { window.openSPLevel(level); }; })(n);
+            // Estilos não-state (geometria/tipografia) ficam inline; estados (cor/cursor/animação) ficam em CSS no <style> antes da tela.
+            btn.style.cssText = 'position:relative;padding:12px 10px;border-radius:var(--mc-r-md,8px);text-align:left;box-sizing:border-box;font-family:inherit;';
+            btn.innerHTML =
+                '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+                  '<span id="sm-card-' + n + '-num" style="font-family:var(--mc-font-mono,monospace);font-size:16px;font-weight:700;color:var(--mc-ink);">' + n + '</span>' +
+                  '<span id="sm-card-' + n + '-state" style="font-size:14px;line-height:1;">🔒</span>' +
+                '</div>' +
+                '<div id="sm-card-' + n + '-name" style="font-family:var(--mc-font-serif,Cinzel,serif);font-size:11px;color:var(--mc-muted);margin-top:6px;text-align:left;">' + (SP_LEVEL_NAMES_PT[n] || ('Fase ' + n)) + '</div>';
+            grid.appendChild(btn);
+        }
+        _spMapBuilt = true;
+    };
+
+    window.refreshSPMap = function() {
+        if (!_spMapBuilt) window.buildSPMap();
+        const max = (window.spProgress && window.spProgress.max_level_completed) || 0;
+        for (let n = 1; n <= 15; n++) {
+            const card    = document.getElementById('sm-card-' + n);
+            const stateEl = document.getElementById('sm-card-' + n + '-state');
+            if (!card || !stateEl) continue;
+            let state, icon;
+            if (n <= max)              { state = 'completed'; icon = '✓'; }
+            else if (n === max + 1)    { state = 'current';   icon = '▶'; }
+            else                       { state = 'locked';    icon = '🔒'; }
+            card.dataset.state = state;
+            card.classList.remove('sp-card-locked', 'sp-card-completed', 'sp-card-current');
+            card.classList.add('sp-card-' + state);
+            stateEl.textContent = icon;
+        }
+    };
+
+    if (typeof window.openSPLevel !== 'function') {
+        window.openSPLevel = function(n) {
+            const card = document.getElementById('sm-card-' + n);
+            if (card && card.dataset.state === 'locked') return;
+            // SP-7.3 substituirá: abre modal com title/difficulty dinâmicos
+            alert('Iniciar fase em desenvolvimento.');
+        };
+    }
+    if (typeof window.closeSPStartModal !== 'function') {
+        window.closeSPStartModal = function() {
+            const m = document.getElementById('sm-start-modal');
+            if (m) m.style.display = 'none';
+            _spPendingLevel = null;
+        };
+    }
+    if (typeof window.confirmStartSPLevel !== 'function') {
+        window.confirmStartSPLevel = function() {
+            const m = document.getElementById('sm-start-modal');
+            if (m) m.style.display = 'none';
+            // SP-7.3 substituirá: socket.emit('single_player_start', { level, token })
+            alert('Iniciar fase em desenvolvimento.');
+        };
+    }
 
     window.selectGameMode = function(mode) {
         _selectedMode = mode;
