@@ -609,12 +609,12 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 | SP-5.3 | i18n da multiplayer-mode | SP-5.1, SP-1.1 | ✅ Completo (2026-05-05) |
 | SP-6.1 | Criar `#screen-solo-hub` | SP-1.3 | ✅ Completo (2026-05-05) |
 | SP-6.2 | Lógica fetch de progresso | SP-6.1, SP-2.3 | ✅ Completo (2026-05-05) |
-| SP-6.3 | Botão CONTINUAR | SP-6.2, SP-7.1 | ⏳ Pendente |
+| SP-6.3 | Botão CONTINUAR | SP-6.2, SP-7.1 | ✅ Completo (2026-05-05) |
 | SP-6.4 | Botão NOVO + confirmação | SP-6.1 | ✅ Completo (2026-05-05) |
-| SP-6.5 | i18n do solo-hub | SP-6.1, SP-1.1 | ⏳ Pendente |
+| SP-6.5 | i18n do solo-hub | SP-6.1, SP-1.1 | ✅ Completo (2026-05-05) |
 | SP-7.1 | Criar `#screen-sp-map` | SP-1.3 | ✅ Completo (2026-05-05) |
 | SP-7.2 | Estados visuais dos cards | SP-7.1 | ✅ Completo (2026-05-05) |
-| SP-7.3 | Click em card → start fase | SP-7.1, SP-3.7 | ⏳ Pendente |
+| SP-7.3 | Click em card → start fase | SP-7.1, SP-3.7 | ✅ Completo (2026-05-05) |
 | SP-7.4 | i18n dos 15 nomes × 9 idiomas | SP-1.1 | ⏳ Pendente |
 | SP-7.5 | Animação de fase desbloqueada | SP-7.1, SP-7.2, SP-3.8 | ⏳ Pendente |
 | SP-8.1 | Adaptar `game-over-screen` para Solo | SP-3.8 | ⏳ Pendente |
@@ -627,11 +627,11 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 | SP-9.4 | Atualizar PROJECT_CONTEXT + ACTIVITY_LOG | SP-9.1..3 | ⏳ Pendente |
 
 ### Próxima sessão sugerida
-**SP-7.3** — Substituir os 3 stubs (`openSPLevel`, `closeSPStartModal`, `confirmStartSPLevel`) por implementação real:
-- `openSPLevel(n)`: se card[n].dataset.state === 'locked' → return. Senão: armazena `_spPendingLevel = n`, atualiza `sm-start-title` ("Fase N — Nome"), `sm-start-difficulty` ("★" × SP_DIFFICULTY[n]), exibe modal `sm-start-modal` (display:flex)
-- `closeSPStartModal()`: já idempotente (fecha + limpa pendingLevel)
-- `confirmStartSPLevel()`: pega `_spPendingLevel`, fecha modal, set `window.spActiveLevel = level`, emite `socket.emit('single_player_start', { level, token: Session.get()?.token, uid, nickname, avatar })` — handler servidor (SP-3.7) cria a partida; client transiciona para matchmaking via match_found event existente
-- Dependências: SP-3.7 ✅ (handler servidor) + SP-7.1 ✅ (modal) → todas satisfeitas
+**SP-7.4** — i18n dos 15 nomes de fase × 9 idiomas. Adicionar chaves `sp_lvl1_name` .. `sp_lvl15_name` em todos os 9 blocos `T.{lang}`:
+- Nomes de referência (PT): Recruta, Aprendiz, Defensor, Atirador, Cavaleiro, Bispeiro, Tanque, Caçador, Estrategista, Duelista, Cercador, Iscador, Rainha, Mestre, Lenda
+- O helper `_spPhaseName(n)` em [html/index.html:4724](html/index.html#L4724) já tenta `t('sp_lvl' + n + '_name')` antes de cair em `SP_LEVEL_NAMES_PT`. Quando essas chaves existirem, automaticamente os nomes aparecem traduzidos no modal sm-start (título dinâmico) e nos cards do mapa.
+- Atualizar `buildSPMap` em [html/index.html:4685-4691](html/index.html#L4685) para usar `_spPhaseName(n)` em vez de `SP_LEVEL_NAMES_PT[n]` direto, ou criar `refreshSPMap` que repopula o `sm-card-{n}-name` (atualmente o nome só é definido em buildSPMap, que roda 1×).
+- Dependências: SP-1.1 ✅ → satisfeita
 
 🏆 **EPIC SP-3 COMPLETO** — 16 estratégias de bot + handler `single_player_start` + completion no gameOver. Backend 100% pronto.
 ✅ **EPIC SP-4 COMPLETO** — Tela `#screen-game-mode` reformatada com 2 cards (SOLO/ONLINE) + i18n × 9 idiomas.

@@ -2857,3 +2857,166 @@ Pulei SP-6.3 (próxima na tabela §10) porque sua dependência SP-7.1 (`screen-s
 - `closeSPStartModal()`: já fecha modal + limpa pendingLevel
 - `confirmStartSPLevel()`: ler `_spPendingLevel`, fechar modal, `window.spActiveLevel = level`, `socket.emit('single_player_start', { level, token, uid, nickname, avatar })`. Handler servidor (SP-3.7) cria a sala; client transiciona via `match_found` event existente.
 - Pré-requisitos satisfeitos: SP-3.7 (handler) + SP-7.1 (modal/cards).
+
+---
+
+## [2026-05-05] Sessão SP-6.3 — Botão CONTINUAR (navegação real)
+
+**Status:** Completo
+**Branch:** main
+**Arquivo modificado:** `html/index.html` — substituído stub `window.continueSolo` ([linhas 4440-4476](html/index.html#L4440))
+
+### Feito
+- **`window.continueSolo`** (real, sobrescreve o stub SP-6.1; sem guard `typeof !== 'function'`):
+  - Lê `max = window.spProgress.max_level_completed || 0`
+  - Chama `showScreen('sp-map')` — o hook existente em [showScreen ~L3929](html/index.html#L3929) dispara `refreshSPMap()` automaticamente, então não preciso chamar à mão
+  - **Se `max >= 15`**: cria (lazy/idempotente) banner `#sm-completed-banner` inserido no início de `#screen-sp-map` antes de `#sm-grid`. Texto PT default: "Todas as fases completas — explore livremente". Estilo inline com tokens `--mc-success`/`--mc-success-soft`/`--mc-r-md`/`--mc-font-serif`. SP-6.5 trocará texto por `t('sp_completed_all_explore')`
+  - **Se `max < 15`**: oculta o banner (caso já exista de uma sessão anterior dessa janela) e faz `scrollIntoView({behavior:'smooth', block:'center'})` no card `sm-card-{max+1}` após delay de 60ms (garante que `buildSPMap` rodou na primeira entrada). Try/catch silencioso em browsers antigos sem suporte ao options object.
+
+### Decisões de design
+- **Banner em vez de modal/alert** para max=15 — UX menos intrusiva. Usuário já chegou ao mapa, banner reforça contexto sem bloquear interação. Modal/alert seria adequado se exigíssemos ação do usuário; aqui é só informativo.
+- **Lazy creation do banner** — não polui o HTML estático. Só existe no DOM se algum usuário max=15 chegar a entrar pela tela. Idempotente: chamadas subsequentes reutilizam o mesmo elemento (não duplica).
+- **`setTimeout(..., 60)` antes de scrollIntoView** — `refreshSPMap()` é chamado síncronamente pelo hook em `showScreen`, mas se for a primeira entrada, `buildSPMap()` é chamado dentro dele e cria os 15 botões. 60ms é margem segura para o browser pintar o DOM antes do scroll. Não é animação que o usuário percebe — apenas garantia de race-free.
+- **`scrollIntoView({block:'center'})`** em vez de `block:'start'` — em desktop com viewport alto, centralizar o card current é melhor enquadramento. Em mobile com 3 colunas e tela curta, equivale a colocar o card visível.
+- **Removi guard `typeof !== 'function'`** que protegia o stub SP-6.1 de ser sobrescrito — agora estamos sobrescrevendo com a versão real, sem necessidade de proteção. SP-6.4 fez o mesmo padrão (substituir stub direto).
+- **Não auto-inicia fase 1 nem abre modal de "iniciar fase X"** — wireframe deixa ambíguo se CONTINUAR deveria pular o sp-map e ir direto pra fase. Decisão: navegar para sp-map e destacar visualmente. Razão: (1) sp-map já mostra animação pulse no card current via SP-7.2, então o destaque é redundante mas reforçado pelo scroll; (2) usuário pode mudar de ideia e escolher rejogar fase anterior; (3) clicar no card current dispara `openSPLevel` que abre o modal de confirmação (SP-7.3 fará isso real).
+- **`screen-sp-map` ainda não tem `openSPLevel` real** — SP-7.3 ainda é stub (alert "Iniciar fase em desenvolvimento"). CONTINUAR vai navegar e focar, mas o usuário só conseguirá efetivamente jogar a fase quando SP-7.3 for implementado. Aceitável — SP-6.3 é só sobre navegação do hub para o mapa.
+
+### Smoke test mental
+- ✅ Convidado (max=0): clica CONTINUAR → sp-map → card 1 fica visível e centrado, com pulse accent
+- ✅ Logado max=6: CONTINUAR → sp-map → scroll suave até card 7, que está em estado current (pulse)
+- ✅ Logado max=15: CONTINUAR → sp-map → banner "Todas as fases completas — explore livremente" aparece no topo. Cards 1-15 todos completed (✓ + bg success-soft).
+- ✅ Re-entrada após max=15 → banner reutilizado (não duplica). Se max cair para <15 (não acontece em fluxo normal, mas defensivo), banner é ocultado.
+- ✅ CONTINUAR sem `window.spProgress` definido (defensivo) → `max=0`, navega normalmente
+- ✅ HTML não foi tocado — apenas substituição de função JS dentro do `<script>` existente
+
+### Próxima sessão
+**SP-6.5** — i18n do solo-hub. Substituir todos os hardcodes PT em:
+- `sh-continue-label` (label "CONTINUAR")
+- `sh-card-new` (label "NOVO")
+- `sh-continue-phase` (renderizado por `loadSPProgress`: "Fase N" / "Todas as fases completas")
+- `sh-new-confirm-text` (renderizado por `openNewSoloModal`: aviso logged vs guest)
+- `sm-completed-banner.textContent` (criado por `continueSolo` em SP-6.3)
+Adicionar chaves `sp_continue`, `sp_new`, `sp_phase`, `sp_completed_all`, `sp_completed_all_explore`, `sp_new_confirm_logged`, `sp_new_confirm_guest` em todos os 9 idiomas (PT/EN/ES/DE/IT/RU/JA/KO/ZH). Atualizar `applyLang()` para popular labels estáticos; chamar updates dos dinâmicos (`loadSPProgress`, refresh do banner) ao trocar idioma.
+
+---
+
+## [2026-05-05] Sessão SP-6.5 — i18n do screen-solo-hub × 9 idiomas
+
+**Status:** Completo
+**Branch:** main
+**Arquivo modificado:** `html/index.html` — chaves SP em cada bloco `T.{lang}` (linhas 3140-3145, 3208-3213, 3303-3308, 3403-3408, 3500-3505, 3593-3598, 3683-3688, 3773-3778, 3865-3870), nova função `refreshSoloHubScreen` + helper `renderSPContinueLabel` ([linhas 4031-4063](html/index.html#L4031)), hooks em `showScreen` ([L3970](html/index.html#L3970)) e `selectLanguage` ([L4344](html/index.html#L4344)), substituição de hardcodes PT em `openNewSoloModal`/`confirmNewSolo`/`loadSPProgress`/`continueSolo` ([linhas 4451-4574](html/index.html#L4451))
+
+### Feito
+- **9 chaves novas em todos os 9 blocos `T.*`** (PT/EN/ES/DE/IT/RU/JA/KO/ZH):
+  - `sp_continue`, `sp_new` — labels dos cards CONTINUAR/NOVO
+  - `sp_continue_desc`, `sp_new_desc` — descrições secundárias dos cards (também eram hardcoded em PT no HTML)
+  - `sp_phase` — palavra "Fase" / "Phase" / "フェーズ" / etc.
+  - `sp_completed_all` — label CONTINUAR quando max=15 ("Todas as fases completas")
+  - `sp_completed_all_explore` — banner sp-map quando max=15 ("Todas as fases completas — explore livremente")
+  - `sp_new_confirm_title` — título estático do modal NOVO ("Reiniciar jornada?")
+  - `sp_new_confirm_logged` + `sp_new_confirm_guest` — corpos do modal NOVO (variantes logado vs guest)
+- **`window.renderSPContinueLabel()`** — helper único que lê `window.spProgress.max_level_completed` e popula `#sh-continue-phase` com `t('sp_completed_all')` (max≥15) ou `t('sp_phase') + ' ' + (max+1)`. Usado por: `loadSPProgress`, `confirmNewSolo` (após reset), `refreshSoloHubScreen` (troca de idioma).
+- **`refreshSoloHubScreen()`** seguindo padrão de `refreshMultiplayerModeScreen`: popula `sh-title`, `sh-back-label`, `sh-continue-label`, `sh-continue-desc`, `sh-new-label`, `sh-new-desc`, `sh-new-confirm-eyebrow`, `sh-new-confirm-title`, `sh-new-confirm-cancel` (`t('cancel_action')`), `sh-new-confirm-ok` (`t('yes')`), e `sm-completed-banner` se já existir no DOM. Chama `renderSPContinueLabel()` ao final.
+- **Hooks**:
+  - `showScreen('solo-hub')` agora chama `refreshSoloHubScreen()` antes do `loadSPProgress()` (i18n estático antes do fetch)
+  - `selectLanguage(lang)` chama `refreshSoloHubScreen()` se a tela atual é solo-hub. Adicionalmente força refresh do `sm-completed-banner` mesmo que solo-hub não esteja ativa (banner pode existir no sp-map criado lazy por `continueSolo` SP-6.3).
+- **Hardcodes PT removidos**:
+  - `openNewSoloModal`: `'Começar nova jornada Solo...'` / `'Reiniciar zera seu progresso...'` → `t('sp_new_confirm_guest')` / `t('sp_new_confirm_logged')`
+  - `confirmNewSolo`: bloco que setava `phaseEl.textContent = 'Fase 1'` → chamada a `renderSPContinueLabel()` (consistente com `loadSPProgress`)
+  - `loadSPProgress.updateLabel`: lógica inline duplicada → delegada a `renderSPContinueLabel()`
+  - `continueSolo` (SP-6.3): banner `'Todas as fases completas — explore livremente'` → `t('sp_completed_all_explore')`
+
+### Decisões de design
+- **`sp_new_confirm_title` adicionado fora da lista original** — modal já tem header estático "Reiniciar jornada?" no HTML; sem essa chave, o título fica em PT em todos os idiomas. Adicionado para fechar o gap.
+- **`sp_continue_desc` + `sp_new_desc` cobertos junto** — são hardcoded em PT no HTML do solo-hub; se ficassem fora desta sessão seriam regression i18n óbvia. Custo trivial: 2 chaves × 9 línguas.
+- **`sh-new-confirm-ok` usa `t('yes')`** em vez de criar uma chave nova `t('confirm')` — `yes` já existe em todos os 9 blocos e é semanticamente equivalente neste contexto (modal de confirmação binária). Padrão consistente com `logout-yes-btn` e outros sysmodal-btn primary do projeto.
+- **`renderSPContinueLabel` exposto em `window`** — chamado de pelo menos 3 lugares (`loadSPProgress`, `confirmNewSolo`, `refreshSoloHubScreen`) e potencialmente futuras sessões SP-7.x/8.x; expor evita ordenação de declaração e closures aninhadas.
+- **`refreshSoloHubScreen` é regular function (não `window.*`)** — segue padrão das outras `refreshXScreen` no arquivo, todas locais ao IIFE/script principal. Não há necessidade de exposição global.
+- **Banner `sm-completed-banner`** atualizado em 2 caminhos: (1) `refreshSoloHubScreen` quando solo-hub está ativa; (2) `selectLanguage` força refresh independente da tela ativa. Banner pode existir no sp-map mesmo quando o usuário não está no solo-hub (criado lazy pelo `continueSolo`), então ambos os caminhos são necessários.
+- **Modal `sh-new-confirm` body atualizado on-demand** — `openNewSoloModal` recalcula `sh-new-confirm-text` toda vez que abre, baseado no estado guest atual. Isso já era assim em SP-6.4; só substituí o hardcode pelos `t()` correspondentes.
+- **`sp_solo` reaproveitado para `sh-title`** — chave existente desde SP-4.2; mesma string ("SOLO" / "ソロ" / etc.). Não criei uma chave duplicada.
+
+### Smoke test mental
+- ✅ Trocar idioma para EN com solo-hub aberta → "CONTINUE — Phase 1", "NEW", "Resume where you left off", "Start from the beginning (Phase 1)"
+- ✅ Trocar para JA → "続ける — フェーズ 1", "新規", "中断したところから再開", "最初から始める（フェーズ1）"
+- ✅ Convidado em ES, clicar NOVO → modal com title "¿Reiniciar travesía?" + body "¿Comenzar una nueva travesía Solo desde la Fase 1?" + botões "CANCELAR" / "SÍ"
+- ✅ Logado max=6 em DE → label "FORTSETZEN — Phase 7"; clicar NOVO → "Neustart setzt deinen Fortschritt dauerhaft zurück. Bestätigen?"
+- ✅ Logado max=15 em IT → label "CONTINUA — Tutte le fasi completate"; clicar CONTINUAR → sp-map com banner "Tutte le fasi completate — esplora liberamente"
+- ✅ Banner já criado em PT, depois usuário troca para FR (não suportado) → fallback EN: "All phases completed — explore freely"
+- ✅ Banner já criado em PT, depois usuário troca para RU sem voltar pro solo-hub → `selectLanguage` força refresh do banner; texto vira "Все этапы пройдены — свободное исследование"
+- ✅ HTML estático preservado — apenas substituições JS dentro do `<script>` existente; nenhuma reescrita de bloco
+
+### Próxima sessão
+**SP-7.3** — Click em card do sp-map → emit `single_player_start`. Substituir 3 stubs:
+- `openSPLevel(n)`: gating em `card.dataset.state === 'locked'`; popula modal `sm-start-modal` com título e dificuldade (★ × SP_DIFFICULTY[n]); abre via `display:flex`
+- `confirmStartSPLevel()`: emit `socket.emit('single_player_start', { level, token, uid, nickname, avatar })`; servidor (SP-3.7) cria a sala; cliente entra via match_found existente
+- Pré-requisitos satisfeitos: SP-3.7 ✅ (handler) + SP-7.1 ✅ (modal/cards) + SP-6.5 ✅ (`t('sp_phase')` disponível para o título)
+
+---
+
+## [2026-05-05] Sessão SP-7.3 — Click em card do mapa → emit `single_player_start`
+
+**Status:** Completo
+**Branch:** main
+**Arquivo modificado:** `html/index.html`
+- Chave `sp_play` adicionada nos 9 blocos `T.*` (linhas 3140, 3209, 3304, 3404, 3501, 3594, 3684, 3774, 3866)
+- Helpers `_spPhaseName(n)` + `_spDifficultyStars(n)` + `window.refreshSPMapModal` ([linhas 4715-4740](html/index.html#L4715))
+- Implementação real de `window.openSPLevel`, `window.closeSPStartModal`, `window.confirmStartSPLevel` ([linhas 4742-4789](html/index.html#L4742))
+- Listener `socket.on('sp_error')` ([linhas 4791-4799](html/index.html#L4791))
+- Hook em `selectLanguage` para refresh do modal aberto ([linha 4396](html/index.html#L4396))
+
+### Feito
+- **`sp_play`** adicionado em 9 idiomas: PT 'JOGAR' / EN 'PLAY' / ES 'JUGAR' / DE 'SPIELEN' / IT 'GIOCA' / RU 'ИГРАТЬ' / JA 'プレイ' / KO '플레이' / ZH '开始'.
+- **`_spPhaseName(n)`**: tenta `t('sp_lvl' + n + '_name')`; se `t()` retornar a própria key (chave inexistente — fallback do helper), cai em `SP_LEVEL_NAMES_PT[n]`. Quando SP-7.4 adicionar as 15 chaves traduzidas, troca automática.
+- **`_spDifficultyStars(n)`**: '★' repetido × `SP_DIFFICULTY[n]` + '☆' repetido para preencher 5 (visual de "X de 5 estrelas").
+- **`window.refreshSPMapModal()`** (idempotente, exposto em window):
+  - Atualiza eyebrow (`t('sp_solo')`), botão Cancelar (`t('cancel_action')`), botão Jogar (`t('sp_play')`)
+  - Se `_spPendingLevel` é um nível válido (1-15), recalcula título (`t('sp_phase') + ' ' + n + ' — ' + nome`) e dificuldade. Útil quando idioma muda com modal aberto.
+- **`window.openSPLevel(n)`** real:
+  - Valida `n` (number, 1..15)
+  - Gating de `card.dataset.state === 'locked'` → return silencioso
+  - Set `_spPendingLevel = n`
+  - Chama `refreshSPMapModal()` para popular tudo (estática + dinâmica)
+  - `m.style.display = 'flex'` para exibir
+- **`window.closeSPStartModal()`** real (sem guard `typeof !== 'function'`): fecha + limpa `_spPendingLevel`. Idempotente.
+- **`window.confirmStartSPLevel()`** real:
+  - Captura `level = _spPendingLevel`, limpa `_spPendingLevel = null` (proteção contra duplo-click)
+  - Fecha modal
+  - Validação defensiva (1-15)
+  - Set `window.spActiveLevel = level` — flag global lida em SP-8.1 (game-over) para customizar botões "PRÓXIMA FASE" / "TENTAR NOVAMENTE"
+  - Popula campos da tela `screen-matchmaking` (espelha `goMatchmaking` sem queue_join): avatar, nick, labels i18n
+  - `setMMState('lobby')` + `showScreen('matchmaking')`
+  - Emite `socket.emit('single_player_start', { uid, nickname, avatar, token, level })` — token via `Session.get()?.token` (null para convidado, OK)
+  - Servidor (SP-3.7, [server.js:1195](server/server.js#L1195)) cria sala imediatamente e responde `match_found`. Cliente trata via listener existente ([html/index.html:4798](html/index.html#L4798)) → `setMMState('found')` → countdown 3-2-1-GO → `launchGame()` → game-area + `game_join`.
+- **`socket.on('sp_error')`** novo handler:
+  - Server emite `sp_error` em casos de `invalid_level` ou `level_locked` ([server.js:1200,1216](server/server.js#L1200))
+  - Cliente: limpa `window.spActiveLevel`, volta para `screen-sp-map`, refaz `loadSPProgress()` + `refreshSPMap()` para sincronizar estado real (caso o cheating via console tenha pedido level acima do permitido)
+  - Sem alert/UI explicativo — refresh do mapa já mostra qual fase é a real disponível (border accent + pulse no `current`)
+- **Hook em `selectLanguage`**: chama `window.refreshSPMapModal()` se ele existir. Cobre o caso edge de usuário trocar idioma com modal aberto sobre qualquer tela.
+
+### Decisões de design
+- **`refreshSPMapModal` exposto em `window`** — mesmo padrão de `renderSPContinueLabel` (SP-6.5). Acessado por `selectLanguage` (escopo distante) e por `openSPLevel` (escopo próximo). Expor evita ordering issues.
+- **`_spPendingLevel` permanece local** — só `openSPLevel`/`closeSPStartModal`/`confirmStartSPLevel`/`refreshSPMapModal` precisam dele, todos no mesmo IIFE. Não exponho.
+- **Limpar `_spPendingLevel = null` no `confirmStartSPLevel` ANTES de emitir** — protege contra duplo-click do botão Jogar (segundo click vê `_spPendingLevel === null` e retorna por validação `typeof level !== 'number'`).
+- **Espelhei `goMatchmaking` em vez de chamá-la** — `goMatchmaking` emite `queue_join`/`queue_train`, não single_player_start. Refatorar para extrair "preparar matchmaking screen" criaria churn maior do que repetir 6-7 linhas. Aceito a duplicação local.
+- **`sp_error` sem alert/i18n custom** — erro é raro (só dispara em cheating ou bug). Recovery silencioso (volta ao mapa + refresh) é suficiente; não vale o overhead de chave i18n para mensagem que ninguém deveria ver. SP-9.3 (validação de segurança) decide se precisa de UX explícita.
+- **`spActiveLevel` setado no client antes do match_found** — server confirma match implicitamente via `match_found`. Se servidor rejeita (sp_error), o handler limpa `spActiveLevel`. Não há janela em que `spActiveLevel != null && partida não confirmada` por mais que alguns ms. SP-8.1 vai depender disso para detectar Solo no game-over.
+- **Estrelas com '★' + '☆' (5 total)** — visual "X de 5". SP_PLANNING.md tabela §5 lista difficulty 1-5; preencher zeros com '☆' deixa explícito o teto. Trade-off: mais caracteres no modal vs informação mais clara.
+- **Não chamei `goMatchmaking('train')` ou similar** — apesar de `queue_train` existir e ter fluxo similar, ele NÃO suporta `level` (uma única estratégia 0). single_player_start é o handler correto, criado em SP-3.7 explicitamente para 15 estratégias.
+- **`launchGame` existente continua funcionando** — não precisei tocar. O `match_found` event chega com `sp: { level, isGuest }` ([server.js:1253](server/server.js#L1253)) mas o cliente atual ignora esse campo. SP-8.1 vai consumir para customizar gameOver. OK.
+
+### Smoke test mental
+- ✅ Convidado clica card 1 (current) em PT → modal abre com "Solo / Fase 1 — Recruta / ★☆☆☆☆ / CANCELAR / JOGAR". Confirma → matchmaking lobby aparece → match_found chega → countdown → game-area com bot Recruta como adversário.
+- ✅ Logado max=6 em EN clica card 7 → modal "Solo / Phase 7 — Tanque / ★★★☆☆ / CANCEL / PLAY". Confirma → fluxo idêntico, server validateLevelProgress passa (7 ≤ 6+1).
+- ✅ Logado max=6 tenta cheating: `socket.emit('single_player_start', {level: 12, ...})` via console → server rejeita com sp_error 'level_locked' → cliente volta para sp-map e re-renderiza.
+- ✅ Card 9 (locked, max=6) clicado → openSPLevel return silencioso (gating). Modal não abre.
+- ✅ Modal aberto em PT, usuário troca para JA → `selectLanguage` chama `refreshSPMapModal` → modal mostra "ソロ / フェーズ N — Recruta (PT pq SP-7.4 não rodou) / ★ / キャンセル / プレイ". Title em PT esperado.
+- ✅ Duplo-click em JOGAR → primeiro confirma e zera _spPendingLevel; segundo entra com level=null → validação retorna (sem segundo emit).
+- ✅ Click em CANCELAR no modal → modal fecha, _spPendingLevel=null, usuário continua no sp-map.
+- ✅ HTML preservado — apenas substituições JS dentro do `<script>` existente.
+
+### Próxima sessão
+**SP-7.4** — i18n dos 15 nomes de fase × 9 idiomas. Adicionar chaves `sp_lvl1_name` .. `sp_lvl15_name` em PT/EN/ES/DE/IT/RU/JA/KO/ZH. Helper `_spPhaseName(n)` já está pronto para consumir (cai automaticamente em `SP_LEVEL_NAMES_PT` enquanto chaves não existem). Atualizar também `buildSPMap` para usar `_spPhaseName(n)` em vez de `SP_LEVEL_NAMES_PT[n]` direto, e expor via `refreshSPMap` para repopular nomes ao trocar idioma sem rebuilding o grid.
+
+
