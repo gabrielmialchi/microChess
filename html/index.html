@@ -2092,12 +2092,19 @@
   0%, 100% { box-shadow: 0 0 10px var(--mc-accent-glow); }
   50%      { box-shadow: 0 0 22px var(--mc-accent-glow); }
 }
+@keyframes sp-unlock {
+  0%   { transform: scale(0.85); box-shadow: 0 0 4px var(--mc-accent-glow); filter: brightness(1); }
+  45%  { transform: scale(1.12); box-shadow: 0 0 32px var(--mc-accent), 0 0 60px var(--mc-accent-glow); filter: brightness(1.5); }
+  100% { transform: scale(1);    box-shadow: 0 0 22px var(--mc-accent-glow); filter: brightness(1); }
+}
 #sm-grid > button { transition: transform 0.15s, border-color 0.15s, box-shadow 0.2s, background 0.15s, opacity 0.15s; }
 #sm-grid > button.sp-card-locked    { background: var(--mc-surface); border: 1.5px solid var(--mc-rule); cursor: not-allowed; opacity: 0.4; }
 #sm-grid > button.sp-card-completed { background: var(--mc-success-soft, var(--mc-surface)); border: 1.5px solid var(--mc-success, var(--mc-rule)); cursor: pointer; opacity: 1; }
 #sm-grid > button.sp-card-current   { background: var(--mc-surface); border: 2px solid var(--mc-accent); cursor: pointer; opacity: 1; animation: sp-pulse 2.4s ease-in-out infinite; }
 #sm-grid > button.sp-card-completed:hover,
 #sm-grid > button.sp-card-current:hover { transform: translateY(-2px); border-color: var(--mc-accent); }
+/* SP-7.5: classe one-shot adicionada por refreshSPMap quando _spJustUnlocked bate com o card; sobrepõe pulse durante 0.6s, depois é removida pelo animationend (pulse retoma). */
+#sm-grid > button.sp-card-just-unlocked { animation: sp-unlock 0.6s ease-out; }
 </style>
 
 <!-- SP-MAP SCREEN — SP-7.1 (grid 15 fases). Estados visuais polidos em SP-7.2; handlers reais em SP-7.3; i18n nomes em SP-7.4. -->
@@ -3143,6 +3150,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sp_completed_all_explore:'Todas as fases completas — explore livremente',
             sp_new_confirm_logged:'Reiniciar zera seu progresso permanentemente. Confirmar?',
             sp_new_confirm_guest:'Começar nova jornada Solo a partir da Fase 1?',
+            sp_lvl1_name:'Recruta', sp_lvl2_name:'Aprendiz', sp_lvl3_name:'Defensor', sp_lvl4_name:'Atirador', sp_lvl5_name:'Cavaleiro',
+            sp_lvl6_name:'Bispeiro', sp_lvl7_name:'Tanque', sp_lvl8_name:'Caçador', sp_lvl9_name:'Estrategista', sp_lvl10_name:'Duelista',
+            sp_lvl11_name:'Cercador', sp_lvl12_name:'Iscador', sp_lvl13_name:'Rainha', sp_lvl14_name:'Mestre', sp_lvl15_name:'Lenda',
+            sp_victory:'VITÓRIA', sp_defeat:'DERROTA', sp_next_level:'PRÓXIMA FASE', sp_retry:'TENTAR DE NOVO', sp_back_to_map:'Voltar ao Mapa',
         },
         en: {
             new_game:'NEW GAME', how_to_play:'HOW TO PLAY', credits:'CREDITS', settings:'SETTINGS', quit:'QUIT', back:'BACK',
@@ -3229,6 +3240,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sp_completed_all_explore:'All phases completed — explore freely',
             sp_new_confirm_logged:'Restarting will permanently reset your progress. Confirm?',
             sp_new_confirm_guest:'Start a new Solo journey from Phase 1?',
+            sp_lvl1_name:'Recruit', sp_lvl2_name:'Apprentice', sp_lvl3_name:'Defender', sp_lvl4_name:'Sharpshooter', sp_lvl5_name:'Knight',
+            sp_lvl6_name:'Bishop', sp_lvl7_name:'Tank', sp_lvl8_name:'Hunter', sp_lvl9_name:'Strategist', sp_lvl10_name:'Duelist',
+            sp_lvl11_name:'Encircler', sp_lvl12_name:'Baiter', sp_lvl13_name:'Queen', sp_lvl14_name:'Master', sp_lvl15_name:'Legend',
+            sp_victory:'VICTORY', sp_defeat:'DEFEAT', sp_next_level:'NEXT STAGE', sp_retry:'TRY AGAIN', sp_back_to_map:'Back to Map',
         },
         es: {
             new_game:'NUEVO JUEGO', how_to_play:'CÓMO JUGAR', credits:'CRÉDITOS', settings:'CONFIGURACIÓN', quit:'SALIR', back:'VOLVER',
@@ -3325,6 +3340,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sp_completed_all_explore:'Todas las fases completadas — explora libremente',
             sp_new_confirm_logged:'Reiniciar borrará tu progreso permanentemente. ¿Confirmar?',
             sp_new_confirm_guest:'¿Comenzar una nueva travesía Solo desde la Fase 1?',
+            sp_lvl1_name:'Recluta', sp_lvl2_name:'Aprendiz', sp_lvl3_name:'Defensor', sp_lvl4_name:'Tirador', sp_lvl5_name:'Caballero',
+            sp_lvl6_name:'Alfilero', sp_lvl7_name:'Tanque', sp_lvl8_name:'Cazador', sp_lvl9_name:'Estratega', sp_lvl10_name:'Duelista',
+            sp_lvl11_name:'Cercador', sp_lvl12_name:'Cebador', sp_lvl13_name:'Reina', sp_lvl14_name:'Maestro', sp_lvl15_name:'Leyenda',
+            sp_victory:'VICTORIA', sp_defeat:'DERROTA', sp_next_level:'PRÓXIMA FASE', sp_retry:'REINTENTAR', sp_back_to_map:'Volver al Mapa',
         },
         de: {
             new_game:'NEUES SPIEL', how_to_play:'ANLEITUNG', credits:'DANKSAGUNG', settings:'EINSTELLUNGEN', quit:'BEENDEN', back:'ZURÜCK',
@@ -3421,6 +3440,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sp_completed_all_explore:'Alle Phasen abgeschlossen — frei erkunden',
             sp_new_confirm_logged:'Neustart setzt deinen Fortschritt dauerhaft zurück. Bestätigen?',
             sp_new_confirm_guest:'Eine neue Solo-Reise ab Phase 1 starten?',
+            sp_lvl1_name:'Rekrut', sp_lvl2_name:'Lehrling', sp_lvl3_name:'Verteidiger', sp_lvl4_name:'Schütze', sp_lvl5_name:'Ritter',
+            sp_lvl6_name:'Läufer', sp_lvl7_name:'Panzer', sp_lvl8_name:'Jäger', sp_lvl9_name:'Stratege', sp_lvl10_name:'Duellant',
+            sp_lvl11_name:'Umzingler', sp_lvl12_name:'Köderer', sp_lvl13_name:'Dame', sp_lvl14_name:'Meister', sp_lvl15_name:'Legende',
+            sp_victory:'SIEG', sp_defeat:'NIEDERLAGE', sp_next_level:'NÄCHSTE STUFE', sp_retry:'WIEDERHOLEN', sp_back_to_map:'Zurück zur Karte',
         },
         it: {
             new_game:'NUOVA PARTITA', how_to_play:'COME SI GIOCA', credits:'CREDITI', settings:'IMPOSTAZIONI', quit:'ESCI', back:'INDIETRO',
@@ -3517,6 +3540,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sp_completed_all_explore:'Tutte le fasi completate — esplora liberamente',
             sp_new_confirm_logged:'Riavviare azzererà permanentemente i tuoi progressi. Confermare?',
             sp_new_confirm_guest:'Iniziare un nuovo viaggio Solo dalla Fase 1?',
+            sp_lvl1_name:'Recluta', sp_lvl2_name:'Apprendista', sp_lvl3_name:'Difensore', sp_lvl4_name:'Tiratore', sp_lvl5_name:'Cavaliere',
+            sp_lvl6_name:'Alfiere', sp_lvl7_name:'Tank', sp_lvl8_name:'Cacciatore', sp_lvl9_name:'Stratega', sp_lvl10_name:'Duellante',
+            sp_lvl11_name:'Accerchiatore', sp_lvl12_name:'Adescatore', sp_lvl13_name:'Regina', sp_lvl14_name:'Maestro', sp_lvl15_name:'Leggenda',
+            sp_victory:'VITTORIA', sp_defeat:'SCONFITTA', sp_next_level:'PROSSIMO LIVELLO', sp_retry:'RIPROVA', sp_back_to_map:'Torna alla Mappa',
         },
         ru: {
             new_game:'НОВАЯ ИГРА', how_to_play:'КАК ИГРАТЬ', credits:'АВТОРЫ', settings:'НАСТРОЙКИ', quit:'ВЫХОД', back:'НАЗАД',
@@ -3613,6 +3640,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sp_completed_all_explore:'Все этапы пройдены — свободное исследование',
             sp_new_confirm_logged:'Перезапуск необратимо обнулит ваш прогресс. Подтвердить?',
             sp_new_confirm_guest:'Начать новое одиночное прохождение с Этапа 1?',
+            sp_lvl1_name:'Новобранец', sp_lvl2_name:'Ученик', sp_lvl3_name:'Защитник', sp_lvl4_name:'Стрелок', sp_lvl5_name:'Рыцарь',
+            sp_lvl6_name:'Слон', sp_lvl7_name:'Танк', sp_lvl8_name:'Охотник', sp_lvl9_name:'Стратег', sp_lvl10_name:'Дуэлянт',
+            sp_lvl11_name:'Окружитель', sp_lvl12_name:'Приманщик', sp_lvl13_name:'Королева', sp_lvl14_name:'Мастер', sp_lvl15_name:'Легенда',
+            sp_victory:'ПОБЕДА', sp_defeat:'ПОРАЖЕНИЕ', sp_next_level:'СЛЕДУЮЩИЙ УРОВЕНЬ', sp_retry:'ЗАНОВО', sp_back_to_map:'К карте',
         },
         ja: {
             new_game:'新しいゲーム', how_to_play:'ルール', credits:'クレジット', settings:'設定', quit:'終了', back:'戻る',
@@ -3709,6 +3740,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sp_completed_all_explore:'全フェーズクリア — 自由に探索',
             sp_new_confirm_logged:'リスタートすると進行状況が完全にリセットされます。よろしいですか？',
             sp_new_confirm_guest:'フェーズ1から新しいソロの旅を始めますか？',
+            sp_lvl1_name:'新兵', sp_lvl2_name:'見習い', sp_lvl3_name:'守護者', sp_lvl4_name:'射手', sp_lvl5_name:'騎士',
+            sp_lvl6_name:'司教', sp_lvl7_name:'タンク', sp_lvl8_name:'狩人', sp_lvl9_name:'戦略家', sp_lvl10_name:'決闘者',
+            sp_lvl11_name:'包囲者', sp_lvl12_name:'おとり師', sp_lvl13_name:'女王', sp_lvl14_name:'達人', sp_lvl15_name:'伝説',
+            sp_victory:'勝利', sp_defeat:'敗北', sp_next_level:'次のステージ', sp_retry:'再挑戦', sp_back_to_map:'マップへ戻る',
         },
         ko: {
             new_game:'새 게임', how_to_play:'게임 방법', credits:'크레딧', settings:'설정', quit:'종료', back:'뒤로',
@@ -3805,6 +3840,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sp_completed_all_explore:'모든 페이즈 완료 — 자유롭게 탐험',
             sp_new_confirm_logged:'재시작하면 진행 상황이 영구적으로 초기화됩니다. 확인하시겠습니까?',
             sp_new_confirm_guest:'페이즈 1부터 새로운 솔로 여정을 시작하시겠습니까?',
+            sp_lvl1_name:'신병', sp_lvl2_name:'견습', sp_lvl3_name:'수호자', sp_lvl4_name:'사수', sp_lvl5_name:'기사',
+            sp_lvl6_name:'비숍', sp_lvl7_name:'탱크', sp_lvl8_name:'사냥꾼', sp_lvl9_name:'전략가', sp_lvl10_name:'결투자',
+            sp_lvl11_name:'포위자', sp_lvl12_name:'미끼꾼', sp_lvl13_name:'여왕', sp_lvl14_name:'거장', sp_lvl15_name:'전설',
+            sp_victory:'승리', sp_defeat:'패배', sp_next_level:'다음 단계', sp_retry:'다시 시도', sp_back_to_map:'지도로 돌아가기',
         },
         zh: {
             new_game:'新游戏', how_to_play:'游戏说明', credits:'制作人员', settings:'设置', quit:'退出', back:'返回',
@@ -3901,6 +3940,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sp_completed_all_explore:'已通关所有关卡 — 自由探索',
             sp_new_confirm_logged:'重新开始将永久清除你的进度。是否确认？',
             sp_new_confirm_guest:'从第1关开始全新的单人之旅？',
+            sp_lvl1_name:'新兵', sp_lvl2_name:'学徒', sp_lvl3_name:'守护者', sp_lvl4_name:'射手', sp_lvl5_name:'骑士',
+            sp_lvl6_name:'主教', sp_lvl7_name:'坦克', sp_lvl8_name:'猎人', sp_lvl9_name:'战略家', sp_lvl10_name:'决斗者',
+            sp_lvl11_name:'包围者', sp_lvl12_name:'诱饵者', sp_lvl13_name:'女王', sp_lvl14_name:'大师', sp_lvl15_name:'传奇',
+            sp_victory:'胜利', sp_defeat:'失败', sp_next_level:'下一关', sp_retry:'重试', sp_back_to_map:'返回地图',
         },
     };
 
@@ -4388,6 +4431,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (currentScreen === 'game-mode') refreshGameModeScreen();
         if (currentScreen === 'multiplayer-mode') refreshMultiplayerModeScreen();
         if (currentScreen === 'solo-hub') refreshSoloHubScreen();
+        // SP-7.4: refresh dos nomes das 15 fases no mapa (e estados, idempotente) ao trocar idioma.
+        if (currentScreen === 'sp-map' && typeof window.refreshSPMap === 'function') window.refreshSPMap();
         // sm-completed-banner pode existir mesmo sem solo-hub ativa (criado lazy em sp-map);
         // refresh do banner é feito dentro de refreshSoloHubScreen, mas aqui forçamos sempre que troca idioma.
         const _smBan = document.getElementById('sm-completed-banner');
@@ -4661,7 +4706,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     // refreshSPMap: atualiza estado visual de cada card (SP-7.2 polirá os estilos).
     // openSPLevel/closeSPStartModal/confirmStartSPLevel são stubs (SP-7.3 implementa lógica real + emit single_player_start).
     const SP_DIFFICULTY = { 1:1,2:1,3:1, 4:2,5:2,6:2, 7:3,8:3,9:3,10:3, 11:4,12:4,13:4, 14:5,15:5 };
-    // PT defaults; SP-7.4 substituirá por t('sp_lvl' + n + '_name')
+    // Fallback PT — usado por _spPhaseName quando t('sp_lvlN_name') falha (idioma não-suportado, chave ausente).
     const SP_LEVEL_NAMES_PT = {
         1:'Recruta', 2:'Aprendiz', 3:'Defensor',
         4:'Atirador', 5:'Cavaleiro', 6:'Bispeiro',
@@ -4690,7 +4735,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                   '<span id="sm-card-' + n + '-num" style="font-family:var(--mc-font-mono,monospace);font-size:16px;font-weight:700;color:var(--mc-ink);">' + n + '</span>' +
                   '<span id="sm-card-' + n + '-state" style="font-size:14px;line-height:1;">🔒</span>' +
                 '</div>' +
-                '<div id="sm-card-' + n + '-name" style="font-family:var(--mc-font-serif,Cinzel,serif);font-size:11px;color:var(--mc-muted);margin-top:6px;text-align:left;">' + (SP_LEVEL_NAMES_PT[n] || ('Fase ' + n)) + '</div>';
+                '<div id="sm-card-' + n + '-name" style="font-family:var(--mc-font-serif,Cinzel,serif);font-size:11px;color:var(--mc-muted);margin-top:6px;text-align:left;">' + _spPhaseName(n) + '</div>';
             grid.appendChild(btn);
         }
         _spMapBuilt = true;
@@ -4699,23 +4744,41 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     window.refreshSPMap = function() {
         if (!_spMapBuilt) window.buildSPMap();
         const max = (window.spProgress && window.spProgress.max_level_completed) || 0;
+        const justUnlocked = window._spJustUnlocked;
         for (let n = 1; n <= 15; n++) {
             const card    = document.getElementById('sm-card-' + n);
             const stateEl = document.getElementById('sm-card-' + n + '-state');
+            const nameEl  = document.getElementById('sm-card-' + n + '-name');
             if (!card || !stateEl) continue;
             let state, icon;
             if (n <= max)              { state = 'completed'; icon = '✓'; }
             else if (n === max + 1)    { state = 'current';   icon = '▶'; }
             else                       { state = 'locked';    icon = '🔒'; }
             card.dataset.state = state;
-            card.classList.remove('sp-card-locked', 'sp-card-completed', 'sp-card-current');
+            // SP-7.5: limpa também `sp-card-just-unlocked` aqui — refresh sem flag deve apagar animação que ainda esteja "presa".
+            card.classList.remove('sp-card-locked', 'sp-card-completed', 'sp-card-current', 'sp-card-just-unlocked');
             card.classList.add('sp-card-' + state);
             stateEl.textContent = icon;
+            if (nameEl) nameEl.textContent = _spPhaseName(n);
+            // SP-7.5: se este card é o recém-desbloqueado, dispara animação one-shot (0.6s).
+            // Force reflow garante que a remoção/adição da classe reinicie a animation mesmo se DOM foi tocado em rapid succession.
+            if (justUnlocked === n) {
+                void card.offsetWidth;
+                card.classList.add('sp-card-just-unlocked');
+                const onEnd = function() {
+                    card.classList.remove('sp-card-just-unlocked');
+                    card.removeEventListener('animationend', onEnd);
+                };
+                card.addEventListener('animationend', onEnd);
+            }
+        }
+        // SP-7.5: flag é one-shot; limpa após primeiro refresh independente de ter encontrado card válido (level=15 → flag=16, ignorado pelo loop).
+        if (typeof justUnlocked === 'number') {
+            window._spJustUnlocked = null;
         }
     };
 
-    // SP-7.3: helper i18n para nome da fase. SP-7.4 vai criar `sp_lvl{N}_name` em todos os idiomas;
-    // até lá, `t('sp_lvl1_name')` retorna a própria key (fallback de t()), então caímos em SP_LEVEL_NAMES_PT.
+    // SP-7.4: as chaves `sp_lvl{N}_name` existem nos 9 idiomas; SP_LEVEL_NAMES_PT só entra se t() retornar a própria key.
     function _spPhaseName(n) {
         const k = 'sp_lvl' + n + '_name';
         const v = t(k);
@@ -4802,6 +4865,75 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             });
         }
     });
+
+    // SP-7.5: server emite sp_level_completed quando humano vence em modo single player ([server.js:470](server/server.js#L470)).
+    // Atualiza spProgress local + seta flag _spJustUnlocked para próxima entrada no sp-map disparar animação no card N+1.
+    // Para fase 15 (final): max=15, _spJustUnlocked=16 → não há card 16, flag é só limpa em refreshSPMap (sem animação visual).
+    socket.on('sp_level_completed', ({ level }) => {
+        if (typeof level !== 'number' || level < 1 || level > 15) return;
+        if (!window.spProgress) window.spProgress = { max_level_completed: 0, isGuest: true };
+        if (level > (window.spProgress.max_level_completed || 0)) {
+            window.spProgress.max_level_completed = level;
+        }
+        window._spJustUnlocked = level + 1;
+        // Se o usuário já está no sp-map (cheating console / app state corner case), refresh imediato; fluxo normal é sp-map → game-over → sp-map (refresh ocorre via showScreen hook).
+        if (typeof currentScreen !== 'undefined' && currentScreen === 'sp-map' && typeof window.refreshSPMap === 'function') {
+            window.refreshSPMap();
+        }
+        // Atualiza label "Fase N+1" no solo-hub se estiver pré-renderizado em outra navegação futura.
+        if (typeof window.renderSPContinueLabel === 'function') window.renderSPContinueLabel();
+    });
+
+    // SP-8.1: helpers para os botões customizados do game-over Solo (PRÓXIMA FASE / TENTAR DE NOVO / VOLTAR AO MAPA).
+    // _resetSoloGameSession espelha o cleanup de returnToMenu sem trocar de tela — usado para iniciar próxima fase ou voltar ao mapa sem flash do menu.
+    function _resetSoloGameSession() {
+        inGame = false;
+        document.getElementById('game-area').style.display = 'none';
+        document.getElementById('game-over-screen').style.display = 'none';
+        const sdOv = document.getElementById('sd-overlay');
+        if (sdOv) sdOv.style.display = 'none';
+        if (window.ExcBanners) window.ExcBanners.hideAll();
+        pieceElements.forEach(el => el.remove());
+        pieceElements.clear();
+        prevPhase = null;
+        lastDuelKey = null;
+        state = null;
+    }
+    // spStartLevel: usado pelos botões PRÓXIMA FASE e TENTAR DE NOVO. Reseta sessão e dispara single_player_start direto (sem passar pelo modal sm-start).
+    window.spStartLevel = function(level) {
+        if (typeof level !== 'number' || level < 1 || level > 15) return;
+        _resetSoloGameSession();
+        window.spActiveLevel = level;
+        const p = getProfile();
+        myUid = p.uid;
+        const elById = id => document.getElementById(id);
+        if (elById('mm-my-avatar'))       elById('mm-my-avatar').textContent       = PIECE_ICONS[p.avatar] || '♔';
+        if (elById('mm-my-nick'))         elById('mm-my-nick').textContent         = p.nickname;
+        if (elById('mm-found-my-avatar')) elById('mm-found-my-avatar').textContent = PIECE_ICONS[p.avatar] || '♔';
+        if (elById('mm-found-my-nick'))   elById('mm-found-my-nick').textContent   = p.nickname;
+        if (elById('mm-title-searching')) elById('mm-title-searching').textContent = t('searching');
+        if (elById('mm-searching-text'))  elById('mm-searching-text').textContent  = t('waiting_adv');
+        if (elById('mm-title-found'))     elById('mm-title-found').textContent     = t('match_found');
+        if (elById('mm-countdown-sub'))   elById('mm-countdown-sub').textContent   = t('battle_begins');
+        if (elById('btn-mm-cancel'))      elById('btn-mm-cancel').textContent      = t('cancel');
+        setMMState('lobby');
+        showScreen('matchmaking');
+        const session = (typeof Session !== 'undefined' && Session.get) ? Session.get() : null;
+        const token   = session && session.token ? session.token : null;
+        socket.emit('single_player_start', {
+            uid:      p.uid,
+            nickname: p.nickname,
+            avatar:   p.avatar,
+            token:    token,
+            level:    level,
+        });
+    };
+    // spBackToMap: usado pelo botão VOLTAR AO MAPA (vitória da fase 15). Reseta sessão, limpa contexto Solo, navega para sp-map.
+    window.spBackToMap = function() {
+        _resetSoloGameSession();
+        window.spActiveLevel = null;
+        showScreen('sp-map');
+    };
 
     window.selectGameMode = function(mode) {
         _selectedMode = mode;
@@ -5064,6 +5196,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         prevPhase   = null;
         lastDuelKey = null;
         state       = null;
+        // SP-8.1: limpar contexto Solo ao voltar ao menu — próximo game-over (MP ou Solo) precisa ler o flag corretamente.
+        window.spActiveLevel = null;
         window.history.replaceState(null, '', window.location.pathname);
         showScreen('menu');
     };
@@ -5262,6 +5396,33 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 goBadge.style.display = '';
             } else if (goBadge) {
                 goBadge.style.display = 'none';
+            }
+            // SP-8.1: ramificação Solo. Quando spActiveLevel está setado, sobrescreve título + botão "JOGAR NOVAMENTE" e oculta MMR/badge.
+            // Se não-Solo (MP), restaura defaults (importante caso o usuário tenha jogado Solo antes nesta sessão).
+            const _btnAgain = document.getElementById('btn-go-again');
+            const _mmrRow   = document.getElementById('go-mmr-row');
+            if (window.spActiveLevel != null) {
+                const _spLvl = window.spActiveLevel;
+                const _won   = (winnerColor === myColor);
+                document.getElementById('go-title').innerText = _won ? t('sp_victory') : t('sp_defeat');
+                if (_btnAgain) {
+                    if (_won && _spLvl >= 15) {
+                        _btnAgain.innerText = t('sp_back_to_map');
+                        _btnAgain.onclick   = function() { window.spBackToMap(); };
+                    } else if (_won) {
+                        _btnAgain.innerText = t('sp_next_level');
+                        _btnAgain.onclick   = function() { window.spStartLevel(_spLvl + 1); };
+                    } else {
+                        _btnAgain.innerText = t('sp_retry');
+                        _btnAgain.onclick   = function() { window.spStartLevel(_spLvl); };
+                    }
+                }
+                if (_mmrRow) _mmrRow.style.display = 'none';
+                if (goBadge) goBadge.style.display = 'none';
+            } else {
+                // Restaurar defaults MP — onclick original do HTML é returnToMenu.
+                if (_btnAgain) _btnAgain.onclick = function() { window.returnToMenu(); };
+                if (_mmrRow) _mmrRow.style.display = '';
             }
             return;
         } else {

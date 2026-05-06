@@ -615,9 +615,9 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 | SP-7.1 | Criar `#screen-sp-map` | SP-1.3 | ✅ Completo (2026-05-05) |
 | SP-7.2 | Estados visuais dos cards | SP-7.1 | ✅ Completo (2026-05-05) |
 | SP-7.3 | Click em card → start fase | SP-7.1, SP-3.7 | ✅ Completo (2026-05-05) |
-| SP-7.4 | i18n dos 15 nomes × 9 idiomas | SP-1.1 | ⏳ Pendente |
-| SP-7.5 | Animação de fase desbloqueada | SP-7.1, SP-7.2, SP-3.8 | ⏳ Pendente |
-| SP-8.1 | Adaptar `game-over-screen` para Solo | SP-3.8 | ⏳ Pendente |
+| SP-7.4 | i18n dos 15 nomes × 9 idiomas | SP-1.1 | ✅ Completo (2026-05-05) |
+| SP-7.5 | Animação de fase desbloqueada | SP-7.1, SP-7.2, SP-3.8 | ✅ Completo (2026-05-05) |
+| SP-8.1 | Adaptar `game-over-screen` para Solo | SP-3.8 | ✅ Completo (2026-05-05) |
 | SP-8.2 | Refresh do progresso ao voltar | SP-6.2 | ⏳ Pendente |
 | SP-8.3 | Remover card "Tutorial" antigo | SP-4.1, SP-7.* | ⏳ Pendente |
 | SP-8.4 | Ativar feature flag `SP_ENABLED` | TODOS anteriores | ⏳ Pendente |
@@ -627,11 +627,11 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 | SP-9.4 | Atualizar PROJECT_CONTEXT + ACTIVITY_LOG | SP-9.1..3 | ⏳ Pendente |
 
 ### Próxima sessão sugerida
-**SP-7.4** — i18n dos 15 nomes de fase × 9 idiomas. Adicionar chaves `sp_lvl1_name` .. `sp_lvl15_name` em todos os 9 blocos `T.{lang}`:
-- Nomes de referência (PT): Recruta, Aprendiz, Defensor, Atirador, Cavaleiro, Bispeiro, Tanque, Caçador, Estrategista, Duelista, Cercador, Iscador, Rainha, Mestre, Lenda
-- O helper `_spPhaseName(n)` em [html/index.html:4724](html/index.html#L4724) já tenta `t('sp_lvl' + n + '_name')` antes de cair em `SP_LEVEL_NAMES_PT`. Quando essas chaves existirem, automaticamente os nomes aparecem traduzidos no modal sm-start (título dinâmico) e nos cards do mapa.
-- Atualizar `buildSPMap` em [html/index.html:4685-4691](html/index.html#L4685) para usar `_spPhaseName(n)` em vez de `SP_LEVEL_NAMES_PT[n]` direto, ou criar `refreshSPMap` que repopula o `sm-card-{n}-name` (atualmente o nome só é definido em buildSPMap, que roda 1×).
-- Dependências: SP-1.1 ✅ → satisfeita
+**SP-8.2** — Refresh de progresso ao voltar ao hub. Quando jogador volta ao `screen-solo-hub` após uma vitória Solo (via MENU ou via fluxo natural de retornar do mapa), o label "CONTINUAR — Fase N+1" precisa refletir o avanço imediatamente. Status atual:
+- Hook em `showScreen('solo-hub')` já chama `loadSPProgress()` ([html/index.html:~3970](html/index.html)) que faz fetch e atualiza spProgress.max + label
+- Listener `sp_level_completed` já atualiza `spProgress.max_level_completed` localmente
+- Possível gap: se o `sm-completed-banner` no sp-map foi criado quando max=15 e usuário re-entra antes de loadSPProgress completar fetch, label pode ficar inconsistente brevemente (fetch async)
+- Verificar também: ao concluir fase 15 e voltar pelo botão VOLTAR AO MAPA → spProgress.max=15 → CONTINUAR mostra `sp_completed_all` corretamente
 
 🏆 **EPIC SP-3 COMPLETO** — 16 estratégias de bot + handler `single_player_start` + completion no gameOver. Backend 100% pronto.
 ✅ **EPIC SP-4 COMPLETO** — Tela `#screen-game-mode` reformatada com 2 cards (SOLO/ONLINE) + i18n × 9 idiomas.

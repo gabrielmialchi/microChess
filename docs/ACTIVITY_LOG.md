@@ -3019,4 +3019,184 @@ Adicionar chaves `sp_continue`, `sp_new`, `sp_phase`, `sp_completed_all`, `sp_co
 ### Próxima sessão
 **SP-7.4** — i18n dos 15 nomes de fase × 9 idiomas. Adicionar chaves `sp_lvl1_name` .. `sp_lvl15_name` em PT/EN/ES/DE/IT/RU/JA/KO/ZH. Helper `_spPhaseName(n)` já está pronto para consumir (cai automaticamente em `SP_LEVEL_NAMES_PT` enquanto chaves não existem). Atualizar também `buildSPMap` para usar `_spPhaseName(n)` em vez de `SP_LEVEL_NAMES_PT[n]` direto, e expor via `refreshSPMap` para repopular nomes ao trocar idioma sem rebuilding o grid.
 
+---
+
+## [2026-05-05] Sessão SP-7.4 — i18n dos 15 nomes de fase × 9 idiomas
+
+**Status:** Completo
+**Branch:** main
+**Arquivo modificado:** `html/index.html` — 15 chaves novas em cada bloco `T.*` (PT linhas 3146-3148, EN 3235-3237, ES 3334-3336, DE 3433-3435, IT 3532-3534, RU 3631-3633, JA 3730-3732, KO 3829-3831, ZH 3928-3930) + `buildSPMap` consome `_spPhaseName(n)` ([linha 4693](html/index.html#L4693)) + `refreshSPMap` repopula `sm-card-{n}-name` ([linhas 4699-4717](html/index.html#L4699)) + hook em `selectLanguage` ([linha 4392](html/index.html#L4392))
+
+### Feito
+- **135 chaves novas** (15 fases × 9 idiomas) inseridas após `sp_new_confirm_guest` em cada bloco `T.{lang}`. Tabela de referência:
+  | n | PT | EN | ES | DE | IT | RU | JA | KO | ZH |
+  |---|----|----|----|----|----|----|----|----|----|
+  | 1 | Recruta | Recruit | Recluta | Rekrut | Recluta | Новобранец | 新兵 | 신병 | 新兵 |
+  | 2 | Aprendiz | Apprentice | Aprendiz | Lehrling | Apprendista | Ученик | 見習い | 견습 | 学徒 |
+  | 3 | Defensor | Defender | Defensor | Verteidiger | Difensore | Защитник | 守護者 | 수호자 | 守护者 |
+  | 4 | Atirador | Sharpshooter | Tirador | Schütze | Tiratore | Стрелок | 射手 | 사수 | 射手 |
+  | 5 | Cavaleiro | Knight | Caballero | Ritter | Cavaliere | Рыцарь | 騎士 | 기사 | 骑士 |
+  | 6 | Bispeiro | Bishop | Alfilero | Läufer | Alfiere | Слон | 司教 | 비숍 | 主教 |
+  | 7 | Tanque | Tank | Tanque | Panzer | Tank | Танк | タンク | 탱크 | 坦克 |
+  | 8 | Caçador | Hunter | Cazador | Jäger | Cacciatore | Охотник | 狩人 | 사냥꾼 | 猎人 |
+  | 9 | Estrategista | Strategist | Estratega | Stratege | Stratega | Стратег | 戦略家 | 전략가 | 战略家 |
+  | 10 | Duelista | Duelist | Duelista | Duellant | Duellante | Дуэлянт | 決闘者 | 결투자 | 决斗者 |
+  | 11 | Cercador | Encircler | Cercador | Umzingler | Accerchiatore | Окружитель | 包囲者 | 포위자 | 包围者 |
+  | 12 | Iscador | Baiter | Cebador | Köderer | Adescatore | Приманщик | おとり師 | 미끼꾼 | 诱饵者 |
+  | 13 | Rainha | Queen | Reina | Dame | Regina | Королева | 女王 | 여왕 | 女王 |
+  | 14 | Mestre | Master | Maestro | Meister | Maestro | Мастер | 達人 | 거장 | 大师 |
+  | 15 | Lenda | Legend | Leyenda | Legende | Leggenda | Легенда | 伝説 | 전설 | 传奇 |
+- **`buildSPMap`** ([html/index.html:4693](html/index.html#L4693)): trocado `SP_LEVEL_NAMES_PT[n] || ('Fase ' + n)` por `_spPhaseName(n)`. Como `_spPhaseName` é function declaration no mesmo IIFE, hoisting garante disponibilidade no momento de execução do `buildSPMap`.
+- **`refreshSPMap`** ([html/index.html:4699-4717](html/index.html#L4699)): adicionado lookup de `nameEl = document.getElementById('sm-card-' + n + '-name')` e `nameEl.textContent = _spPhaseName(n)` no loop. Antes refreshSPMap só mexia em estado/ícone; agora também sincroniza nome (idempotente: chamadas repetidas não acumulam efeito).
+- **`selectLanguage`** ([html/index.html:4392](html/index.html#L4392)): adicionada chamada `if (currentScreen === 'sp-map') window.refreshSPMap()` para repopular nomes (e estado, ileso) sem precisar rebuildar o grid.
+- **Comentário do `SP_LEVEL_NAMES_PT`** atualizado: era "PT defaults; SP-7.4 substituirá..."; agora "Fallback PT — usado por _spPhaseName quando t() falha". O fallback continua existindo como rede de segurança contra idiomas não-suportados (FR/etc) ou chaves removidas inadvertidamente.
+- **Comentário do `_spPhaseName`** atualizado: era "SP-7.3: helper i18n... SP-7.4 vai criar..."; agora "SP-7.4: as chaves existem nos 9 idiomas; SP_LEVEL_NAMES_PT só entra se t() retornar a própria key".
+
+### Decisões de design
+- **Inserção após `sp_new_confirm_guest`** (última chave SP existente em cada bloco) — mantém afinidade visual: todas as chaves SP ficam contíguas no fim de cada `T.{lang}`. Facilita revisão futura por desenvolvedor que está auditando i18n.
+- **Layout de 3 linhas × 5 chaves** (em vez de 1 linha × 15 ou 15 linhas × 1) — escolha de legibilidade. 1 linha × 15 ultrapassaria largura confortável; 15 linhas × 1 inflaria diff sem ganho. 5 por linha mapeia naturalmente os tiers de dificuldade (1-5, 6-10, 11-15) — bônus mnemônico.
+- **`buildSPMap` chama `_spPhaseName` em vez de `SP_LEVEL_NAMES_PT`** — ordering safe via hoisting de function declaration; testei mentalmente: `buildSPMap` é só registrado em `window`, executa quando `refreshSPMap` o chama (que por sua vez é chamado pelo hook em `showScreen`). Em ambos os pontos `_spPhaseName` já está hoisted.
+- **`refreshSPMap` agora repopula nomes** — alternativa seria criar uma função separada `refreshSPMapNames`. Decidi mesclar porque (a) refreshSPMap já é chamado em todo entry de tela e em `selectLanguage`, então é o ponto natural de re-render; (b) custo é trivial (15 lookups); (c) reduz a quantidade de funções globais.
+- **Hook em `selectLanguage` checa `currentScreen === 'sp-map'`** em vez de chamar incondicionalmente — chamada não-condicional dispararia `buildSPMap` na primeira troca de idioma após app load (mesmo se usuário nunca foi ao mapa), criando 15 botões DOM órfãos. Conditional evita esse leak.
+- **Não adicionei nova chave i18n para o fallback `('Phase ' + n)` no `_spPhaseName`** — fallback só dispara em corner case (idioma não-suportado + key não-resolvida). Inglês "Phase" é aceitável neste edge.
+- **Nomes em RU usam terminologia chess-russa** — "Слон" para Bishop (literal: elefante; é o nome standard da peça em russo), "Королева" para Queen (em chess russo é "Ферзь", mas para persona name "Королева" comunica melhor). Trade-off cultural; pode ser revisado em SP-9.x QA com falante nativo.
+- **JA: "おとり師" para Iscador** — em vez de tradução literal de "baiter" como 誘導者 (que significa "guia"). おとり = decoy/isca, 師 = mestre/usuário. Comunica a estratégia de bait+sacrifice melhor que opções literais.
+
+### Smoke test mental
+- ✅ Convidado em PT abre sp-map → cards mostram "Recruta / Aprendiz / Defensor / ..." consistente com SP_PLANNING.md
+- ✅ Trocar para EN com sp-map ativa → `selectLanguage` chama `refreshSPMap` → cards atualizam para "Recruit / Apprentice / Defender / ..."
+- ✅ Trocar para JA → "新兵 / 見習い / 守護者 / ..." (Unicode preservado, tipografia herda CSS existente)
+- ✅ Logado max=6 em DE: card 7 "Panzer" highlighted (current pulse), cards 1-6 "Rekrut..Läufer" completed (✓)
+- ✅ Modal sm-start aberto em ZH (clicou card 11) → título "关卡 11 — 包围者" (sp_phase + n + nome traduzido via `_spPhaseName`)
+- ✅ Trocar idioma com modal aberto → `refreshSPMapModal` recalcula título (já existia em SP-7.3) → modal reflete novo idioma instantaneamente
+- ✅ Idioma fictício (FR) selecionado por dev → fallback do `t()` retorna a key → `_spPhaseName` cai em `SP_LEVEL_NAMES_PT` → card mostra "Recruta" (PT). Edge tolerado.
+- ✅ Re-entrada em sp-map (BACK → CONTINUAR de novo) → `refreshSPMap` rodando atualiza nomes E estados — idempotente
+- ✅ HTML preservado: 9 inserções pontuais nos blocos T.* + 3 substituições pontuais em funções JS dentro do `<script>` existente; nenhuma reescrita de bloco
+- ✅ Helper `_spPhaseName` antes só era consumido por `refreshSPMapModal` (título do modal); agora é a única fonte de nome no UI inteiro do sp-map (cards + modal). Centralização.
+
+### Próxima sessão
+**SP-7.5** — Animação de fase desbloqueada. Após vitória de fase N que faz `max_level_completed = N`, ao retornar ao `screen-sp-map` o card N+1 deve receber animação one-shot de "desbloqueio" (ex: pulse intensificado, scale-in, fade-in do ícone ▶ substituindo o 🔒). Estratégia provável:
+- `loadSPProgress` detecta delta no max e seta `window._spJustUnlocked = max + 1`
+- `refreshSPMap` lê a flag, adiciona classe `.sp-card-just-unlocked` no card correspondente, depois zera a flag
+- CSS: `@keyframes sp-unlock` em 1.2s ease-out (opacity 0→1 + scale 0.85→1.05→1) com `animation-fill-mode: forwards`
+- Limpeza automática via `animationend` listener para remover a classe (não persistir em re-renders)
+
+Pré-requisitos: SP-7.1 ✅ + SP-7.2 ✅ + SP-3.8 ✅ — todos satisfeitos.
+
+---
+
+## [2026-05-05] Sessão SP-7.5 — Animação one-shot de fase desbloqueada
+
+**Status:** Completo
+**Branch:** main
+**Arquivo modificado:** `html/index.html` — `@keyframes sp-unlock` + classe `.sp-card-just-unlocked` no `<style>` ([linhas 2095-2099, 2110](html/index.html#L2095)) + listener `socket.on('sp_level_completed')` ([linhas 4843-4859](html/index.html#L4843)) + extensão de `refreshSPMap` para aplicar/limpar animação ([linhas 4724-4747](html/index.html#L4724))
+
+### Feito
+- **CSS `@keyframes sp-unlock`** (0.6s ease-out): scale 0.85 → 1.12 (45%) → 1.0; box-shadow do glow normal → pico duplo (32px accent + 60px glow) → glow normal; brightness 1 → 1.5 → 1. Sensação visual: o card "explode" para fora, brilha forte no meio, assenta no estado final. Dura 600ms exatos conforme spec do checklist SP-7.5.
+- **Classe `.sp-card-just-unlocked`** definida no mesmo `<style>` block do sp-map (não tocar no `<style>` global). Single property: `animation: sp-unlock 0.6s ease-out`. Combinada com `.sp-card-current` (que já tem `animation: sp-pulse infinite`), CSS dá precedência à classe declarada por último — durante 0.6s sobrepõe pulse; após `animationend` listener remover a classe, pulse retoma naturalmente.
+- **Listener `socket.on('sp_level_completed', ({ level }) => ...)`** adicionado após `socket.on('sp_error')`. Consome o evento que [server.js:470](server/server.js#L470) já emite quando humano vence em modo single player. Lógica:
+  1. Validação defensiva (level numérico 1..15)
+  2. `window.spProgress.max_level_completed = max(current, level)` — apenas avança, nunca regride (defesa contra eventos fora de ordem)
+  3. `window._spJustUnlocked = level + 1` — flag one-shot lida na próxima entrada do sp-map
+  4. Edge case: se já está no sp-map (cheating console / corner case), refresh imediato
+  5. Atualiza `renderSPContinueLabel` para que se o usuário voltar ao solo-hub o label "Fase N+1" reflita o avanço
+- **`refreshSPMap` estendido**:
+  - Lê `window._spJustUnlocked` no início (snapshot)
+  - Adiciona `'sp-card-just-unlocked'` ao `classList.remove(...)` — garante limpeza idempotente em cada refresh, evitando classe presa caso animationend nunca dispare (ex: usuário navegou away durante animação)
+  - Após aplicar state class, se `justUnlocked === n`: força reflow via `void card.offsetWidth` antes de adicionar a classe (garante que a animation reinicie mesmo em rápida sucessão de adds/removes)
+  - Anexa `animationend` listener one-shot que remove a classe e o próprio listener (cleanup automático)
+  - Após o loop, `window._spJustUnlocked = null` se era number — flag é one-shot, válida só para o primeiro refresh após o evento
+
+### Decisões de design
+- **`@keyframes sp-unlock` com 3 keyframes (0/45/100%)** em vez de 2 (0/100%) — pico em 45% dá sensação de "bounce" tátil. Linear scale 0.85→1.0 seria insípido; bounce passando 1.12 e voltando para 1.0 comunica "algo aconteceu". 45% (não 50%) acelera o pico, deixando a curva ease-out trabalhar mais na descida (a parte mais lenta visualmente).
+- **`brightness(1.5)` no pico** — efeito breve de "flash" sem precisar de pseudo-element nem overlay. Apenas filtro CSS aplicado ao próprio botão. Funciona em qualquer tema (claro/escuro) porque opera multiplicativamente sobre cores existentes.
+- **Não usei `animation-fill-mode: forwards`** — o keyframe 100% já casa com o estado de descanso (scale 1, brightness 1, glow normal). `forwards` só seria necessário se o último keyframe diferisse do estado base; aqui é redundante e perigoso (deixaria classe presa visualmente se removida fora do animationend).
+- **Limpeza dupla (animationend + classList.remove no refresh)** — proteção em camadas. Cenário comum: animação completa, animationend dispara, classe removida ✓. Cenário edge: usuário navega para outra tela durante a animação, `display:none` na tela do sp-map suspende a animation, animationend pode nunca disparar. Próxima entrada na tela → `refreshSPMap` chama `classList.remove('sp-card-just-unlocked')` antes de tudo → reset garantido.
+- **`void card.offsetWidth` para forçar reflow** — pattern padrão para reiniciar animation CSS via toggle de classe. Sem isso, navegadores podem deduplicar a transição se a classe foi adicionada/removida no mesmo tick.
+- **Flag `_spJustUnlocked` em vez de evento custom** — escolha entre (a) flag global lida em `refreshSPMap` ou (b) evento custom `sp:unlock` despachado para o card. Optei por (a) porque: (1) refreshSPMap já é o ponto único de re-render do sp-map; (2) flag persiste mesmo se sp-map ainda não foi montado (build lazy); (3) menos infraestrutura.
+- **`level + 1` mesmo para nível 15** — flag = 16, sai do range 1..15 do loop, ignorada. Sem caso especial. Se quiser animação dedicada para "completou tudo", SP-9 / Design futuro decide; SP-7.5 só anima desbloqueio incremental.
+- **Avança apenas, nunca regride** (`if (level > current) ...`) — defesa contra eventos fora de ordem (socket.io retransmite em reconexão), contra exploits que enviem level menor após maior, e contra race conditions (P/V de UI: não regredir progresso visualmente).
+- **Refresh imediato se já está no sp-map** — case extremo (player venceu enquanto sp-map estava aberta em outra aba? ou cheating console?). Custo trivial; UX consistente.
+- **Não inseri chave i18n** — animação é puramente visual; sem texto. SP-7.5 spec não exige `sp_phase_unlocked` (essa key foi mencionada em SP_TERMS.md §214 mas é opcional para SP-7.5; pode ser usada em SP-9 para banner overlay se quisermos texto explicativo).
+
+### Smoke test mental
+- ✅ Convidado vence fase 1 → server emite `sp_level_completed{level:1}` → cliente: spProgress.max=1, _spJustUnlocked=2 → game-over screen → BACK to map → refreshSPMap roda → card 2 tem state='current' + class .sp-card-just-unlocked → 0.6s de bounce/glow → animationend → classe removida → pulse normal continua
+- ✅ Logado max=6 vence fase 7 → max=7, _spJustUnlocked=8 → entra sp-map → card 8 anima 0.6s, depois fica current pulsando
+- ✅ Vitória da fase 15 → max=15, _spJustUnlocked=16 → entra sp-map → loop n=1..15 nunca encontra n===16, animação não dispara → flag limpa no fim do loop → todos os cards completed (✓)
+- ✅ Re-entrada após animação concluída: refreshSPMap roda de novo, _spJustUnlocked já é null → não dispara animação → comportamento normal
+- ✅ Edge: usuário navega Out durante animação (display:none no sp-map), retorna depois → próxima refreshSPMap remove .sp-card-just-unlocked como precaução → card reseta para state base, sem visual quebrado
+- ✅ Edge: usuário ainda está no sp-map quando recebe sp_level_completed (cheating console) → handler chama refreshSPMap diretamente → animação dispara sem precisar mudar de tela
+- ✅ Edge: server retransmite sp_level_completed (reconexão socket) → flag re-set, mas se max já é >= level a animação re-anima a mesma fase. Aceitável (raro, e visualmente consistente).
+- ✅ Edge: server envia sp_level_completed{level:0} ou inválido → validação defensiva descarta, sem efeito
+- ✅ Hover em card recém-desbloqueado durante animação: hover rule `transform: translateY(-2px)` é override-reseted pela animation (que controla transform). Após animação, hover funciona normalmente.
+- ✅ HTML preservado: 3 inserções (style block expandido, listener novo, classList expandida). Nenhuma reescrita de bloco.
+
+### Próxima sessão
+**SP-8.1** — Adaptar `game-over-screen` para Solo. Quando `window.spActiveLevel != null` no fim da partida, customizar botões:
+- **Vitória da fase N (N<15)**: botão "JOGAR NOVAMENTE" vira "PRÓXIMA FASE" → `startSPLevel(N+1)` (ou navega sp-map e usuário clica)
+- **Vitória da fase 15**: botão vira "VOLTAR AO MAPA" → showScreen('sp-map') (mostra banner "Tudo completo")
+- **Derrota**: botão vira "TENTAR NOVAMENTE" → `startSPLevel(N)` mesma fase
+- Botão MENU intacto (sempre volta ao menu principal)
+- i18n: chaves `sp_next_level`, `sp_retry`, `sp_back_to_map` (já listadas em SP_TERMS.md §214 — podem precisar ser adicionadas ou já existirem; verificar)
+
+---
+
+## [2026-05-05] Sessão SP-8.1 — Adaptar `game-over-screen` para Solo
+
+**Status:** Completo
+**Branch:** main
+**Arquivo modificado:** `html/index.html`
+- 5 chaves i18n × 9 idiomas (`sp_victory`, `sp_defeat`, `sp_next_level`, `sp_retry`, `sp_back_to_map`) inseridas após `sp_lvl15_name` em cada `T.{lang}` (PT linha 3149, EN 3239, ES 3339, DE 3439, IT 3539, RU 3639, JA 3739, KO 3839, ZH 3939)
+- Helpers Solo no IIFE principal: `_resetSoloGameSession`, `window.spStartLevel(level)`, `window.spBackToMap()` ([linhas 4887-4934](html/index.html#L4887))
+- Branch Solo no `updateUI` GAMEOVER: customiza título + botão `btn-go-again` + oculta MMR row e badge unranked ([linhas 5398-5424](html/index.html#L5398))
+- `returnToMenu` agora limpa `window.spActiveLevel = null` ([linha 5142](html/index.html#L5142))
+
+### Feito
+- **45 chaves novas** (5 × 9 idiomas) com tradução vinda direto de SP_TERMS.md §3 — fonte de verdade para evitar inconsistência entre planning e implementação. Exemplos:
+  - `sp_victory`: VITÓRIA / VICTORY / VICTORIA / SIEG / VITTORIA / ПОБЕДА / 勝利 / 승리 / 胜利
+  - `sp_next_level`: PRÓXIMA FASE / NEXT STAGE / PRÓXIMA FASE / NÄCHSTE STUFE / PROSSIMO LIVELLO / СЛЕДУЮЩИЙ УРОВЕНЬ / 次のステージ / 다음 단계 / 下一关
+  - `sp_retry`: TENTAR DE NOVO / TRY AGAIN / REINTENTAR / WIEDERHOLEN / RIPROVA / ЗАНОВО / 再挑戦 / 다시 시도 / 重试
+  - `sp_back_to_map`: Voltar ao Mapa / Back to Map / Volver al Mapa / Zurück zur Karte / Torna alla Mappa / К карте / マップへ戻る / 지도로 돌아가기 / 返回地图
+- **`_resetSoloGameSession()`** (private): mirror do cleanup de `returnToMenu` sem `showScreen('menu')` — fecha game-area, game-over-screen, sd-overlay; chama `ExcBanners.hideAll`; limpa `pieceElements`/`prevPhase`/`lastDuelKey`/`state`. Não toca em `tabbar` (tela matchmaking ou sp-map vai gerenciar). Não toca em `history.replaceState` (URL é estável; mudaria só ao voltar ao menu).
+- **`window.spStartLevel(level)`**: bate validação (1..15), chama reset, espelha o prep+emit de `confirmStartSPLevel` (avatar/nick/labels do matchmaking + `setMMState('lobby')` + `showScreen('matchmaking')` + emit `single_player_start`). Setado `window.spActiveLevel = level` para o próximo game-over reconhecer Solo.
+- **`window.spBackToMap()`**: reset, limpa `spActiveLevel = null`, `showScreen('sp-map')` — hook existente em `showScreen` chama `loadSPProgress` + `refreshSPMap`, então o map renderiza atualizado.
+- **Branch Solo no GAMEOVER** (após o block de unranked-badge):
+  - Se `spActiveLevel != null`:
+    - Vitória + level==15 → botão "Voltar ao Mapa" + onclick `spBackToMap`
+    - Vitória + level<15 → botão "Próxima Fase" + onclick `spStartLevel(level+1)`
+    - Derrota (qualquer level) → botão "Tentar de Novo" + onclick `spStartLevel(level)` (mesma fase)
+    - Título `go-title` vira `sp_victory` ou `sp_defeat`
+    - `go-mmr-row` é ocultada (PdL não muda em Solo)
+    - `_go-unranked-badge` é ocultada (Solo não tem semântica de "ranqueada/unranked")
+  - Se `spActiveLevel == null` (modo MP): restaura defaults — `btn-go-again.onclick = returnToMenu`, MMR row visível. Necessário para o caso "jogou Solo, voltou ao menu, joga MP" — o onclick foi customizado e precisa ser restaurado.
+- **`returnToMenu`**: 1 linha adicionada (`window.spActiveLevel = null`) entre `state = null` e `history.replaceState`. Garante que após voltar ao menu, próximo game-over (MP) leia `spActiveLevel` como null.
+
+### Decisões de design
+- **`_resetSoloGameSession` separado de `returnToMenu`** em vez de extrair helper compartilhado — evitei refactor de `returnToMenu` (existente, validado em produção). Duplicação de ~10 linhas é aceitável; risco de regressão num refactor seria maior. Reset não inclui `tabbar` toggle nem `history.replaceState` porque a transição vai para outra tela imediatamente (matchmaking ou sp-map), não para o menu.
+- **Ramificação Solo no FIM da função GAMEOVER** (após unranked-badge) em vez de no início — permite que toda a lógica MP existente rode primeiro (set initial title/buttons/text) e depois sobrescreva apenas o necessário para Solo. Mais simples de auditar; menos risco de fork-divergence.
+- **Branch `else` que restaura defaults MP** — não óbvio mas crítico. `btn-go-again.onclick` é setado dinamicamente em Solo; sem reset no MP, um jogador que jogou Solo, voltou ao menu, encontrou um MP, terminou a partida — clicaria em "JOGAR NOVAMENTE" e dispararia `spStartLevel(N)` (handler antigo)! O `else` zera `onclick = returnToMenu`. `_mmrRow.style.display = ''` faz o mesmo para a row de PdL.
+- **`btn-go-menu` (MENU) intocado** — `returnToMenu` agora limpa `spActiveLevel`, então não importa se foi Solo ou MP, MENU sempre volta limpo ao menu principal. Conforme spec.
+- **Sem refactor de `confirmStartSPLevel` para usar `spStartLevel`** — `confirmStartSPLevel` é chamado pelo botão JOGAR do modal sm-start, fluxo já estável. Refactorá-lo expandiria escopo. Algum dia consolidar via helper privado `_emitSPLevelStart`, mas não nesta sessão.
+- **Não bloqueio `addStat` no fluxo Solo** — atualmente `addStat('wins')`/`addStat('losses')` é chamado em GAMEOVER independentemente do modo. Isso significa que vitórias/derrotas Solo poluem stats locais (W/L do perfil). Decisão: deixar como está para SP-8.1 (escopo é botões); abrir issue para SP-9 / hardening. Risco baixo já que stats locais são apenas exibição cosmetic; servidor não recebe esses dados em Solo.
+- **`go-title` recebe `sp_victory`/`sp_defeat`** ao invés de manter `game_over_title` — SP_TERMS.md classifica esses como "Título". Cinza-claro em Solo: o título em letras grandes ("VITÓRIA"/"DEFEAT") substitui o "Fim de Jogo" genérico, dando peso emocional ao resultado da fase.
+- **`go-pdl-delta`/`go-pdl-now` ocultos via parent row** — não preciso limpar os textos individualmente; ocultar `go-mmr-row` é suficiente. Quando voltar ao MP, branch `else` re-exibe a row e os textos se atualizam normalmente.
+- **Validação `level < 1 || level > 15`** em `spStartLevel` — defensivo, mas em fluxo normal o handler de game-over chamaria com `level+1` ou `level` controlados; cap em 15 é redundante porque caso `level=15` o branch vitória vai para `spBackToMap`. Defesa em profundidade.
+
+### Smoke test mental
+- ✅ Convidado vence fase 1 → game-over: título "VITÓRIA" / botão "PRÓXIMA FASE" → click → matchmaking imediato com level=2 → fase 2 começa
+- ✅ Convidado perde fase 5 → game-over: título "DERROTA" / botão "TENTAR DE NOVO" → click → matchmaking com level=5 (mesma fase)
+- ✅ Logado vence fase 15 → game-over: título "VITÓRIA" / botão "Voltar ao Mapa" → click → sp-map renderiza com banner "Todas as fases completas — explore livremente"
+- ✅ Convidado vence fase 7 → game-over → MENU → menu principal limpo (spActiveLevel=null) → jogar MP → game-over MP funciona normal (botão "JOGAR NOVAMENTE" + onclick=returnToMenu + MMR row visível)
+- ✅ Em EN: Solo vitória → "VICTORY" + "NEXT STAGE"; em JA: "勝利" + "次のステージ"; em RU: "ПОБЕДА" + "СЛЕДУЮЩИЙ УРОВЕНЬ" — chaves resolvem corretamente
+- ✅ Solo + draw (raro: mate de ambos os reis em mesmo turno?) → winnerColor==='draw' → `_won = false` → branch derrota → botão "Tentar de Novo". Aceitável (não há fluxo dedicado para draw em Solo).
+- ✅ Re-game-over (cheating ou bug que dispara updateUI múltiplas vezes em GAMEOVER): cada call sobrescreve textos/onclick; idempotente
+- ✅ Edge: usuário entra em Solo, perde, clica "Tentar de Novo", perde de novo → repeated cycle funciona (spActiveLevel mantido = level original)
+- ✅ HTML preservado — apenas inserções (45 chaves i18n + 3 funções helpers + branch no updateUI) e 1 linha adicional em returnToMenu
+
+### Próxima sessão
+**SP-8.2** — Refresh do progresso ao voltar para hub. Verificar se o solo-hub atualiza corretamente após uma vitória/derrota Solo:
+- Após Solo → MENU → SOLO de novo: `loadSPProgress` deve disparar e label "CONTINUAR — Fase N+1" deve refletir o avanço
+- Após Solo (vitória fase 15) → "Voltar ao Mapa" → BACK → solo-hub: label deve mostrar `sp_completed_all` ("Todas as fases completas")
+- Hook `showScreen('solo-hub')` chama `loadSPProgress` (existe desde SP-6.2) — verificar se cobre os fluxos da SP-8.1
+
 
