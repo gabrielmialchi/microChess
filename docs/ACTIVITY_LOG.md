@@ -27,6 +27,82 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-05-06] Sessão SP-8.4 — Ativar feature flag SP_ENABLED + remover wrappers vestigiais
+**Status:** Completo
+**Branch:** main
+
+### Achado-chave
+A feature flag `SP_ENABLED` documentada no plano (SP_PLANNING.md §4 e §6) **nunca foi implementada como gate real no código** — só existia como conceito em docs. Durante SP-1..SP-8.3, as telas/handlers foram criados sem gates ativos. O passo "ativar a flag" se traduz em "remover os fallbacks vestigiais que faziam o papel de gate-soft-when-DOM-not-ready".
+
+### Feito
+- Stub idempotente de `openSoloHub` ([html/index.html:4533-4541 antes da edição]) removido — era dead code: a função era sempre redefinida em SP-6.2 logo abaixo no mesmo script.
+- `window.openSoloHub` ([html/index.html:~4665]) simplificada de 7 linhas (com guard `getElementById('screen-solo-hub')` + alert "Modo Solo em desenvolvimento") para 1 linha (`showScreen('solo-hub')`). Guard é inalcançável: a tela existe no DOM desde SP-6.1.
+- `window.spGoOnline` ([html/index.html:~4528]) simplificada de 4 linhas para 1 linha pelo mesmo motivo (tela existe desde SP-5.1).
+- Comentários atualizados para refletir o estado pós-SP-8.4.
+
+### Validação
+- JS extraído de `<script>` inline parseou sem erro via `node --check`.
+- Grep por `Modo Solo em desenvolvimento`, `Fluxo Online em desenvolvimento`, `SP_ENABLED` no código (`html/`, `server/`) retornou zero matches — confirma que nenhum gate cosmético sobreviveu.
+- Smoke test mental do fluxo Menu → Novo Jogo → SOLO → CONTINUAR → SP-MAP → start fase: cadeia completa, todos os hooks de showScreen disparam refresh + fetch corretamente.
+
+### Decisão
+- Não foi adicionado `window.SP_ENABLED = true` cosmético, pois a flag não tem consumidores. Adicionar uma linha que ninguém lê seria YAGNI puro (CLAUDE.md: "Don't design for hypothetical future requirements").
+
+### Notas para próxima sessão (SP-9.1)
+- QA walk-through manual: criar conta → vencer fase 1 → confirmar fase 2 desbloqueia → sair/voltar e confirmar persistência → tentar pular fase via console e ver `sp_error`.
+
+### Status do EPIC SP
+- ✅ SP-1.* (specs) · ✅ SP-2.* (backend persistência) · ✅ SP-3.* (16 estratégias) · ✅ SP-4.* (game-mode) · ✅ SP-5.* (multiplayer-mode) · ✅ SP-6.* (solo-hub) · ✅ SP-7.* (sp-map) · ✅ SP-8.* (integração) · ⏳ SP-9.* (QA + docs)
+- Fluxo Solo end-to-end implementado e funcional. Resta apenas QA manual + documentação final.
+
+---
+
+## [2026-05-06] Sessão SP-8.3 — Remover card "Tutorial" antigo (deleção definitiva do JS legado)
+**Status:** Completo
+**Branch:** main
+
+### Contexto
+HTML do layout legado (3 cards Casual/Ranqueada/Tutorial + FIND MATCH) já tinha sido removido em SP-4.1; restavam funções e gates JS órfãos referenciando IDs que não existem mais no DOM. Esta sessão completa a limpeza.
+
+### Feito
+- Removida `window.selectGameMode` ([html/index.html:~4945 antes da edição]) — não era chamada por nenhum onclick HTML; toda referência ativa migrou para `window.selectMultiplayerMode` em SP-5.2.
+- Removida `window.startMatchmakingWithMode` (mesmo bloco) — substituída por `window.startMatchmakingMP` em SP-5.2.
+- Removida declaração `let _selectedMode = null` ([html/index.html:~4549 antes da edição]); só era usada pelas funções acima e pelo reset block do hook game-mode.
+- Reset block dentro de `showScreen('game-mode')` ([html/index.html:4002-4014 antes da edição]) reduzido a apenas `refreshGameModeScreen()` — `getElementById` chamadas para `gm-card-casual`/`gm-card-ranked`/`gm-card-train`/`gm-check-*`/`gm-find-btn` retornavam null (DOM já limpo desde SP-4.1).
+- Guards de i18n em `refreshGameModeScreen` ([html/index.html:4078-4084 antes da edição]) removidos para `gm-casual-label/desc`, `gm-ranked-label/desc`, `gm-train-label/desc`, `gm-find-label`. Permanecem apenas SOLO/ONLINE.
+- Comentário HTML linha 2029 atualizado de "Deleção definitiva da JS em SP-8.3" para confirmação de que SP-8.3 concluiu o cleanup.
+
+### Validação
+- Grep final por `selectGameMode|startMatchmakingWithMode|_selectedMode|gm-card-train|gm-find-btn|gm-train-*|gm-find-label|gm-casual-*|gm-ranked-*` retorna apenas:
+  - 1 menção em comentário HTML (linha 2029, descritivo)
+  - 1 menção em comentário JS (linha 4548, descreve migração de SP-5.2)
+- JS extraído de todos os `<script>` inline parseou sem erro via `node --check`.
+
+### Notas para próxima sessão (SP-8.4)
+- Verificar se a feature flag `SP_ENABLED` ainda existe ou já foi removida em sessões anteriores — se removida, SP-8.4 pode ser apenas confirmação documental.
+
+---
+
+## [2026-05-06] Sessão SP-8.2 — Refresh do progresso ao voltar para hub
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- Hook `showScreen('sp-map')` ([html/index.html:4035-4045](html/index.html#L4035-L4045)) passa a disparar `loadSPProgress()` em sequência ao `refreshSPMap()`. Pattern: paint imediato com cache local → fetch async → segundo paint com dados frescos. Garante que progresso persistido no servidor sobrescreva qualquer dessincronização local (outras abas/dispositivos, fetch falho anterior).
+- Hook `showScreen('solo-hub')` já fazia o fetch desde SP-6.2, sem mudança necessária.
+
+### Cobertura dos cenários do checklist
+- **Vitória normal** (fase < 15): `sp_level_completed` → spProgress local atualizado → "VOLTAR AO MAPA" reusa cache imediato + reconfirma via fetch.
+- **Vitória da fase 15**: spBackToMap → `sp-map` hook → 1º refresh pinta tudo como completed (cache=15) → fetch reafirma 15 → 2º refresh idempotente.
+- **Outra aba/dispositivo**: usuário avançou progresso em outro lugar — ao voltar para sp-map, fetch sobrescreve cache local e 2º refresh repinta cards corretamente.
+
+### Notas para próxima sessão (SP-8.3)
+- Confirmar via grep que `selectGameMode('train')` e o card legado `gm-card-train` não são mais alcançáveis no fluxo ativo
+- Remover ou comentar o bloco HTML do card Tutorial em `#screen-game-mode`
+- Limpar guards de i18n em `refreshGameModeScreen()` se IDs saírem do DOM
+
+---
+
 ## [2026-04-24] Sessão BUG-H — Cascata de Duelo no Caso f.1 (contested_king)
 **Status:** Completo
 **Branch:** main

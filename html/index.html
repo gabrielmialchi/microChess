@@ -2026,7 +2026,7 @@
       <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-online-label">ONLINE</div>
       <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="gm-online-desc">Jogadores reais online</div>
     </button>
-    <!-- SP-4.1: layout legado (3 cards Casual/Ranqueada/Tutorial + botao FIND MATCH) removido daqui. Rollback via git history (commit pre-SP-4.1). Funcoes selectGameMode e startMatchmakingWithMode permanecem em JS pois SP-5.2 ira renomea-las para o fluxo de multiplayer-mode. Delecao definitiva da JS em SP-8.3. -->
+    <!-- SP-8.3: layout legado (Casual/Ranqueada/Tutorial + FIND MATCH) e JS associado (selectGameMode/startMatchmakingWithMode/_selectedMode) removidos. Substituidos por SOLO -> openSoloHub e ONLINE -> spGoOnline. Rollback via git history. -->
   </div>
 </div>
 
@@ -4000,16 +4000,6 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             if (_fbBtn) _fbBtn.textContent = t('feedback');
         }
         if (id === 'game-mode') {
-            _selectedMode = null;
-            ['gm-card-casual','gm-card-ranked','gm-card-train'].forEach(cid => {
-                const c = document.getElementById(cid);
-                if (c) { c.style.border = '1.5px solid var(--mc-rule)'; c.style.background = 'var(--mc-surface)'; }
-            });
-            ['gm-check-casual','gm-check-ranked','gm-check-train'].forEach(cid => {
-                const c = document.getElementById(cid); if (c) c.style.display = 'none';
-            });
-            const findBtn = document.getElementById('gm-find-btn');
-            if (findBtn) { findBtn.disabled = true; findBtn.style.opacity = '0.4'; findBtn.style.cursor = 'not-allowed'; }
             refreshGameModeScreen();
         }
         if (id === 'multiplayer-mode') {
@@ -4035,6 +4025,13 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (id === 'sp-map') {
             // SP-7.1: build 1× + refresh estado dos cards baseado em window.spProgress
             if (typeof window.refreshSPMap === 'function') window.refreshSPMap();
+            // SP-8.2: refetch do progresso ao entrar (cache local pode estar dessincronizado em outras abas/dispositivos);
+            // refresh paint imediato com cache + segundo paint após fetch garantem que servidor sempre vence em caso de divergência.
+            if (typeof window.loadSPProgress === 'function') {
+                window.loadSPProgress().then(function() {
+                    if (typeof window.refreshSPMap === 'function') window.refreshSPMap();
+                });
+            }
         }
         refreshOverlays();
     };
@@ -4067,14 +4064,6 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (el('gm-solo-desc'))    el('gm-solo-desc').textContent    = t('sp_solo_desc');
         if (el('gm-online-label')) el('gm-online-label').textContent = t('sp_online');
         if (el('gm-online-desc'))  el('gm-online-desc').textContent  = t('sp_online_desc');
-        // Legado (3 cards): IDs comentados em SP-4.1; guards mantêm seguro até remoção em SP-8.3
-        if (el('gm-casual-label'))el('gm-casual-label').textContent = t('mode_casual');
-        if (el('gm-casual-desc')) el('gm-casual-desc').textContent  = t('mode_casual_desc');
-        if (el('gm-ranked-label'))el('gm-ranked-label').textContent = t('mode_ranked');
-        if (el('gm-ranked-desc')) el('gm-ranked-desc').textContent  = t('mode_ranked_desc');
-        if (el('gm-train-label')) el('gm-train-label').textContent  = t('mode_train');
-        if (el('gm-train-desc'))  el('gm-train-desc').textContent   = t('mode_train_desc');
-        if (el('gm-find-label'))  el('gm-find-label').textContent  = t('mode_find_match');
     }
 
     // SP-5.3: i18n de screen-multiplayer-mode. Reaproveita chaves existentes (PRE-OT-B); zero chaves novas.
@@ -4539,22 +4528,11 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     let myUid           = null;
     let opponentProfile = null;
 
-    let _selectedMode = null;
     let _selectedMPMode = null; // SP-5.2: modo selecionado em screen-multiplayer-mode
 
-    // SP-4.1: handlers placeholder dos cards SOLO/ONLINE.
-    // openSoloHub: stub até SP-6.2 implementar (verifica se solo-hub screen existe; senão alerta).
-    // spGoOnline: navega para multiplayer-mode (criada em SP-5.1); fallback alerta enquanto a screen não existe.
-    if (typeof window.openSoloHub !== 'function') {
-        window.openSoloHub = function() {
-            if (document.getElementById('screen-solo-hub')) { showScreen('solo-hub'); return; }
-            alert('Modo Solo em desenvolvimento.');
-        };
-    }
-    window.spGoOnline = function() {
-        if (document.getElementById('screen-multiplayer-mode')) { showScreen('multiplayer-mode'); return; }
-        alert('Fluxo Online em desenvolvimento.');
-    };
+    // SP-8.4: handlers dos cards SOLO/ONLINE em screen-game-mode.
+    // openSoloHub é redefinida em SP-6.2 ([html/index.html:~4680]) — esta linha é a definição inicial.
+    window.spGoOnline = function() { showScreen('multiplayer-mode'); };
 
     // SP-5.2: implementação real dos handlers de screen-multiplayer-mode.
     // Espelha selectGameMode/startMatchmakingWithMode mas só com Casual/Ranqueada (sem train).
@@ -4691,15 +4669,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         updateLabel();
     };
 
-    // SP-6.2: substitui o stub idempotente de SP-4.1 pela implementação real.
-    // O fetch acontece via hook de showScreen('solo-hub'), que dispara loadSPProgress() ao entrar.
-    window.openSoloHub = function() {
-        if (!document.getElementById('screen-solo-hub')) {
-            alert('Modo Solo em desenvolvimento.');
-            return;
-        }
-        showScreen('solo-hub');
-    };
+    // SP-6.2: handler do card SOLO. O fetch de progresso acontece via hook de showScreen('solo-hub'),
+    // que dispara loadSPProgress() ao entrar (ver showScreen ~linha 4019).
+    window.openSoloHub = function() { showScreen('solo-hub'); };
 
     // SP-7.1: estrutura do mapa de 15 fases.
     // buildSPMap: gera os cards uma vez (idempotente via flag).
@@ -4933,34 +4905,6 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         _resetSoloGameSession();
         window.spActiveLevel = null;
         showScreen('sp-map');
-    };
-
-    window.selectGameMode = function(mode) {
-        _selectedMode = mode;
-        const cardCasual  = document.getElementById('gm-card-casual');
-        const cardRanked  = document.getElementById('gm-card-ranked');
-        const cardTrain   = document.getElementById('gm-card-train');
-        const checkCasual = document.getElementById('gm-check-casual');
-        const checkRanked = document.getElementById('gm-check-ranked');
-        const checkTrain  = document.getElementById('gm-check-train');
-        const findBtn     = document.getElementById('gm-find-btn');
-        // Reset all cards
-        [cardCasual, cardRanked, cardTrain].forEach(c => { if (c) { c.style.border = '1.5px solid var(--mc-rule)'; c.style.background = 'var(--mc-surface)'; } });
-        [checkCasual, checkRanked, checkTrain].forEach(c => { if (c) c.style.display = 'none'; });
-        // Highlight selected
-        const selCard  = mode === 'casual' ? cardCasual : mode === 'train' ? cardTrain : cardRanked;
-        const selCheck = mode === 'casual' ? checkCasual : mode === 'train' ? checkTrain : checkRanked;
-        if (selCard)  { selCard.style.border = '2px solid var(--mc-accent)'; selCard.style.background = 'var(--mc-accent-soft)'; }
-        if (selCheck) selCheck.style.display = 'grid';
-        // Enable find button
-        findBtn.disabled = false;
-        findBtn.style.opacity = '1';
-        findBtn.style.cursor = 'pointer';
-    };
-
-    window.startMatchmakingWithMode = function() {
-        if (!_selectedMode) return;
-        window.goMatchmaking(_selectedMode);
     };
 
     window.goMatchmaking = function(mode) {

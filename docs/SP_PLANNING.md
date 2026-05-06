@@ -618,20 +618,19 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 | SP-7.4 | i18n dos 15 nomes × 9 idiomas | SP-1.1 | ✅ Completo (2026-05-05) |
 | SP-7.5 | Animação de fase desbloqueada | SP-7.1, SP-7.2, SP-3.8 | ✅ Completo (2026-05-05) |
 | SP-8.1 | Adaptar `game-over-screen` para Solo | SP-3.8 | ✅ Completo (2026-05-05) |
-| SP-8.2 | Refresh do progresso ao voltar | SP-6.2 | ⏳ Pendente |
-| SP-8.3 | Remover card "Tutorial" antigo | SP-4.1, SP-7.* | ⏳ Pendente |
-| SP-8.4 | Ativar feature flag `SP_ENABLED` | TODOS anteriores | ⏳ Pendente |
+| SP-8.2 | Refresh do progresso ao voltar | SP-6.2 | ✅ Completo (2026-05-06) |
+| SP-8.3 | Remover card "Tutorial" antigo | SP-4.1, SP-7.* | ✅ Completo (2026-05-06) |
+| SP-8.4 | Ativar feature flag `SP_ENABLED` | TODOS anteriores | ✅ Completo (2026-05-06) |
 | SP-9.1 | Walk-through autenticado | SP-8.4 | ⏳ Pendente |
 | SP-9.2 | Walk-through guest | SP-8.4 | ⏳ Pendente |
 | SP-9.3 | Validação de segurança | SP-8.4 | ⏳ Pendente |
 | SP-9.4 | Atualizar PROJECT_CONTEXT + ACTIVITY_LOG | SP-9.1..3 | ⏳ Pendente |
 
 ### Próxima sessão sugerida
-**SP-8.2** — Refresh de progresso ao voltar ao hub. Quando jogador volta ao `screen-solo-hub` após uma vitória Solo (via MENU ou via fluxo natural de retornar do mapa), o label "CONTINUAR — Fase N+1" precisa refletir o avanço imediatamente. Status atual:
-- Hook em `showScreen('solo-hub')` já chama `loadSPProgress()` ([html/index.html:~3970](html/index.html)) que faz fetch e atualiza spProgress.max + label
-- Listener `sp_level_completed` já atualiza `spProgress.max_level_completed` localmente
-- Possível gap: se o `sm-completed-banner` no sp-map foi criado quando max=15 e usuário re-entra antes de loadSPProgress completar fetch, label pode ficar inconsistente brevemente (fetch async)
-- Verificar também: ao concluir fase 15 e voltar pelo botão VOLTAR AO MAPA → spProgress.max=15 → CONTINUAR mostra `sp_completed_all` corretamente
+**SP-9.1** — Walk-through autenticado (manual QA). Pré-requisitos: SP-8.4 ✅. Requer:
+- Subir o servidor e jogar o fluxo completo: criar conta → SOLO → NOVO → fase 1 → vencer → confirmar fase 2 desbloqueia
+- Validar persistência: sair, voltar, confirmar progresso retém
+- Tentar pular fase via DevTools console (`socket.emit('single_player_start', {level: 5})`) → backend deve rejeitar com `sp_error`
 
 🏆 **EPIC SP-3 COMPLETO** — 16 estratégias de bot + handler `single_player_start` + completion no gameOver. Backend 100% pronto.
 ✅ **EPIC SP-4 COMPLETO** — Tela `#screen-game-mode` reformatada com 2 cards (SOLO/ONLINE) + i18n × 9 idiomas.
