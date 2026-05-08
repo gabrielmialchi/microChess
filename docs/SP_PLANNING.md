@@ -621,16 +621,18 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 | SP-8.2 | Refresh do progresso ao voltar | SP-6.2 | ✅ Completo (2026-05-06) |
 | SP-8.3 | Remover card "Tutorial" antigo | SP-4.1, SP-7.* | ✅ Completo (2026-05-06) |
 | SP-8.4 | Ativar feature flag `SP_ENABLED` | TODOS anteriores | ✅ Completo (2026-05-06) |
-| SP-9.1 | Walk-through autenticado | SP-8.4 | ⏳ Pendente |
+| SP-9.1 | Walk-through autenticado | SP-8.4 | ✅ Completo (2026-05-06) |
 | SP-9.2 | Walk-through guest | SP-8.4 | ⏳ Pendente |
 | SP-9.3 | Validação de segurança | SP-8.4 | ⏳ Pendente |
 | SP-9.4 | Atualizar PROJECT_CONTEXT + ACTIVITY_LOG | SP-9.1..3 | ⏳ Pendente |
 
 ### Próxima sessão sugerida
-**SP-9.1** — Walk-through autenticado (manual QA). Pré-requisitos: SP-8.4 ✅. Requer:
-- Subir o servidor e jogar o fluxo completo: criar conta → SOLO → NOVO → fase 1 → vencer → confirmar fase 2 desbloqueia
-- Validar persistência: sair, voltar, confirmar progresso retém
-- Tentar pular fase via DevTools console (`socket.emit('single_player_start', {level: 5})`) → backend deve rejeitar com `sp_error`
+**SP-9.2** — Walk-through como convidado (sem login). Pré-requisitos: SP-8.4 ✅. Requer:
+- Sem login, abrir Novo Jogo → SOLO → solo-hub
+- CONTINUAR sempre mostra "Fase 1" (não há progresso salvo)
+- Jogar fase 1 e vencer; confirmar que sp-map mostra fase 2 desbloqueada NA SESSÃO ATUAL
+- Atualizar a página (F5); confirmar que progresso foi perdido — tudo volta para fase 1
+- Confirmar que NENHUMA chamada de fetch /sp/* aconteceu como convidado (ver Network tab)
 
 🏆 **EPIC SP-3 COMPLETO** — 16 estratégias de bot + handler `single_player_start` + completion no gameOver. Backend 100% pronto.
 ✅ **EPIC SP-4 COMPLETO** — Tela `#screen-game-mode` reformatada com 2 cards (SOLO/ONLINE) + i18n × 9 idiomas.

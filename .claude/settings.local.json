@@ -16,7 +16,8 @@
       "Bash(node --check server/bot-strategies/index.js)",
       "Bash(node -e ' *)",
       "Bash(node --check server/server.js)",
-      "Bash(node -e \"const fs=require\\('fs'\\);const html=fs.readFileSync\\('html/index.html','utf8'\\);const m=html.match\\(/<script>\\([\\\\s\\\\S]*?\\)<\\\\/script>/g\\);console.log\\('script tags:',m?m.length:0\\);\")"
+      "Bash(node -e \"const fs=require\\('fs'\\);const html=fs.readFileSync\\('html/index.html','utf8'\\);const m=html.match\\(/<script>\\([\\\\s\\\\S]*?\\)<\\\\/script>/g\\);console.log\\('script tags:',m?m.length:0\\);\")",
+      "Bash(node --check .tmp_check.js)"
     ]
   }
 }

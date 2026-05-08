@@ -27,6 +27,46 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-05-06] Sessão SP-9.1 + POL-SP — Walk-through autenticado + Polimento UX hub solo
+**Status:** Completo
+**Branch:** main
+
+### SP-9.1 — Walk-through autenticado (QA manual)
+
+**Resultado:** ✅ Aprovado com cobertura mista (3 passos E2E + 1 passo via análise estática + evidência indireta).
+
+**Passos executados pelo usuário em produção (itch.io → Railway):**
+1. ✅ Criar conta nova — registro + login funcionaram
+2. ✅ Vencer fase 1 e ver fase 2 desbloqueada no mapa (com animação de unlock + persistência local via `sp_level_completed`)
+3. ✅ Logout + login → progresso persistiu (label "Fase 2" apareceu corretamente; mapa mostrou card 1 ✓ e card 2 ▶)
+4. ⏸ Bypass via console — não executado em runtime devido a sandboxing do iframe do itch.io que isola o contexto do `window._mcSocket`. Cobertura via:
+   - Análise estática em [server/singleplayer.js:32-37](server/singleplayer.js#L32) (3 linhas determinísticas: `level <= max + 1`)
+   - [server/server.js:1215-1218](server/server.js#L1215) (handler chama validateLevelProgress e emite `sp_error: level_locked` em falha)
+   - Evidência indireta: passo 3 já provou o caminho de auth + leitura de DB; mesma rota é usada pelo handler antes da validação de level
+
+**Follow-up opcional (sem urgência):** refazer Passo 4 numa próxima ocasião com servidor local (ou solucionar o switch de contexto do DevTools no iframe da itch.zone) para fechar evidência E2E formal. Risco prático baixo dado que o modo solo não afeta MMR.
+
+### POL-SP — Correção UX no hub solo
+
+**Pedido do usuário durante QA:** trocar labels do hub solo para refletir melhor o estado do jogador.
+
+**Feito**
+- Botão CONTINUAR agora alterna entre **COMEÇAR** (`max_level_completed === 0`, jogador estreante) e **CONTINUAR** (`max ≥ 1`, retomando jornada). Implementado em [html/index.html:`renderSPContinueLabel`](html/index.html) — único helper que controla label + sub-label baseado em `window.spProgress.max_level_completed`.
+- Botão NOVO renomeado para **RESETAR TRAJETO**. Lógica de modal de confirmação (`sh-new-confirm`) e endpoint `POST /sp/reset` mantidos intactos.
+- 2 chaves i18n novas × 9 idiomas (pt/en/es/de/it/ru/ja/ko/zh):
+  - `sp_start`: COMEÇAR / START / EMPEZAR / STARTEN / INIZIA / НАЧАТЬ / 開始 / 시작하기 / 开始
+  - `sp_reset_journey`: RESETAR TRAJETO / RESET JOURNEY / REINICIAR TRAVESÍA / REISE ZURÜCKSETZEN / RESETTA VIAGGIO / СБРОСИТЬ ПУТЬ / 旅をリセット / 여정 초기화 / 重置旅程
+- `refreshSoloHubScreen` deixou de setar `sh-continue-label` explicitamente — delegação para `renderSPContinueLabel` (mantém label e sub-label sincronizados em todas as situações: idioma trocado, fetch completado, sp_level_completed recebido).
+- `sp_new` (chave antiga) permanece nos dicionários como vestígio órfão — não removido pra manter diff mínimo.
+
+### Validação
+- JS extraído de `<script>` inline parseou sem erro via `node --check`.
+
+### Status do EPIC SP
+- ✅ SP-1.* · ✅ SP-2.* · ✅ SP-3.* · ✅ SP-4.* · ✅ SP-5.* · ✅ SP-6.* · ✅ SP-7.* · ✅ SP-8.* · ✅ SP-9.1 · ⏳ SP-9.2 (walk-through guest) · ⏳ SP-9.3 (validação segurança) · ⏳ SP-9.4 (atualizar docs)
+
+---
+
 ## [2026-05-06] Sessão SP-8.4 — Ativar feature flag SP_ENABLED + remover wrappers vestigiais
 **Status:** Completo
 **Branch:** main
