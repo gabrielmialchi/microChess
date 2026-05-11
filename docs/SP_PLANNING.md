@@ -622,9 +622,9 @@ TUDO ──→ SP-8.4 (flag ON) ──→ SP-9
 | SP-8.3 | Remover card "Tutorial" antigo | SP-4.1, SP-7.* | ✅ Completo (2026-05-06) |
 | SP-8.4 | Ativar feature flag `SP_ENABLED` | TODOS anteriores | ✅ Completo (2026-05-06) |
 | SP-9.1 | Walk-through autenticado | SP-8.4 | ✅ Completo (2026-05-06) |
-| SP-9.2 | Walk-through guest | SP-8.4 | ⏳ Pendente |
-| SP-9.3 | Validação de segurança | SP-8.4 | ⏳ Pendente |
-| SP-9.4 | Atualizar PROJECT_CONTEXT + ACTIVITY_LOG | SP-9.1..3 | ⏳ Pendente |
+| SP-9.2 | Walk-through guest | SP-8.4 | ✅ Completo (2026-05-11) |
+| SP-9.3 | Validação de segurança | SP-8.4 | ✅ Completo (2026-05-11) |
+| SP-9.4 | Atualizar PROJECT_CONTEXT + ACTIVITY_LOG | SP-9.1..3 | ✅ Completo (2026-05-11) |
 
 ### Próxima sessão sugerida
 **SP-9.2** — Walk-through como convidado (sem login). Pré-requisitos: SP-8.4 ✅. Requer:

@@ -27,6 +27,158 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-05-11] Epic SP — Single Player — CONCLUÍDO
+**Status:** ✅ Completo (todas as 34 subtarefas)
+**Branch:** main
+**Duração:** 2026-05-04 → 2026-05-11 (8 dias corridos)
+
+### Sumário do epic
+O epic SP entregou um modo Single Player completo de 15 fases, cada uma comandada por um bot de estratégia distinta (Recruta → Lenda), com persistência de progresso para usuários autenticados e modo "Play linear" para convidados (sem persistência, por design).
+
+### Entregas por sub-epic
+
+**SP-1 — Specs e wireframes (3/3)**
+- `docs/SP_TERMS.md` — terminologia × 9 idiomas
+- `docs/SP_STRATEGIES.md` — spec das 15 estratégias de bot
+- `docs/SP_WIREFRAMES.md` — wireframes textuais de todas as telas
+
+**SP-2 — Backend de persistência (3/3)**
+- Tabela `singleplayer_progress` ([server/db/database.js:76-81](server/db/database.js#L76)) com FK em players
+- Módulo `server/singleplayer.js` — `getProgress`, `validateLevelProgress`, `markLevelCompleted`, `resetProgress`
+- 3 endpoints REST: `GET /sp/progress`, `POST /sp/level-complete`, `POST /sp/reset` (todos protegidos por `requireAuth`)
+
+**SP-3 — Bots e integração (8/8)**
+- Refator `server/bot.js` + registry `server/bot-strategies/` (16 estratégias incluindo `_minimax.js` compartilhado)
+- 15 estratégias × 3 fases por estágio: Recruta/Aprendiz/Defensor → Atirador/Cavaleiro/Bispeiro → Tanque/Caçador/Estrategista → Duelista/Cercador/Iscador → Rainha/Mestre/Lenda
+- Socket event `single_player_start` ([server/server.js:1195-1259](server/server.js#L1195))
+- Hook de level-completed no gameOver ([server/server.js:467-470](server/server.js#L467))
+
+**SP-4 / SP-5 / SP-6 / SP-7 — Frontend (16/16)**
+- 4 telas novas: `screen-game-mode` (reformulada), `screen-multiplayer-mode`, `screen-solo-hub`, `screen-sp-map`
+- i18n × 9 idiomas para todos os labels (SP_TERMS + nomes de fases + textos de hub/mapa)
+- Animação one-shot de unlock após vencer ([html/index.html:4741-4749](html/index.html#L4741))
+
+**SP-8 — Integração final (4/4)**
+- `game-over-screen` adaptado para Solo (PRÓXIMA FASE / TENTAR DE NOVO / VOLTAR AO MAPA)
+- Refresh de progresso ao voltar pro hub (cache + segundo paint após fetch)
+- Remoção definitiva do card "Tutorial" legado
+- Ativação da feature flag `SP_ENABLED` via limpeza dos fallbacks vestigiais
+
+**SP-9 — QA + Docs (4/4)**
+- SP-9.1: walk-through autenticado em produção (criar conta → fase 1 → fase 2 desbloqueia → persistência cross-session)
+- SP-9.2: walk-through guest (sem persistência DB; chain linear via PRÓXIMA FASE preserva, navegação para menu/mapa reseta — por design)
+- SP-9.3: validação de segurança via 15 testes unitários ([testes/server/singleplayer.test.js](testes/server/singleplayer.test.js)) + análise estática de auth gates
+- SP-9.4: este registro consolidado + atualização do PROJECT_CONTEXT
+
+### Decisões de design relevantes
+1. **Convidado sem persistência** — sem DB, sem localStorage. Progresso vive em `window.spProgress` (RAM) e só é preservado na chain PRÓXIMA FASE/TENTAR DE NOVO. Sair pro menu ou mapa zera. Reforça funil de registro via CTA "Crie uma conta para salvar seu progresso".
+2. **Server gate apenas para logados** — `validateLevelProgress` só roda dentro do bloco `if (token)` em `single_player_start` ([server/server.js:1215](server/server.js#L1215)). Para convidado, qualquer level passa no servidor; gate cosmético via UI do mapa. Não é vulnerabilidade porque guest não afeta MMR/leaderboard.
+3. **Bot strategy `_minimax.js` separado** — facilita ajustes finos de Rainha/Mestre/Lenda sem mexer em duas estratégias ao mesmo tempo.
+4. **POL-SP (label "COMEÇAR" vs "CONTINUAR")** — quando `max_level_completed === 0`, o botão principal do hub mostra "COMEÇAR" em vez de "CONTINUAR", refletindo o estado do jogador estreante.
+
+### Métricas
+- Subtarefas concluídas: **34/34** (100%)
+- Arquivos novos: 18 (15 estratégias + minimax + singleplayer.js + singleplayer.test.js)
+- Telas novas: 4
+- Idiomas mantidos sincronizados: 9 (pt/en/es/de/it/ru/ja/ko/zh)
+- Testes unitários (cobertura SP-9.3): 15 passou / 0 falhou
+- Suite completa pós-epic: 51 passou / 0 falhou (elo 20 + mmr 16 + singleplayer 15)
+
+### Próximas iniciativas relacionadas
+- `MANUT-A` ⏳ — Limpeza de contas de teste antes do Open Test
+- `SEC-A` ⏳ — Bundling/minificação/obfuscação JS (pré-Play Store)
+- `P-B` ⏸ — Links externos reais (aguarda URLs do Gabriel)
+- `ANAL-C/D` ⏸ — Extração e interpretação de métricas (aguarda Open Test)
+
+---
+
+## [2026-05-11] Sessão SP-9.4 — Atualizar docs (encerramento epic SP)
+**Status:** Completo
+**Branch:** main
+
+### Feito
+- Tabela de telas em [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md): atualizada com 4 telas SP (game-mode, multiplayer-mode, solo-hub, sp-map). Aproveitei para corrigir status stale de auth-overlay/ban-overlay/screen-leaderboard/screen-replay (que estavam ❌ A criar, mas foram criados em sessões 5/6).
+- Linha SP da tabela de progresso em PROJECT_CONTEXT.md: ⏳ Em andamento → ✅ Completo.
+- Entrada consolidada do epic SP adicionada acima nesta mesma data — referência única para o que entregamos.
+- Tabela §10 de SP_PLANNING.md: SP-9.4 marcada ✅.
+
+### Decisões
+- Não removi o histórico das sessões individuais (SP-1.1 a SP-9.3) do ACTIVITY_LOG — preserva o contexto de cada decisão. A entrada consolidada acima é um índice navegável, não substituto.
+
+### Status do EPIC SP
+- ✅ TUDO concluído. Epic encerrado.
+
+---
+
+## [2026-05-11] Sessão SP-9.3 — Validação de segurança
+**Status:** Completo
+**Branch:** main
+
+### Resultado
+✅ Aprovado — 3/3 itens do checklist validados, com cobertura E2E automatizada (15 testes unitários novos) + análise estática estrutural dos 2 itens restantes.
+
+### Checklist
+1. ✅ **POST `/sp/level-complete` com level=15 sem ter completado 1..14 → rejeita**
+   Evidência E2E: 4 testes em [testes/server/singleplayer.test.js](testes/server/singleplayer.test.js) cobrem `validateLevelProgress(uid, 15) === false` quando max=0; `validateLevelProgress(uid, 2) === false` quando max=0; e `validateLevelProgress(uid, 8) === false` quando max=5. Endpoint em [server/server.js:344-352](server/server.js#L344) chama `validateLevelProgress` antes de `markLevelCompleted` e responde HTTP 400 quando falha.
+2. ✅ **POST sem token → 401**
+   Análise estática em [server/server.js:344-346](server/server.js#L344): `requireAuth(req.headers.authorization)` ([server.js:146-154](server/server.js#L146)) retorna `null` quando o header está ausente/malformado, e o endpoint responde imediatamente com `res.status(401).json({ error: 'Não autenticado' })`. Mesmo gate aplicado em `/sp/progress` e `/sp/reset`.
+3. ✅ **POST com token de outro user → impossível (uid vem do JWT)**
+   Estrutural: endpoint em [server/server.js:344-352](server/server.js#L344) usa `decoded.id` (vindo do JWT verificado) como uid em todas as 2 chamadas ao módulo `sp`. O `req.body` é lido apenas para extrair `level`. Não há caminho onde o uid do body é honrado, então um atacante com um token válido só pode escrever o próprio progresso.
+
+### Defesa em profundidade observada
+Além do checklist, os testes também validaram garantias secundárias que mitigam vetores correlatos:
+- `validateLevelProgress` rejeita level=0, level=16, level negativo, string, float, null/undefined (type guards em [server/singleplayer.js:18-20](server/singleplayer.js#L18))
+- `markLevelCompleted` retorna `false` sem uid (guest nunca grava) e nunca regride o progresso (level <= current → no-op)
+- Guest (uid falsy) só passa em `validateLevelProgress` quando level=1 (linha [server/singleplayer.js:34](server/singleplayer.js#L34))
+
+### Arquivos criados/modificados
+- ✚ [testes/server/singleplayer.test.js](testes/server/singleplayer.test.js) — 15 testes unitários novos cobrindo `validateLevelProgress`, `markLevelCompleted`, `getProgress`, `resetProgress`. Usa DB temporária em `os.tmpdir()` (não toca produção/local). Cleanup completo no fim, incluindo arquivos `-wal`/`-shm` do SQLite.
+
+### Validação
+- `node testes/server/singleplayer.test.js` → 15/15 passou
+- `node testes/server/run-tests.js` (suite completa) → 51/51 passou (elo: 20, mmr: 16, singleplayer: 15)
+
+### Status do EPIC SP
+- ✅ SP-1.* · ✅ SP-2.* · ✅ SP-3.* · ✅ SP-4.* · ✅ SP-5.* · ✅ SP-6.* · ✅ SP-7.* · ✅ SP-8.* · ✅ SP-9.1 · ✅ SP-9.2 · ✅ SP-9.3 · ⏳ SP-9.4 (atualizar docs)
+
+---
+
+## [2026-05-11] Sessão SP-9.2 — Walk-through guest
+**Status:** Completo
+**Branch:** main
+
+### Resultado
+✅ Aprovado — 5/5 passos do checklist passaram em produção (itch.io → Railway), com cobertura mista (4 passos E2E + Passo 5 confirmado via análise estática + sanity check no Console).
+
+### Passos executados pelo usuário
+1. ✅ Sem login → Novo Jogo → SOLO → solo-hub abre sem auth-gate ([html/index.html:4678](html/index.html#L4678))
+2. ✅ Botão principal mostra "COMEÇAR — Fase 1" (label após POL-SP; comportamento equivalente ao "CONTINUAR — Fase 1" do planning original quando `max_level_completed === 0`)
+3. ✅ Venceu fase 1; sp-map mostrou card 1 ✓ e card 2 ▶ desbloqueado na sessão atual (animação de unlock + atualização local via `sp_level_completed`)
+4. ✅ F5 zerou progresso — guest volta para Fase 1; nenhum estado persistiu
+5. ✅ Network tab limpa (sem requests para `/sp/progress`, `/sp/level-complete`, `/sp/reset`); sanity check no Console retornou `{ max_level_completed: 0, isGuest: true }`
+
+### Auditoria estática (pré-walk-through)
+Antes de entregar o protocolo, validamos as 5 frentes no código:
+- `openSoloHub` ([html/index.html:4678](html/index.html#L4678)) — sem auth-gate
+- `loadSPProgress` ([html/index.html:4657-4660](html/index.html#L4657)) — guard `if (!session || !session.token)` retorna `{0, isGuest:true}` antes de qualquer fetch
+- `confirmNewSolo` ([html/index.html:4629](html/index.html#L4629)) — `if (!isGuest)` antes do POST `/sp/reset`
+- Server `single_player_start` ([server/server.js:1206](server/server.js#L1206)) — `isGuest = true` por default; só vira `false` se token válido
+- Server gameOver SP ([server/server.js:467-470](server/server.js#L467)) — `if (!room._spIsGuest && human.uid)` antes de `markLevelCompleted`; `sp_level_completed` emitido para guests também (atualiza só memória no client)
+
+### Mensagens do Console observadas (não são bugs)
+- `Unrecognized feature: 'monetization' / 'xr'` — iframe do itch.io
+- `Allow attribute will take precedence over 'allowfullscreen'` — iframe do itch.io
+- `bad HTTP response code (403)` em `lib.min.js` — loader de analytics do itch.io
+- `preload Cinzel font não usado` — `<link rel="preload">` nosso com timeout do hint do browser; não impacta funcionamento (oportunidade futura: revisar política de preload de fontes)
+
+### Decisões
+- O label do botão principal mudou de "CONTINUAR" (planning original) para "COMEÇAR" via POL-SP em 2026-05-06 para refletir corretamente o estado `max_level_completed === 0`. O checklist SP-9.2 foi interpretado com esse contexto — Passo 2 valida o intent (botão inicia Fase 1), não o texto literal.
+
+### Status do EPIC SP
+- ✅ SP-1.* · ✅ SP-2.* · ✅ SP-3.* · ✅ SP-4.* · ✅ SP-5.* · ✅ SP-6.* · ✅ SP-7.* · ✅ SP-8.* · ✅ SP-9.1 · ✅ SP-9.2 · ⏳ SP-9.3 (validação de segurança) · ⏳ SP-9.4 (atualizar docs)
+
+---
+
 ## [2026-05-06] Sessão SP-9.1 + POL-SP — Walk-through autenticado + Polimento UX hub solo
 **Status:** Completo
 **Branch:** main

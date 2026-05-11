@@ -49,10 +49,14 @@ microChess/
 | `game-over-screen` | Fim de Jogo | ✅ Existe | Resultado + botões MENU / JOGAR NOVAMENTE |
 | `game-area` | Jogo | ✅ Existe | Board 4x4, painel, botão PRONTO |
 | `duel-modal` | Duelo | ✅ Existe | Modal de dados durante conflitos |
-| `auth-overlay` | Login/Registro | ❌ A criar | Porta de entrada, bloqueia tudo até autenticar |
-| `ban-overlay` | Banimento | ❌ A criar | Mostra tempo restante de ban, bloqueia matchmaking |
-| `screen-leaderboard` | Ranking | ❌ A criar | Top 50 jogadores por MMR |
-| `screen-replay` | Replay Viewer | ❌ A criar | Reprodução turno a turno de uma partida |
+| `auth-overlay` | Login/Registro | ✅ Existe | Porta de entrada, bloqueia tudo até autenticar |
+| `ban-overlay` | Banimento | ✅ Existe | Mostra tempo restante de ban, bloqueia matchmaking |
+| `screen-leaderboard` | Ranking | ✅ Existe | Top 50 jogadores por MMR |
+| `screen-replay` | Replay Viewer | ✅ Existe | Reprodução turno a turno de uma partida |
+| `screen-game-mode` | Modo de Jogo | ✅ Existe | 2 cards (SOLO / ONLINE) — entry point do NOVO JOGO. Reformulada em SP-4.1 |
+| `screen-multiplayer-mode` | Modo Multiplayer | ✅ Existe | Sub-modos online (Casual / Ranqueada / Sala Privada) — extraída em SP-5.1 |
+| `screen-solo-hub` | Hub Solo | ✅ Existe | Hub do Single Player: botão COMEÇAR/CONTINUAR + RESETAR TRAJETO + CTA convidado — SP-6.1 |
+| `screen-sp-map` | Mapa SP | ✅ Existe | Mapa de 15 fases com estados (concluída/atual/trancada) + animação de unlock — SP-7.1 |
 
 ### IDs importantes no HTML existente que devem ser populados com dados do backend
 ```
@@ -329,6 +333,6 @@ curl http://localhost:3000/health
 | ANAL-B | Tabela de eventos — instrumentação de fluxo (pré Open Test) | ✅ Completo |
 | ANAL-C | Extração — queries SQL e script de relatório | ⏸ Aguarda Open Test |
 | ANAL-D | Interpretação — argumento de venda | ⏸ Aguarda Open Test |
-| **SP** | **Single Player: 15 fases com bots de estratégias diferentes — ver `docs/SP_PLANNING.md`** | ⏳ Em andamento |
+| **SP** | **Single Player: 15 fases com bots de estratégias diferentes — ver `docs/SP_PLANNING.md`** | ✅ Completo |
 
 *(Atualizar este arquivo ao concluir cada sessão)*
