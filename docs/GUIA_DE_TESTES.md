@@ -38,7 +38,7 @@ Cada partida dura cerca de **5 a 10 minutos**.
 ## O que pedimos de você
 
 **Tempo de teste sugerido: ~2 horas no total.**
-Pode ser de uma só vez ou dividir em duas sessões de 1 hora — o que for melhor pra você.
+//Pode ser de uma só vez ou dividir em duas sessões de 1 hora — o que for melhor pra você.
 
 Durante esse tempo, queremos que você **experimente o jogo de verdade**: jogue, explore as telas, tente entender, perca, ganhe, reclame, ria. O que importa é o feedback honesto.
 
