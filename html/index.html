@@ -2001,7 +2001,7 @@
 
   <!-- Footer -->
   <div style="padding:8px 20px 16px;text-align:center;">
-    <a href="#" id="footer-feedback" target="_blank" style="font-family:var(--mc-font-sans);font-size:11px;color:var(--mc-faint);text-decoration:none;">Dê o seu Feedback</a>
+    <a href="https://forms.gle/v7mT2y8aZy7icWsY6" id="footer-feedback" target="_blank" style="font-family:var(--mc-font-sans);font-size:11px;color:var(--mc-faint);text-decoration:none;">Dê o seu Feedback</a>
   </div>
 
   <!-- Legacy btn — mantido para retrocompat de scripts externos -->
@@ -2321,19 +2321,21 @@
         </div>
         <div class="dk-crd-rule"></div>
         <div>
-            <div class="dk-crd-name">Gabriel Mialchi</div>
-            <div class="dk-crd-role">Design · Desenvolvimento · Ideia</div>
+            <div style="font-size:11px;font-family:var(--mc-font-sans);color:var(--mc-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;" id="crd-dev-by-label">Desenvolvido por</div>
+            <div class="dk-crd-studio" style="margin-bottom:0;">O6 GAMES</div>
         </div>
-        <div class="dk-crd-studio">o6 games</div>
+        <div style="height:12px;"></div>
+        <div>
+            <div style="font-size:11px;font-family:var(--mc-font-sans);color:var(--mc-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;" id="crd-proj-by-label">Desenvolvimento de Projeto por</div>
+            <div class="dk-crd-name">Gabriel Mialchi</div>
+        </div>
         <div class="dk-crd-links">
-            <a class="dk-crd-link" href="#" target="_blank" id="crd-portfolio">Portfólio</a>
-            <a class="dk-crd-link" href="#" target="_blank" id="crd-site">Site</a>
-            <a class="dk-crd-link" href="#" target="_blank" id="crd-insta">Instagram</a>
-            <a class="dk-crd-link" href="#" target="_blank" id="crd-itch">Itch.io</a>
+            <a class="dk-crd-link" href="https://www.o6games.com.br" target="_blank" id="crd-site">Site</a>
+            <a class="dk-crd-link" href="https://www.instagram.com/o6games" target="_blank" id="crd-insta">Instagram</a>
         </div>
         <div class="dk-crd-rule"></div>
-        <div style="font-size:12px;color:var(--mc-muted,rgba(24,19,12,0.56));line-height:1.6;max-width:220px;">Obrigado por jogar.<br>Feedback é muito bem-vindo.</div>
-        <button class="dk-crd-feedback" onclick="window.open('#','_blank')" id="crd-feedback-btn">Deixe seu feedback →</button>
+        <div style="font-size:12px;color:var(--mc-muted,rgba(24,19,12,0.56));line-height:1.6;max-width:220px;" id="crd-thanks-text">Obrigado por jogar.<br>Feedback é muito bem-vindo.</div>
+        <button class="dk-crd-feedback" onclick="window.open('https://forms.gle/v7mT2y8aZy7icWsY6','_blank')" id="crd-feedback-btn">Deixe seu feedback →</button>
     </div>
 </div>
 
@@ -2921,11 +2923,43 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         <span id="opp-dc-timer" class="exc-timer">60</span>
     </div>
     <div id="afk-banner" class="exc-banner exc-warn">
-        <span id="afk-warn-text">Jogue agora — tempo esgotando!</span>
-        <span id="afk-timer" class="exc-timer exc-pulse">45</span>
+        <span id="afk-warn-text">Inativo — clique para continuar!</span>
+        <span id="afk-timer" class="exc-timer exc-pulse">10</span>
     </div>
     <div id="sudden-death-banner" class="exc-banner exc-info">
         <span>⚔ Morte Súbita — próxima colisão vai direto ao duelo</span>
+    </div>
+
+    <!-- Inactivity popup — shown to the inactive player -->
+    <div id="inactivity-self-popup" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.85);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
+        <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">INATIVO POR MAIS DE 60 SEGUNDOS</div>
+        <button onclick="window.inactivityReturn()" id="inactivity-return-btn" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
+            VOLTAR (<span id="inactivity-return-timer">90</span>)
+        </button>
+        <button onclick="window.inactivityAbandon()" id="inactivity-abandon-btn" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
+            ABANDONAR PARTIDA
+        </button>
+    </div>
+
+    <!-- Inactivity popup — shown to the active player waiting -->
+    <div id="inactivity-opp-popup" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.85);flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;">
+        <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;">OPONENTE INATIVO</div>
+        <div style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);letter-spacing:1.5px;">AGUARDANDO AÇÃO</div>
+        <button onclick="window.inactivityOppReturn()" id="inactivity-opp-return-btn" disabled style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:not-allowed;opacity:0.4;">
+            VOLTAR
+        </button>
+    </div>
+
+    <!-- Return-to-game prompt — shown when reconnecting while opponent was also pending -->
+    <div id="return-to-game-popup" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.88);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
+        <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">RETORNAR AO JOGO?</div>
+        <div style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);letter-spacing:1.5px;max-width:240px;">Seu oponente voltou. Deseja continuar a partida?</div>
+        <button onclick="window.rtgYes()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
+            SIM (<span id="rtg-timer">15</span>)
+        </button>
+        <button onclick="window.rtgNo()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
+            NÃO
+        </button>
     </div>
 
     <div class="panel" id="my-panel">
@@ -3114,12 +3148,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'Nenhum jogador ainda.', no_matches_yet:'Nenhuma partida registrada.',
             match_result_win:'VITÓRIA', match_result_loss:'DERROTA', match_result_wo:'W.O.',
             unranked_match:'PARTIDA NÃO RANQUEADA',
-            warrior:'Guerreiro', afk_warn:'Jogue agora — tempo esgotando!',
+            warrior:'Guerreiro', afk_warn:'Inativo — clique para continuar!',
             err_unknown:'Erro desconhecido.', err_connection:'Erro de conexão com o servidor.',
             err_fill_fields:'Preencha todos os campos.', err_passwords_mismatch:'As senhas não coincidem.',
             err_change_password:'Erro ao alterar senha.',
             mode_title:'MODO DE JOGO', mode_casual:'Casual', mode_ranked:'Ranqueada', mode_train:'Tutorial',
-            mode_casual_desc:'Jogue sem afetar seu XP', mode_ranked_desc:'Dispute XP e suba no ranking', mode_train_desc:'Aprenda jogando contra um bot no modo fácil',
+            mode_casual_desc:'Jogue sem afetar seu XP', mode_ranked_desc:'Dispute XP e suba no ranking', mode_train_desc:'Aprenda jogando contra um bot no modo fácil', ranked_requires_account:'Conta necessária',
             mode_find_match:'ENCONTRAR PARTIDA',
             sp_solo:'SOLO', sp_online:'ONLINE', sp_solo_desc:'15 fases contra a CPU', sp_online_desc:'Jogadores reais online',
             htp_intro:'microChess Online é um duelo tático onde o xadrez clássico encontra a incerteza do campo de batalha. O objetivo é simples: Capture o Rei adversário.',
@@ -3204,12 +3238,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             no_players_yet:'No players yet.', no_matches_yet:'No matches recorded.',
             match_result_win:'VICTORY', match_result_loss:'DEFEAT', match_result_wo:'W.O.',
             unranked_match:'UNRANKED MATCH',
-            warrior:'Warrior', afk_warn:'Play now — time running out!',
+            warrior:'Warrior', afk_warn:'Inactive — click to continue!',
             err_unknown:'Unknown error.', err_connection:'Connection error.',
             err_fill_fields:'Please fill in all fields.', err_passwords_mismatch:'Passwords do not match.',
             err_change_password:'Error changing password.',
             mode_title:'GAME MODE', mode_casual:'Casual', mode_ranked:'Ranked', mode_train:'Tutorial',
-            mode_casual_desc:'Play without affecting your XP', mode_ranked_desc:'Compete for XP and climb the ranks', mode_train_desc:'Learn by playing against an easy bot',
+            mode_casual_desc:'Play without affecting your XP', mode_ranked_desc:'Compete for XP and climb the ranks', mode_train_desc:'Learn by playing against an easy bot', ranked_requires_account:'Account required',
             mode_find_match:'FIND MATCH',
             sp_solo:'SOLO', sp_online:'ONLINE', sp_solo_desc:'15 stages vs CPU', sp_online_desc:'Real players online',
             htp_intro:'microChess Online is a tactical duel where classic chess meets battlefield uncertainty. The goal is simple: Capture the enemy King.',
@@ -3309,7 +3343,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             err_fill_fields:'Completa todos los campos.', err_passwords_mismatch:'Las contraseñas no coinciden.',
             err_change_password:'Error al cambiar la contraseña.',
             mode_title:'MODO DE JUEGO', mode_casual:'Casual', mode_ranked:'Competitiva', mode_train:'Tutorial',
-            mode_casual_desc:'Juega sin afectar tu XP', mode_ranked_desc:'Compite por XP y sube en el ranking', mode_train_desc:'Aprende jugando contra un bot fácil',
+            mode_casual_desc:'Juega sin afectar tu XP', mode_ranked_desc:'Compite por XP y sube en el ranking', mode_train_desc:'Aprende jugando contra un bot fácil', ranked_requires_account:'Cuenta requerida',
             mode_find_match:'BUSCAR PARTIDA',
             sp_solo:'SOLO', sp_online:'ONLINE', sp_solo_desc:'15 fases contra la CPU', sp_online_desc:'Jugadores reales online',
             htp_intro:'microChess Online es un duelo táctico donde el ajedrez clásico se encuentra con la incertidumbre del campo de batalla. El objetivo es simple: Captura al Rey enemigo.',
@@ -3409,7 +3443,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             err_fill_fields:'Bitte alle Felder ausfüllen.', err_passwords_mismatch:'Passwörter stimmen nicht überein.',
             err_change_password:'Fehler beim Ändern des Passworts.',
             mode_title:'SPIELMODUS', mode_casual:'Gelegentlich', mode_ranked:'Gewertet', mode_train:'Tutorial',
-            mode_casual_desc:'Spielen ohne XP zu verlieren', mode_ranked_desc:'Kämpfe um XP und steige auf', mode_train_desc:'Lerne mit einem einfachen Bot zu spielen',
+            mode_casual_desc:'Spielen ohne XP zu verlieren', mode_ranked_desc:'Kämpfe um XP und steige auf', mode_train_desc:'Lerne mit einem einfachen Bot zu spielen', ranked_requires_account:'Konto erforderlich',
             mode_find_match:'SPIEL FINDEN',
             sp_solo:'SOLO', sp_online:'ONLINE', sp_solo_desc:'15 Stufen gegen die CPU', sp_online_desc:'Echte Spieler online',
             htp_intro:'microChess Online ist ein taktisches Duell, bei dem klassisches Schach auf die Ungewissheit des Schlachtfelds trifft. Das Ziel ist einfach: Capture den feindlichen König.',
@@ -3509,7 +3543,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             err_fill_fields:'Compila tutti i campi.', err_passwords_mismatch:'Le password non coincidono.',
             err_change_password:'Errore durante il cambio password.',
             mode_title:'MODALITÀ DI GIOCO', mode_casual:'Casuale', mode_ranked:'Classificata', mode_train:'Tutorial',
-            mode_casual_desc:'Gioca senza influenzare la tua XP', mode_ranked_desc:'Combatti per XP e scala la classifica', mode_train_desc:'Impara giocando contro un bot facile',
+            mode_casual_desc:'Gioca senza influenzare la tua XP', mode_ranked_desc:'Combatti per XP e scala la classifica', mode_train_desc:'Impara giocando contro un bot facile', ranked_requires_account:'Account richiesto',
             mode_find_match:'TROVA PARTITA',
             sp_solo:'SOLO', sp_online:'ONLINE', sp_solo_desc:'15 livelli contro la CPU', sp_online_desc:'Giocatori reali online',
             htp_intro:'microChess Online è un duello tattico dove gli scacchi classici incontrano l\'incertezza del campo di battaglia. L\'obiettivo è semplice: Cattura il Re nemico.',
@@ -3609,7 +3643,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             err_fill_fields:'Заполните все поля.', err_passwords_mismatch:'Пароли не совпадают.',
             err_change_password:'Ошибка смены пароля.',
             mode_title:'РЕЖИМ ИГРЫ', mode_casual:'Обычный', mode_ranked:'Рейтинговый', mode_train:'Туториал',
-            mode_casual_desc:'Играйте без изменения XP', mode_ranked_desc:'Соревнуйтесь за XP и рейтинг', mode_train_desc:'Учитесь, играя против лёгкого бота',
+            mode_casual_desc:'Играйте без изменения XP', mode_ranked_desc:'Соревнуйтесь за XP и рейтинг', mode_train_desc:'Учитесь, играя против лёгкого бота', ranked_requires_account:'Аккаунт обязателен',
             mode_find_match:'НАЙТИ МАТЧ',
             sp_solo:'СОЛО', sp_online:'ОНЛАЙН', sp_solo_desc:'15 уровней против ИИ', sp_online_desc:'Игроки в реальном времени',
             htp_intro:'microChess Online — это тактический дуэль, где классические шахматы встречаются с непредсказуемостью поля боя. Цель проста: захватите Короля противника.',
@@ -3709,7 +3743,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             err_fill_fields:'すべての項目を入力してください。', err_passwords_mismatch:'パスワードが一致しません。',
             err_change_password:'パスワード変更エラー。',
             mode_title:'ゲームモード', mode_casual:'カジュアル', mode_ranked:'ランク戦', mode_train:'チュートリアル',
-            mode_casual_desc:'XPに影響しない対戦', mode_ranked_desc:'XPを争いランクを上げる', mode_train_desc:'簡単なボットで学ぼう',
+            mode_casual_desc:'XPに影響しない対戦', mode_ranked_desc:'XPを争いランクを上げる', mode_train_desc:'簡単なボットで学ぼう', ranked_requires_account:'アカウント必須',
             mode_find_match:'マッチ検索',
             sp_solo:'ソロ', sp_online:'オンライン', sp_solo_desc:'CPUと15ステージ', sp_online_desc:'オンライン対戦',
             htp_intro:'microChess Onlineは、クラシックなチェスと戦場の不確実性が融合した戦術的決闘です。目標はシンプル：敵のキングを捕獲せよ。',
@@ -3809,7 +3843,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             err_fill_fields:'모든 필드를 채워주세요.', err_passwords_mismatch:'비밀번호가 일치하지 않습니다.',
             err_change_password:'비밀번호 변경 오류.',
             mode_title:'게임 모드', mode_casual:'캐주얼', mode_ranked:'랭크전', mode_train:'튜토리얼',
-            mode_casual_desc:'XP에 영향 없이 플레이', mode_ranked_desc:'XP를 걸고 랭크에 도전', mode_train_desc:'쉬운 봇과 플레이하며 배우기',
+            mode_casual_desc:'XP에 영향 없이 플레이', mode_ranked_desc:'XP를 걸고 랭크에 도전', mode_train_desc:'쉬운 봇과 플레이하며 배우기', ranked_requires_account:'계정 필요',
             mode_find_match:'매치 찾기',
             sp_solo:'솔로', sp_online:'온라인', sp_solo_desc:'CPU와 15단계', sp_online_desc:'실시간 온라인 대전',
             htp_intro:'microChess Online은 클래식 체스와 전쟁터의 불확실성이 만나는 전술적 결투입니다. 목표는 간단합니다: 적의 킹을 잡아라.',
@@ -3909,7 +3943,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             err_fill_fields:'请填写所有字段。', err_passwords_mismatch:'密码不匹配。',
             err_change_password:'修改密码出错。',
             mode_title:'游戏模式', mode_casual:'休闲', mode_ranked:'排名赛', mode_train:'教程',
-            mode_casual_desc:'不影响XP的对局', mode_ranked_desc:'争夺XP并提升排名', mode_train_desc:'与简单机器人对局学习',
+            mode_casual_desc:'不影响XP的对局', mode_ranked_desc:'争夺XP并提升排名', mode_train_desc:'与简单机器人对局学习', ranked_requires_account:'需要账户',
             mode_find_match:'查找对局',
             sp_solo:'单人', sp_online:'在线', sp_solo_desc:'15 关对战 CPU', sp_online_desc:'真人在线对战',
             htp_intro:'microChess Online是一场战术决斗，经典国际象棋与战场的不确定性相遇。目标很简单：捕获敌方国王。',
@@ -4076,6 +4110,23 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (el('mp-ranked-label')) el('mp-ranked-label').textContent = t('mode_ranked');
         if (el('mp-ranked-desc'))  el('mp-ranked-desc').textContent  = t('mode_ranked_desc');
         if (el('mp-find-label'))   el('mp-find-label').textContent   = t('mode_find_match');
+        // Lock ranked card for guests
+        const isAuth = !!(window.Session && window.Session.get() && window.Session.get().token);
+        const rankedCard = el('mp-card-ranked');
+        const lockBadge  = el('mp-ranked-lock-badge');
+        if (rankedCard) {
+            rankedCard.style.pointerEvents = isAuth ? '' : 'none';
+            rankedCard.style.opacity       = isAuth ? '' : '0.45';
+        }
+        if (!isAuth && rankedCard && !lockBadge) {
+            const badge = document.createElement('div');
+            badge.id = 'mp-ranked-lock-badge';
+            badge.style.cssText = 'font-size:11px;color:var(--mc-muted);margin-top:4px;';
+            badge.textContent = '🔒 ' + (t('ranked_requires_account') || 'Conta necessária');
+            rankedCard.appendChild(badge);
+        } else if (isAuth && lockBadge) {
+            lockBadge.remove();
+        }
     }
 
     // SP-6.5: i18n do screen-solo-hub + label dinâmico de progresso + textos do modal NOVO + banner sp-map.
@@ -4521,6 +4572,17 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     const socket = io(SERVER_URL);
     window._mcSocket = socket;
 
+    // On reconnect: attempt to restore in-progress game
+    socket.on('connect', () => {
+        const storedToken = sessionStorage.getItem('mc_reconnect_token');
+        const session = window.Session && window.Session.get && window.Session.get();
+        if (storedToken) {
+            socket.emit('rejoin_game', { reconnectToken: storedToken });
+        } else if (session && session.token) {
+            socket.emit('rejoin_game', { token: session.token });
+        }
+    });
+
     // ── GAME STATE VARS ───────────────────────────────────────────
     let roomID      = null;
     let myColor     = 'white';
@@ -4541,6 +4603,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     // SP-5.2: implementação real dos handlers de screen-multiplayer-mode.
     // Espelha selectGameMode/startMatchmakingWithMode mas só com Casual/Ranqueada (sem train).
     window.selectMultiplayerMode = function(mode) {
+        if (mode === 'ranked' && !(window.Session && window.Session.get() && window.Session.get().token)) return;
         _selectedMPMode = mode;
         const cardCasual  = document.getElementById('mp-card-casual');
         const cardRanked  = document.getElementById('mp-card-ranked');
@@ -4942,12 +5005,14 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
     // match_found comes from server
     let _isRanked = true;
-    socket.on('match_found', ({ myColor: color, oppProfile, roomId, isRanked }) => {
+    socket.on('match_found', ({ myColor: color, oppProfile, roomId, isRanked, reconnectToken }) => {
         opponentProfile = oppProfile;
         roomID    = roomId;
         myColor   = color;
         oppColor  = color === 'white' ? 'black' : 'white';
         _isRanked = isRanked !== false;
+        if (reconnectToken) sessionStorage.setItem('mc_reconnect_token', reconnectToken);
+        else sessionStorage.removeItem('mc_reconnect_token');
         // Populate matchmaking screen (may be coming from private room)
         const p = getProfile();
         document.getElementById('mm-found-my-avatar').textContent = PIECE_ICONS[p.avatar] || '♔';
@@ -5128,7 +5193,13 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     });
     socket.on('private_room_expired', () => window.privateRoom._onExpired());
     socket.on('private_room_error',   ({ error }) => window.privateRoom._onError(error));
-    socket.on('rejoin_success', () => { localSelection = null; if (state) updateUI(); });
+    socket.on('rejoin_success', ({ roomId, color } = {}) => {
+        localSelection = null;
+        if (roomId) roomID = roomId;
+        if (color)  myColor = color;
+        if (state) updateUI();
+    });
+    socket.on('rejoin_failed', () => { sessionStorage.removeItem('mc_reconnect_token'); });
 
     window.returnToMenu = function() {
         inGame = false;
@@ -5281,9 +5352,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     function updateUI() {
         // GAME OVER
         if (state.phase === 'GAMEOVER') {
+            sessionStorage.removeItem('mc_reconnect_token');
             const wk = state.army.find(p => p.type === 'K' && p.color === 'white');
             const bk = state.army.find(p => p.type === 'K' && p.color === 'black');
-            const winnerColor = wk ? 'white' : (bk ? 'black' : 'draw');
+            const winnerColor = state.draw ? 'draw' : (wk ? 'white' : (bk ? 'black' : 'draw'));
 
             const goScreen = document.getElementById('game-over-screen');
             const goResult = document.getElementById('game-over-result');
@@ -5942,68 +6014,170 @@ if ('serviceWorker' in navigator) {
         window.returnToMenu && window.returnToMenu();
     };
 
-    // ── AFK tracking — synced to server deadline ─────────────────
-    let _afkInterval  = null;
-    let _prevPhase    = null;
-    let _prevReady    = false;
-    let _myColor      = null;
+    // ── Inactivity tracking — click-based detection ───────────────
+    let _myColor             = null;
+    let _lastActivityAt      = Date.now();
+    let _inactiveEmitted     = false;
+    let _inactivityInterval  = null;
+    let _inactivityPopupTimer = null;
+    let _oppReturnTimer      = null;
+    let _currentPhase        = null;
 
-    const AFK_WARN_THRESHOLD = 10;
-    function _startAfkTimer(deadlineMs) {
-        if (_afkInterval) clearInterval(_afkInterval);
-        const tick = () => {
-            const remain = deadlineMs ? Math.max(0, Math.round((deadlineMs - Date.now()) / 1000)) : 0;
-            if (remain <= AFK_WARN_THRESHOLD) window.ExcBanners.showAfk(remain);
-            else                              window.ExcBanners.hideAfk();
-            if (remain <= 0) { clearInterval(_afkInterval); _afkInterval = null; }
-        };
-        tick();
-        _afkInterval = setInterval(tick, 500);
-    }
-
-    function _stopAfkTimer() {
-        if (_afkInterval) { clearInterval(_afkInterval); _afkInterval = null; }
+    function _resetActivity() {
+        _lastActivityAt  = Date.now();
+        _inactiveEmitted = false;
         window.ExcBanners.hideAfk();
     }
+
+    function _startInactivityTracking() {
+        _resetActivity();
+        if (_inactivityInterval) clearInterval(_inactivityInterval);
+        _inactivityInterval = setInterval(() => {
+            if (_inactiveEmitted) return;
+            if (!_currentPhase || _currentPhase === 'GAMEOVER') return;
+            const selfPopup = document.getElementById('inactivity-self-popup');
+            if (selfPopup && selfPopup.style.display !== 'none') return;
+            const elapsed = Date.now() - _lastActivityAt;
+            if (elapsed >= 60_000) {
+                _inactiveEmitted = true;
+                const s = window._mcSocket; if (s) s.emit('player_inactive');
+                window.ExcBanners.hideAfk();
+            } else if (elapsed >= 50_000) {
+                window.ExcBanners.showAfk(Math.max(0, Math.ceil((60_000 - elapsed) / 1000)));
+            } else {
+                window.ExcBanners.hideAfk();
+            }
+        }, 500);
+    }
+
+    function _stopInactivityTracking() {
+        if (_inactivityInterval) { clearInterval(_inactivityInterval); _inactivityInterval = null; }
+        window.ExcBanners.hideAfk();
+    }
+
+    function _hideInactivityPopups() {
+        const p1 = document.getElementById('inactivity-self-popup');
+        const p2 = document.getElementById('inactivity-opp-popup');
+        if (p1) p1.style.display = 'none';
+        if (p2) p2.style.display = 'none';
+        if (_inactivityPopupTimer) { clearInterval(_inactivityPopupTimer); _inactivityPopupTimer = null; }
+        if (_oppReturnTimer)       { clearTimeout(_oppReturnTimer);        _oppReturnTimer = null; }
+        _inactiveEmitted = false;
+    }
+
+    window.inactivityReturn = function() {
+        const s = window._mcSocket; if (s) s.emit('player_returned');
+        _hideInactivityPopups();
+        _startInactivityTracking();
+    };
+    window.inactivityAbandon = function() {
+        const s = window._mcSocket; if (s) s.emit('player_abandoned');
+        _hideInactivityPopups();
+    };
+    window.inactivityOppReturn = function() {
+        _hideInactivityPopups();
+    };
+
+    // Any click/touch anywhere resets the inactivity timer
+    document.addEventListener('click',      _resetActivity, true);
+    document.addEventListener('touchstart', _resetActivity, { passive: true, capture: true });
 
     window.addEventListener('load', () => {
         const socket = window._mcSocket;
         if (!socket) return;
 
-        // Capture my color
         socket.on('match_found', ({ myColor: color }) => { _myColor = color; });
 
-        // AFK + sudden death tracking
         socket.on('game_state', (data) => {
             if (!data) return;
-            const phase   = data.phase;
-            const ready   = data.ready || {};
-            const myReady = _myColor ? !!ready[_myColor] : false;
+            const phase = data.phase;
+            _currentPhase = phase;
 
-            if (phase === 'ACTION') {
-                if (myReady) {
-                    _stopAfkTimer();
-                } else {
-                    const deadline = _myColor && data.afkDeadline ? data.afkDeadline[_myColor] : null;
-                    if (_prevPhase !== 'ACTION' || _prevReady) {
-                        _startAfkTimer(deadline);
-                    }
-                }
+            if (!phase || phase === 'GAMEOVER') {
+                _stopInactivityTracking();
             } else {
-                _stopAfkTimer();
+                if (!_inactivityInterval) _startInactivityTracking();
             }
 
-            // Sudden death: shown during duel, cleared on new action phase
-            if (phase !== 'ACTION' && phase !== 'GAMEOVER') {
+            // Sudden death banner
+            if (phase !== 'ACTION' && phase !== 'GAMEOVER' && phase !== 'SUDDEN_DEATH') {
                 window.ExcBanners.hideSuddenDeath();
             }
             if (phase === 'GAMEOVER') {
                 window.ExcBanners.hideAll();
+                _hideInactivityPopups();
+                _stopInactivityTracking();
             }
-
-            _prevPhase = phase;
-            _prevReady = myReady;
         });
+
+        // ── Inactivity popup events ──────────────────────────────
+        socket.on('inactivity_popup', ({ deadline }) => {
+            _stopInactivityTracking();
+            const popup = document.getElementById('inactivity-self-popup');
+            if (!popup) return;
+            popup.style.display = 'flex';
+            const timerEl = document.getElementById('inactivity-return-timer');
+            if (_inactivityPopupTimer) clearInterval(_inactivityPopupTimer);
+            _inactivityPopupTimer = setInterval(() => {
+                const remain = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+                if (timerEl) timerEl.textContent = remain;
+                if (remain <= 0) { clearInterval(_inactivityPopupTimer); _inactivityPopupTimer = null; }
+            }, 500);
+            if (timerEl) timerEl.textContent = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+        });
+
+        socket.on('opponent_inactive', () => {
+            const popup = document.getElementById('inactivity-opp-popup');
+            const btn   = document.getElementById('inactivity-opp-return-btn');
+            if (popup) popup.style.display = 'flex';
+            if (btn)   { btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; }
+        });
+
+        socket.on('opponent_returned', ({ dismissInMs }) => {
+            const btn = document.getElementById('inactivity-opp-return-btn');
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+            if (_oppReturnTimer) clearTimeout(_oppReturnTimer);
+            _oppReturnTimer = setTimeout(() => {
+                _hideInactivityPopups();
+                _oppReturnTimer = null;
+            }, dismissInMs || 15_000);
+        });
+
+        // ── Return-to-game prompt (both players were pending) ────────
+        let _rtgTimer = null;
+        socket.on('return_to_game_prompt', ({ dismissInMs }) => {
+            _hideInactivityPopups();
+            const popup = document.getElementById('return-to-game-popup');
+            const timerEl = document.getElementById('rtg-timer');
+            if (!popup) return;
+            popup.style.display = 'flex';
+            const deadline = Date.now() + (dismissInMs || 15_000);
+            if (_rtgTimer) clearInterval(_rtgTimer);
+            _rtgTimer = setInterval(() => {
+                const remain = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+                if (timerEl) timerEl.textContent = remain;
+                if (remain <= 0) {
+                    clearInterval(_rtgTimer); _rtgTimer = null;
+                    window.rtgNo && window.rtgNo();
+                }
+            }, 500);
+            if (timerEl) timerEl.textContent = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+        });
+
+        function _hideRtgPopup() {
+            if (_rtgTimer) { clearInterval(_rtgTimer); _rtgTimer = null; }
+            const popup = document.getElementById('return-to-game-popup');
+            if (popup) popup.style.display = 'none';
+        }
+
+        window.rtgYes = function() {
+            _hideRtgPopup();
+            socket.emit('return_prompt_response', { answer: 'yes' });
+        };
+        window.rtgNo = function() {
+            _hideRtgPopup();
+            socket.emit('return_prompt_response', { answer: 'no' });
+        };
     });
 })();
 </script>

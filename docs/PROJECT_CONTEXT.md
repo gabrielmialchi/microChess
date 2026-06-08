@@ -74,44 +74,36 @@ microChess/
 
 ---
 
-## Sistemas a Implementar
+## Sistemas Implementados
 
-### ✅ Já implementado no server.js
-- Matchmaking por fila (Socket.io, in-memory)
-- Lógica completa do jogo (DRAFT → POSITION → REVEAL → ACTION → GAMEOVER)
-- Validação de movimentos server-side (`isValidMove`)
-- WO básico por disconnect (`room.state.wo = true`)
+Todos os sistemas do plano original (sessões 1–18, Design-A..L, SP, PRE-OT-A..G, etc.) estão ✅ concluídos.
 
-### ❌ A implementar (ordem das sessões)
+## Próximo Ciclo — Ajustes Pós-Open Test
 
-#### Sessão 1 — Database (SQLite)
-- Tabelas: `players`, `matches`, `replays`
-- Campos críticos: `ban_until`, `wo_count`, `wo_against_count`
+Ver `docs/SESSAO_POR_SESSAO_PLANNING.md` para o plano detalhado de cada sessão.
 
-#### Sessão 2 — Autenticação (JWT)
-- Endpoints: POST /auth/register, POST /auth/login
-- `queue_join` retrocompatível com e sem token
+### ⏳ ADJ-A — Quick wins (independente)
+- **BLOCO A**: Ranked desabilitado para convidados — botão bloqueado visualmente no frontend
+- **BLOCO B**: Deletar todos os usuários cadastrados (sqlite, one-shot)
+- **BLOCO F**: Atualizar tela de Créditos — nova estrutura "Desenvolvido por / O6 GAMES · Desenvolvimento de Projeto por / Gabriel Mialchi", remover Portfólio e Itch.io
 
-#### Sessão 3 — MMR + WO/Ban + AFK
-- Cálculo ELO ao fim de cada partida
-- Sistema de ban: 3 WOs → ban 30min, escalável
-- Timer AFK: inatividade em ACTION phase → WO automático
-- Endpoint: GET /leaderboard, GET /player/:id
+### ⏳ ADJ-B — Sistema de Inatividade (substituição completa)
+Substitui o sistema AFK baseado em fase por detecção de clique do usuário:
+- 50s sem clicar → banner de aviso com countdown 10s
+- 60s sem clicar → `player_inactive` emitido; popup "INATIVO POR MAIS DE 60 SEGUNDOS" com VOLTAR(90s) e ABANDONAR
+- Oponente vê: "OPONENTE INATIVO, AGUARDANDO AÇÃO"
+- Ao retornar: oponente tem 15s para fechar popup
+- Sem resposta em 90s → WO
 
-#### Sessão 4 — Replay Recording
-- Gravar estado do board + movimentos + dados em cada turno
-- Salvar no banco ao fim da partida
-- Endpoint: GET /match/:id/replay
+### ⏳ ADJ-C — Sistema de Desconexão (rework)
+- Janela de 90s para reconectar (era 60s; convidados tinham WO imediato — agora igual para todos)
+- Convidados recebem `reconnectToken` ao entrar na partida (guardado em sessionStorage)
+- Reutiliza popup "OPONENTE INATIVO" do ADJ-B
 
-#### Sessão 5 — Frontend Auth + Ban
-- `html/auth-frontend.js`: overlay de login/registro, Session manager, MMR badge
-- Overlay de ban com countdown
-- Integração com `queue_join` (injetar token + mmr)
-- Popular IDs do menu/perfil com dados do backend
-
-#### Sessão 6 — Frontend Leaderboard + Replay Viewer
-- `html/rank-ui.js`: leaderboard, profile expandido
-- `html/replay-ui.js`: reprodução turno a turno com controles
+### ⏳ ADJ-D — Empate por dupla inatividade/desconexão
+- Ambos inativos/desconectados → DRAW forçado
+- Um retorna enquanto outro ainda está pending → popup "RETORNAR AO JOGO? SIM/NÃO" com 15s
+- NÃO ou timer esgota → WO contra quem estava pending (retornado vence)
 
 #### Sessão 7 — Reorganização de Navegação + Header + Logout
 - Menu: apenas NOVO JOGO / RANKING / CONFIGURAÇÕES
@@ -209,9 +201,13 @@ duel_resolve    → finalizar duel (quando ambos rolaram)
 disconnect      → sair (remove da fila; WO se em partida)
 ```
 
-Eventos que serão ADICIONADOS:
+Eventos a ADICIONAR (ADJ-B / ADJ-C / ADJ-D):
 ```
-(nenhum novo evento por enquanto — tudo via HTTP REST)
+player_inactive         → cliente informa 60s sem clique
+player_returned         → jogador inativo voltou (clicou VOLTAR)
+player_abandoned        → jogador inativo abandonou
+return_prompt_response  → resposta ao prompt "RETORNAR AO JOGO?" (answer:'yes'|'no')
+game_reconnect_token    → servidor envia token de reconexão para convidados
 ```
 
 ---
@@ -316,7 +312,7 @@ curl http://localhost:3000/health
 | OPT-C | flag-icons inline + SW versioning + perMessageDeflate + CSS hints | ✅ Completo |
 | TESTES-A | Unit tests + db-inspector | ✅ Completo |
 | INFRA-A | Railway Volume + persistência do SQLite + monitoramento de uptime | ✅ Completo |
-| MANUT-A | Limpeza de contas de teste antes do Open Test | ⏳ Pendente |
+| MANUT-A | Limpeza de contas de teste antes do Open Test | ✅ Completo (ADJ-A/B) |
 | PRE-OT-A | Idioma EN padrão + detecção de sistema + preferência por usuário | ✅ Completo |
 | PRE-OT-B | Modo Casual + novo fluxo NOVO JOGO | ✅ Completo |
 | PRE-OT-C | Renomear PdL→XP + timer visível desde início do turno | ✅ Completo |
@@ -333,6 +329,10 @@ curl http://localhost:3000/health
 | ANAL-B | Tabela de eventos — instrumentação de fluxo (pré Open Test) | ✅ Completo |
 | ANAL-C | Extração — queries SQL e script de relatório | ⏸ Aguarda Open Test |
 | ANAL-D | Interpretação — argumento de venda | ⏸ Aguarda Open Test |
-| **SP** | **Single Player: 15 fases com bots de estratégias diferentes — ver `docs/SP_PLANNING.md`** | ✅ Completo |
+| **SP** | **Single Player: 15 fases com bots de estratégias diferentes** | ✅ Completo |
+| **ADJ-A** | **Ranked lock + delete users + créditos** | ✅ Completo |
+| **ADJ-B** | **Sistema de inatividade (substituição completa)** | ✅ Completo |
+| **ADJ-C** | **Sistema de desconexão (rework + guests)** | ✅ Completo |
+| **ADJ-D** | **Empate por dupla inatividade/desconexão** | ✅ Completo |
 
 *(Atualizar este arquivo ao concluir cada sessão)*

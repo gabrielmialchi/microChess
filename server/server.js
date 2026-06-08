@@ -179,6 +179,7 @@ app.post('/auth/register', authLimiter, async (req, res) => {
         ).run(id, uname, email_enc, email_hash, email_enc, password_hash);
         const token = signToken({ id, username: uname, pv: 0 });
         res.json({ token, id, username: uname, mmr: 1500, lang: 'en' });
+        logEvent('register_success', id, null, null);
     } catch (e) {
         if (e.message.includes('UNIQUE'))
             return res.status(409).json({ error: 'Username já cadastrado' });
@@ -359,9 +360,7 @@ app.post('/sp/reset', apiLimiter, (req, res) => {
 });
 
 // ── MMR / BAN / AFK ───────────────────────────────────────────
-const K_WO_BONUS     = 8;
-const AFK_ACTION_MS  = 45_000;
-const AFK_PREPARE_MS = 120_000;
+const K_WO_BONUS = 8;
 
 function applyBan(playerId, newWoCount) {
     const minutes = getBanDuration(newWoCount);
@@ -462,12 +461,16 @@ function persistMatchResult(room, winnerColor, isWO = false) {
         const humanColor = room._botColor === 'black' ? 'white' : 'black';
         const humanWon   = winnerColor === humanColor && !isWO;
         const human      = room.players[humanColor];
+        const level      = room._spLevel;
+        const turns      = room._replay?.turns?.length ?? 0;
         if (humanWon && human?.socketId) {
-            const level = room._spLevel;
             if (!room._spIsGuest && human.uid) {
                 sp.markLevelCompleted(human.uid, level);
             }
             io.to(human.socketId).emit('sp_level_completed', { level });
+            logEvent('solo_complete', human.uid, room.id, { level, turns });
+        } else if (human?.uid) {
+            logEvent('solo_quit', human.uid, room.id, { level, turns, isWO });
         }
         return;
     }
@@ -510,6 +513,7 @@ function startAFKTimer(room, color, ms, reason) {
         const roomNow = rooms.get(room.id);
         if (!roomNow || roomNow.state.phase === 'GAMEOVER') return;
         console.log(`[AFK] ${color} inativo (${reason}). WO decretado.`);
+        logEvent('afk_triggered', roomNow.players[color]?.uid, roomNow.id, { phase: roomNow.state.phase, reason });
         const oppColor = color === 'white' ? 'black' : 'white';
         clearAFKTimer(roomNow, color);
         clearAFKTimer(roomNow, color === 'white' ? 'black' : 'white');
@@ -520,6 +524,33 @@ function startAFKTimer(room, color, ms, reason) {
         broadcast(roomNow);
         scheduleRoomCleanup(room.id);
     }, ms);
+}
+
+function decreeWOForInactivity(room, color, reason) {
+    const roomNow = rooms.get(room.id);
+    if (!roomNow || roomNow.state.phase === 'GAMEOVER') return;
+    const oppColor = color === 'white' ? 'black' : 'white';
+    // Both players pending → force draw
+    if (roomNow.pending?.[oppColor]) {
+        clearTimeout(roomNow.pending[oppColor].timer);
+        roomNow.pending.white = null;
+        roomNow.pending.black = null;
+        roomNow.state.phase = 'GAMEOVER';
+        roomNow.state.draw  = true;
+        roomNow.state.wo    = false;
+        persistMatchResult(roomNow, null, false);
+        broadcast(roomNow);
+        scheduleRoomCleanup(room.id);
+        return;
+    }
+    if (roomNow.pending) roomNow.pending[color] = null;
+    console.log(`[INACTIVITY] ${color} ${reason}. WO decretado.`);
+    roomNow.state.phase = 'GAMEOVER';
+    roomNow.state.wo    = true;
+    roomNow.state.afk   = color;
+    persistMatchResult(roomNow, oppColor, true);
+    broadcast(roomNow);
+    scheduleRoomCleanup(room.id);
 }
 
 // ── GAME CONFIG (mirrors client) ──────────────────────────────
@@ -537,7 +568,7 @@ const queue            = [];         // { uid, nickname, avatar, timestamp, sock
 const rooms            = new Map();  // roomId → { id, players, state, resolving }
 const pendingReconnects = new Map(); // uid → { roomId, color, timer }
 const privateRooms     = new Map();  // code → { profile, socketId, timer, createdAt }
-const RECONNECT_MS     = 60_000;
+const RECONNECT_MS     = 90_000;
 const PRIVATE_ROOM_MS  = 5 * 60_000; // 5 minutes expiry
 
 // ── SOCKET RATE LIMITER ───────────────────────────────────────
@@ -922,8 +953,6 @@ function finishDuel(room) {
     state.duelQueue = [];
     state.phase     = 'ACTION';
     room.resolving  = false;
-    startAFKTimer(room, 'white', AFK_ACTION_MS, 'action');
-    startAFKTimer(room, 'black', AFK_ACTION_MS, 'action');
     broadcast(room);
 }
 
@@ -937,22 +966,17 @@ function handleBotEvent(room, event, data) {
         const type = data;
         const cfg = CONFIG[type];
         if (!cfg || !cfg.cost || s.ready[botColor] || s.budget[botColor] < cfg.cost) return;
-        clearAFKTimer(room, botColor);
         s.budget[botColor] -= cfg.cost;
         s.inventory[botColor].push({ type, color: botColor, id: `p_${Date.now()}_${crypto.randomBytes(2).toString('hex')}` });
-        startAFKTimer(room, botColor, AFK_PREPARE_MS, 'draft');
         broadcast(room);
         return;
     }
     if (event === 'draft_ready') {
         if (s.phase !== 'DRAFT' || s.ready[botColor]) return;
-        clearAFKTimer(room, botColor);
         s.ready[botColor] = true;
         if (s.ready.white && s.ready.black) {
             s.phase = 'POSITION';
             s.ready = { white: false, black: false };
-            startAFKTimer(room, 'white', AFK_PREPARE_MS, 'position');
-            startAFKTimer(room, 'black', AFK_PREPARE_MS, 'position');
         }
         broadcast(room);
         return;
@@ -965,16 +989,13 @@ function handleBotEvent(room, event, data) {
         if (s.army.some(p => p.x === x && p.y === y)) return;
         const invIdx = s.inventory[botColor].findIndex(p => p.id === pieceId);
         if (invIdx === -1) return;
-        clearAFKTimer(room, botColor);
         const piece = s.inventory[botColor].splice(invIdx, 1)[0];
         s.army.push({ id: piece.id, type: piece.type, color: botColor, x, y, bonus: CONFIG[piece.type].bonus, buffed: false });
-        startAFKTimer(room, botColor, AFK_PREPARE_MS, 'position');
         broadcast(room);
         return;
     }
     if (event === 'position_ready') {
         if (s.phase !== 'POSITION' || s.ready[botColor]) return;
-        clearAFKTimer(room, botColor);
         s.ready[botColor] = true;
         if (s.ready.white && s.ready.black) {
             recordTurn(room._replay, { type: 'position', ...buildTurnSnapshot(s) });
@@ -984,8 +1005,6 @@ function handleBotEvent(room, event, data) {
                 const r = rooms.get(room.id);
                 if (r && r.state.phase === 'REVEAL') {
                     r.state.phase = 'ACTION';
-                    startAFKTimer(r, 'white', AFK_ACTION_MS, 'action');
-                    startAFKTimer(r, 'black', AFK_ACTION_MS, 'action');
                     broadcast(r);
                 }
             }, 3000);
@@ -998,9 +1017,7 @@ function handleBotEvent(room, event, data) {
         if (s.phase !== 'ACTION' || s.ready[botColor] || s.duel.active) return;
         const piece = s.army.find(p => p.id === pieceId && p.color === botColor);
         if (!piece || !isValidMove(piece, tx, ty, s.army)) return;
-        clearAFKTimer(room, botColor);
         s.planning[botColor] = { pieceId, tx, ty };
-        startAFKTimer(room, botColor, AFK_ACTION_MS, 'action');
         broadcast(room);
         return;
     }
@@ -1104,6 +1121,7 @@ io.on('connection', (socket) => {
         if (existing > -1) queue.splice(existing, 1);
 
         queue.push({ uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: safeAvatar, timestamp: Date.now(), socketId: socket.id, match_mode: queueMode });
+        logEvent('queue_enter', playerId, null, { mode: queueMode });
 
         if (queue.length >= 2) {
             const p1 = queue.shift();
@@ -1119,18 +1137,21 @@ io.on('connection', (socket) => {
                 state:      createState(),
                 resolving:  false,
                 timeouts:   {},
+                pending:    { white: null, black: null },
                 _replay:    createReplayBuffer(),
                 match_mode: roomMode,
                 _startedAt: _matchStartTs,
                 _ttmMs:     Math.round(((p1.timestamp ? _matchStartTs - p1.timestamp : 0) + (p2.timestamp ? _matchStartTs - p2.timestamp : 0)) / 2),
             };
             rooms.set(roomId, newRoom);
-            startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
-            startAFKTimer(newRoom, 'black', AFK_PREPARE_MS, 'draft');
+
+            // Assign reconnect tokens for guest players
+            if (p1.uid.startsWith('g_')) newRoom.players.white.reconnectToken = crypto.randomUUID();
+            if (p2.uid.startsWith('g_')) newRoom.players.black.reconnectToken = crypto.randomUUID();
 
             const isRanked = !p1.uid.startsWith('g_') && !p2.uid.startsWith('g_') && roomMode !== 'casual';
-            io.to(p1.socketId).emit('match_found', { myColor: 'white', oppProfile: { nickname: p2.nickname, avatar: p2.avatar }, roomId, isRanked });
-            io.to(p2.socketId).emit('match_found', { myColor: 'black', oppProfile: { nickname: p1.nickname, avatar: p1.avatar }, roomId, isRanked });
+            io.to(p1.socketId).emit('match_found', { myColor: 'white', oppProfile: { nickname: p2.nickname, avatar: p2.avatar }, roomId, isRanked, reconnectToken: newRoom.players.white.reconnectToken });
+            io.to(p2.socketId).emit('match_found', { myColor: 'black', oppProfile: { nickname: p1.nickname, avatar: p1.avatar }, roomId, isRanked, reconnectToken: newRoom.players.black.reconnectToken });
             logEvent('draft_start', p1.uid, roomId, null);
             logEvent('draft_start', p2.uid, roomId, null);
         }
@@ -1138,7 +1159,11 @@ io.on('connection', (socket) => {
 
     socket.on('queue_cancel', () => {
         const idx = queue.findIndex(p => p.socketId === socket.id);
-        if (idx > -1) queue.splice(idx, 1);
+        if (idx > -1) {
+            const cancelled = queue[idx];
+            logEvent('queue_cancel', cancelled.uid, null, { mode: cancelled.match_mode, wait_ms: Date.now() - cancelled.timestamp });
+            queue.splice(idx, 1);
+        }
     });
 
     // ── TRAINING MODE (vs Bot) ────────────────────────────────────
@@ -1173,6 +1198,7 @@ io.on('connection', (socket) => {
             state:      createState(),
             resolving:  false,
             timeouts:   {},
+            pending:    { white: null, black: null },
             _replay:    createReplayBuffer(),
             match_mode: 'casual',
             _startedAt: Date.now(),
@@ -1184,7 +1210,6 @@ io.on('connection', (socket) => {
         playerColor = 'white';
         socket.join(roomId);
         socket.emit('match_found', { myColor: 'white', oppProfile: { nickname: bot.nickname, avatar: bot.avatar }, roomId, isRanked: false });
-        startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
         setImmediate(() => {
             const r = rooms.get(roomId);
             if (r) processBotTurn(r, 'black', (ev, data) => handleBotEvent(r, ev, data));
@@ -1236,6 +1261,7 @@ io.on('connection', (socket) => {
             state:           createState(),
             resolving:       false,
             timeouts:        {},
+            pending:         { white: null, black: null },
             _replay:         createReplayBuffer(),
             match_mode:      'casual',
             _startedAt:      Date.now(),
@@ -1251,7 +1277,7 @@ io.on('connection', (socket) => {
         playerColor = 'white';
         socket.join(roomId);
         socket.emit('match_found', { myColor: 'white', oppProfile: { nickname: bot.nickname, avatar: bot.avatar }, roomId, isRanked: false, sp: { level, isGuest } });
-        startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
+        logEvent('solo_start', playerId, roomId, { level, isGuest });
         setImmediate(() => {
             const r = rooms.get(roomId);
             if (r) processBotTurn(r, 'black', (ev, data) => handleBotEvent(r, ev, data));
@@ -1352,16 +1378,19 @@ io.on('connection', (socket) => {
             state:      createState(),
             resolving:  false,
             timeouts:   {},
+            pending:    { white: null, black: null },
             _replay:    createReplayBuffer(),
             match_mode: 'casual', // private rooms are always casual
         };
         rooms.set(roomId, newRoom);
-        startAFKTimer(newRoom, 'white', AFK_PREPARE_MS, 'draft');
-        startAFKTimer(newRoom, 'black', AFK_PREPARE_MS, 'draft');
+
+        // Assign reconnect tokens for guest players
+        if (white.uid.startsWith('g_')) newRoom.players.white.reconnectToken = crypto.randomUUID();
+        if (black.uid.startsWith('g_')) newRoom.players.black.reconnectToken = crypto.randomUUID();
 
         const isRanked = false; // private rooms never ranked
-        io.to(white.socketId).emit('match_found', { myColor: 'white', oppProfile: { nickname: black.nickname, avatar: black.avatar }, roomId, isRanked });
-        io.to(black.socketId).emit('match_found', { myColor: 'black', oppProfile: { nickname: white.nickname, avatar: white.avatar }, roomId, isRanked });
+        io.to(white.socketId).emit('match_found', { myColor: 'white', oppProfile: { nickname: black.nickname, avatar: black.avatar }, roomId, isRanked, reconnectToken: newRoom.players.white.reconnectToken });
+        io.to(black.socketId).emit('match_found', { myColor: 'black', oppProfile: { nickname: white.nickname, avatar: white.avatar }, roomId, isRanked, reconnectToken: newRoom.players.black.reconnectToken });
     });
 
     socket.on('private_room_cancel', () => {
@@ -1392,13 +1421,11 @@ io.on('connection', (socket) => {
         const s   = room.state;
         const cfg = CONFIG[type];
         if (!cfg || !cfg.cost || s.ready[playerColor] || s.budget[playerColor] < cfg.cost) return;
-        clearAFKTimer(room, playerColor);
         s.budget[playerColor] -= cfg.cost;
         s.inventory[playerColor].push({
             type, color: playerColor,
             id: `p_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`,
         });
-        startAFKTimer(room, playerColor, AFK_PREPARE_MS, 'draft');
         broadcast(room);
     });
 
@@ -1407,10 +1434,8 @@ io.on('connection', (socket) => {
         if (!room || room.state.phase !== 'DRAFT' || !playerColor) return;
         const s = room.state;
         if (s.ready[playerColor]) return;
-        clearAFKTimer(room, playerColor);
         s.budget[playerColor]    = 5;
         s.inventory[playerColor] = [];
-        startAFKTimer(room, playerColor, AFK_PREPARE_MS, 'draft');
         broadcast(room);
     });
 
@@ -1419,7 +1444,8 @@ io.on('connection', (socket) => {
         if (!room || room.state.phase !== 'DRAFT' || !playerColor) return;
         const s = room.state;
         if (s.ready[playerColor]) return;
-        clearAFKTimer(room, playerColor);
+        const armyTypes = s.inventory[playerColor].map(p => p.type);
+        logEvent('draft_army', room.players[playerColor]?.uid, room.id, { army: armyTypes });
         s.ready[playerColor] = true;
         if (s.ready.white && s.ready.black) {
             logEvent('draft_complete', room.players.white?.uid, room.id, null);
@@ -1428,8 +1454,6 @@ io.on('connection', (socket) => {
             s.ready = { white: false, black: false };
             logEvent('phase_enter', room.players.white?.uid, room.id, { phase: 'POSITION' });
             logEvent('phase_enter', room.players.black?.uid, room.id, { phase: 'POSITION' });
-            startAFKTimer(room, 'white', AFK_PREPARE_MS, 'position');
-            startAFKTimer(room, 'black', AFK_PREPARE_MS, 'position');
         }
         broadcast(room);
     });
@@ -1446,10 +1470,8 @@ io.on('connection', (socket) => {
         if (s.army.some(p => p.x === x && p.y === y)) return;
         const invIdx = s.inventory[playerColor].findIndex(p => p.id === pieceId);
         if (invIdx === -1) return;
-        clearAFKTimer(room, playerColor);
         const piece = s.inventory[playerColor].splice(invIdx, 1)[0];
         s.army.push({ id: piece.id, type: piece.type, color: playerColor, x, y, bonus: CONFIG[piece.type].bonus, buffed: false });
-        startAFKTimer(room, playerColor, AFK_PREPARE_MS, 'position');
         broadcast(room);
     });
 
@@ -1460,10 +1482,8 @@ io.on('connection', (socket) => {
         if (s.ready[playerColor]) return;
         const idx = s.army.findIndex(p => p.id === pieceId && p.color === playerColor && p.type !== 'K');
         if (idx === -1) return;
-        clearAFKTimer(room, playerColor);
         const piece = s.army.splice(idx, 1)[0];
         s.inventory[playerColor].push({ type: piece.type, color: playerColor, id: piece.id });
-        startAFKTimer(room, playerColor, AFK_PREPARE_MS, 'position');
         broadcast(room);
     });
 
@@ -1472,19 +1492,18 @@ io.on('connection', (socket) => {
         if (!room || room.state.phase !== 'POSITION' || !playerColor) return;
         const s = room.state;
         if (s.ready[playerColor]) return;
-        clearAFKTimer(room, playerColor);
         s.ready[playerColor] = true;
         if (s.ready.white && s.ready.black) {
             // Turno 0: snapshot do posicionamento para replay
             recordTurn(room._replay, { type: 'position', ...buildTurnSnapshot(s) });
             s.phase = 'REVEAL';
             s.ready = { white: false, black: false };
+            logEvent('phase_enter', room.players.white?.uid, room.id, { phase: 'ACTION' });
+            logEvent('phase_enter', room.players.black?.uid, room.id, { phase: 'ACTION' });
             setTimeout(() => {
                 const r = rooms.get(room.id);
                 if (r && r.state.phase === 'REVEAL') {
                     r.state.phase = 'ACTION';
-                    startAFKTimer(r, 'white', AFK_ACTION_MS, 'action');
-                    startAFKTimer(r, 'black', AFK_ACTION_MS, 'action');
                     broadcast(r);
                 }
             }, 3000);
@@ -1505,9 +1524,7 @@ io.on('connection', (socket) => {
             if (invalidMoveCount > 15) console.warn(`[ANTICHEAT] Socket ${socket.id} — ${invalidMoveCount} tentativas inválidas.`);
             return;
         }
-        clearAFKTimer(room, playerColor);
         s.planning[playerColor] = { pieceId, tx, ty };
-        startAFKTimer(room, playerColor, AFK_ACTION_MS, 'action');
         broadcast(room);
     });
 
@@ -1516,11 +1533,8 @@ io.on('connection', (socket) => {
         if (!room || room.state.phase !== 'ACTION' || !playerColor) return;
         const s = room.state;
         if (s.ready[playerColor] || s.duel.active) return;
-        clearAFKTimer(room, playerColor);
         s.ready[playerColor] = true;
         if (s.ready.white && s.ready.black) {
-            clearAFKTimer(room, 'white');
-            clearAFKTimer(room, 'black');
             const planningSnap = {
                 white: s.planning.white ? { ...s.planning.white } : null,
                 black: s.planning.black ? { ...s.planning.black } : null,
@@ -1602,58 +1616,83 @@ io.on('connection', (socket) => {
 
         const oppColor  = playerColor === 'white' ? 'black' : 'white';
         const playerUid = room.players[playerColor]?.uid;
-        const isAuth    = !!(playerUid && db.prepare('SELECT id FROM players WHERE id=?').get(playerUid));
+        const reconnectToken = room.players[playerColor]?.reconnectToken;
 
         clearAFKTimer(room, 'white');
         clearAFKTimer(room, 'black');
 
-        if (isAuth) {
-            // Authenticated: 60s reconnection window
-            const reconnectTimer = setTimeout(() => {
-                pendingReconnects.delete(playerUid);
-                const roomNow = rooms.get(playerRoom);
-                if (!roomNow || roomNow.state.phase === 'GAMEOVER') return;
-                roomNow.state.phase = 'GAMEOVER';
-                roomNow.state.wo    = true;
-                roomNow.state.army  = roomNow.state.army.filter(p => !(p.type === 'K' && p.color === playerColor));
-                persistMatchResult(roomNow, oppColor, true);
-                const opp = roomNow.players[oppColor];
-                if (opp) io.to(opp.socketId).emit('game_state', roomNow.state);
-                scheduleRoomCleanup(playerRoom);
-            }, RECONNECT_MS);
-
-            pendingReconnects.set(playerUid, { roomId: playerRoom, color: playerColor, timer: reconnectTimer });
-            logEvent('disconnect_ingame', playerUid, room._matchId || room.id, { phase: room.state.phase });
-            const opp = room.players[oppColor];
-            if (opp) io.to(opp.socketId).emit('opponent_reconnecting', { remainMs: RECONNECT_MS });
-            console.log(`[RECONNECT] ${playerUid} desconectou — aguardando 60s`);
-        } else {
-            // Guest: WO imediato
-            room.state.phase = 'GAMEOVER';
-            room.state.wo    = true;
-            room.state.army  = room.state.army.filter(p => !(p.type === 'K' && p.color === playerColor));
-            persistMatchResult(room, oppColor, true);
-            const opp = room.players[oppColor];
-            if (opp) io.to(opp.socketId).emit('game_state', room.state);
-            scheduleRoomCleanup(playerRoom);
+        // Cancel any existing inactivity pending for this player
+        if (room.pending?.[playerColor]) {
+            clearTimeout(room.pending[playerColor].timer);
+            room.pending[playerColor] = null;
         }
+        if (!room.pending) room.pending = { white: null, black: null };
+
+        // Unified 90s reconnect window for all players (auth + guest)
+        const deadline = Date.now() + RECONNECT_MS;
+        const color    = playerColor;
+        const roomId   = playerRoom;
+
+        const reconnectTimer = setTimeout(() => {
+            // Remove from pendingReconnects
+            if (playerUid && !playerUid.startsWith('g_')) pendingReconnects.delete(playerUid);
+            else if (reconnectToken) pendingReconnects.delete(reconnectToken);
+
+            const roomNow = rooms.get(roomId);
+            if (!roomNow) return;
+            if (roomNow.pending) roomNow.pending[color] = null;
+            decreeWOForInactivity(roomNow, color, 'desconexão');
+        }, RECONNECT_MS);
+
+        room.pending[color] = { type: 'disconnected', deadline, timer: reconnectTimer };
+
+        if (playerUid && !playerUid.startsWith('g_')) {
+            pendingReconnects.set(playerUid, { roomId, color, timer: reconnectTimer });
+            logEvent('disconnect_ingame', playerUid, room._matchId || room.id, { phase: room.state.phase });
+        } else if (reconnectToken) {
+            pendingReconnects.set(reconnectToken, { roomId, color, timer: reconnectTimer });
+        }
+
+        const opp = room.players[oppColor];
+        if (opp) io.to(opp.socketId).emit('opponent_inactive', { remainMs: RECONNECT_MS });
+        console.log(`[RECONNECT] ${playerUid || reconnectToken} desconectou — aguardando ${RECONNECT_MS / 1000}s`);
     });
 
     // ── REJOIN ───────────────────────────────────────────────────
-    socket.on('rejoin_game', ({ token } = {}) => {
-        if (!token) return;
-        const decoded = verifyToken(token);
-        if (!decoded) return;
+    socket.on('rejoin_game', ({ token, reconnectToken } = {}) => {
+        let pendingKey = null;
+        let uid = null;
 
-        const pending = pendingReconnects.get(decoded.id);
-        if (!pending) { logEvent('reconnect_fail', decoded.id, null, { reason: 'no_pending' }); socket.emit('rejoin_failed', { reason: 'no_pending' }); return; }
+        if (token) {
+            const decoded = verifyToken(token);
+            if (!decoded) return;
+            uid = decoded.id;
+            pendingKey = uid;
+        } else if (reconnectToken) {
+            pendingKey = reconnectToken;
+        } else {
+            return;
+        }
+
+        const pending = pendingReconnects.get(pendingKey);
+        if (!pending) {
+            if (uid) logEvent('reconnect_fail', uid, null, { reason: 'no_pending' });
+            socket.emit('rejoin_failed', { reason: 'no_pending' });
+            return;
+        }
 
         clearTimeout(pending.timer);
-        pendingReconnects.delete(decoded.id);
+        pendingReconnects.delete(pendingKey);
 
         const room = rooms.get(pending.roomId);
         if (!room || room.state.phase === 'GAMEOVER') {
             socket.emit('rejoin_failed', { reason: 'game_over' }); return;
+        }
+
+        // Clear the pending entry for this color
+        if (room.pending?.[pending.color]) {
+            clearTimeout(room.pending[pending.color].timer);
+            room.pending[pending.color] = null;
         }
 
         room.players[pending.color].socketId = socket.id;
@@ -1661,22 +1700,88 @@ io.on('connection', (socket) => {
         playerColor = pending.color;
         socket.join(pending.roomId);
 
-        // Restaurar AFK timer da fase atual
-        const phase = room.state.phase;
-        if (phase === 'DRAFT' || phase === 'POSITION') {
-            startAFKTimer(room, pending.color, AFK_PREPARE_MS, phase.toLowerCase());
-        } else if (phase === 'ACTION') {
-            startAFKTimer(room, pending.color, AFK_ACTION_MS, 'action');
-        }
-
         const oppColor = pending.color === 'white' ? 'black' : 'white';
         const opp = room.players[oppColor];
-        if (opp) io.to(opp.socketId).emit('opponent_reconnected');
+
+        // If opponent is also disconnected/inactive, offer them a 15s prompt to return
+        if (room.pending?.[oppColor]) {
+            clearTimeout(room.pending[oppColor].timer);
+            const rtgTimer = setTimeout(() => decreeWOForInactivity(room, oppColor, 'não respondeu ao prompt'), 15_000);
+            room.pending[oppColor].rtgTimer = rtgTimer;
+            if (opp) io.to(opp.socketId).emit('return_to_game_prompt', { dismissInMs: 15_000 });
+        } else {
+            if (opp) io.to(opp.socketId).emit('opponent_returned', { dismissInMs: 15_000 });
+        }
 
         socket.emit('game_state', room.state);
         socket.emit('rejoin_success', { roomId: pending.roomId, color: pending.color });
-        logEvent('reconnect_success', decoded.id, room._matchId || pending.roomId, { roomId: pending.roomId });
-        console.log(`[RECONNECT] ${decoded.id} reconectado à sala ${pending.roomId}`);
+        if (uid) logEvent('reconnect_success', uid, room._matchId || pending.roomId, { roomId: pending.roomId });
+        console.log(`[RECONNECT] ${uid || reconnectToken} reconectado à sala ${pending.roomId}`);
+    });
+
+    // ── RETORNO AO JOGO (após oponente reconectar enquanto estava pendente) ──
+    socket.on('return_prompt_response', ({ answer } = {}) => {
+        const room = getRoom();
+        if (!room || !playerColor) return;
+        if (answer === 'yes') {
+            if (room.pending?.[playerColor]) {
+                clearTimeout(room.pending[playerColor].timer);
+                if (room.pending[playerColor].rtgTimer) clearTimeout(room.pending[playerColor].rtgTimer);
+                room.pending[playerColor] = null;
+            }
+            broadcast(room);
+        } else {
+            if (room.pending?.[playerColor]?.rtgTimer) clearTimeout(room.pending[playerColor].rtgTimer);
+            decreeWOForInactivity(room, playerColor, 'recusou retorno');
+        }
+    });
+
+    // ── INATIVIDADE ──────────────────────────────────────────────
+    socket.on('player_inactive', () => {
+        const room = getRoom();
+        if (!room || room.state.phase === 'GAMEOVER' || !playerColor) return;
+        if (!room.pending) room.pending = { white: null, black: null };
+        if (room.pending[playerColor]) return; // already pending
+        const deadline = Date.now() + 90_000;
+        const color    = playerColor;
+        const timer    = setTimeout(() => decreeWOForInactivity(room, color, 'inatividade'), 90_000);
+        room.pending[color] = { type: 'inactive', deadline, timer };
+        clearAFKTimer(room, 'white');
+        clearAFKTimer(room, 'black');
+        socket.emit('inactivity_popup', { deadline });
+        const oppColor = color === 'white' ? 'black' : 'white';
+        const opp = room.players[oppColor];
+        if (opp) io.to(opp.socketId).emit('opponent_inactive', { remainMs: 90_000 });
+        console.log(`[INACTIVITY] ${color} inativo — aguardando 90s`);
+    });
+
+    socket.on('player_returned', () => {
+        const room = getRoom();
+        if (!room || !playerColor || !room.pending?.[playerColor]) return;
+        clearTimeout(room.pending[playerColor].timer);
+        room.pending[playerColor] = null;
+        const oppColor = playerColor === 'white' ? 'black' : 'white';
+        const opp = room.players[oppColor];
+        // If opponent is also pending, offer them a 15s prompt to return
+        if (room.pending?.[oppColor]) {
+            clearTimeout(room.pending[oppColor].timer);
+            const rtgTimer = setTimeout(() => decreeWOForInactivity(room, oppColor, 'não respondeu ao prompt'), 15_000);
+            room.pending[oppColor].rtgTimer = rtgTimer;
+            if (opp) io.to(opp.socketId).emit('return_to_game_prompt', { dismissInMs: 15_000 });
+        } else {
+            if (opp) io.to(opp.socketId).emit('opponent_returned', { dismissInMs: 15_000 });
+        }
+        console.log(`[INACTIVITY] ${playerColor} retornou`);
+    });
+
+    socket.on('player_abandoned', () => {
+        const room = getRoom();
+        if (!room || !playerColor) return;
+        if (room.pending?.[playerColor]) {
+            clearTimeout(room.pending[playerColor].timer);
+            room.pending[playerColor] = null;
+        }
+        decreeWOForInactivity(room, playerColor, 'abandono');
     });
 });
 

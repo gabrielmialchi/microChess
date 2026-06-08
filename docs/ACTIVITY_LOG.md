@@ -27,6 +27,127 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-08] Sessão ANAL-C — Instrumentação de Funil para Open Test
+**Status:** ✅ Completo
+**Branch:** main
+
+### Feito
+- `register_success` logado em `POST /auth/register` após res.json bem-sucedido (`server.js:181`)
+- `afk_triggered` logado em `startAFKTimer` quando o timeout dispara, com `{phase, reason}` (`server.js:510`)
+- `solo_start` logado em `single_player_start` após `match_found` emitido, com `{level, isGuest}` (`server.js:1268`)
+- `solo_complete` logado em `persistMatchResult` quando humano vence modo SP, com `{level, turns}` (`server.js:468`)
+- `solo_quit` logado em `persistMatchResult` quando humano perde/leva WO no modo SP, com `{level, turns, isWO}` (`server.js:471`)
+- `draft_army` logado em `draft_ready` antes de setar `s.ready`, com `{army:[tipos]}` — captura composição final do exército (`server.js:1434`)
+- `phase_enter {phase:'ACTION'}` logado em `position_ready` quando ambos confirmam posicionamento (x2, white+black) (`server.js:1490`)
+- `queue_enter` logado em `queue_join` após `queue.push`, com `{mode}` (`server.js:1120`)
+- `queue_cancel` logado em `queue_cancel` com `{mode, wait_ms}` (tempo de espera antes de cancelar) (`server.js:1157`)
+- `node --check server.js` → OK
+
+### Tabela de eventos instrumentados (completa pós-sessão)
+| Evento | Quando | Dados |
+|--------|--------|-------|
+| register_success | Conta criada com sucesso | user_id |
+| session_start | Login | user_id |
+| session_end | Disconnect com sessão ativa | user_id |
+| queue_enter | Entrou na fila online | user_id, {mode} |
+| queue_cancel | Cancelou fila antes de encontrar partida | user_id, {mode, wait_ms} |
+| draft_start | Partida online encontrada | user_id, match_id |
+| draft_army | Confirmou Draft | user_id, match_id, {army} |
+| draft_complete | Ambos confirmaram Draft | user_id, match_id |
+| phase_enter POSITION | Transição Draft→Position | user_id, match_id |
+| phase_enter ACTION | Ambos confirmaram Posicionamento | user_id, match_id |
+| afk_triggered | Timer de inatividade disparou | user_id, match_id, {phase, reason} |
+| disconnect_ingame | Desconectou durante partida | user_id, match_id, {phase} |
+| reconnect_success | Reconectou com sucesso | user_id, match_id |
+| reconnect_fail | Tentou reconectar sem pending | user_id |
+| solo_start | Iniciou fase Solo | user_id, room_id, {level, isGuest} |
+| solo_complete | Venceu fase Solo | user_id, room_id, {level, turns} |
+| solo_quit | Perdeu/WO em fase Solo | user_id, room_id, {level, turns, isWO} |
+
+---
+
+## [2026-06-08] Sessão ADJ-D — Empate por dupla inatividade/desconexão
+**Status:** ✅ Completo
+**Branch:** main
+
+### Feito
+- E.1: Draw em `decreeWOForInactivity` já estava implementado (ADJ-C). Verificado: usa `broadcast(roomNow)` → ambos recebem `game_state` com `phase:'GAMEOVER'` e `draw:true`.
+- E.2: `#return-to-game-popup` já existia (ADJ-C). Corrigido: ao emitir `return_to_game_prompt` (em `player_returned` e `rejoin_game`), cancela o timer de 90s do oponente pending e inicia um novo timer de 15s específico (`room.pending[oppColor].rtgTimer`). Garante que o oponente tem exatamente 15s para decidir, independente de quanto tempo já tinha passado no timer original.
+- E.3: `return_prompt_response` 'yes' corrigido para usar `broadcast(room)` (era `socket.emit('game_state', room.state)` sem stateView — vazava planning do oponente). Ambos os players recebem estado atualizado.
+- E.4: Frontend — `winnerColor` agora verifica `state.draw` antes da lógica de army (`state.draw ? 'draw' : ...`). Corrige bug onde empate forçado com ambos os reis vivos exibia "white wins".
+
+### Próxima sessão
+Ciclo ADJ concluído. Aguardar Open Test para ADJ-E ou próximo ciclo.
+
+---
+
+## [2026-06-08] Sessão ADJ-C — Sistema de Desconexão
+**Status:** ✅ Completo
+**Branch:** main
+
+### Feito
+- D.1: `RECONNECT_MS` alterado de 60s → 90s.
+- D.2: Tokens de reconexão para guests gerados em matchmaking (`crypto.randomUUID()`) e emitidos em `match_found`. Idem para private room.
+- D.3: Handler `disconnect` reescrito — fluxo unificado auth+guest: 90s `room.pending[color]` para todos; guests não recebem WO imediato; `opponent_inactive` emitido (reutiliza popup ADJ-B).
+- D.4: `rejoin_game` aceita `{ token }` (JWT auth) OU `{ reconnectToken }` (guest). Verifica em `pendingReconnects` por ambas as chaves. Ao reconectar: limpa `room.pending[color]`, emite `opponent_returned` ou `return_to_game_prompt` dependendo se oponente também está pending.
+- D.5: Novo handler `return_prompt_response` — `answer:'yes'` restaura jogo; `answer:'no'` decreta WO.
+- D.6: `player_returned` atualizado para emitir `return_to_game_prompt` quando oponente também está pending.
+- D.7 (Frontend): `match_found` armazena `reconnectToken` em `sessionStorage`. Evento `connect` emite `rejoin_game` com token ou reconnectToken ao reconectar. `rejoin_failed` limpa sessionStorage. `rejoin_success` restaura roomId/color. GAMEOVER limpa token.
+- D.8 (Frontend): `#return-to-game-popup` inserido no HTML. Handler `return_to_game_prompt` exibe popup com contador 15s. Funções globais `rtgYes`/`rtgNo`. Auto-resposta 'no' ao expirar.
+
+### Próxima sessão
+ADJ-D — Empate por dupla inatividade/desconexão (já parcialmente implementado em `decreeWOForInactivity`; pendente: popup específico de empate)
+
+---
+
+## [2026-06-08] Sessão ADJ-B — Sistema de Inatividade
+**Status:** ✅ Completo
+**Branch:** main
+
+### Feito
+- C.1: Removidas constantes `AFK_ACTION_MS` e `AFK_PREPARE_MS`. Removidas todas as chamadas `startAFKTimer`/`clearAFKTimer` de fases do jogo (ACTION, POSITION, DRAFT) em todos os handlers (bot, humano, rejoin). Funções mantidas como no-op seguro.
+- C.2: Campo `pending: { white: null, black: null }` adicionado às criações de sala em matchmaking, training, single_player e private_room.
+- C.3: Função `decreeWOForInactivity` criada (inclui lógica de draw quando ambos pending). Handlers `player_inactive`, `player_returned` e `player_abandoned` adicionados após `rejoin_game`.
+- C.4: Bloco AFK tracking substituído por detecção baseada em clique. Listeners `click`/`touchstart` em capture phase. Interval de 500ms: 50s→banner aviso, 60s→`player_inactive`. `_stopInactivityTracking` chamado ao GAMEOVER.
+- C.5: Dois novos popups inseridos no `#game-area`: `#inactivity-self-popup` (INATIVO POR MAIS DE 60 SEGUNDOS + VOLTAR(contador) + ABANDONAR PARTIDA) e `#inactivity-opp-popup` (OPONENTE INATIVO / AGUARDANDO AÇÃO + VOLTAR disabled→enabled).
+- C.6: Handlers para `inactivity_popup`, `opponent_inactive`, `opponent_returned`. Funções globais `inactivityReturn`, `inactivityAbandon`, `inactivityOppReturn`.
+- Texto do `#afk-banner` atualizado para "Inativo — clique para continuar!" (PT e EN).
+
+### Próxima sessão
+ADJ-C — Sistema de Desconexão (rework: guests têm WO imediato hoje; dar 90s para todos)
+
+---
+
+## [2026-06-08] Sessão ADJ-A — Ranked lock · Delete users · Créditos
+**Status:** ✅ Completo
+**Branch:** main
+
+### Feito
+- BLOCO A: `refreshMultiplayerModeScreen` agora aplica lock visual (opacity 0.45, pointer-events none) no card Ranqueada quando o usuário é convidado; badge "🔒 Conta necessária" adicionado dinamicamente; guard em `selectMultiplayerMode` impede seleção. Chave i18n `ranked_requires_account` adicionada nos 9 idiomas.
+- BLOCO B: todos os usuários deletados via node script (`players`, `matches`, `replays`, `singleplayer_progress` — nessa ordem por FK). Verificado: 0 players.
+- BLOCO F: tela de créditos reestruturada — "Desenvolvido por / O6 GAMES" + "Desenvolvimento de Projeto por / Gabriel Mialchi"; links Portfólio e Itch.io removidos; Site e Instagram mantidos.
+
+### Próxima sessão
+ADJ-B — Sistema de Inatividade (substituição completa do AFK)
+
+---
+
+## [2026-06-08] Reorganização de docs + planejamento do ciclo ADJ
+**Status:** ✅ Completo
+**Branch:** main
+
+### Feito
+- Movidos para `docs/Legacy/`: SESSAO_POR_SESSAO_PLANNING.md, SP_PLANNING.md, SP_TERMS.md, SP_WIREFRAMES.md, SP_STRATEGIES.md, ONBOARDING_MULTIAGENTE.md, ONBOARDING_GAMEDEV.md, DOSSIE_STAKEHOLDERS.md, MicroChess_TechDoc.html, MicroChess_OnePager.html, Lista de Ajustes para o Open Tests.pdf
+- Criado novo `docs/SESSAO_POR_SESSAO_PLANNING.md` com plano de 4 sessões ADJ-A..D
+- `docs/PROJECT_CONTEXT.md` atualizado: seção de sistemas pendentes, tabela de progresso, novos eventos socket
+
+### Próxima sessão
+**ADJ-A** — Quick wins: Ranked lock para convidados + delete users + atualizar créditos
+- Arquivos: `html/index.html` (ranked lock + créditos) + `server/db/microchess.db` (delete)
+- Ver seção ADJ-A em `SESSAO_POR_SESSAO_PLANNING.md`
+
+---
+
 ## [2026-05-11] Epic SP — Single Player — CONCLUÍDO
 **Status:** ✅ Completo (todas as 34 subtarefas)
 **Branch:** main

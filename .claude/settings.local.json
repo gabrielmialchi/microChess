@@ -19,7 +19,11 @@
       "Bash(node -e \"const fs=require\\('fs'\\);const html=fs.readFileSync\\('html/index.html','utf8'\\);const m=html.match\\(/<script>\\([\\\\s\\\\S]*?\\)<\\\\/script>/g\\);console.log\\('script tags:',m?m.length:0\\);\")",
       "Bash(node --check .tmp_check.js)",
       "Bash(node testes/server/singleplayer.test.js)",
-      "Bash(node testes/server/run-tests.js)"
+      "Bash(node testes/server/run-tests.js)",
+      "Bash(sqlite3 \"e:/Projetos/o6/FAST IP/microChess/server/db/microchess.db\" \"DELETE FROM singleplayer_progress; DELETE FROM replays; DELETE FROM matches; DELETE FROM players;\")",
+      "Bash(sqlite3 \"e:/Projetos/o6/FAST IP/microChess/server/db/microchess.db\" \"SELECT COUNT\\(*\\) FROM players;\")",
+      "PowerShell(node --check \"e:\\\\Projetos\\\\o6\\\\FAST IP\\\\microChess\\\\server\\\\server.js\" 2>&1; Write-Host \"exit:$LASTEXITCODE\")",
+      "Bash(node --check \"e:\\\\Projetos\\\\o6\\\\FAST IP\\\\microChess\\\\server\\\\server.js\")"
     ]
   }
 }
