@@ -27,6 +27,17 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-09] Sessão ADJ-DESIGN-POLISH — Pendências #5–#8 do bloco ADJ-DESIGN
+**Status:** 🔄 Em andamento (branch `ajustes-design`)
+
+### Itens (1 commit cada)
+- [x] **#8** — Bots valorizando o Rei. `combatBonus(type, isAttacker)` em `_helpers.js` (Rei: +5 atq / +3 def); `_minimax.simulateMove` usa combatBonus na predição de duelo. `evaluate` mantém `pieceBonus` (Rei=0 material — correto). **Nova descoberta (fora de escopo):** o modelo de duelo do minimax trata captura de peça parada como duelo, mas no jogo real é auto-captura (atacante sempre vence) — bot evita capturas lucrativas de peças não-Rei. Anotado p/ futuro.
+- [ ] **#7** — Limpar código `buffed` morto no `index.html` (CSS + isValidMove cliente + classList).
+- [ ] **#6** — Fix replay-ui: snapshot grava `wPieceId`/`bPieceId` mas UI lê `wPiece`/`bPiece`; IDs não codificam tipo de forma confiável → gravar `wType`/`bType` explícitos.
+- [ ] **#5** — Replay da Morte Súbita: gravar `sdHistory` + renderizar a série (placar + rodadas) no `replay-ui.js`.
+
+---
+
 ## [2026-06-09] Sessão ADJ-DESIGN — Ajustes de Game Design (5 itens)
 **Status:** ✅ Implementação completa (5/5) na branch `ajustes-design` — pendente playtest manual + merge em `main`
 **Branch:** `ajustes-design` (dedicada; `main` permanece intocada para reversão segura)

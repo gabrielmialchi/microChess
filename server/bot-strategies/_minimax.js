@@ -1,5 +1,5 @@
 'use strict';
-const { legalMoves, manhattanDist, pieceBonus, findKing } = require('./_helpers');
+const { legalMoves, manhattanDist, pieceBonus, combatBonus, findKing } = require('./_helpers');
 
 function getAllMoves(state, color) {
     const moves = [];
@@ -23,8 +23,9 @@ function simulateMove(state, move, color) {
     );
 
     if (enemyIdx >= 0) {
-        const myBonus = pieceBonus(newArmy[myIdx].type);
-        const enBonus = pieceBonus(newArmy[enemyIdx].type);
+        // Predição de duelo: minha peça ataca, inimigo defende (Rei luta forte).
+        const myBonus = combatBonus(newArmy[myIdx].type, true);
+        const enBonus = combatBonus(newArmy[enemyIdx].type, false);
         if (myBonus >= enBonus) {
             // atacante vence — remove enemy + move atacante
             newArmy.splice(enemyIdx, 1);

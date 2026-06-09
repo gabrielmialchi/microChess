@@ -28,6 +28,14 @@ function pieceBonus(type) {
     return BONUS[type] ?? 0;
 }
 
+// Bônus de COMBATE (diferente do material): o Rei luta forte.
+// +5 quando ataca, +3 quando defende parado (espelha effectiveBonus do jogo).
+// Demais peças usam o bônus normal. Usado só na predição de duelo do minimax.
+function combatBonus(type, isAttacker) {
+    if (type === 'K') return isAttacker ? 5 : 3;
+    return BONUS[type] ?? 0;
+}
+
 function findKing(state, color) {
     return state.army.find(p => p.type === 'K' && p.color === color);
 }
@@ -77,6 +85,7 @@ module.exports = {
     weightedChoice,
     manhattanDist,
     pieceBonus,
+    combatBonus,
     findKing,
     findPiece,
     dirForward,
