@@ -28,7 +28,7 @@ para entender o estado atual antes de implementar qualquer coisa.
 ---
 
 ## [2026-06-09] Sessão ADJ-DESIGN — Ajustes de Game Design (5 itens)
-**Status:** 🔄 Em andamento — item 5 ✅ · faltam 2, 3, 1, 4
+**Status:** 🔄 Em andamento — itens 5, 2 ✅ · faltam 3, 1, 4
 **Branch:** `ajustes-design` (dedicada; `main` permanece intocada para reversão segura)
 
 ### Origem
@@ -43,7 +43,7 @@ Plano detalhado em `SESSAO_POR_SESSAO_PLANNING.md` → seção "SESSÃO ADJ-DESI
 
 ### Itens (ordem de execução: 5 → 2 → 3 → 1 → 4)
 - [x] **5** — Bot nível 1 (recruta) com intenção mínima (45% avança p/ Rei inimigo, 55% aleatório). Arquivo: `bot-strategies/01-recruta.js`. ✅ `node --check` OK · 15 testes verdes.
-- [ ] **2** — Rei bônus dinâmico. Novo módulo `server/duel.js` (`effectiveBonus`); 2 linhas em `finishDuel`. Risco 🟠
+- [x] **2** — Rei bônus dinâmico. Novo módulo `server/duel.js` (`effectiveBonus`); 2 linhas em `finishDuel`. ✅ 7 testes novos em `duel.test.js` · suíte verde. Descoberta: King só entra em DUELO ao atacar outro Rei (case c) ou choque frontal — contra peça comum parada há auto-captura (sem dado).
 - [ ] **3** — Peão → Rainha. `promotePawns(army)` em `movegen.js`, chamado em `resolveAction` E `finishDuel` (corrige bug latente: promoção por duelo nunca disparava). Risco 🟢🟠
 - [ ] **1** — Morte Súbita melhor-de-3 (Variante A). `duel.js` (série de rodadas) + `roll_dice` (humano+bot) + ramo SD do `finishDuel` + modal `index.html` + `replay-ui.js`. Risco 🟠
 - [ ] **4** — Probabilidade do duelo na UI. `duel.js` (`duelOdds`); servidor anexa `d.odds`; render no modal. Risco 🟢

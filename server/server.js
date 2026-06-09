@@ -17,6 +17,7 @@ const { logEvent } = require('./analytics');
 const { isPathClear, isValidMove }     = require('./movegen');
 const { createBotPlayer, processBotTurn } = require('./bot');
 const sp = require('./singleplayer');
+const { effectiveBonus } = require('./duel');
 
 const app    = express();
 const server = http.createServer(app);
@@ -808,8 +809,8 @@ function finishDuel(room) {
     if (!d || !d.resolveTime) { room.resolving = false; return; }
 
     let army = JSON.parse(JSON.stringify(state.army));
-    const totW = d.rolls.white + d.wPiece.bonus;
-    const totB = d.rolls.black + d.bPiece.bonus;
+    const totW = d.rolls.white + effectiveBonus(d.wPiece, 'white', d);
+    const totB = d.rolls.black + effectiveBonus(d.bPiece, 'black', d);
     const idxW = army.findIndex(a => a.id === d.wPiece.id);
     const idxB = army.findIndex(a => a.id === d.bPiece.id);
 
