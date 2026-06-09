@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const { effectiveBonus } = require('../../server/duel');
+const { effectiveBonus, createSDDuel, judgeSDRound, sdSeriesOver, sdWinner } = require('../../server/duel');
 
 let passed = 0, failed = 0;
 function test(name, fn) {
@@ -41,6 +41,35 @@ test('effectiveBonus: ambos os Reis em ataque mútuo defendem a +3', () => {
 });
 test('effectiveBonus: peça ausente → 0', () => {
     assert.strictEqual(effectiveBonus(null, 'white', { type: 'attack' }), 0);
+});
+
+// ── Morte Súbita (melhor de 3) ────────────────────────────────
+test('createSDDuel: estado inicial correto', () => {
+    const d = createSDDuel({ type: 'K', color: 'white' }, { type: 'K', color: 'black' });
+    assert.strictEqual(d.suddenDeath, true);
+    assert.strictEqual(d.sdRound, 1);
+    assert.deepStrictEqual(d.sdWins, { white: 0, black: 0 });
+    assert.deepStrictEqual(d.sdHistory, []);
+});
+test('judgeSDRound: maior dado vence', () => {
+    assert.strictEqual(judgeSDRound(5, 3), 'white');
+    assert.strictEqual(judgeSDRound(2, 6), 'black');
+    assert.strictEqual(judgeSDRound(4, 4), 'tie');
+});
+test('sdSeriesOver: alguém com 2 vitórias encerra', () => {
+    assert.strictEqual(sdSeriesOver({ white: 2, black: 0 }, 2), true);
+    assert.strictEqual(sdSeriesOver({ white: 1, black: 0 }, 1), false);
+});
+test('sdSeriesOver: 3 rodadas sempre encerra', () => {
+    assert.strictEqual(sdSeriesOver({ white: 1, black: 1 }, 3), true);
+});
+test('sdWinner: mais vitórias vence', () => {
+    assert.strictEqual(sdWinner({ white: 2, black: 1 }), 'white');
+    assert.strictEqual(sdWinner({ white: 0, black: 2 }), 'black');
+});
+test('sdWinner: empate de vitórias → draw', () => {
+    assert.strictEqual(sdWinner({ white: 1, black: 1 }), 'draw');
+    assert.strictEqual(sdWinner({ white: 0, black: 0 }), 'draw');
 });
 
 console.log(`\n  ${passed} passou · ${failed} falhou\n`);

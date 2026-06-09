@@ -5742,18 +5742,20 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     // ── DUEL UI ───────────────────────────────────────────────────
     function buildDuelCard(isOpponent, pieceData, rollData, pressedState) {
         const themeClass = pieceData.color === 'white' ? 'card-theme-white' : 'card-theme-black';
-        const nameText   = `${CONFIG[pieceData.type].name} +${pieceData.bonus}`;
+        // Morte Súbita: Reis lutam sem bônus (dado limpo).
+        const dispBonus  = state.duel.suddenDeath ? 0 : pieceData.bonus;
+        const nameText   = `${CONFIG[pieceData.type].name} +${dispBonus}`;
 
         let diceContent  = '🎲';
         let resultHTML   = '';
 
         if (state.duel.resolveTime) {
             diceContent = DICE_FACES[rollData - 1];
-            const total = rollData + pieceData.bonus;
+            const total = rollData + dispBonus;
             resultHTML  = `
                 <div class="result-box show">
                     <div class="result-total">${total}</div>
-                    <div class="result-math">${t('pts')} (${rollData}) + Bônus (${pieceData.bonus})</div>
+                    <div class="result-math">${t('pts')} (${rollData}) + Bônus (${dispBonus})</div>
                 </div>`;
         } else if (pressedState) {
             diceContent = '⏳';
@@ -5822,7 +5824,13 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             : 'rgba(0,0,0,0.97)';
 
         const statusEl = document.getElementById('duel-status');
-        statusEl.innerText = d.suddenDeath ? t('sudden_death') : t('conflict');
+        let _statusText = d.suddenDeath ? t('sudden_death') : t('conflict');
+        if (d.suddenDeath && d.sdWins) {
+            const _my  = myColor === 'white' ? d.sdWins.white : d.sdWins.black;
+            const _opp = myColor === 'white' ? d.sdWins.black : d.sdWins.white;
+            _statusText += ` · ${d.sdRound}/3 · ${_my}×${_opp}`;
+        }
+        statusEl.innerText = _statusText;
         statusEl.style.color = '';
         statusEl.classList.toggle('sudden-death', !!d.suddenDeath);
         // Design-L: sync sudden death banner
@@ -5880,10 +5888,17 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
             container.innerHTML = html;
 
-            const totW = d.rolls.white + d.wPiece.bonus;
-            const totB = d.rolls.black + d.bPiece.bonus;
+            const _bw  = d.suddenDeath ? 0 : d.wPiece.bonus;
+            const _bb  = d.suddenDeath ? 0 : d.bPiece.bonus;
+            const totW = d.rolls.white + _bw;
+            const totB = d.rolls.black + _bb;
 
-            if (totW > totB) {
+            if (d.suddenDeath) {
+                // Morte Súbita: resultado da RODADA (vencedor da partida só na tela de fim de jogo).
+                if (totW > totB)      document.getElementById('dice-btn-white')?.classList.add('winner-pulse');
+                else if (totB > totW) document.getElementById('dice-btn-black')?.classList.add('winner-pulse');
+                // statusEl mantém o rótulo MORTE SÚBITA + placar de rodadas
+            } else if (totW > totB) {
                 statusEl.innerText = t('white_wins');
                 document.getElementById('dice-btn-white')?.classList.add('winner-pulse');
             } else if (totB > totW) {
@@ -5910,6 +5925,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (!d || !d.resolveTime) return;
         if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
         document.getElementById('duel-modal').style.display = 'none';
+        // Reset para que o modal reapareça na próxima rodada da Morte Súbita
+        // (os Reis são os mesmos a cada rodada, então duelKey não muda sozinho).
+        lastDuelKey = null;
         socket.emit('duel_resolve');
     };
 

@@ -28,4 +28,47 @@ function effectiveBonus(piece, color, duel) {
     return 5; // fallback (ex.: contested_king — Rei não é o mover aqui)
 }
 
-module.exports = { effectiveBonus };
+// ── MORTE SÚBITA — melhor de 3 rodadas (Variante A) ───────────
+// Cada rodada: 1d6 vs 1d6, maior vence a rodada (empate = ninguém).
+// Série: primeiro a 2 vitórias OU mais vitórias após 3 rodadas.
+// Empate de vitórias após 3 rodadas → DRAW (equilíbrio real).
+
+const SD_MAX_ROUNDS = 3;
+
+/** Cria o objeto de duelo de Morte Súbita (Reis com bônus 0 via effectiveBonus). */
+function createSDDuel(kW, kB) {
+    return {
+        active: true, resolveTime: false,
+        suddenDeath: true, wPiece: kW, bPiece: kB,
+        sdWins:    { white: 0, black: 0 },
+        sdRound:   1,
+        sdHistory: [],
+        pressed:   { white: false, black: false },
+        rolls:     { white: 0,     black: 0     },
+    };
+}
+
+/** Vencedor de uma rodada a partir dos dois dados. */
+function judgeSDRound(rollW, rollB) {
+    if (rollW > rollB) return 'white';
+    if (rollB > rollW) return 'black';
+    return 'tie';
+}
+
+/** A série acabou? (alguém chegou a 2, ou já se jogaram 3 rodadas) */
+function sdSeriesOver(sdWins, sdRound) {
+    return sdWins.white >= 2 || sdWins.black >= 2 || sdRound >= SD_MAX_ROUNDS;
+}
+
+/** Vencedor da série: 'white' | 'black' | 'draw' (empate de vitórias). */
+function sdWinner(sdWins) {
+    if (sdWins.white > sdWins.black) return 'white';
+    if (sdWins.black > sdWins.white) return 'black';
+    return 'draw';
+}
+
+module.exports = {
+    effectiveBonus,
+    SD_MAX_ROUNDS,
+    createSDDuel, judgeSDRound, sdSeriesOver, sdWinner,
+};

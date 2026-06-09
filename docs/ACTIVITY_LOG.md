@@ -28,7 +28,7 @@ para entender o estado atual antes de implementar qualquer coisa.
 ---
 
 ## [2026-06-09] Sessão ADJ-DESIGN — Ajustes de Game Design (5 itens)
-**Status:** 🔄 Em andamento — itens 5, 2, 3 ✅ · faltam 1, 4
+**Status:** 🔄 Em andamento — itens 5, 2, 3, 1 ✅ · falta 4
 **Branch:** `ajustes-design` (dedicada; `main` permanece intocada para reversão segura)
 
 ### Origem
@@ -45,7 +45,7 @@ Plano detalhado em `SESSAO_POR_SESSAO_PLANNING.md` → seção "SESSÃO ADJ-DESI
 - [x] **5** — Bot nível 1 (recruta) com intenção mínima (45% avança p/ Rei inimigo, 55% aleatório). Arquivo: `bot-strategies/01-recruta.js`. ✅ `node --check` OK · 15 testes verdes.
 - [x] **2** — Rei bônus dinâmico. Novo módulo `server/duel.js` (`effectiveBonus`); 2 linhas em `finishDuel`. ✅ 7 testes novos em `duel.test.js` · suíte verde. Descoberta: King só entra em DUELO ao atacar outro Rei (case c) ou choque frontal — contra peça comum parada há auto-captura (sem dado).
 - [x] **3** — Peão → Rainha. `promotePawns(army)` em `movegen.js`, chamado em `resolveAction` E `finishDuel` (2 pontos de finalização: exit-3 valid-duel + exit final). Bug latente corrigido. Regra morta do peão buffed removida (server). ✅ 8 testes em `movegen.test.js`. Pendência p/ item 4: card de duelo no `index.html` mostra bônus estático do Rei (sempre +5), não o efetivo — corrigir ao enviar odds.
-- [ ] **1** — Morte Súbita melhor-de-3 (Variante A). `duel.js` (série de rodadas) + `roll_dice` (humano+bot) + ramo SD do `finishDuel` + modal `index.html` + `replay-ui.js`. Risco 🟠
+- [x] **1** — Morte Súbita melhor-de-3 (Variante A). ✅ Abordagem simplificada: cada rodada reusa o fluxo de duelo (rolar→resolver); `duel_resolve` roteia p/ `advanceSD` (humano+bot). Novas funções puras em `duel.js` (createSDDuel/judgeSDRound/sdSeriesOver/sdWinner) + `advanceSD`/`finishSuddenDeath` no server. `roll_dice` e `finishDuel` NÃO precisaram mudar. Modal mostra bônus 0 + placar de rodadas. Fix: `lastDuelKey=null` p/ remodal reaparecer entre rodadas (Reis iguais). 6 testes novos. **Desvio:** `replay-ui.js` NÃO tocado — SD grava snapshot (bonuses 0 + sdWins) e o render genérico mostra só a rodada decisiva; refinar depois. Bug pré-existente em replay-ui: lê `wPiece`/`bPiece` mas snapshot grava `wPieceId`/`bPieceId` (todos os duelos aparecem como Rei vs Rei no replay) — fora de escopo.
 - [ ] **4** — Probabilidade do duelo na UI. `duel.js` (`duelOdds`); servidor anexa `d.odds`; render no modal. Risco 🟢
 
 ### Follow-up fora de escopo (anotado)
