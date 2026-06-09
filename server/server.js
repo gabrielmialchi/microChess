@@ -833,9 +833,13 @@ function finishSuddenDeath(room) {
 
     if (room._replay) {
         const result = winnerSide === 'white' ? 'white_wins' : winnerSide === 'black' ? 'black_wins' : 'draw';
-        const snap = buildDuelSnapshot(d, result);
-        snap.bonuses = { white: 0, black: 0 };
-        recordTurn(room._replay, { type: 'duel', sd: true, sdWins: { ...d.sdWins }, ...snap });
+        const snap = buildDuelSnapshot(d, result); // bônus já = 0 via effectiveBonus na SD
+        recordTurn(room._replay, {
+            type: 'duel', sd: true,
+            sdWins:    { ...d.sdWins },
+            sdHistory: d.sdHistory.map(r => ({ ...r })),
+            ...snap,
+        });
     }
 
     if (winnerSide !== 'draw') {

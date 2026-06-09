@@ -28,13 +28,13 @@ para entender o estado atual antes de implementar qualquer coisa.
 ---
 
 ## [2026-06-09] Sessão ADJ-DESIGN-POLISH — Pendências #5–#8 do bloco ADJ-DESIGN
-**Status:** 🔄 Em andamento (branch `ajustes-design`)
+**Status:** ✅ Completo (branch `ajustes-design`) — pendente playtest + merge junto com ADJ-DESIGN
 
 ### Itens (1 commit cada)
 - [x] **#8** — Bots valorizando o Rei. `combatBonus(type, isAttacker)` em `_helpers.js` (Rei: +5 atq / +3 def); `_minimax.simulateMove` usa combatBonus na predição de duelo. `evaluate` mantém `pieceBonus` (Rei=0 material — correto). **Nova descoberta (fora de escopo):** o modelo de duelo do minimax trata captura de peça parada como duelo, mas no jogo real é auto-captura (atacante sempre vence) — bot evita capturas lucrativas de peças não-Rei. Anotado p/ futuro.
 - [x] **#7** — Limpado código `buffed` morto no `index.html`: removido CSS `.piece.buffed`, `classList.add('buffed')` e o ramo buffed do isValidMove do cliente (agora espelha o `movegen.js`).
 - [x] **#6** — Fix replay: `buildDuelSnapshot` grava `wPiece`/`bPiece` (id) + `wType`/`bType` explícitos + bônus EFETIVO (importa `effectiveBonus`); `replay-ui` lê `wType`/`bType`. Duelos não mais sempre "Rei vs Rei". Replays antigos: fallback 'K' (sem regressão).
-- [ ] **#5** — Replay da Morte Súbita: gravar `sdHistory` + renderizar a série (placar + rodadas) no `replay-ui.js`.
+- [x] **#5** — Replay da Morte Súbita: `finishSuddenDeath` grava `sdHistory`; `replay-ui` renderiza a série ("⚔️ Morte Súbita · ♔ 2×1 ♚ · R1 6×1 · R2 1×5 · R3 4×2 · ♔ venceu"). Removido override redundante de bonuses (effectiveBonus já dá 0 na SD).
 
 ---
 

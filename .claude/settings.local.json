@@ -48,7 +48,8 @@
       "Bash(node -e \"const {duelOdds,effectiveBonus}=require\\('./server/duel'\\); const pct=o=>\\({w:Math.round\\(o.win*100\\),t:Math.round\\(o.tie*100\\),l:Math.round\\(o.lose*100\\)}\\); console.log\\('R+4 vs Q+5:',JSON.stringify\\(pct\\(duelOdds\\(4,5\\)\\)\\)\\); console.log\\('Rei atacante\\(5\\) vs Rei defensor\\(3\\):',JSON.stringify\\(pct\\(duelOdds\\(5,3\\)\\)\\)\\); console.log\\('SD Rei\\(0\\) vs Rei\\(0\\):',JSON.stringify\\(pct\\(duelOdds\\(0,0\\)\\)\\)\\);\")",
       "Bash(node --check server/bot-strategies/_helpers.js)",
       "Bash(node --check server/replay.js)",
-      "Bash(node -e \"const r=require\\('./server/replay'\\); const snap=r.buildDuelSnapshot\\({wPiece:{id:'wk1',type:'K'},bPiece:{id:'p_1_ab',type:'R'},rolls:{white:4,black:3},type:'attack',attackerColor:'white'},'white_wins'\\); console.log\\('snapshot:',JSON.stringify\\(snap\\)\\);\")"
+      "Bash(node -e \"const r=require\\('./server/replay'\\); const snap=r.buildDuelSnapshot\\({wPiece:{id:'wk1',type:'K'},bPiece:{id:'p_1_ab',type:'R'},rolls:{white:4,black:3},type:'attack',attackerColor:'white'},'white_wins'\\); console.log\\('snapshot:',JSON.stringify\\(snap\\)\\);\")",
+      "Bash(node --check html/replay-ui.js)"
     ]
   }
 }
