@@ -40,7 +40,8 @@
       "Bash(node --check db/database.js)",
       "Bash(node --check server.js)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git checkout *)"
     ]
   }
 }

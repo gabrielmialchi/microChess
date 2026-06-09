@@ -28,7 +28,7 @@ para entender o estado atual antes de implementar qualquer coisa.
 ---
 
 ## [2026-06-09] Sessão ADJ-DESIGN — Ajustes de Game Design (5 itens)
-**Status:** ⏳ Planejado — aguardando implementação
+**Status:** 🔄 Em andamento — item 5 ✅ · faltam 2, 3, 1, 4
 **Branch:** `ajustes-design` (dedicada; `main` permanece intocada para reversão segura)
 
 ### Origem
@@ -42,7 +42,7 @@ Plano detalhado em `SESSAO_POR_SESSAO_PLANNING.md` → seção "SESSÃO ADJ-DESI
 - **Estratégia de reversibilidade:** branch dedicada + **1 commit por item**. Erro em um item → `git revert` só daquele commit, sem afetar os demais nem a `main`.
 
 ### Itens (ordem de execução: 5 → 2 → 3 → 1 → 4)
-- [ ] **5** — Bot nível 1 (recruta) com intenção mínima (45% avança p/ Rei inimigo, 55% aleatório). Arquivo: `bot-strategies/01-recruta.js`. Risco 🟢
+- [x] **5** — Bot nível 1 (recruta) com intenção mínima (45% avança p/ Rei inimigo, 55% aleatório). Arquivo: `bot-strategies/01-recruta.js`. ✅ `node --check` OK · 15 testes verdes.
 - [ ] **2** — Rei bônus dinâmico. Novo módulo `server/duel.js` (`effectiveBonus`); 2 linhas em `finishDuel`. Risco 🟠
 - [ ] **3** — Peão → Rainha. `promotePawns(army)` em `movegen.js`, chamado em `resolveAction` E `finishDuel` (corrige bug latente: promoção por duelo nunca disparava). Risco 🟢🟠
 - [ ] **1** — Morte Súbita melhor-de-3 (Variante A). `duel.js` (série de rodadas) + `roll_dice` (humano+bot) + ramo SD do `finishDuel` + modal `index.html` + `replay-ui.js`. Risco 🟠
