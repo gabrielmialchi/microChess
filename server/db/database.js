@@ -15,7 +15,11 @@ db.pragma('foreign_keys = ON');
 const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
 db.exec(schema);
 
-// ── EMAIL CRYPTO (same defaults as server.js) ─────────────────
+// ── EMAIL CRYPTO ─────────────────────────────────────────────
+if (process.env.NODE_ENV === 'production') {
+    if (!process.env.HMAC_SECRET) { console.error('[SECURITY] CRÍTICO: HMAC_SECRET não definido.'); process.exit(1); }
+    if (!process.env.AES_KEY)     { console.error('[SECURITY] CRÍTICO: AES_KEY não definida.');     process.exit(1); }
+}
 const HMAC_SECRET = process.env.HMAC_SECRET || 'mc-hmac-dev-secret-key';
 const _AES_KEY    = Buffer.from(
     (process.env.AES_KEY || 'mc-aes-key-dev-000000000000000').padEnd(32, '0').slice(0, 32)

@@ -38,7 +38,21 @@ const io     = new Server(server, {
 const PORT   = process.env.PORT || 3000;
 
 app.use(compression());
-app.use(helmet({ contentSecurityPolicy: false })); // CSP off: Google Fonts CDN + Socket.io inline
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc:  ["'self'"],
+            scriptSrc:   ["'self'", "'unsafe-inline'"],   // Socket.io injeta inline
+            styleSrc:    ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+            fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
+            connectSrc:  ["'self'", 'ws:', 'wss:'],       // Socket.io WebSocket
+            workerSrc:   ["'self'", 'blob:'],              // Service Worker
+            imgSrc:      ["'self'", 'data:'],
+            objectSrc:   ["'none'"],
+            baseUri:     ["'self'"],
+        },
+    },
+}));
 
 app.use((req, res, next) => {
     const origin = req.headers.origin;
@@ -101,9 +115,8 @@ app.get('/.well-known/assetlinks.json', (_, res) => {
 
 // ── STARTUP SECURITY CHECKS ───────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
-    if (!process.env.HMAC_SECRET)     console.error('[SECURITY] CRÍTICO: HMAC_SECRET não definido. Emails não estão protegidos!');
-    if (!process.env.AES_KEY)         console.error('[SECURITY] CRÍTICO: AES_KEY não definida. Emails não estão criptografados corretamente!');
     if (!process.env.ALLOWED_ORIGIN)  console.error('[SECURITY] AVISO: ALLOWED_ORIGIN não definido — Socket.IO aceitando conexões de qualquer origem.');
+    // HMAC_SECRET e AES_KEY são verificados e abortam em database.js antes de chegar aqui.
 }
 
 // ── RATE LIMITING ─────────────────────────────────────────────

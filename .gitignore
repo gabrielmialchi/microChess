@@ -1,0 +1,18 @@
+# Dependências
+node_modules/
+
+# Segredos — nunca versionar
+.env
+*.env
+
+# Banco SQLite — contém dados de usuários (hashes, e-mails). Nunca versionar.
+*.db
+*.db-wal
+*.db-shm
+
+# Artefatos de build (mantidos em disco, fora do controle de versão)
+WebBuilds/
+
+# Logs e temporários
+*.log
+_tmp*
