@@ -44,7 +44,8 @@
       "Bash(git checkout *)",
       "Bash(node --check server/duel.js)",
       "Bash(npm test *)",
-      "Bash(node --check server/movegen.js)"
+      "Bash(node --check server/movegen.js)",
+      "Bash(node -e \"const {duelOdds,effectiveBonus}=require\\('./server/duel'\\); const pct=o=>\\({w:Math.round\\(o.win*100\\),t:Math.round\\(o.tie*100\\),l:Math.round\\(o.lose*100\\)}\\); console.log\\('R+4 vs Q+5:',JSON.stringify\\(pct\\(duelOdds\\(4,5\\)\\)\\)\\); console.log\\('Rei atacante\\(5\\) vs Rei defensor\\(3\\):',JSON.stringify\\(pct\\(duelOdds\\(5,3\\)\\)\\)\\); console.log\\('SD Rei\\(0\\) vs Rei\\(0\\):',JSON.stringify\\(pct\\(duelOdds\\(0,0\\)\\)\\)\\);\")"
     ]
   }
 }

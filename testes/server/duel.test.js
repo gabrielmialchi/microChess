@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const { effectiveBonus, createSDDuel, judgeSDRound, sdSeriesOver, sdWinner } = require('../../server/duel');
+const { effectiveBonus, duelOdds, createSDDuel, judgeSDRound, sdSeriesOver, sdWinner } = require('../../server/duel');
 
 let passed = 0, failed = 0;
 function test(name, fn) {
@@ -70,6 +70,31 @@ test('sdWinner: mais vitórias vence', () => {
 test('sdWinner: empate de vitórias → draw', () => {
     assert.strictEqual(sdWinner({ white: 1, black: 1 }), 'draw');
     assert.strictEqual(sdWinner({ white: 0, black: 0 }), 'draw');
+});
+
+// ── duelOdds ──────────────────────────────────────────────────
+test('duelOdds: soma sempre 100%', () => {
+    for (const [a, b] of [[0, 0], [5, 1], [3, 4], [2, 2]]) {
+        const o = duelOdds(a, b);
+        assert.ok(Math.abs((o.win + o.tie + o.lose) - 1) < 1e-9, `${a},${b}`);
+    }
+});
+test('duelOdds: bônus igual → 41,7% / 16,7% / 41,7%', () => {
+    const o = duelOdds(0, 0);
+    assert.ok(Math.abs(o.win - 15 / 36) < 1e-9);
+    assert.ok(Math.abs(o.tie - 6 / 36) < 1e-9);
+    assert.ok(Math.abs(o.lose - 15 / 36) < 1e-9);
+});
+test('duelOdds: +1 de vantagem → 58,3% vitória', () => {
+    const o = duelOdds(1, 0);
+    assert.ok(Math.abs(o.win - 21 / 36) < 1e-9);
+    assert.ok(Math.abs(o.lose - 10 / 36) < 1e-9);
+});
+test('duelOdds: simetria — win(a,b) === lose(b,a)', () => {
+    const o1 = duelOdds(5, 1);
+    const o2 = duelOdds(1, 5);
+    assert.ok(Math.abs(o1.win - o2.lose) < 1e-9);
+    assert.ok(Math.abs(o1.tie - o2.tie) < 1e-9);
 });
 
 console.log(`\n  ${passed} passou · ${failed} falhou\n`);

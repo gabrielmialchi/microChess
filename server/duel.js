@@ -67,8 +67,23 @@ function sdWinner(sdWins) {
     return 'draw';
 }
 
+// ── PROBABILIDADE DE DUELO ────────────────────────────────────
+// Dois d6: total = dado + bônus. Maior vence; empate é empate
+// (semântica de quem morre fica a cargo de finishDuel).
+// Retorna frações (0..1) da perspectiva do BRANCO.
+function duelOdds(bonusW, bonusB) {
+    let win = 0, tie = 0, lose = 0;
+    for (let a = 1; a <= 6; a++) {
+        for (let b = 1; b <= 6; b++) {
+            const tw = a + bonusW, tb = b + bonusB;
+            if (tw > tb) win++; else if (tb > tw) lose++; else tie++;
+        }
+    }
+    return { win: win / 36, tie: tie / 36, lose: lose / 36 };
+}
+
 module.exports = {
-    effectiveBonus,
+    effectiveBonus, duelOdds,
     SD_MAX_ROUNDS,
     createSDDuel, judgeSDRound, sdSeriesOver, sdWinner,
 };

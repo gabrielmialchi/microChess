@@ -334,5 +334,6 @@ curl http://localhost:3000/health
 | **ADJ-B** | **Sistema de inatividade (substituição completa)** | ✅ Completo |
 | **ADJ-C** | **Sistema de desconexão (rework + guests)** | ✅ Completo |
 | **ADJ-D** | **Empate por dupla inatividade/desconexão** | ✅ Completo |
+| **ADJ-DESIGN** | **Ajustes de design: bot nv1 · Rei dinâmico · Peão→Rainha · Morte Súbita bo3 · odds na UI** | 🔄 Branch `ajustes-design` (pendente playtest + merge) |
 
 *(Atualizar este arquivo ao concluir cada sessão)*

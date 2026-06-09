@@ -17,7 +17,7 @@ const { logEvent } = require('./analytics');
 const { isPathClear, isValidMove, promotePawns } = require('./movegen');
 const { createBotPlayer, processBotTurn } = require('./bot');
 const sp = require('./singleplayer');
-const { effectiveBonus, createSDDuel, judgeSDRound, sdSeriesOver, sdWinner } = require('./duel');
+const { effectiveBonus, duelOdds, createSDDuel, judgeSDRound, sdSeriesOver, sdWinner } = require('./duel');
 
 const app    = express();
 const server = http.createServer(app);
@@ -639,8 +639,15 @@ function createState() {
 
 function stateView(state, color) {
     const opp = color === 'white' ? 'black' : 'white';
+    // Anexa bônus efetivo + odds ao duelo ativo (fonte única; cliente só exibe)
+    let duel = state.duel;
+    if (duel && duel.active && duel.wPiece && duel.bPiece) {
+        const ebW = effectiveBonus(duel.wPiece, 'white', duel);
+        const ebB = effectiveBonus(duel.bPiece, 'black', duel);
+        duel = { ...duel, effBonus: { white: ebW, black: ebB }, odds: duelOdds(ebW, ebB) };
+    }
     // Always hide opponent's planning to prevent WebSocket snooping
-    return { ...state, planning: { ...state.planning, [opp]: null } };
+    return { ...state, duel, planning: { ...state.planning, [opp]: null } };
 }
 
 function broadcast(room) {
