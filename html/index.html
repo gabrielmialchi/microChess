@@ -635,10 +635,6 @@
             filter: grayscale(1) blur(0.5px) !important;
         }
 
-        .piece.buffed {
-            filter: drop-shadow(0 0 14px #d4a832) drop-shadow(0 0 7px #d4a832) !important;
-        }
-
         .piece.selected {
             transform: translate(var(--px, 0%), var(--py, 0%)) scale(1.22) translateY(-6%);
             z-index: 20;
@@ -5631,8 +5627,6 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             // Reset classes, then apply current state
             el.className = `piece ${p.color}`;
 
-            if (p.buffed) el.classList.add('buffed');
-
             if (localSelection && !localSelection.fromInv && localSelection.id === p.id && p.color === myColor)
                 el.classList.add('selected');
 
@@ -5720,16 +5714,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             case 'B': ok = (dx === dy); break;
             case 'N': ok = ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)); break;
             case 'P': {
+                // Peão promove a Rainha ao chegar ao fundo (sem estado buffed).
                 const isEnemy = targetPiece && targetPiece.color !== p.color;
                 const fwd     = p.color === 'white' ? 1 : -1;
                 const diffY   = ty - p.y;
-                if (p.buffed) {
-                    if (isEnemy  && dx === 1 && Math.abs(dy) === 1) ok = true;
-                    if (!isEnemy && ((dx === 0 && Math.abs(dy) === 1) || (dx === 1 && dy === 0))) ok = true;
-                } else {
-                    if (isEnemy  && dx === 1 && diffY === fwd) ok = true;
-                    if (!isEnemy && dx === 0 && Math.abs(dy) === 1) ok = true;
-                }
+                if (isEnemy  && dx === 1 && diffY === fwd) ok = true;
+                if (!isEnemy && dx === 0 && Math.abs(dy) === 1) ok = true;
                 break;
             }
         }
