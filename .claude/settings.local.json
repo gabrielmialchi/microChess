@@ -50,7 +50,10 @@
       "Bash(node --check server/replay.js)",
       "Bash(node -e \"const r=require\\('./server/replay'\\); const snap=r.buildDuelSnapshot\\({wPiece:{id:'wk1',type:'K'},bPiece:{id:'p_1_ab',type:'R'},rolls:{white:4,black:3},type:'attack',attackerColor:'white'},'white_wins'\\); console.log\\('snapshot:',JSON.stringify\\(snap\\)\\);\")",
       "Bash(node --check html/replay-ui.js)",
-      "Bash(node -e 'const fs=require\\(\"fs\"\\);[\"ACTIVITY_LOG\",\"PROJECT_CONTEXT\",\"SESSAO_POR_SESSAO_PLANNING\"].forEach\\(f=>console.log\\(f.padEnd\\(28\\),fs.readFileSync\\(\"docs/\"+f+\".md\",\"utf8\"\\).length\\)\\)')"
+      "Bash(node -e 'const fs=require\\(\"fs\"\\);[\"ACTIVITY_LOG\",\"PROJECT_CONTEXT\",\"SESSAO_POR_SESSAO_PLANNING\"].forEach\\(f=>console.log\\(f.padEnd\\(28\\),fs.readFileSync\\(\"docs/\"+f+\".md\",\"utf8\"\\).length\\)\\)')",
+      "Bash(git pull *)",
+      "Bash(git merge --no-ff ajustes-design -m ' *)",
+      "Bash(git commit *)"
     ]
   }
 }
