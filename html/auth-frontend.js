@@ -13,6 +13,7 @@ const Session = (() => {
         isValid() { const s = this.get(); return !!(s && s.token && s.id); },
     };
 })();
+window.Session = Session;
 
 // ── MENU POPULATOR ────────────────────────────────────────────
 const PIECE_MAP = { K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙', k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' };
