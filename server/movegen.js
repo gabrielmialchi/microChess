@@ -30,16 +30,12 @@ function isValidMove(p, tx, ty, army) {
         case 'B': ok = (dx === dy); break;
         case 'N': ok = ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)); break;
         case 'P': {
+            // Peão não tem mais estado "buffed": ao chegar ao fundo promove a Rainha (ver promotePawns).
             const isEnemy = target && target.color !== p.color;
             const fwd     = p.color === 'white' ? 1 : -1;
             const diffY   = ty - p.y;
-            if (p.buffed) {
-                if (isEnemy  && dx === 1 && Math.abs(dy) === 1) ok = true;
-                if (!isEnemy && ((dx === 0 && Math.abs(dy) === 1) || (dx === 1 && dy === 0))) ok = true;
-            } else {
-                if (isEnemy  && dx === 1 && diffY === fwd) ok = true;
-                if (!isEnemy && dx === 0 && Math.abs(dy) === 1) ok = true;
-            }
+            if (isEnemy  && dx === 1 && diffY === fwd) ok = true;
+            if (!isEnemy && dx === 0 && Math.abs(dy) === 1) ok = true;
             break;
         }
     }
@@ -48,4 +44,20 @@ function isValidMove(p, tx, ty, army) {
     return true;
 }
 
-module.exports = { isPathClear, isValidMove };
+/**
+ * Promove peões que alcançaram o fundo oposto: viram Rainha (bônus 5).
+ * Idempotente — chamar sempre que a posição do exército for finalizada.
+ * @param {Array} army  lista de peças (mutada in-place)
+ */
+function promotePawns(army) {
+    for (const p of army) {
+        if (p.type === 'P' &&
+            ((p.color === 'white' && p.y === 3) || (p.color === 'black' && p.y === 0))) {
+            p.type  = 'Q';
+            p.bonus = 5; // = CONFIG.Q.bonus
+            delete p.buffed;
+        }
+    }
+}
+
+module.exports = { isPathClear, isValidMove, promotePawns };

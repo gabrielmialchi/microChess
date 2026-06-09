@@ -115,8 +115,19 @@ const ReplayViewer = {
                 const duels = allTurns.filter((t, i) => t.type === 'duel' && i > prevGlobal && i < curGlobal);
                 if (duels.length) {
                     duelTxt.innerHTML = duels.map(d => {
-                        const wType  = (d.wPiece?.[1] || 'K').toUpperCase();
-                        const bType  = (d.bPiece?.[1] || 'K').toUpperCase();
+                        // Morte Súbita: série de até 3 rodadas (Reis sem bônus)
+                        if (d.sd) {
+                            const kw = _REPLAY_ICONS.white.K, kb = _REPLAY_ICONS.black.K;
+                            const w  = d.sdWins?.white ?? 0, b = d.sdWins?.black ?? 0;
+                            const rounds = (d.sdHistory || [])
+                                .map((r, i) => `R${i + 1} ${r.white}×${r.black}`).join(' · ');
+                            const outcome = d.result === 'white_wins' ? `${kw} venceu`
+                                          : d.result === 'black_wins' ? `${kb} venceu`
+                                          : 'empate';
+                            return `<span>⚔️ Morte Súbita · ${kw} ${w}×${b} ${kb}${rounds ? ' · ' + rounds : ''} · ${outcome}</span>`;
+                        }
+                        const wType  = (d.wType || d.wPiece?.[1] || 'K').toUpperCase();
+                        const bType  = (d.bType || d.bPiece?.[1] || 'K').toUpperCase();
                         const wIcon  = _REPLAY_ICONS.white[wType] || '?';
                         const bIcon  = _REPLAY_ICONS.black[bType] || '?';
                         const wName  = _PIECE_NAMES[wType] || wType;

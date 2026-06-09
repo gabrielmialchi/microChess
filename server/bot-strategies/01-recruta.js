@@ -1,5 +1,5 @@
 'use strict';
-const { randomChoice, legalMoves } = require('./_helpers');
+const { randomChoice, legalMoves, manhattanDist, findKing } = require('./_helpers');
 
 const COSTS = { Q: 5, R: 4, N: 3, B: 2, P: 1 };
 
@@ -46,10 +46,24 @@ function chooseAction(state, color) {
         }
     }
     if (allMoves.length === 0) return { event: 'action_ready', delayMs: 1500 };
-    const m = randomChoice(allMoves);
+
+    let chosen = null;
+    // 45%: intenção fraca — avança uma peça (não-Rei) em direção ao Rei inimigo.
+    const oppKing = findKing(state, color === 'white' ? 'black' : 'white');
+    if (oppKing && Math.random() < 0.45) {
+        const advancing = allMoves.filter(m => m.piece.type !== 'K');
+        let best = Infinity;
+        for (const m of advancing) {
+            const d = manhattanDist({ x: m.tx, y: m.ty }, oppKing);
+            if (d < best) { best = d; chosen = m; }
+        }
+    }
+    // 55% (ou fallback): aleatório — mantém os erros de iniciante.
+    if (!chosen) chosen = randomChoice(allMoves);
+
     return {
         event:   'action_plan',
-        payload: { pieceId: m.piece.id, tx: m.tx, ty: m.ty },
+        payload: { pieceId: chosen.piece.id, tx: chosen.tx, ty: chosen.ty },
         delayMs: 1500,
     };
 }

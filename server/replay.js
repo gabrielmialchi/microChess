@@ -1,5 +1,7 @@
 'use strict';
 
+const { effectiveBonus } = require('./duel');
+
 function createReplayBuffer() {
     return { turns: [], startTime: Date.now() };
 }
@@ -19,10 +21,13 @@ function buildTurnSnapshot(state) {
 
 function buildDuelSnapshot(duel, result) {
     return {
-        wPieceId: duel.wPiece?.id,
-        bPieceId: duel.bPiece?.id,
-        rolls:    { white: duel.rolls.white, black: duel.rolls.black },
-        bonuses:  { white: duel.wPiece?.bonus, black: duel.bPiece?.bonus },
+        wPiece:  duel.wPiece?.id,
+        bPiece:  duel.bPiece?.id,
+        wType:   duel.wPiece?.type,
+        bType:   duel.bPiece?.type,
+        rolls:   { white: duel.rolls.white, black: duel.rolls.black },
+        bonuses: { white: effectiveBonus(duel.wPiece, 'white', duel),
+                   black: effectiveBonus(duel.bPiece, 'black', duel) },
         result,
     };
 }

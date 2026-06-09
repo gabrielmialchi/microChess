@@ -14,9 +14,10 @@ const { calculate: calcMMR, calculateDraw, getRank, getBanDuration } = require('
 const { createReplayBuffer, recordTurn, buildTurnSnapshot, buildDuelSnapshot } = require('./replay');
 const { applyLPChange, getEloDisplay } = require('./elo');
 const { logEvent } = require('./analytics');
-const { isPathClear, isValidMove }     = require('./movegen');
+const { isPathClear, isValidMove, promotePawns } = require('./movegen');
 const { createBotPlayer, processBotTurn } = require('./bot');
 const sp = require('./singleplayer');
+const { effectiveBonus, duelOdds, createSDDuel, judgeSDRound, sdSeriesOver, sdWinner } = require('./duel');
 
 const app    = express();
 const server = http.createServer(app);
@@ -638,8 +639,15 @@ function createState() {
 
 function stateView(state, color) {
     const opp = color === 'white' ? 'black' : 'white';
+    // Anexa bônus efetivo + odds ao duelo ativo (fonte única; cliente só exibe)
+    let duel = state.duel;
+    if (duel && duel.active && duel.wPiece && duel.bPiece) {
+        const ebW = effectiveBonus(duel.wPiece, 'white', duel);
+        const ebB = effectiveBonus(duel.bPiece, 'black', duel);
+        duel = { ...duel, effBonus: { white: ebW, black: ebB }, odds: duelOdds(ebW, ebB) };
+    }
     // Always hide opponent's planning to prevent WebSocket snooping
-    return { ...state, planning: { ...state.planning, [opp]: null } };
+    return { ...state, duel, planning: { ...state.planning, [opp]: null } };
 }
 
 function broadcast(room) {
@@ -761,14 +769,8 @@ function resolveAction(state) {
 
     duelQueue.sort((a, b) => b.priority - a.priority);
 
-    // Buff pawns that reached the opposite end
-    army.forEach(p => {
-        if (p.type === 'P' && !p.buffed) {
-            if ((p.color === 'white' && p.y === 3) || (p.color === 'black' && p.y === 0)) {
-                p.buffed = true; p.bonus = 2;
-            }
-        }
-    });
+    // Promove peões que alcançaram o fundo oposto (viram Rainha)
+    promotePawns(army);
 
     const emptyDuel = { active: false, resolveTime: false, suddenDeath: false,
                         pressed: { white: false, black: false }, rolls: { white: 0, black: 0 },
@@ -802,14 +804,70 @@ function resolveAction(state) {
     state.duelQueue = remainingQueue;
 }
 
+// ── MORTE SÚBITA (melhor de 3) ────────────────────────────────
+// Cada rodada usa o mesmo fluxo de duelo (rolar → resolveTime → resolver).
+// advanceSD apura a rodada e ou avança para a próxima ou encerra a série.
+function advanceSD(room) {
+    const d = room.state.duel;
+    const winner = judgeSDRound(d.rolls.white, d.rolls.black);
+    d.sdHistory.push({ white: d.rolls.white, black: d.rolls.black, winner });
+    if (winner !== 'tie') d.sdWins[winner]++;
+
+    if (sdSeriesOver(d.sdWins, d.sdRound)) {
+        finishSuddenDeath(room);
+    } else {
+        d.sdRound++;
+        d.pressed     = { white: false, black: false };
+        d.rolls       = { white: 0,     black: 0     };
+        d.resolveTime = false;
+        room.resolving = false;
+        broadcast(room);
+    }
+}
+
+function finishSuddenDeath(room) {
+    const state = room.state;
+    const d     = state.duel;
+    const winnerSide = sdWinner(d.sdWins); // 'white' | 'black' | 'draw'
+    let army = JSON.parse(JSON.stringify(state.army));
+
+    if (room._replay) {
+        const result = winnerSide === 'white' ? 'white_wins' : winnerSide === 'black' ? 'black_wins' : 'draw';
+        const snap = buildDuelSnapshot(d, result); // bônus já = 0 via effectiveBonus na SD
+        recordTurn(room._replay, {
+            type: 'duel', sd: true,
+            sdWins:    { ...d.sdWins },
+            sdHistory: d.sdHistory.map(r => ({ ...r })),
+            ...snap,
+        });
+    }
+
+    if (winnerSide !== 'draw') {
+        const loser = winnerSide === 'white' ? 'black' : 'white';
+        const idx = army.findIndex(p => p.type === 'K' && p.color === loser);
+        if (idx > -1) army.splice(idx, 1);
+    }
+
+    state.army      = army;
+    state.duel      = { active: false };
+    state.duelQueue = [];
+    state.phase     = 'GAMEOVER';
+    room.resolving  = false;
+    clearAFKTimer(room, 'white');
+    clearAFKTimer(room, 'black');
+    persistMatchResult(room, winnerSide === 'draw' ? 'draw' : winnerSide, false);
+    broadcast(room);
+    scheduleRoomCleanup(room.id);
+}
+
 function finishDuel(room) {
     const state = room.state;
     const d     = state.duel;
     if (!d || !d.resolveTime) { room.resolving = false; return; }
 
     let army = JSON.parse(JSON.stringify(state.army));
-    const totW = d.rolls.white + d.wPiece.bonus;
-    const totB = d.rolls.black + d.bPiece.bonus;
+    const totW = d.rolls.white + effectiveBonus(d.wPiece, 'white', d);
+    const totB = d.rolls.black + effectiveBonus(d.bPiece, 'black', d);
     const idxW = army.findIndex(a => a.id === d.wPiece.id);
     const idxB = army.findIndex(a => a.id === d.bPiece.id);
 
@@ -920,6 +978,7 @@ function finishDuel(room) {
         }
 
         if (valid) {
+            promotePawns(army);
             state.army      = army;
             state.duel      = { ...nd, active: true, resolveTime: false,
                                 wPiece: stillW, bPiece: stillB,
@@ -950,17 +1009,13 @@ function finishDuel(room) {
             const kW = r.state.army.find(k => k.color === 'white');
             const kB = r.state.army.find(k => k.color === 'black');
             if (!kW || !kB) return;
-            r.state.duel = {
-                active: true, resolveTime: false, wPiece: kW, bPiece: kB,
-                suddenDeath: true,
-                pressed: { white: false, black: false },
-                rolls:   { white: 0,     black: 0     },
-            };
+            r.state.duel = createSDDuel(kW, kB);
             broadcast(r);
         }, 3_000);
         return;
     }
 
+    promotePawns(army);
     state.army      = army;
     state.duel      = { active: false };
     state.duelQueue = [];
@@ -1054,12 +1109,7 @@ function handleBotEvent(room, event, data) {
                     const kW = r.state.army.find(k => k.color === 'white');
                     const kB = r.state.army.find(k => k.color === 'black');
                     if (!kW || !kB) return;
-                    r.state.duel = {
-                        active: true, resolveTime: false, wPiece: kW, bPiece: kB,
-                        suddenDeath: true,
-                        pressed: { white: false, black: false },
-                        rolls:   { white: 0,     black: 0     },
-                    };
+                    r.state.duel = createSDDuel(kW, kB);
                     broadcast(r);
                 }, 3_000);
             }
@@ -1081,7 +1131,8 @@ function handleBotEvent(room, event, data) {
         const d = s.duel;
         if (!d?.resolveTime) return;
         room.resolving = true;
-        finishDuel(room);
+        if (d.suddenDeath) advanceSD(room);
+        else finishDuel(room);
     }
 }
 
@@ -1564,12 +1615,7 @@ io.on('connection', (socket) => {
                     const kW = r.state.army.find(k => k.color === 'white');
                     const kB = r.state.army.find(k => k.color === 'black');
                     if (!kW || !kB) return;
-                    r.state.duel = {
-                        active: true, resolveTime: false, wPiece: kW, bPiece: kB,
-                        suddenDeath: true,
-                        pressed: { white: false, black: false },
-                        rolls:   { white: 0,     black: 0     },
-                    };
+                    r.state.duel = createSDDuel(kW, kB);
                     broadcast(r);
                 }, 3_000);
             }
@@ -1598,7 +1644,8 @@ io.on('connection', (socket) => {
         const d = room.state?.duel;
         if (!d?.resolveTime) return;
         room.resolving = true;
-        finishDuel(room);
+        if (d.suddenDeath) advanceSD(room);
+        else finishDuel(room);
     });
 
     // ── DISCONNECT ───────────────────────────────────────────────
