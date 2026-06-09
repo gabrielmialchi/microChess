@@ -27,6 +27,37 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-09] Sessão ADJ-DESIGN — Ajustes de Game Design (5 itens)
+**Status:** ⏳ Planejado — aguardando implementação
+**Branch:** `ajustes-design` (dedicada; `main` permanece intocada para reversão segura)
+
+### Origem
+Estudo de game design (variância dado vs. perícia). 5 ajustes aprovados pelo Gabriel.
+Plano detalhado em `SESSAO_POR_SESSAO_PLANNING.md` → seção "SESSÃO ADJ-DESIGN".
+
+### Decisões travadas
+- **Morte Súbita:** Variante **A** — 3 rodadas de 1d6 vs 1d6, vence quem ganhar mais rodadas; empate de rodadas → DRAW (preserva empate como "equilíbrio real"; ~17,8%).
+- **Rei bônus dinâmico:** +5 atacante · +4 choque frontal · +3 defensor parado · +0 Morte Súbita.
+- **Peão:** promoção ao fundo oposto → vira **Rainha** (bônus 5), não mais "buffed".
+- **Estratégia de reversibilidade:** branch dedicada + **1 commit por item**. Erro em um item → `git revert` só daquele commit, sem afetar os demais nem a `main`.
+
+### Itens (ordem de execução: 5 → 2 → 3 → 1 → 4)
+- [ ] **5** — Bot nível 1 (recruta) com intenção mínima (45% avança p/ Rei inimigo, 55% aleatório). Arquivo: `bot-strategies/01-recruta.js`. Risco 🟢
+- [ ] **2** — Rei bônus dinâmico. Novo módulo `server/duel.js` (`effectiveBonus`); 2 linhas em `finishDuel`. Risco 🟠
+- [ ] **3** — Peão → Rainha. `promotePawns(army)` em `movegen.js`, chamado em `resolveAction` E `finishDuel` (corrige bug latente: promoção por duelo nunca disparava). Risco 🟢🟠
+- [ ] **1** — Morte Súbita melhor-de-3 (Variante A). `duel.js` (série de rodadas) + `roll_dice` (humano+bot) + ramo SD do `finishDuel` + modal `index.html` + `replay-ui.js`. Risco 🟠
+- [ ] **4** — Probabilidade do duelo na UI. `duel.js` (`duelOdds`); servidor anexa `d.odds`; render no modal. Risco 🟢
+
+### Follow-up fora de escopo (anotado)
+- `_minimax.js`/`_helpers.js` usam `BONUS.K = 0` → bots subestimam o Rei em combate. Não quebra (vitória por morte do Rei é avaliada à parte), mas bots fortes jogam abaixo do ideal em duelos de Rei. Ajustar depois.
+
+### Testes previstos
+- Novo `testes/server/duel.test.js`: `effectiveBonus` (4 cenários), `duelOdds` (soma 100%, simetria), série SD (decisão + empate).
+- `movegen.test.js`: peão em y=3/y=0 vira Q com bônus 5 e move como Rainha.
+- `node --check` a cada item.
+
+---
+
 ## [2026-06-08] Sessão ANAL-C — Instrumentação de Funil para Open Test
 **Status:** ✅ Completo
 **Branch:** main

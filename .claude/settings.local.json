@@ -23,7 +23,24 @@
       "Bash(sqlite3 \"e:/Projetos/o6/FAST IP/microChess/server/db/microchess.db\" \"DELETE FROM singleplayer_progress; DELETE FROM replays; DELETE FROM matches; DELETE FROM players;\")",
       "Bash(sqlite3 \"e:/Projetos/o6/FAST IP/microChess/server/db/microchess.db\" \"SELECT COUNT\\(*\\) FROM players;\")",
       "PowerShell(node --check \"e:\\\\Projetos\\\\o6\\\\FAST IP\\\\microChess\\\\server\\\\server.js\" 2>&1; Write-Host \"exit:$LASTEXITCODE\")",
-      "Bash(node --check \"e:\\\\Projetos\\\\o6\\\\FAST IP\\\\microChess\\\\server\\\\server.js\")"
+      "Bash(node --check \"e:\\\\Projetos\\\\o6\\\\FAST IP\\\\microChess\\\\server\\\\server.js\")",
+      "Bash(wc -l server/server.js server/db/database.js html/index.html server/singleplayer.js server/analytics.js server/mmr.js html/auth-frontend.js)",
+      "Bash(ls -la .gitignore)",
+      "Bash(xargs -I{} du -k \"{}\")",
+      "Bash(git show *)",
+      "Bash(node -e \"try{const D=require\\('./server/node_modules/better-sqlite3'\\);const db=new D\\('/tmp/mc_head.db',{readonly:true}\\);const u=db.prepare\\('SELECT count\\(*\\) c FROM players'\\).get\\(\\);const sample=db.prepare\\('SELECT username,email,password_hash FROM players LIMIT 3'\\).all\\(\\);console.log\\('USERS in committed DB:',u.c\\);console.log\\('SAMPLE:',JSON.stringify\\(sample,null,0\\).slice\\(0,400\\)\\);}catch\\(e\\){console.log\\('err',e.message\\)}\")",
+      "Bash(node -e \"try{const D=require\\('./server/node_modules/better-sqlite3'\\);const db=new D\\('./server/_tmp_head.db',{readonly:true}\\);const u=db.prepare\\('SELECT count\\(*\\) c FROM players'\\).get\\(\\);const s=db.prepare\\('SELECT username,substr\\(email,1,12\\) e,substr\\(password_hash,1,10\\) h FROM players LIMIT 4'\\).all\\(\\);console.log\\('USERS in HEAD-committed DB:',u.c\\);console.log\\('SAMPLE:',JSON.stringify\\(s\\)\\);}catch\\(e\\){console.log\\('err',e.message\\)}\")",
+      "Bash(rm -f \"./server/_tmp_head.db\")",
+      "Bash(git rm *)",
+      "Bash(mkdir -p \"_arquivo/backups\" \"_arquivo/testes\" \"_arquivo/design/OLD\")",
+      "Bash(git mv *)",
+      "Bash(echo '# Arquivo Morto — microChess *)",
+      "Bash(git add *)",
+      "Bash(xargs echo \"arquivos com mudança staged:\")",
+      "Bash(node --check db/database.js)",
+      "Bash(node --check server.js)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
