@@ -33,7 +33,7 @@ para entender o estado atual antes de implementar qualquer coisa.
 ### Itens (1 commit cada)
 - [x] **#8** — Bots valorizando o Rei. `combatBonus(type, isAttacker)` em `_helpers.js` (Rei: +5 atq / +3 def); `_minimax.simulateMove` usa combatBonus na predição de duelo. `evaluate` mantém `pieceBonus` (Rei=0 material — correto). **Nova descoberta (fora de escopo):** o modelo de duelo do minimax trata captura de peça parada como duelo, mas no jogo real é auto-captura (atacante sempre vence) — bot evita capturas lucrativas de peças não-Rei. Anotado p/ futuro.
 - [x] **#7** — Limpado código `buffed` morto no `index.html`: removido CSS `.piece.buffed`, `classList.add('buffed')` e o ramo buffed do isValidMove do cliente (agora espelha o `movegen.js`).
-- [ ] **#6** — Fix replay-ui: snapshot grava `wPieceId`/`bPieceId` mas UI lê `wPiece`/`bPiece`; IDs não codificam tipo de forma confiável → gravar `wType`/`bType` explícitos.
+- [x] **#6** — Fix replay: `buildDuelSnapshot` grava `wPiece`/`bPiece` (id) + `wType`/`bType` explícitos + bônus EFETIVO (importa `effectiveBonus`); `replay-ui` lê `wType`/`bType`. Duelos não mais sempre "Rei vs Rei". Replays antigos: fallback 'K' (sem regressão).
 - [ ] **#5** — Replay da Morte Súbita: gravar `sdHistory` + renderizar a série (placar + rodadas) no `replay-ui.js`.
 
 ---

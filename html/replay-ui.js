@@ -115,8 +115,8 @@ const ReplayViewer = {
                 const duels = allTurns.filter((t, i) => t.type === 'duel' && i > prevGlobal && i < curGlobal);
                 if (duels.length) {
                     duelTxt.innerHTML = duels.map(d => {
-                        const wType  = (d.wPiece?.[1] || 'K').toUpperCase();
-                        const bType  = (d.bPiece?.[1] || 'K').toUpperCase();
+                        const wType  = (d.wType || d.wPiece?.[1] || 'K').toUpperCase();
+                        const bType  = (d.bType || d.bPiece?.[1] || 'K').toUpperCase();
                         const wIcon  = _REPLAY_ICONS.white[wType] || '?';
                         const bIcon  = _REPLAY_ICONS.black[bType] || '?';
                         const wName  = _PIECE_NAMES[wType] || wType;
