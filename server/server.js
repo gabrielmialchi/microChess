@@ -14,7 +14,7 @@ const { calculate: calcMMR, calculateDraw, getRank, getBanDuration } = require('
 const { createReplayBuffer, recordTurn, buildTurnSnapshot, buildDuelSnapshot } = require('./replay');
 const { applyLPChange, getEloDisplay } = require('./elo');
 const { logEvent } = require('./analytics');
-const { isPathClear, isValidMove }     = require('./movegen');
+const { isPathClear, isValidMove, promotePawns } = require('./movegen');
 const { createBotPlayer, processBotTurn } = require('./bot');
 const sp = require('./singleplayer');
 const { effectiveBonus } = require('./duel');
@@ -762,14 +762,8 @@ function resolveAction(state) {
 
     duelQueue.sort((a, b) => b.priority - a.priority);
 
-    // Buff pawns that reached the opposite end
-    army.forEach(p => {
-        if (p.type === 'P' && !p.buffed) {
-            if ((p.color === 'white' && p.y === 3) || (p.color === 'black' && p.y === 0)) {
-                p.buffed = true; p.bonus = 2;
-            }
-        }
-    });
+    // Promove peões que alcançaram o fundo oposto (viram Rainha)
+    promotePawns(army);
 
     const emptyDuel = { active: false, resolveTime: false, suddenDeath: false,
                         pressed: { white: false, black: false }, rolls: { white: 0, black: 0 },
@@ -921,6 +915,7 @@ function finishDuel(room) {
         }
 
         if (valid) {
+            promotePawns(army);
             state.army      = army;
             state.duel      = { ...nd, active: true, resolveTime: false,
                                 wPiece: stillW, bPiece: stillB,
@@ -962,6 +957,7 @@ function finishDuel(room) {
         return;
     }
 
+    promotePawns(army);
     state.army      = army;
     state.duel      = { active: false };
     state.duelQueue = [];
