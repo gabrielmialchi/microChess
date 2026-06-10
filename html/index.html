@@ -676,6 +676,16 @@
             pointer-events: none;
         }
 
+        /* ── IMPACTO DE CAPTURA (board shake) ── */
+        @keyframes board-shake {
+            0%,100% { transform: translate(0,0); }
+            20%     { transform: translate(-3px, 2px); }
+            40%     { transform: translate(3px, -2px); }
+            60%     { transform: translate(-2px, -2px); }
+            80%     { transform: translate(2px, 2px); }
+        }
+        .board-shake { animation: board-shake 0.3s cubic-bezier(.36,.07,.19,.97); }
+
         /* ── SHOP / INVENTORY ── */
         .inventory-area { width: 100%; text-align: center; position: relative; }
 
@@ -5340,6 +5350,16 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         setTimeout(() => board.classList.remove('reveal-bloom'), 700);
     }
 
+    // J5 — impacto de captura: sacode o tabuleiro inteiro (células + peças)
+    function triggerBoardShake() {
+        const bc = document.querySelector('.board-container');
+        if (!bc) return;
+        bc.classList.remove('board-shake');
+        void bc.offsetWidth;
+        bc.classList.add('board-shake');
+        setTimeout(() => bc.classList.remove('board-shake'), 320);
+    }
+
     // ── SOCKET GAME STATE LISTENER ────────────────────────────────
     socket.on('game_state', (data) => {
         if (!inGame || !data) return;
@@ -5588,6 +5608,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const displayedIds = new Set(piecesToDraw.map(p => p.id));
 
         // Handle removed / phase-hidden pieces
+        let _captured = false;
         pieceElements.forEach((el, id) => {
             if (el.classList.contains('piece-capturing')) return; // already animating out
 
@@ -5595,6 +5616,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 // Piece was captured → dramatic exit
                 el.classList.add('piece-capturing');
                 el.style.zIndex = '30';
+                _captured = true;
                 setTimeout(() => { el.remove(); pieceElements.delete(id); }, 680);
 
             } else if (!displayedIds.has(id)) {
@@ -5602,6 +5624,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 el.classList.add('piece-hidden');
             }
         });
+        if (_captured) triggerBoardShake();
 
         // Update or create displayed pieces
         let enteringIndex = 0;
