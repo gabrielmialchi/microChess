@@ -39,8 +39,14 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
-## [2026-06-09] ADJ-JUICE — Feedback/Juice de timing (PLANEJADO)
-**Status:** ⏳ Planejado — plano detalhado em `SESSAO_POR_SESSAO_PLANNING.md`
+## [2026-06-09] ADJ-JUICE — Feedback/Juice de timing
+**Status:** 🔄 Em andamento — ADJ-JUICE-A ✅ (branch `adj-juice`); B/C/D pendentes
+
+### Feito — ADJ-JUICE-A (juice de combate, branch `adj-juice`)
+- **J5** impacto de captura: `board-shake` no `.board-container` ao capturar.
+- **J6** Morte Súbita: `sd-round-pop` no status ao trocar de rodada.
+- **J1** revelação por turno: `reveal-snap` (pulso de brilho) em `#pieces-layer` ao resolver Ação.
+- **J7** beat pós-duelo: segura o resultado ~800ms antes de revelar o tabuleiro (queixa do Gabriel).
 
 ### Origem
 Avaliação de game feel: o juice é forte em eventos discretos (entrada/captura/duelo)

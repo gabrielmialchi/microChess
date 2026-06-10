@@ -32,6 +32,8 @@ Princípios: tudo em CSS `@keyframes` + toggle de classe (reusar vocabulário ex
 
 # SESSÃO ADJ-JUICE-A — Juice de combate
 
+**Status:** ✅ Implementado na branch `adj-juice` (J5·J6·J1·J7, 1 commit cada) — pendente playtest + merge.
+
 ## Objetivo
 Dar peso e ritmo ao ciclo commit → revelação → resolução, onde mora o "prazer de timing".
 
