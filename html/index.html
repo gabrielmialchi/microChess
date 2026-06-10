@@ -686,6 +686,14 @@
         }
         .board-shake { animation: board-shake 0.3s cubic-bezier(.36,.07,.19,.97); }
 
+        /* ── J6: slam ao trocar de rodada na Morte Súbita ── */
+        @keyframes sd-round-pop {
+            0%   { transform: scale(1); }
+            35%  { transform: scale(1.18); filter: brightness(1.5); }
+            100% { transform: scale(1); }
+        }
+        .sd-round-pop { animation: sd-round-pop 0.45s cubic-bezier(0.34, 1.4, 0.64, 1); }
+
         /* ── SHOP / INVENTORY ── */
         .inventory-area { width: 100%; text-align: center; position: relative; }
 
@@ -5256,6 +5264,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     let pieceElements  = new Map(); // pieceId → DOM element
     let prevPhase      = null;
     let lastDuelKey    = null;     // detects new duel in queue
+    let _lastSdRound   = 0;        // J6: detecta troca de rodada na Morte Súbita
     let revealBloomed  = false;    // one-shot reveal board bloom
 
     const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
@@ -5874,6 +5883,17 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             _statusText += ` · ${d.sdRound}/3 · ${_my}×${_opp}`;
         }
         statusEl.innerText = _statusText;
+        // J6: slam ao iniciar uma nova rodada da Morte Súbita
+        if (d.suddenDeath) {
+            if (d.sdRound !== _lastSdRound) {
+                _lastSdRound = d.sdRound;
+                statusEl.classList.remove('sd-round-pop');
+                void statusEl.offsetWidth;
+                statusEl.classList.add('sd-round-pop');
+            }
+        } else {
+            _lastSdRound = 0;
+        }
         statusEl.style.color = '';
         statusEl.classList.toggle('sudden-death', !!d.suddenDeath);
         // Design-L: sync sudden death banner
