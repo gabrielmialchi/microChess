@@ -2277,6 +2277,13 @@
 .dk-piece-table .dk-p{font-size:20px;text-align:center;}
 .dk-piece-table .dk-n{font-weight:600;color:var(--mc-ink,#18130c);}
 .dk-piece-table .dk-b{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;font-weight:600;color:var(--mc-accent,#d4a832);}
+.dk-king-block{margin-top:10px;padding-top:9px;border-top:1px solid var(--mc-rule,rgba(24,19,12,0.1));}
+.dk-king-head{display:flex;align-items:center;gap:10px;}
+.dk-king-head .dk-p{font-size:20px;}
+.dk-king-head .dk-n{font-weight:600;color:var(--mc-ink,#18130c);}
+.dk-king-conds{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:11px;align-items:center;margin-top:5px;padding-left:30px;}
+.dk-king-conds .dk-kc-l{color:var(--mc-muted,rgba(24,19,12,0.56));}
+.dk-king-conds .dk-b{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-weight:600;color:var(--mc-accent,#d4a832);}
 .dk-htp-note{font-size:12px;color:var(--mc-muted,rgba(24,19,12,0.56));line-height:1.5;padding:12px 14px;border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,12px);background:var(--mc-surface,#fbf7ee);}
 .dk-crd-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;text-align:center;}
 .dk-crd-logo{font-family:var(--mc-font-serif,'Cinzel',serif);font-size:28px;font-weight:700;color:var(--mc-ink,#18130c);}
@@ -3172,7 +3179,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             privacy_policy:'Política de Privacidade',
             age_gate:'Confirmo que tenho 13 anos ou mais',
             age_gate_error:'Você precisa ter 13 anos ou mais para criar uma conta.',
-            appearance:'APARÊNCIA', info:'INFORMAÇÕES', dark_theme:'Tema escuro', htp_bonus_title:'BÔNUS POR PEÇA',
+            appearance:'APARÊNCIA', info:'INFORMAÇÕES', dark_theme:'Tema escuro', htp_bonus_title:'BÔNUS POR PEÇA', htp_king_atk:'Rei ataca', htp_king_clash:'Rei encontra adversário', htp_king_def:'Rei é atacado',
             sp_continue:'CONTINUAR', sp_start:'COMEÇAR', sp_new:'NOVO', sp_reset_journey:'RESETAR TRAJETO', sp_phase:'Fase', sp_play:'JOGAR',
             sp_continue_desc:'Retomar de onde parou', sp_new_desc:'Começar do início (Fase 1)',
             sp_new_confirm_title:'Reiniciar jornada?',
@@ -3262,7 +3269,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             privacy_policy:'Privacy Policy',
             age_gate:'I confirm I am 13 years of age or older',
             age_gate_error:'You must be 13 or older to create an account.',
-            appearance:'APPEARANCE', info:'INFO', dark_theme:'Dark theme', htp_bonus_title:'PIECE BONUS',
+            appearance:'APPEARANCE', info:'INFO', dark_theme:'Dark theme', htp_bonus_title:'PIECE BONUS', htp_king_atk:'King attacks', htp_king_clash:'King meets enemy', htp_king_def:'King is attacked',
             sp_continue:'CONTINUE', sp_start:'START', sp_new:'NEW', sp_reset_journey:'RESET JOURNEY', sp_phase:'Phase', sp_play:'PLAY',
             sp_continue_desc:'Resume where you left off', sp_new_desc:'Start from the beginning (Phase 1)',
             sp_new_confirm_title:'Restart journey?',
@@ -3362,7 +3369,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             privacy_policy:'Política de Privacidad',
             age_gate:'Confirmo que tengo 13 años o más',
             age_gate_error:'Debes tener 13 años o más para crear una cuenta.',
-            appearance:'APARIENCIA', info:'INFO', dark_theme:'Tema oscuro', htp_bonus_title:'BONO POR PIEZA',
+            appearance:'APARIENCIA', info:'INFO', dark_theme:'Tema oscuro', htp_bonus_title:'BONO POR PIEZA', htp_king_atk:'El Rey ataca', htp_king_clash:'El Rey choca', htp_king_def:'El Rey es atacado',
             sp_continue:'CONTINUAR', sp_start:'EMPEZAR', sp_new:'NUEVO', sp_reset_journey:'REINICIAR TRAVESÍA', sp_phase:'Fase', sp_play:'JUGAR',
             sp_continue_desc:'Continúa donde lo dejaste', sp_new_desc:'Empezar desde el principio (Fase 1)',
             sp_new_confirm_title:'¿Reiniciar travesía?',
@@ -3462,7 +3469,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             privacy_policy:'Datenschutzrichtlinie',
             age_gate:'Ich bestätige, dass ich 13 Jahre alt oder älter bin',
             age_gate_error:'Du musst mindestens 13 Jahre alt sein, um ein Konto zu erstellen.',
-            appearance:'ERSCHEINUNGSBILD', info:'INFO', dark_theme:'Dunkles Design', htp_bonus_title:'FIGURENBONUS',
+            appearance:'ERSCHEINUNGSBILD', info:'INFO', dark_theme:'Dunkles Design', htp_bonus_title:'FIGURENBONUS', htp_king_atk:'König greift an', htp_king_clash:'König trifft Gegner', htp_king_def:'König wird angegriffen',
             sp_continue:'FORTSETZEN', sp_start:'STARTEN', sp_new:'NEU', sp_reset_journey:'REISE ZURÜCKSETZEN', sp_phase:'Phase', sp_play:'SPIELEN',
             sp_continue_desc:'Dort weitermachen, wo du aufgehört hast', sp_new_desc:'Von vorne beginnen (Phase 1)',
             sp_new_confirm_title:'Reise neu starten?',
@@ -3562,7 +3569,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             privacy_policy:'Informativa sulla Privacy',
             age_gate:'Confermo di avere 13 anni o più',
             age_gate_error:'Devi avere almeno 13 anni per creare un account.',
-            appearance:'ASPETTO', info:'INFO', dark_theme:'Tema scuro', htp_bonus_title:'BONUS PEZZO',
+            appearance:'ASPETTO', info:'INFO', dark_theme:'Tema scuro', htp_bonus_title:'BONUS PEZZO', htp_king_atk:'Il Re attacca', htp_king_clash:'Il Re si scontra', htp_king_def:'Il Re è attaccato',
             sp_continue:'CONTINUA', sp_start:'INIZIA', sp_new:'NUOVO', sp_reset_journey:'RESETTA VIAGGIO', sp_phase:'Fase', sp_play:'GIOCA',
             sp_continue_desc:'Riprendi da dove eri rimasto', sp_new_desc:'Ricomincia dall\'inizio (Fase 1)',
             sp_new_confirm_title:'Ricominciare il viaggio?',
@@ -3662,7 +3669,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             privacy_policy:'Политика конфиденциальности',
             age_gate:'Подтверждаю, что мне 13 лет или больше',
             age_gate_error:'Вам должно быть не менее 13 лет для создания аккаунта.',
-            appearance:'ВИД', info:'ИНФО', dark_theme:'Тёмная тема', htp_bonus_title:'БОНУС ФИГУР',
+            appearance:'ВИД', info:'ИНФО', dark_theme:'Тёмная тема', htp_bonus_title:'БОНУС ФИГУР', htp_king_atk:'Король атакует', htp_king_clash:'Король сталкивается', htp_king_def:'Король под атакой',
             sp_continue:'ПРОДОЛЖИТЬ', sp_start:'НАЧАТЬ', sp_new:'НОВАЯ', sp_reset_journey:'СБРОСИТЬ ПУТЬ', sp_phase:'Этап', sp_play:'ИГРАТЬ',
             sp_continue_desc:'Продолжить с того места, где остановились', sp_new_desc:'Начать с начала (Этап 1)',
             sp_new_confirm_title:'Начать заново?',
@@ -3762,7 +3769,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             privacy_policy:'プライバシーポリシー',
             age_gate:'13歳以上であることを確認します',
             age_gate_error:'アカウントを作成するには13歳以上である必要があります。',
-            appearance:'外観', info:'情報', dark_theme:'ダークモード', htp_bonus_title:'コマのボーナス',
+            appearance:'外観', info:'情報', dark_theme:'ダークモード', htp_bonus_title:'コマのボーナス', htp_king_atk:'王が攻撃', htp_king_clash:'王が衝突', htp_king_def:'王が攻撃される',
             sp_continue:'続ける', sp_start:'開始', sp_new:'新規', sp_reset_journey:'旅をリセット', sp_phase:'フェーズ', sp_play:'プレイ',
             sp_continue_desc:'中断したところから再開', sp_new_desc:'最初から始める（フェーズ1）',
             sp_new_confirm_title:'旅をリスタート？',
@@ -3862,7 +3869,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             privacy_policy:'개인정보 처리방침',
             age_gate:'만 13세 이상임을 확인합니다',
             age_gate_error:'계정을 만들려면 만 13세 이상이어야 합니다.',
-            appearance:'화면', info:'정보', dark_theme:'다크 모드', htp_bonus_title:'기물 보너스',
+            appearance:'화면', info:'정보', dark_theme:'다크 모드', htp_bonus_title:'기물 보너스', htp_king_atk:'왕이 공격', htp_king_clash:'왕이 충돌', htp_king_def:'왕이 공격받음',
             sp_continue:'계속하기', sp_start:'시작하기', sp_new:'새로 시작', sp_reset_journey:'여정 초기화', sp_phase:'페이즈', sp_play:'플레이',
             sp_continue_desc:'중단한 곳부터 이어하기', sp_new_desc:'처음부터 시작 (페이즈 1)',
             sp_new_confirm_title:'여정을 재시작?',
@@ -3962,7 +3969,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             privacy_policy:'隐私政策',
             age_gate:'我确认我已年满13岁',
             age_gate_error:'您必须年满13岁才能创建账户。',
-            appearance:'外观', info:'信息', dark_theme:'深色主题', htp_bonus_title:'棋子加成',
+            appearance:'外观', info:'信息', dark_theme:'深色主题', htp_bonus_title:'棋子加成', htp_king_atk:'王进攻', htp_king_clash:'王相遇', htp_king_def:'王被攻击',
             sp_continue:'继续', sp_start:'开始', sp_new:'重新开始', sp_reset_journey:'重置旅程', sp_phase:'关卡', sp_play:'开始',
             sp_continue_desc:'从中断处继续', sp_new_desc:'从头开始（第1关）',
             sp_new_confirm_title:'重新开始旅程？',
@@ -4387,11 +4394,17 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const body = document.getElementById('htp-body');
         if (!body) return;
 
-        // Bonus table using game config (Q/R/N/B/P + K)
-        const bonusRows = ['Q','R','N','B','P','K'].map(type => {
+        // Bonus table using game config (Q/R/N/B/P). Rei tem bônus dinâmico → bloco próprio.
+        const bonusRows = ['Q','R','N','B','P'].map(type => {
             const cfg = CONFIG[type];
             return `<span class="dk-p">${cfg.icon}</span><span class="dk-n">${cfg.name}</span><span class="dk-b">+${cfg.bonus}</span>`;
         }).join('');
+        const _kCfg = CONFIG['K'];
+        const kingConds = [
+            [t('htp_king_atk'),   '+5'],
+            [t('htp_king_clash'), '+4'],
+            [t('htp_king_def'),   '+3'],
+        ].map(([lbl, b]) => `<span class="dk-kc-l">${lbl}</span><span class="dk-b">${b}</span>`).join('');
 
         body.innerHTML = `
             <div class="dk-htp-steps">
@@ -4413,7 +4426,13 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 </div>
             </div>
             <div class="dk-sec-label">${t('htp_bonus_title') || 'BÔNUS POR PEÇA'}</div>
-            <div class="dk-htp-bonus"><div class="dk-piece-table">${bonusRows}</div></div>
+            <div class="dk-htp-bonus">
+                <div class="dk-piece-table">${bonusRows}</div>
+                <div class="dk-king-block">
+                    <div class="dk-king-head"><span class="dk-p">${_kCfg.icon}</span><span class="dk-n">${_kCfg.name}</span></div>
+                    <div class="dk-king-conds">${kingConds}</div>
+                </div>
+            </div>
             <div class="dk-htp-note">${t('htp_intro')}</div>
         `;
     }
