@@ -694,6 +694,10 @@
         }
         .sd-round-pop { animation: sd-round-pop 0.45s cubic-bezier(0.34, 1.4, 0.64, 1); }
 
+        /* ── J1: pulso de revelação dos planos a cada turno de Ação ── */
+        @keyframes reveal-snap { 0% { filter: brightness(1.7); } 100% { filter: brightness(1); } }
+        #pieces-layer.reveal-snap { animation: reveal-snap 0.38s ease-out; }
+
         /* ── SHOP / INVENTORY ── */
         .inventory-area { width: 100%; text-align: center; position: relative; }
 
@@ -5369,9 +5373,21 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         setTimeout(() => bc.classList.remove('board-shake'), 320);
     }
 
+    // J1 — pulso de revelação ao resolver um turno de Ação (planos revelados)
+    function triggerActionReveal() {
+        const layer = document.getElementById('pieces-layer');
+        if (!layer) return;
+        layer.classList.remove('reveal-snap');
+        void layer.offsetWidth;
+        layer.classList.add('reveal-snap');
+        setTimeout(() => layer.classList.remove('reveal-snap'), 400);
+    }
+
     // ── SOCKET GAME STATE LISTENER ────────────────────────────────
     socket.on('game_state', (data) => {
         if (!inGame || !data) return;
+        // J1: eu estava esperando o oponente numa fase de Ação?
+        const _prevWaitingAction = state && state.phase === 'ACTION' && state.ready && state.ready[myColor] === true;
         state = data;
 
         // Safe defaults
@@ -5387,6 +5403,11 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         state.duel.pressed = state.duel.pressed || { white: false, black: false };
         state.duel.rolls   = state.duel.rolls   || { white: 0, black: 0 };
         state.duelQueue  = state.duelQueue || [];
+
+        // J1: turno de Ação resolvido (estava esperando → planos revelados)
+        if (_prevWaitingAction && state.ready[myColor] === false && state.phase !== 'GAMEOVER') {
+            triggerActionReveal();
+        }
 
         handlePhaseChange(state.phase);
         updateUI();
