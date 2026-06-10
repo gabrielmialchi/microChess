@@ -5269,6 +5269,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     let prevPhase      = null;
     let lastDuelKey    = null;     // detects new duel in queue
     let _lastSdRound   = 0;        // J6: detecta troca de rodada na Morte Súbita
+    let _duelHideScheduled = false; // J7: beat pós-duelo (segura o resultado antes de fechar)
     let revealBloomed  = false;    // one-shot reveal board bloom
 
     const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
@@ -5856,12 +5857,30 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const container = document.getElementById('duel-container');
 
         if (!d || !d.active) {
-            modal.style.display = 'none';
+            // J7: se o modal mostra um resultado, segura ~800ms antes de revelar o tabuleiro
+            if (modal.style.display === 'flex') {
+                if (!_duelHideScheduled) {
+                    _duelHideScheduled = true;
+                    if (rollInterval) { clearInterval(rollInterval); rollInterval = null; }
+                    if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
+                    localDiceAnimating = false;
+                    setTimeout(() => {
+                        if (!state.duel || !state.duel.active) {
+                            modal.style.display = 'none';
+                            lastDuelKey = null;
+                        }
+                        _duelHideScheduled = false;
+                    }, 800);
+                }
+                return;
+            }
             if (rollInterval) { clearInterval(rollInterval); rollInterval = null; }
             localDiceAnimating = false;
             lastDuelKey = null;
             return;
         }
+
+        _duelHideScheduled = false; // duelo ativo: cancela estado de fechamento pendente
 
         // Detect new duel in queue → brief pause before showing
         const duelKey = `${d.wPiece?.id}_${d.bPiece?.id}`;
@@ -6008,9 +6027,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const d = state.duel;
         if (!d || !d.resolveTime) return;
         if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
-        document.getElementById('duel-modal').style.display = 'none';
-        // Reset para que o modal reapareça na próxima rodada da Morte Súbita
-        // (os Reis são os mesmos a cada rodada, então duelKey não muda sozinho).
+        // J7: NÃO esconde aqui — o estado resolvido segura o resultado ~800ms antes de fechar.
+        const _cd = document.getElementById('close-duel');
+        if (_cd) _cd.style.display = 'none'; // evita clique duplo
+        // Reset para que o modal reapareça na próxima rodada da Morte Súbita.
         lastDuelKey = null;
         socket.emit('duel_resolve');
     };
