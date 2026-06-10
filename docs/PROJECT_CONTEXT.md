@@ -268,4 +268,5 @@ curl http://localhost:3000/health
 
 Histórico completo arquivado em [`_arquivo/docs/PROJECT_CONTEXT_progresso.md`](../_arquivo/docs/PROJECT_CONTEXT_progresso.md).
 
-**Em andamento:** ADJ-DESIGN + ADJ-DESIGN-POLISH — branch `ajustes-design`, pendente playtest + merge.
+**Concluído e mergeado:** ADJ-DESIGN (5 ajustes de game design) + POLISH + HTP-FIX (Como Jogar: bônus dinâmico do Rei).
+**Em andamento / próximo:** ADJ-JUICE — feedback/juice de timing (planejado; ver `SESSAO_POR_SESSAO_PLANNING.md`).

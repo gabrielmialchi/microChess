@@ -1,97 +1,101 @@
 # microChess — Plano de Implementação: Ajustes Pós-Open Test
-## Revisado em 2026-06-08
+## Revisado em 2026-06-09
 
 ---
 
 ## Contexto
 
-Todas as sessões originais (1–18, Design-A..L, SP, PRE-OT-A..G, etc.) estão concluídas.
-Este documento cobre o próximo ciclo de ajustes, definido após análise do estado atual do jogo.
+Bloco ADJ-DESIGN (5 ajustes de game design) + POLISH concluídos e mergeados na `main`.
+Plano detalhado desses concluídos: `_arquivo/docs/SESSAO_POR_SESSAO_PLANNING_concluido.md`.
 
-Leia `ACTIVITY_LOG.md` para ver o que já foi feito. Leia `PROJECT_CONTEXT.md` para arquitetura atual.
+Este documento cobre o próximo ciclo: **ADJ-JUICE** (feedback/game feel de timing).
+Leia `ACTIVITY_LOG.md` para o estado atual. `PROJECT_CONTEXT.md` para arquitetura.
 
 ---
 
 ## Resumo dos Blocos
 
-| Sessão | Bloco | Tema | Arquivos tocados | Risco |
-|--------|-------|------|-----------------|-------|
-| ADJ-DESIGN | 5·2·3·1·4 | Ajustes de game design: bot nv1 · Rei dinâmico · promoção · Morte Súbita bo3 · odds na UI | `duel.js`(novo) · `server.js` · `movegen.js` · `01-recruta.js` · `index.html` · `replay-ui.js` | 🟠 Médio |
+| Sessão | Tema | Arquivos tocados | Risco |
+|--------|------|-----------------|-------|
+| ADJ-JUICE-A | Juice de combate: revelação por turno · impacto de captura · beat pós-duelo · rodadas SD | `index.html` (CSS+JS) | 🟠 Médio |
+| ADJ-JUICE-B | Recompensa/fim: promoção→Rainha · sequência de fim de partida | `index.html` | 🟢 Baixo |
+| ADJ-JUICE-C | Pressão/commit: urgência do timer · trava do PRONTO | `index.html` | 🟢 Baixo |
+| ADJ-JUICE-D | Micro-polimento: compra no draft · chip de odds · hand-off plano→resolução | `index.html` | 🟢 Baixo |
 
-> Blocos ADJ-A..D (concluídos) arquivados em `_arquivo/docs/SESSAO_POR_SESSAO_PLANNING_concluido.md`.
-ADJ-DESIGN: item 2 cria `duel.js` (reusado por 1 e 4) → 2 antes de 1 e 4. Itens 3 e 5 independentes.
+> Blocos ADJ-A..D e ADJ-DESIGN (concluídos) arquivados em `_arquivo/docs/`.
+
+Princípios: tudo em CSS `@keyframes` + toggle de classe (reusar vocabulário existente:
+`piece-enter`, `piece-capture`, `reveal-flash`, `reveal-bloom`, `winner-radiate`, `result-pop`,
+`phase-title-pop`). Sem sons. Sem libs. Branch dedicada + 1 commit por item.
 
 ---
 
-# SESSÃO ADJ-DESIGN — Ajustes de Game Design
+# SESSÃO ADJ-JUICE-A — Juice de combate
 
 ## Objetivo
-5 ajustes derivados do estudo de design. Objetivo central: **reduzir a sensação de "sorte pura"
-no combate e melhorar a curva do single player**, sem descaracterizar o blefe simultâneo (o coração do jogo).
+Dar peso e ritmo ao ciclo commit → revelação → resolução, onde mora o "prazer de timing".
 
-## Risco: 🟠 Médio — toca o núcleo de combate (`resolveAction`/`finishDuel`). Mitigado por:
-- Branch dedicada `ajustes-design`; `main` intocada.
-- **1 commit por item** → reversão granular via `git revert <hash>`.
-- Toda lógica nova e pura em `server/duel.js` (testável isoladamente); `server.js` recebe só call-sites.
-- `node --check` + testes a cada item.
+## J1 — Revelação simultânea por turno (Tier 1)
+- [ ] Hoje `reveal-flash`+`reveal-bloom` disparam só 1x (POSITION→ACTION). Disparar um
+      micro-flash + freeze (~150-200ms) **a cada turno** quando ambos confirmam, antes das peças moverem.
+- [ ] Reusar `triggerReveal()` / `reveal-flash` numa versão curta no início da resolução de ACTION.
 
-## Decisões travadas (Gabriel, 2026-06-09)
-- Morte Súbita: **Variante A** (3 rodadas, conta vitórias, empate de rodadas → DRAW).
-- Rei: bônus **dinâmico** por cenário.
-- Peão: promoção → **Rainha**.
+## J5 — Impacto de captura (Tier 2)
+- [ ] A vítima já some bem (`piece-capture`). Falta impacto no tabuleiro/vencedor.
+- [ ] Micro-shake do `#main-board` (~120ms, translate pequeno) ou recoil-pulse na peça vencedora.
 
-## Ordem: 5 → 2 → 3 → 1 → 4
+## J7 — Beat ao fim do duelo (apontado pelo Gabriel: "tela muda rápido demais")
+- [ ] Após `finishDuel`/`advanceSD`, segurar o resultado um instante antes de transicionar
+      (atraso curto no fechamento do modal / no próximo broadcast renderizado).
+- [ ] Garantir que o resultado do dado fique legível (vencedor pulsando) antes do corte.
+
+## J6 — Ritmo entre rodadas da Morte Súbita (NOVO de ADJ-DESIGN)
+- [ ] Entre rodadas o modal esconde/reaparece de forma abrupta.
+- [ ] Slam "RODADA 2/3" + placar (`sdWins`) pulsando ao atualizar.
 
 ---
 
-## ITEM 5 — Bot nível 1 com intenção mínima
-**Arquivo:** `bot-strategies/01-recruta.js` (só `chooseAction`).
-- [ ] Reunir todos os movimentos legais das peças próprias.
-- [ ] ~45%: escolher movimento que minimiza `manhattanDist(destino, findKing(oppColor))` usando peça não-Rei.
-- [ ] ~55%: `randomChoice(allMoves)` (mantém erros de iniciante).
-- [ ] Sem desvio de ameaça e sem caça a capturas (preserva curva: nível ≥3 que faz isso).
-- [ ] Sem movimentos → `action_ready`. Rei inimigo ausente → cai no aleatório.
-- [ ] Validar que continua **mais fraco** que nível 2 (que empurra peões sem capturar).
+# SESSÃO ADJ-JUICE-B — Recompensa e fim
 
-## ITEM 2 — Rei com bônus dinâmico
-**Novo:** `server/duel.js` · **Edição:** `server.js` `finishDuel` (linhas ~811-812).
-- [ ] `duel.js`: `effectiveBonus(piece, color, duel)`:
-      não-Rei → `piece.bonus`; SD → 0; `frontal` → 4; `attack` → (atacante? 5 : 3); fallback 5.
-- [ ] `finishDuel`: trocar `d.wPiece.bonus`/`d.bPiece.bonus` por `effectiveBonus(...)`.
-- [ ] **Não** mutar o campo `bonus` do Rei (segue 5 p/ ordenação da fila e exibição).
-- [ ] Conferir mapeamento: atacante King caso c (730-732)=+5; defensor King (752, follow-up contested_king 868-884)=+3; frontal=+4; SD=+0.
+## J3 — Promoção do Peão → Rainha (Tier 1, feature nova sem juice)
+- [ ] Detectar `type` mudando de P→Q no `syncBoard` e aplicar burst na casa
+      (reusar linguagem de `winner-radiate` + scale-pop). Pico emocional hoje mudo.
 
-## ITEM 3 — Promoção do Peão → Rainha
-**Edição:** `movegen.js` (+`promotePawns`) · `server.js`.
-- [ ] `movegen.js`: `promotePawns(army)` → P em fundo oposto vira `type:'Q'`, `bonus:5`, remove `buffed`.
-- [ ] Chamar `promotePawns` em `resolveAction` (substitui bloco 765-771) **E** em `finishDuel` (após reposicionar vencedores 826/832) — corrige bug: promoção por captura/duelo nunca disparava.
-- [ ] Remover regra morta do "peão buffed" em `movegen.js` (36-38).
-- [ ] Replay grava `type:'Q'` corretamente.
+## J8 — Sequência de fim de partida (apontado pelo Gabriel)
+- [ ] Revisar pacing do game over: resultado → stats → recompensa (MMR/LP/promoção) em
+      sequência com build-up, em vez de aparecer tudo de uma vez / rápido demais.
+- [ ] Reusar `go-in`, `go-result`, `ov-content-slam`, toast de MMR.
 
-## ITEM 1 — Morte Súbita melhor-de-3 (Variante A)
-**Edição:** `duel.js` · `server.js` (`roll_dice` humano 1568 + bot 1070 + ramo SD `finishDuel`) · `index.html` (modal) · `replay-ui.js`.
-- [ ] Estado SD do duelo: `d.sdWins={white,black}`, `d.round` (1..3), reset de `pressed`/`rolls` entre rodadas.
-- [ ] `roll_dice` SD: ao ambos rolarem na rodada → apurar vencedor da rodada, incrementar `sdWins`, avançar rodada; após 3 rodadas → `resolveTime`.
-- [ ] `finishDuel` SD: mais vitórias de rodada vence; empate de vitórias → DRAW (reusa 836-848).
-- [ ] Bônus dos Reis = 0 (já garantido pelo item 2 via `suddenDeath`).
-- [ ] Modal `index.html`: mostrar 3 slots de rodada por lado + placar de rodadas.
-- [ ] `replay-ui.js`: exibir resultado da série.
+---
 
-## ITEM 4 — Probabilidade do duelo na UI
-**Edição:** `duel.js` (`duelOdds`) · `server.js` (anexar `d.odds`) · `index.html` (modal).
-- [ ] `duel.js`: `duelOdds(bA, bB)` → `{win, tie, lose}` pela distribuição `d6 - d6`.
-- [ ] Ao montar duelo ativo: `d.odds = duelOdds(effectiveBonus(wPiece,'white',d), effectiveBonus(bPiece,'black',d))`.
-- [ ] SD: odds da **série** (P de mais vitórias de rodada), não de 1 dado.
-- [ ] `index.html`: renderizar "%" do lado do jogador no modal. Servidor é a única fonte (sem duplicar lógica no cliente).
+# SESSÃO ADJ-JUICE-C — Pressão e commit
 
-## Testes (novo `testes/server/duel.test.js` + `movegen.test.js`)
-- [ ] `effectiveBonus`: 4 cenários.
-- [ ] `duelOdds`: soma 100%, simetria, bate com a tabela do estudo.
-- [ ] Série SD: decisão correta + caso de empate.
-- [ ] Promoção: peão→Q com bônus 5 e movimentos de Rainha.
+## J2 — Urgência do timer (Tier 1)
+- [ ] Não existe feedback de tempo acabando. Classe `.low-time` (cor→vermelho + pulso
+      acelerando) abaixo de ~10s; banner de inatividade (50s) com "batimento".
+- [ ] Confirmar onde o tempo é mostrado durante o turno (ver rework de inatividade ADJ-B).
 
-## Critério de conclusão
-- [ ] Todos os itens commitados (1 commit cada) na branch `ajustes-design`.
-- [ ] `npm test` verde + `node --check server.js`.
-- [ ] Playtest manual: duelo normal, choque frontal, ataque ao Rei, promoção, Morte Súbita, odds visíveis.
-- [ ] Merge em `main` só após validação.
+## J4 — Trava do PRONTO (Tier 2)
+- [ ] Apertar PRONTO só troca texto + desabilita. Adicionar snap de "travado"
+      (✓/cadeado + glow). Pulso no meu lado quando o **oponente** confirma (anticipation).
+
+---
+
+# SESSÃO ADJ-JUICE-D — Micro-polimento
+
+## J9 — Compra no Draft (Tier 3)
+- [ ] Número do orçamento com tick-down ao comprar; botão da loja com press-pop.
+
+## J10 — Chip de odds "🎯 X%" (Tier 3, feature nova)
+- [ ] Entra estático; adicionar fade/pop ao abrir o duelo.
+
+## J11 — Hand-off plano→resolução (Tier 3)
+- [ ] Corte seco entre planejar e assistir; dim do tabuleiro + flash curto para separar as fases.
+
+---
+
+## Critério de conclusão (por sessão)
+- [ ] Itens commitados (1 commit cada) na branch.
+- [ ] Sem regressão de performance (animações GPU-friendly: transform/opacity).
+- [ ] Playtest manual do "feel" de cada momento.
+- [ ] Merge em `main` após validação do Gabriel.
