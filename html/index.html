@@ -698,6 +698,15 @@
         @keyframes reveal-snap { 0% { filter: brightness(1.7); } 100% { filter: brightness(1); } }
         #pieces-layer.reveal-snap { animation: reveal-snap 0.38s ease-out; }
 
+        /* ── J3: comemoração da promoção Peão → Rainha ── */
+        @keyframes piece-promote {
+            0%   { filter: brightness(1)   drop-shadow(0 0 0 transparent); }
+            25%  { filter: brightness(2.8) drop-shadow(0 0 16px #d4a832); }
+            60%  { filter: brightness(1.4) drop-shadow(0 0 9px #d4a832); }
+            100% { filter: brightness(1)   drop-shadow(0 0 0 transparent); }
+        }
+        .piece-promoting { animation: piece-promote 0.7s ease-out; z-index: 22; }
+
         /* ── SHOP / INVENTORY ── */
         .inventory-area { width: 100%; text-align: center; position: relative; }
 
@@ -5270,6 +5279,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     let lastDuelKey    = null;     // detects new duel in queue
     let _lastSdRound   = 0;        // J6: detecta troca de rodada na Morte Súbita
     let _duelHideScheduled = false; // J7: beat pós-duelo (segura o resultado antes de fechar)
+    const _promoting = new Set();   // J3: ids de peças em animação de promoção→Rainha
     let revealBloomed  = false;    // one-shot reveal board bloom
 
     const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
@@ -5695,10 +5705,18 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 el.style.setProperty('--py', `${visualY * 100}%`);
             }
 
+            // J3: detecta promoção Peão → Rainha (type muda P→Q)
+            const _prevType = el.dataset.type;
             el.innerText = CONFIG[p.type].icon;
+            el.dataset.type = p.type;
+            if (_prevType === 'P' && p.type === 'Q') {
+                _promoting.add(p.id);
+                setTimeout(() => _promoting.delete(p.id), 720);
+            }
 
             // Reset classes, then apply current state
             el.className = `piece ${p.color}`;
+            if (_promoting.has(p.id)) el.classList.add('piece-promoting'); // sobrevive ao reset de className
 
             if (localSelection && !localSelection.fromInv && localSelection.id === p.id && p.color === myColor)
                 el.classList.add('selected');
