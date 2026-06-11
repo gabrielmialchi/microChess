@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>♟️ Guia microChess — Mobile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens ─────────────────────────────────────────────── */
+:root {
+  --bg:          #f5f3ee;
+  --surface:     #ffffff;
+  --surface-2:   #ebe8e0;
+  --ink:         #18130c;
+  --ink-2:       #3a3227;
+  --muted:       rgba(24,19,12,0.50);
+  --faint:       rgba(24,19,12,0.26);
+  --rule:        rgba(24,19,12,0.10);
+  --rule-strong: rgba(24,19,12,0.18);
+  --accent:      #ff5a1f;
+  --accent-soft: rgba(255,90,31,0.11);
+  --success:     #2a8f52;
+  --success-soft:rgba(42,143,82,0.11);
+  --danger:      #d43a2a;
+  --danger-soft: rgba(212,58,42,0.11);
+  --warn:        #c18200;
+  --warn-soft:   rgba(193,130,0,0.13);
+  --sans:        'Inter', system-ui, sans-serif;
+  --mono:        'JetBrains Mono', ui-monospace, monospace;
+
+  /* Mobile page dimensions: ~iPhone 14 proportions */
+  --pw: 108mm;
+  --ph: 192mm;
+}
+
+/* ── Reset ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ── Screen backdrop ───────────────────────────────────── */
+body {
+  background: #b0aca5;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--sans);
+}
+
+/* ── Page container ────────────────────────────────────── */
+.page {
+  width: var(--pw);
+  height: var(--ph);
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.24), 0 1px 4px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+/* ── Page header ───────────────────────────────────────── */
+.ph {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5mm 6mm 0;
+  flex-shrink: 0;
+}
+.ph-brand {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 8.5pt; font-weight: 700; color: var(--ink);
+}
+.ph-brand .slash { color: var(--rule-strong); }
+.ph-brand .sub   { color: var(--muted); font-weight: 400; font-size: 7.5pt; }
+.ph-num {
+  font-family: var(--mono); font-size: 7pt;
+  color: var(--faint); letter-spacing: 0.06em;
+}
+
+/* ── Page body ─────────────────────────────────────────── */
+.pb {
+  flex: 1;
+  min-height: 0;
+  padding: 5mm 6mm 4mm;
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  overflow: hidden;
+}
+
+/* ── Page footer ───────────────────────────────────────── */
+.pf-rule { border: none; border-top: 1px solid var(--rule); margin: 0 6mm; flex-shrink: 0; }
+.pf {
+  flex-shrink: 0;
+  padding: 2mm 6mm 5mm;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pf span { font-family: var(--mono); font-size: 6.5pt; color: var(--faint); }
+
+/* ── Typography ────────────────────────────────────────── */
+.eyebrow {
+  font-family: var(--mono); font-size: 6.5pt;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--muted); margin-bottom: 2px;
+}
+.sec-title {
+  font-size: 15pt; font-weight: 700;
+  letter-spacing: -0.02em; line-height: 1.15;
+  color: var(--ink);
+}
+.sec-body {
+  font-size: 9pt; color: var(--ink-2); line-height: 1.6; margin-top: 3px;
+}
+
+/* ── Card ──────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+/* ── Feature rows ──────────────────────────────────────── */
+.feat-item {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 7px 11px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 8.5pt; line-height: 1.5;
+}
+.feat-item:last-child { border-bottom: none; }
+.feat-icon {
+  width: 23px; height: 23px; flex-shrink: 0;
+  background: var(--accent-soft); border-radius: 6px;
+  display: grid; place-items: center; font-size: 11pt;
+}
+.feat-icon.plain { background: var(--surface-2); }
+.feat-body strong { font-weight: 600; font-size: 8.5pt; display: block; margin-bottom: 1px; }
+.feat-body span   { color: var(--ink-2); }
+
+/* ── Steps ─────────────────────────────────────────────── */
+.step-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 7.5px 11px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 8.5pt; line-height: 1.55;
+}
+.step-item:last-child { border-bottom: none; }
+.step-num {
+  font-family: var(--mono); font-size: 7.5pt; font-weight: 700;
+  color: var(--accent); width: 14px; flex-shrink: 0; margin-top: 2px;
+}
+.step-link { color: var(--accent); font-weight: 600; }
+.code-pill {
+  display: inline-flex; padding: 1px 6px;
+  background: var(--surface-2); color: var(--ink-2);
+  border: 1px solid var(--rule-strong); border-radius: 5px;
+  font-family: var(--mono); font-size: 7.5pt; font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+/* ── Warn banner ───────────────────────────────────────── */
+.warn-banner {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 8px 11px;
+  background: var(--warn-soft);
+  border: 1px solid rgba(193,130,0,0.20); border-radius: 8px;
+  font-size: 8pt; line-height: 1.55; color: var(--ink-2);
+}
+.warn-banner .ico { font-size: 11pt; flex-shrink: 0; line-height: 1.3; }
+
+/* ── Missions ──────────────────────────────────────────── */
+.mission-item {
+  display: grid; grid-template-columns: 30px 1fr 22px;
+  align-items: center; gap: 9px;
+  padding: 7px 9px;
+  background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 8px;
+}
+.m-num {
+  width: 30px; height: 30px; border-radius: 7px;
+  background: var(--surface-2); color: var(--muted);
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 8pt; font-weight: 700;
+}
+.m-name { font-size: 8.5pt; font-weight: 600; letter-spacing: -0.01em; display: block; }
+.m-desc { font-size: 7.5pt; color: var(--ink-2); line-height: 1.45; display: block; margin-top: 1px; }
+.m-check {
+  width: 22px; height: 22px;
+  border: 1.5px solid var(--rule-strong); border-radius: 5px;
+  flex-shrink: 0;
+}
+
+/* ── Chaos card ────────────────────────────────────────── */
+.chaos-card {
+  display: flex; gap: 11px; align-items: flex-start;
+  padding: 10px 11px;
+  background: var(--danger-soft);
+  border: 1px solid rgba(212,58,42,0.18); border-radius: 8px;
+}
+.chaos-card .ico { font-size: 18pt; line-height: 1; flex-shrink: 0; }
+.chaos-card h3   { font-size: 9pt; font-weight: 600; margin-bottom: 2px; }
+.chaos-card p    { font-size: 8pt; color: var(--ink-2); line-height: 1.5; }
+
+/* ── Bullet list ───────────────────────────────────────── */
+.bullet-item {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 7px 10px;
+  background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 7px;
+  font-size: 8.5pt; line-height: 1.5;
+}
+.b-icon {
+  width: 23px; height: 23px; flex-shrink: 0;
+  background: var(--surface-2); border-radius: 5px;
+  display: grid; place-items: center; font-size: 11pt;
+}
+
+/* ── Report rows ───────────────────────────────────────── */
+.report-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 7px 11px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 8.5pt; line-height: 1.55;
+}
+.report-item:last-child { border-bottom: none; }
+.r-num {
+  font-family: var(--mono); font-size: 7.5pt; font-weight: 700;
+  color: var(--muted); width: 14px; flex-shrink: 0; margin-top: 2px;
+}
+
+/* ── Form button ───────────────────────────────────────── */
+.form-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 13px;
+  background: var(--accent); color: #fff;
+  border-radius: 9px; text-decoration: none;
+  font-size: 9pt; font-weight: 700; letter-spacing: -0.01em;
+}
+.form-btn .btn-ico { font-size: 14pt; flex-shrink: 0; }
+.form-btn-sub {
+  font-size: 7.5pt; font-weight: 400; opacity: 0.82;
+  display: block; margin-top: 1px; word-break: break-all;
+}
+
+/* ── Contact card ──────────────────────────────────────── */
+.contact-card {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 11px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(255,90,31,0.18); border-radius: 8px;
+}
+.contact-label {
+  font-family: var(--mono); font-size: 6.5pt;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent);
+}
+.contact-row { display: flex; align-items: center; gap: 7px; font-size: 8.5pt; }
+.contact-row a { color: var(--accent); font-weight: 600; }
+
+/* ── Known issues ──────────────────────────────────────── */
+.known-item {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 8px 11px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--warn);
+  border-radius: 0 7px 7px 0;
+  font-size: 8.5pt; line-height: 1.5;
+}
+.ki-title { font-weight: 600; display: block; margin-bottom: 1px; }
+.ki-desc  { color: var(--ink-2); font-size: 8pt; }
+
+/* ── Spacers ───────────────────────────────────────────── */
+.gap-sm { height: 2mm; flex-shrink: 0; }
+.gap-md { height: 3.5mm; flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════════════════
+   COVER specific
+   ═══════════════════════════════════════════════════════ */
+.cover-board {
+  position: absolute; top: -8mm; right: -5mm;
+  display: grid; grid-template-columns: repeat(4, 14mm);
+  opacity: 0.055; transform: rotate(6deg); pointer-events: none;
+}
+.cb { width: 14mm; height: 14mm; background: var(--ink); }
+.cb.l { background: transparent; border: 1px solid var(--ink); }
+
+.cover-body {
+  flex: 1; min-height: 0;
+  padding: 12mm 7mm 0;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.cover-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 20px; padding: 0 9px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent);
+  font-family: var(--mono); font-size: 6.5pt;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 10px; width: fit-content;
+}
+.cover-title {
+  font-size: 34pt; font-weight: 800;
+  letter-spacing: -0.035em; line-height: 1.0;
+  color: var(--ink); margin-bottom: 5mm;
+}
+.cover-title .acc { color: var(--accent); }
+.cover-intro {
+  font-size: 9.5pt; color: var(--ink-2); line-height: 1.65;
+  margin-bottom: 7mm;
+}
+.cover-divider {
+  width: 100%; height: 1px;
+  background: var(--rule-strong); margin-bottom: 5mm;
+}
+.cover-meta {
+  display: flex; flex-direction: column; gap: 4mm;
+}
+.cmi-label {
+  font-family: var(--mono); font-size: 6.5pt;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--faint); margin-bottom: 1px;
+}
+.cmi-value { font-size: 9.5pt; font-weight: 600; color: var(--ink); }
+
+.cover-footer {
+  flex-shrink: 0; padding: 4mm 7mm 5mm;
+  display: flex; align-items: center; gap: 7px;
+  border-top: 1px solid var(--rule);
+}
+.cfb-piece { font-size: 15pt; }
+.cfb-name  { font-size: 9.5pt; font-weight: 700; letter-spacing: -0.01em; }
+.cfb-slash { color: var(--rule-strong); }
+.cfb-sub   { font-size: 8pt; color: var(--muted); }
+
+/* ── Screen hint ───────────────────────────────────────── */
+.screen-hint {
+  color: #6b6560; font-family: var(--mono); font-size: 8pt;
+  text-align: center; letter-spacing: 0.04em; padding-bottom: 2px;
+  user-select: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PRINT
+   ═══════════════════════════════════════════════════════ */
+@media print {
+  @page {
+    size: 108mm 192mm;
+    margin: 0;
+  }
+  body {
+    background: none; padding: 0; gap: 0;
+  }
+  .screen-hint { display: none; }
+  .page {
+    box-shadow: none; border-radius: 0;
+    page-break-after: always; break-after: page;
+  }
+  .page:last-of-type {
+    page-break-after: auto; break-after: auto;
+  }
+}
+</style>
+</head>
+<body>
+
+<p class="screen-hint">Prévia Mobile · Cmd/Ctrl + P para exportar</p>
+
+<!-- ══════════════════════════════
+     PÁG 1 — CAPA
+     ══════════════════════════════ -->
+<div class="page">
+  <div class="cover-board" aria-hidden="true">
+    <div class="cb l"></div><div class="cb"></div><div class="cb l"></div><div class="cb"></div>
+    <div class="cb"></div><div class="cb l"></div><div class="cb"></div><div class="cb l"></div>
+    <div class="cb l"></div><div class="cb"></div><div class="cb l"></div><div class="cb"></div>
+    <div class="cb"></div><div class="cb l"></div><div class="cb"></div><div class="cb l"></div>
+    <div class="cb l"></div><div class="cb"></div><div class="cb l"></div><div class="cb"></div>
+  </div>
+
+  <div class="cover-body">
+    <div class="cover-tag">♟ Playtest · v1</div>
+    <h1 class="cover-title">Guia<br><span class="acc">micro</span>Chess</h1>
+    <p class="cover-intro">Bem-vindo ao playtest! Este guia tem tudo que você precisa para jogar, explorar e reportar.</p>
+    <div class="cover-divider"></div>
+    <div class="cover-meta">
+      <div><div class="cmi-label">Versão</div><div class="cmi-value">Playtest v1</div></div>
+      <div><div class="cmi-label">Plataforma</div><div class="cmi-value">Web · itch.io</div></div>
+      <div><div class="cmi-label">Duração estimada</div><div class="cmi-value">30–60 min</div></div>
+    </div>
+  </div>
+
+  <footer class="cover-footer">
+    <span class="cfb-piece">♟</span>
+    <span class="cfb-name">microChess</span>
+    <span class="cfb-slash">/</span>
+    <span class="cfb-sub">o6 Studio</span>
+  </footer>
+</div>
+
+
+<!-- ══════════════════════════════
+     PÁG 2 — O QUE É
+     ══════════════════════════════ -->
+<div class="page">
+  <div class="ph">
+    <div class="ph-brand">♟ microChess <span class="slash">/</span> <span class="sub">Guia</span></div>
+    <span class="ph-num">02</span>
+  </div>
+  <div class="pb">
+
+    <div>
+      <div class="eyebrow">01 · Visão Geral</div>
+      <h2 class="sec-title">O que é o microChess?</h2>
+      <p class="sec-body">Xadrez "de bolso" em tabuleiro 4×4. Partidas caóticas e rápidas (~5 min) com regras especiais:</p>
+    </div>
+
+    <div class="card">
+      <div class="feat-item">
+        <div class="feat-icon">🛒</div>
+        <div class="feat-body"><strong>Compra</strong><span>Monte seu exército com pontuação limitada.</span></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">🗺️</div>
+        <div class="feat-body"><strong>Posicionamento</strong><span>Escolha onde suas peças começam.</span></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">⚡</div>
+        <div class="feat-body"><strong>Revelação Mágica</strong><span>Os dois jogadores se movem ao mesmo tempo.</span></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">🎲</div>
+        <div class="feat-body"><strong>Duelos de Dados</strong><span>Dados + bônus de peça decidem o sobrevivente.</span></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon">♔</div>
+        <div class="feat-body"><strong>Objetivo</strong><span>Eliminar o Rei adversário.</span></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="pf-rule"></div>
+  <div class="pf"><span>♟ microChess · Guia</span><span>Playtest v1</span></div>
+</div>
+
+
+<!-- ══════════════════════════════
+     PÁG 3 — COMO ENTRAR
+     ══════════════════════════════ -->
+<div class="page">
+  <div class="ph">
+    <div class="ph-brand">♟ microChess <span class="slash">/</span> <span class="sub">Guia</span></div>
+    <span class="ph-num">03</span>
+  </div>
+  <div class="pb">
+
+    <div>
+      <div class="eyebrow">02 · Acesso</div>
+      <h2 class="sec-title">Como entrar na Arena</h2>
+    </div>
+
+    <div class="card">
+      <div class="step-item">
+        <span class="step-num">01</span>
+        <div>Acesse no navegador:<br><span class="step-link">o6games.itch.io/microchess</span></div>
+      </div>
+      <div class="step-item">
+        <span class="step-num">02</span>
+        <div>Senha de acesso: <span class="code-pill">micro26chess</span></div>
+      </div>
+      <div class="step-item">
+        <span class="step-num">03</span>
+        <div>Clique em <strong>"Run Game"</strong>. Roda direto, sem instalar.</div>
+      </div>
+      <div class="step-item">
+        <span class="step-num">04</span>
+        <div>Crie uma conta (qualquer e-mail). Estar logado salva progresso e ranking.</div>
+      </div>
+    </div>
+
+    <div class="warn-banner">
+      <span class="ico">⚠️</span>
+      <div><strong style="color:var(--ink);">Se o jogo travar,</strong> recarregue a página — você volta à partida em andamento.</div>
+    </div>
+
+  </div>
+  <div class="pf-rule"></div>
+  <div class="pf"><span>♟ microChess · Guia</span><span>Playtest v1</span></div>
+</div>
+
+
+<!-- ══════════════════════════════
+     PÁG 4 — MISSÕES
+     ══════════════════════════════ -->
+<div class="page">
+  <div class="ph">
+    <div class="ph-brand">♟ microChess <span class="slash">/</span> <span class="sub">Guia</span></div>
+    <span class="ph-num">04</span>
+  </div>
+  <div class="pb">
+
+    <div>
+      <div class="eyebrow">03 · Objetivos</div>
+      <h2 class="sec-title">Suas Missões</h2>
+      <p class="sec-body">Explore todas as áreas. Marque ao completar:</p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <div class="mission-item">
+        <div class="m-num">01</div>
+        <div class="m-text"><span class="m-name">O Recruta</span><span class="m-desc">Crie conta, escolha apelido e leia as regras em Configurações.</span></div>
+        <div class="m-check"></div>
+      </div>
+      <div class="mission-item">
+        <div class="m-num">02</div>
+        <div class="m-text"><span class="m-name">O Estrategista</span><span class="m-desc">Jogue o modo Solo e enfrente os bots.</span></div>
+        <div class="m-check"></div>
+      </div>
+      <div class="mission-item">
+        <div class="m-num">03</div>
+        <div class="m-text"><span class="m-name">O Gladiador</span><span class="m-desc">Jogue 2–3 partidas Casual Online.</span></div>
+        <div class="m-check"></div>
+      </div>
+      <div class="mission-item">
+        <div class="m-num">04</div>
+        <div class="m-text"><span class="m-name">O Competidor</span><span class="m-desc">Jogue uma partida Ranqueada.</span></div>
+        <div class="m-check"></div>
+      </div>
+      <div class="mission-item">
+        <div class="m-num">05</div>
+        <div class="m-text"><span class="m-name">O Anfitrião</span><span class="m-desc">Crie uma Sala Privada e chame um amigo.</span></div>
+        <div class="m-check"></div>
+      </div>
+      <div class="mission-item">
+        <div class="m-num">06</div>
+        <div class="m-text"><span class="m-name">O Analista</span><span class="m-desc">Veja suas estatísticas e assista a um Replay.</span></div>
+        <div class="m-check"></div>
+      </div>
+      <div class="mission-item">
+        <div class="m-num">07</div>
+        <div class="m-text"><span class="m-name">O Turista</span><span class="m-desc">Mude idioma, tema e depois volte ao normal.</span></div>
+        <div class="m-check"></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="pf-rule"></div>
+  <div class="pf"><span>♟ microChess · Guia</span><span>Playtest v1</span></div>
+</div>
+
+
+<!-- ══════════════════════════════
+     PÁG 5 — MODO CAOS
+     ══════════════════════════════ -->
+<div class="page">
+  <div class="ph">
+    <div class="ph-brand">♟ microChess <span class="slash">/</span> <span class="sub">Guia</span></div>
+    <span class="ph-num">05</span>
+  </div>
+  <div class="pb">
+
+    <div>
+      <div class="eyebrow">04 · Stress Test</div>
+      <h2 class="sec-title">Modo Caos</h2>
+      <p class="sec-body">Tente quebrar o jogo. Nossos servidores registram como ele reage:</p>
+    </div>
+
+    <div class="chaos-card">
+      <span class="ico">😈</span>
+      <div>
+        <h3>Testadores do caos, unidos!</h3>
+        <p>Faça o sistema suar em situações extremas.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <div class="bullet-item">
+        <div class="b-icon">💣</div>
+        <div>Feche a aba no meio de um duelo e reabra. Consegue voltar a tempo?</div>
+      </div>
+      <div class="bullet-item">
+        <div class="b-icon">💤</div>
+        <div>Fique <strong>AFK</strong> na sua vez durante uma ranqueada.</div>
+      </div>
+      <div class="bullet-item">
+        <div class="b-icon">👥</div>
+        <div>Crie uma segunda conta com o mesmo e-mail da primeira.</div>
+      </div>
+      <div class="bullet-item">
+        <div class="b-icon">🔄</div>
+        <div>Faça <strong>Logout</strong> e entre de novo. Rank e histórico continuam lá?</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="pf-rule"></div>
+  <div class="pf"><span>♟ microChess · Guia</span><span>Playtest v1</span></div>
+</div>
+
+
+<!-- ══════════════════════════════
+     PÁG 6 — REPORTAR BUG
+     ══════════════════════════════ -->
+<div class="page">
+  <div class="ph">
+    <div class="ph-brand">♟ microChess <span class="slash">/</span> <span class="sub">Guia</span></div>
+    <span class="ph-num">06</span>
+  </div>
+  <div class="pb">
+
+    <div>
+      <div class="eyebrow">05 · Feedback</div>
+      <h2 class="sec-title">Viu um Bug?</h2>
+      <p class="sec-body">Mande uma mensagem com:</p>
+    </div>
+
+    <div class="card">
+      <div class="report-item">
+        <span class="r-num">01</span>
+        <div><strong>O que você fazia?</strong> — Ex: "Fase 3 do Solo"</div>
+      </div>
+      <div class="report-item">
+        <span class="r-num">02</span>
+        <div><strong>O que aconteceu?</strong> — Ex: "Cavalo ficou invisível"</div>
+      </div>
+      <div class="report-item">
+        <span class="r-num">03</span>
+        <div><strong>O que deveria acontecer?</strong></div>
+      </div>
+      <div class="report-item">
+        <span class="r-num">04</span>
+        <div>Um print de tela, se possível.</div>
+      </div>
+    </div>
+
+    <div class="gap-sm"></div>
+
+    <!-- FORMULÁRIO — link principal -->
+    <a class="form-btn" href="https://forms.gle/XbBCdaJWby8aCbV77">
+      <span class="btn-ico">📝</span>
+      <div>
+        <span>Preencher Formulário de Feedback</span>
+        <span class="form-btn-sub">forms.gle/XbBCdaJWby8aCbV77</span>
+      </div>
+    </a>
+
+    <div class="contact-card">
+      <span class="contact-label">Ou por e-mail</span>
+      <div class="contact-row">
+        <span>✉️</span>
+        <a href="/cdn-cgi/l/email-protection#2f4c40415b4e5b400140195c5b5a4b46406f48424e4643014c4042"><span class="__cf_email__" data-cfemail="2645494852475249084910555253424f4966414b474f4a0845494b">[email&#160;protected]</span></a>
+      </div>
+    </div>
+
+  </div>
+  <div class="pf-rule"></div>
+  <div class="pf"><span>♟ microChess · Guia</span><span>Playtest v1</span></div>
+</div>
+
+
+<!-- ══════════════════════════════
+     PÁG 7 — JÁ SABEMOS
+     ══════════════════════════════ -->
+<div class="page">
+  <div class="ph">
+    <div class="ph-brand">♟ microChess <span class="slash">/</span> <span class="sub">Guia</span></div>
+    <span class="ph-num">07</span>
+  </div>
+  <div class="pb">
+
+    <div>
+      <div class="eyebrow">06 · Comportamento Esperado</div>
+      <h2 class="sec-title">Relaxa, não é Bug</h2>
+      <p class="sec-body">Antes de reportar, confira a lista:</p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <div class="known-item">
+        <span style="font-size:11pt;flex-shrink:0;margin-top:1px;">💾</span>
+        <div>
+          <span class="ki-title">Perdeu o progresso no Solo?</span>
+          <span class="ki-desc">Jogando sem conta, ao voltar ao menu você volta pra Fase 1. É de propósito.</span>
+        </div>
+      </div>
+      <div class="known-item">
+        <span style="font-size:11pt;flex-shrink:0;margin-top:1px;">📱</span>
+        <div>
+          <span class="ki-title">Telas apertadas no celular</span>
+          <span class="ki-desc">O tabuleiro pode ficar espremido em telas pequenas na fase de Ação.</span>
+        </div>
+      </div>
+      <div class="known-item">
+        <span style="font-size:11pt;flex-shrink:0;margin-top:1px;">🔴</span>
+        <div>
+          <span class="ki-title">Erros no F12 (Console)</span>
+          <span class="ki-desc">São avisos do itch.io, não afetam sua partida.</span>
+        </div>
+      </div>
+      <div class="known-item">
+        <span style="font-size:11pt;flex-shrink:0;margin-top:1px;">⏱️</span>
+        <div>
+          <span class="ki-title">Fui banido por 30 minutos!</span>
+          <span class="ki-desc">3 abandonos em 24h = castigo automático. É funcionalidade, não erro.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="pf-rule"></div>
+  <div class="pf" style="padding-bottom:6mm;">
+    <div style="display:flex;align-items:center;gap:7px;">
+      <span style="font-size:15pt;">♟</span>
+      <span style="font-size:7.5pt;color:var(--ink-2);line-height:1.5;">Obrigado por nos ajudar!<br>Bons rolos de dados. 🎲</span>
+    </div>
+    <span style="font-size:6.5pt;color:var(--faint);font-family:var(--mono);">o6 Studio</span>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
+</html>
