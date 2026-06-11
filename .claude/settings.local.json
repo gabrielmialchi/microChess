@@ -55,7 +55,12 @@
       "Bash(git merge --no-ff ajustes-design -m ' *)",
       "Bash(git commit *)",
       "Bash(node _tmp_i18n.js)",
-      "Bash(node _tmp_archive.js)"
+      "Bash(node _tmp_archive.js)",
+      "WebSearch",
+      "Bash(wc -l server.js db/database.js analytics.js)",
+      "Bash(ls db/)",
+      "Bash(ls *.js)",
+      "Bash(grep -rln \"socket.on\\('banned'\\\\|socket.on\\(\\\\\"banned\\\\\"\" .)"
     ]
   }
 }

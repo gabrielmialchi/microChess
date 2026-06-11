@@ -59,6 +59,8 @@ Dar peso e ritmo ao ciclo commit → revelação → resolução, onde mora o "p
 
 # SESSÃO ADJ-JUICE-B — Recompensa e fim
 
+**Status:** ✅ Implementado na branch `adj-juice` (J3·J8, 1 commit cada) — pendente playtest + merge.
+
 ## J3 — Promoção do Peão → Rainha (Tier 1, feature nova sem juice)
 - [ ] Detectar `type` mudando de P→Q no `syncBoard` e aplicar burst na casa
       (reusar linguagem de `winner-radiate` + scale-pop). Pico emocional hoje mudo.
