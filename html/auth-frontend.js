@@ -483,6 +483,10 @@ function listenGameEvents(socket) {
 
     socket.on('banned', (data) => BanOverlay.show(data));
 
+    socket.on('maintenance', (data) => {
+        alert(data?.message || 'Servidor fora do horário de testes. Volte mais tarde.');
+    });
+
     socket.on('opponent_reconnecting', ({ remainMs }) => ReconnectOverlay.show(remainMs));
     socket.on('opponent_reconnected',  ()             => ReconnectOverlay.hide());
 

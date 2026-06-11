@@ -70,4 +70,22 @@ juice de fim de partida.
 
 ---
 
+## [2026-06-10] Painel de testes (stats/export/janela) — preparação para teste de carga
+
+### Feito
+- `server/admin.js` (novo): `/api/admin/stats` (CCU, fila, salas ativas — protegido por `ADMIN_TOKEN`),
+  `/api/admin/export` (dump JSON de players/matches/events/ccu_snapshots/singleplayer_progress),
+  `checkTestWindow()` (janela de teste opcional via `TEST_WINDOW_START`/`TEST_WINDOW_END`).
+- `server/server.js`: rotas acima inseridas + checagem da janela em `queue_join`.
+- `html/auth-frontend.js`: aviso ao jogador (`socket.on('maintenance')`) quando fora da janela de teste.
+
+### ⚠️ TODO — retomar: Volumes no Railway
+- `server/db/microchess.db` é gitignored e **não há volume persistente confirmado** no Railway.
+- Sem volume, qualquer redeploy (push/Remove+Redeploy) **zera o banco** (players, matches, events, ccu_snapshots).
+- Decisão adiada: configurar volume (Settings → Volumes, mount path `/app/server/db`) quando o projeto
+  for além de testes pontuais — avaliar implicações de retenção de dados de usuários antes de ativar.
+- Até lá: usar `/api/admin/export` como backup manual antes de qualquer redeploy.
+
+---
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

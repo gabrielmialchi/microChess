@@ -60,7 +60,11 @@
       "Bash(wc -l server.js db/database.js analytics.js)",
       "Bash(ls db/)",
       "Bash(ls *.js)",
-      "Bash(grep -rln \"socket.on\\('banned'\\\\|socket.on\\(\\\\\"banned\\\\\"\" .)"
+      "Bash(grep -rln \"socket.on\\('banned'\\\\|socket.on\\(\\\\\"banned\\\\\"\" .)",
+      "Bash(node --check admin.js)",
+      "Bash(node --check auth-frontend.js)",
+      "Bash(ls server/*.json server/*.toml)",
+      "Bash(find . -maxdepth 2 -iname \"railway*\")"
     ]
   }
 }

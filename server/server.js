@@ -18,6 +18,7 @@ const { isPathClear, isValidMove, promotePawns } = require('./movegen');
 const { createBotPlayer, processBotTurn } = require('./bot');
 const sp = require('./singleplayer');
 const { effectiveBonus, duelOdds, createSDDuel, judgeSDRound, sdSeriesOver, sdWinner } = require('./duel');
+const { requireAdmin, getStats, exportData, checkTestWindow } = require('./admin');
 
 const app    = express();
 const server = http.createServer(app);
@@ -78,6 +79,16 @@ app.get('/health', (_, res) => {
     } catch {
         res.status(500).json({ ok: false, db: 'error' });
     }
+});
+
+// ── PAINEL DE TESTES (protegido por ADMIN_TOKEN) ──────────────
+app.get('/api/admin/stats', requireAdmin, (req, res) => {
+    res.json({ ...getStats({ io, queue, rooms }), testWindow: checkTestWindow() });
+});
+
+app.get('/api/admin/export', requireAdmin, (req, res) => {
+    res.setHeader('Content-Disposition', `attachment; filename="microchess-export-${Date.now()}.json"`);
+    res.json(exportData(db));
 });
 
 app.get('/privacy-policy', (_, res) => {
@@ -1148,6 +1159,11 @@ io.on('connection', (socket) => {
     // ── MATCHMAKING ──────────────────────────────────────────────
     socket.on('queue_join', (profile) => {
         if (!checkSocketRate(socket, 'queue_join', 3, 5000)) return; // max 3 per 5s
+        const tw = checkTestWindow();
+        if (!tw.open) {
+            socket.emit('maintenance', { message: 'Fora do horário de testes. Volte mais tarde.', start: tw.start, end: tw.end });
+            return;
+        }
         let { uid, nickname, avatar, token, mmr: clientMMR, match_mode } = profile || {};
         const queueMode = match_mode === 'casual' ? 'casual' : 'ranked';
         let playerId  = uid;
