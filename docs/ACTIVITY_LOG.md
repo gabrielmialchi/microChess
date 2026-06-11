@@ -39,8 +39,8 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
-## [2026-06-09] ADJ-JUICE — Feedback/Juice de timing
-**Status:** 🔄 Em andamento — ADJ-JUICE-A, B ✅ (branch `adj-juice`); C/D pendentes
+## [2026-06-10] ADJ-JUICE — Feedback/Juice de timing
+**Status:** 🔄 Em andamento — A, B, C ✅; D parcial (J9/J10 ✅, J11 pendente decisão) (main, sem commit ainda)
 
 ### Feito — ADJ-JUICE-A (juice de combate, branch `adj-juice`)
 - **J5** impacto de captura: `board-shake` no `.board-container` ao capturar.
@@ -51,6 +51,21 @@ para entender o estado atual antes de implementar qualquer coisa.
 ### Feito — ADJ-JUICE-B (recompensa/fim, branch `adj-juice`)
 - **J3** promoção→Rainha: flash dourado (`piece-promote`) ao detectar P→Q no syncBoard.
 - **J8** fim de partida: `syncBoard()` anima o rei caindo (+shake) e segura ~850ms antes da tela de fim.
+
+### Feito — ADJ-JUICE-C (pressão/commit, main)
+- **J2** urgência do timer: classe `.exc-banner.low-time` — banner de inatividade fica
+  vermelho + pulso acelerado (0.45s) nos últimos 5s antes do popup de 60s.
+- **J4** trava do PRONTO: snap de "travado" (`ready-lock-snap` + glow `ready-locked`) ao
+  confirmar; texto vira "✓ Aguardando Oponente..."; pulso de antecipação (`opp-ready-pulse`)
+  no meu botão quando o oponente confirma e eu ainda não.
+
+### Feito — ADJ-JUICE-D parcial (main)
+- **J9** compra no Draft: `#my-budget` faz tick-down (`budget-tick`) ao gastar pontos;
+  botões da loja com press-pop (`:active` scale).
+- **J10** chip de odds "🎯 X%": pop (`duel-odds-pop`) na primeira renderização de cada duelo.
+- **J11** hand-off plano→resolução: PENDENTE — avaliar junto com Gabriel se não é redundante
+  com `triggerPhaseOverlay`/`triggerReveal` já existentes (overlay de fase + flash + bloom
+  no ACTION→REVEAL já cobrem boa parte do "corte seco").
 
 ### Origem
 Avaliação de game feel: o juice é forte em eventos discretos (entrada/captura/duelo)

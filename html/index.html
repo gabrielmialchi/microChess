@@ -751,6 +751,12 @@
 
         .shop-btns button:disabled { opacity: 0.18; cursor: not-allowed; }
 
+        /* J9 — press-pop ao comprar peça no Draft */
+        .shop-btns button:active:not(:disabled) {
+            transform: scale(0.9);
+            transition: transform 0.08s ease-out;
+        }
+
         #btn-reset-draft {
             width: 34px; height: 34px;
             background: rgba(231,76,60,0.12);
@@ -775,7 +781,23 @@
             font-size: 1rem;
             font-family: 'IBM Plex Mono', monospace;
             letter-spacing: 3px;
+            display: inline-block;
         }
+
+        /* J9 — tick-down do orçamento ao comprar peça */
+        @keyframes budget-tick-down {
+            0%   { transform: scale(1.18); color: var(--mc-danger, #e53e3e); }
+            100% { transform: scale(1); color: var(--accent); }
+        }
+        #my-budget.budget-tick { animation: budget-tick-down 0.35s ease-out; }
+
+        /* J10 — fade/pop do chip de odds ao abrir o duelo */
+        @keyframes duel-odds-pop {
+            0%   { opacity: 0; transform: scale(0.7) translateY(-4px); }
+            60%  { opacity: 1; transform: scale(1.12) translateY(0); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .duel-odds.duel-odds-pop { animation: duel-odds-pop 0.4s cubic-bezier(0.34, 1.4, 0.64, 1); }
 
         .inv-piece {
             display: inline-flex;
@@ -843,6 +865,28 @@
             background: rgba(0,0,0,0.08);
             color: rgba(0,0,0,0.22);
         }
+
+        /* J4 — trava do PRONTO: snap "travado" ao confirmar */
+        @keyframes btn-ready-lock {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(0.94); }
+            70%  { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+        .btn-ready.ready-lock-snap { animation: btn-ready-lock 0.35s ease-out; }
+
+        .btn-ready.ready-locked:disabled {
+            background: color-mix(in srgb, var(--success) 22%, transparent);
+            color: var(--success);
+            box-shadow: 0 0 0 1px color-mix(in srgb, var(--success) 35%, transparent), 0 0 14px color-mix(in srgb, var(--success) 25%, transparent);
+        }
+
+        /* J4 — pulso de antecipação: oponente já confirmou e eu ainda não */
+        @keyframes btn-opp-ready-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+            50%      { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 0%, transparent); }
+        }
+        .btn-ready.opp-ready-pulse:not(:disabled) { animation: btn-opp-ready-pulse 1.1s ease-out infinite; }
 
         /* ── PHASE TRANSITION OVERLAY ── */
         #phase-overlay {
@@ -2910,6 +2954,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 .exc-timer { font-family: var(--mc-font-mono, 'IBM Plex Mono', monospace); font-size: 15px; font-weight: 700; min-width: 28px; text-align: right; flex-shrink: 0; }
 .exc-pulse { animation: exc-pulse-anim 1s ease-in-out infinite; }
 @keyframes exc-pulse-anim { 0%,100%{opacity:1} 50%{opacity:0.35} }
+/* J2 — urgência do timer: últimos 5s do aviso de inatividade ficam vermelhos + pulso acelerado */
+.exc-banner.low-time { background: rgba(229,62,62,0.14) !important; color: var(--mc-danger, #e53e3e) !important; border-bottom-color: rgba(229,62,62,0.2) !important; }
+[data-theme="dark"] .exc-banner.low-time { background: rgba(229,62,62,0.18) !important; }
+.exc-banner.low-time .exc-pulse { animation: exc-pulse-anim 0.45s ease-in-out infinite; }
 #phase-title.sd-phase { background: rgba(229,62,62,0.12) !important; color: var(--mc-danger, #e53e3e) !important; animation: exc-pulse-anim 1s ease-in-out infinite !important; }
 #pr-join-input.exc-err { border-color: var(--mc-danger, #e53e3e) !important; background: rgba(229,62,62,0.05) !important; }
 .exc-blur-panel { filter: blur(2px); pointer-events: none; user-select: none; transition: filter 0.3s; }
@@ -5283,6 +5331,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     let _duelHideScheduled = false; // J7: beat pós-duelo (segura o resultado antes de fechar)
     const _promoting = new Set();   // J3: ids de peças em animação de promoção→Rainha
     let revealBloomed  = false;    // one-shot reveal board bloom
+    let _prevMyReady   = false;    // J4: detecta transição PRONTO para snap de trava
+    let _prevBudget    = null;     // J9: detecta compra para tick-down do orçamento
+    let _lastOddsKey   = null;     // J10: detecta novo duelo para pop do chip de odds
 
     const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
     const CONFIG = {
@@ -5562,15 +5613,30 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
         // Ready button
         const btnReady = document.getElementById('btn-ready');
-        btnReady.disabled = state.ready[myColor] || state.phase === 'REVEAL' || state.phase === 'SUDDEN_DEATH';
+        const myReady  = state.ready[myColor];
+        btnReady.disabled = myReady || state.phase === 'REVEAL' || state.phase === 'SUDDEN_DEATH';
 
         if (state.phase === 'REVEAL') {
             btnReady.innerText = t('preparing_action');
-        } else if (state.ready[myColor]) {
-            btnReady.innerText = t('waiting_opp');
+        } else if (myReady) {
+            btnReady.innerText = '✓ ' + t('waiting_opp');
         } else {
             btnReady.innerText = t('ready');
         }
+
+        // J4 — trava do PRONTO: snap "travado" ao confirmar
+        btnReady.classList.toggle('ready-locked', myReady);
+        if (myReady && !_prevMyReady) {
+            btnReady.classList.remove('ready-lock-snap');
+            void btnReady.offsetWidth;
+            btnReady.classList.add('ready-lock-snap');
+            setTimeout(() => btnReady.classList.remove('ready-lock-snap'), 380);
+        }
+        _prevMyReady = myReady;
+
+        // J4 — pulso de antecipação: oponente já confirmou e eu ainda não
+        btnReady.classList.toggle('opp-ready-pulse',
+            oppReady && !myReady && state.phase !== 'REVEAL' && state.phase !== 'SUDDEN_DEATH');
 
         document.getElementById('btn-reset-draft').style.display =
             (state.phase === 'DRAFT' && !state.ready[myColor]) ? 'block' : 'none';
@@ -5592,7 +5658,17 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         invStack.innerHTML = '';
         shopContainer.innerHTML = '';
 
-        document.getElementById('my-budget').innerText = `${t('my_pts')}: ${state.budget[myColor]}`;
+        const budgetEl = document.getElementById('my-budget');
+        budgetEl.innerText = `${t('my_pts')}: ${state.budget[myColor]}`;
+
+        // J9 — tick-down do orçamento ao comprar peça
+        if (_prevBudget !== null && state.budget[myColor] < _prevBudget) {
+            budgetEl.classList.remove('budget-tick');
+            void budgetEl.offsetWidth;
+            budgetEl.classList.add('budget-tick');
+            setTimeout(() => budgetEl.classList.remove('budget-tick'), 380);
+        }
+        _prevBudget = state.budget[myColor];
 
         ['Q','R','N','B','P'].forEach(type => {
             const btn = document.createElement('button');
@@ -5861,7 +5937,11 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             const o = state.duel.odds;
             const winPct = Math.round((pieceData.color === 'white' ? o.win : o.lose) * 100);
             const tiePct = Math.round(o.tie * 100);
-            oddsHTML = `<div class="duel-odds" style="margin-top:4px;font-size:0.8rem;opacity:0.85;letter-spacing:0.5px;">🎯 ${winPct}%${tiePct ? ` · = ${tiePct}%` : ''}</div>`;
+            // J10 — pop só na primeira renderização deste duelo (evita repetir a cada tick)
+            const oddsKey  = `${state.duel.wPiece?.id}_${state.duel.bPiece?.id}`;
+            const popClass = (oddsKey !== _lastOddsKey) ? ' duel-odds-pop' : '';
+            _lastOddsKey = oddsKey;
+            oddsHTML = `<div class="duel-odds${popClass}" style="margin-top:4px;font-size:0.8rem;opacity:0.85;letter-spacing:0.5px;">🎯 ${winPct}%${tiePct ? ` · = ${tiePct}%` : ''}</div>`;
         }
 
         return `
@@ -6125,12 +6205,16 @@ if ('serviceWorker' in navigator) {
             showAfk(seconds) {
                 const banner  = document.getElementById('afk-banner');
                 const timerEl = document.getElementById('afk-timer');
-                if (banner) banner.classList.add('visible');
+                if (banner) {
+                    banner.classList.add('visible');
+                    // J2: últimos 5s ficam vermelhos + pulso acelerado
+                    banner.classList.toggle('low-time', seconds <= 5);
+                }
                 if (timerEl) timerEl.textContent = Math.max(0, seconds);
             },
             hideAfk() {
                 const banner = document.getElementById('afk-banner');
-                if (banner) banner.classList.remove('visible');
+                if (banner) { banner.classList.remove('visible'); banner.classList.remove('low-time'); }
             },
             showSuddenDeath() {
                 const banner = document.getElementById('sudden-death-banner');
