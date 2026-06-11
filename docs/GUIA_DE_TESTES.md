@@ -25,20 +25,19 @@ Cada partida dura cerca de **5 a 10 minutos**.
 
    **https://o6games.itch.io/microchess**
 
-2. A página é privada. Digite a **senha** que enviamos junto com o convite.
+2. A página é privada. Digite a **senha**: micro26chess
 
 3. Quando o jogo carregar na página, clique no botão grande **"Run Game"** (ou "Executar Jogo").
 
 4. O microChess abre direto na página. Não precisa baixar nada, não precisa instalar nada.
 
-> **Dica:** funciona melhor em tela de computador. Em celular dá pra jogar, mas algumas telas ficam mais confortáveis em monitor.
+> **Dica:** o jogo está otimizado para celular, mas é possível jogar em computador tranquilamente usando o mouse.
 
 ---
 
 ## O que pedimos de você
 
-**Tempo de teste sugerido: ~2 horas no total.**
-//Pode ser de uma só vez ou dividir em duas sessões de 1 hora — o que for melhor pra você.
+**Tempo de teste sugerido: ~1 hora.**
 
 Durante esse tempo, queremos que você **experimente o jogo de verdade**: jogue, explore as telas, tente entender, perca, ganhe, reclame, ria. O que importa é o feedback honesto.
 
@@ -46,20 +45,27 @@ No fim do guia tem um **checklist** para você ir marcando o que foi testando, e
 
 ---
 
-## Roteiro sugerido de 2 horas
+## Roteiro sugerido de ~1 hora
 
 Você não precisa seguir essa ordem à risca, mas se quiser uma sugestão:
 
 | Bloco | Tempo | O que fazer |
 |-------|-------|-------------|
-| 1. Primeiros passos | 10 min | Criar conta, dar uma olhada no menu, ler "Como Jogar" |
-| 2. Modo Solo | 30 min | Jogar contra os bots, tentar passar das primeiras 3 ou 4 fases |
-| 3. Casual Online | 25 min | Jogar 2 a 3 partidas casuais contra outros testadores |
-| 4. Ranqueada | 20 min | Jogar 1 ou 2 partidas valendo rank, observar o XP subir/descer |
-| 5. Sala Privada | 15 min | Combinar com outro testador e jogar usando código de sala |
-| 6. Perfil / Histórico / Replay | 10 min | Olhar suas estatísticas, abrir um replay de partida sua |
+| 1. Primeiros passos | 5 min | Criar conta, dar uma olhada no menu, ler "Como Jogar" |
+| 2. Modo Solo | 15 min | Jogar contra os bots, tentar passar das primeiras 3 ou 4 fases |
+| 3. Casual Online | 10 min | Jogar 2 a 3 partidas casuais contra outros testadores |
+| 4. Ranqueada | 15 min | Jogar 1 ou 2 partidas valendo rank, observar o XP subir/descer |
+| 5. Sala Privada | 10 min | Combinar com outro testador e jogar usando código de sala |
+| 6. Perfil / Histórico / Replay | 5 min | Olhar suas estatísticas, abrir um replay de partida sua |
 | 7. Idiomas e Configurações | 5 min | Trocar pra outro idioma e voltar |
 | 8. Logout e voltar | 5 min | Fechar, abrir de novo, conferir se tudo continua igual |
+
+---
+
+Algumas dicas rápidas:
+- Se o jogo travar em qualquer parte, reinicie o navegador. O jogo deve retornar para a partida ou, dependendo do tempo que levou pra voltar, considerar derrota/vitória por WO;
+- O jogo é baseado em xadrez, mas com algumas mecânicas próprias, incluindo rolagem de dados e turnos simultâneos; Se quiser conhecer mais, tire um tempo para ler o Tutorial do Jogo;
+- Crie uma conta fake, o jogo aceita qualquer e-mail no formato teste@teste.com, invente um para essa Playtest
 
 ---
 

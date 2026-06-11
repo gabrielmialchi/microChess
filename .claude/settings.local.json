@@ -65,7 +65,8 @@
       "Bash(node --check auth-frontend.js)",
       "Bash(ls server/*.json server/*.toml)",
       "Bash(find . -maxdepth 2 -iname \"railway*\")",
-      "Bash(git merge *)"
+      "Bash(git merge *)",
+      "Bash(git branch *)"
     ]
   }
 }
