@@ -55,6 +55,23 @@ function exportData(db) {
     };
 }
 
+// Apaga todos os jogadores, partidas, replays e progresso singleplayer.
+// Usado para zerar o leaderboard/banco antes de um novo período de testes.
+function resetAllData(db) {
+    const before = {
+        players: db.prepare('SELECT COUNT(*) AS n FROM players').get().n,
+        matches: db.prepare('SELECT COUNT(*) AS n FROM matches').get().n,
+        replays: db.prepare('SELECT COUNT(*) AS n FROM replays').get().n,
+    };
+    db.transaction(() => {
+        db.prepare('DELETE FROM replays').run();
+        db.prepare('DELETE FROM matches').run();
+        db.prepare('DELETE FROM singleplayer_progress').run();
+        db.prepare('DELETE FROM players').run();
+    })();
+    return before;
+}
+
 // Janela de teste opcional: TEST_WINDOW_START e TEST_WINDOW_END (datas ISO completas).
 // Se nenhuma das duas estiver definida, o servidor fica sempre aberto (comportamento atual).
 function checkTestWindow() {

@@ -18,7 +18,7 @@ const { isPathClear, isValidMove, promotePawns } = require('./movegen');
 const { createBotPlayer, processBotTurn } = require('./bot');
 const sp = require('./singleplayer');
 const { effectiveBonus, duelOdds, createSDDuel, judgeSDRound, sdSeriesOver, sdWinner } = require('./duel');
-const { requireAdmin, getStats, exportData, checkTestWindow } = require('./admin');
+const { requireAdmin, getStats, exportData, checkTestWindow, resetAllData } = require('./admin');
 
 const app    = express();
 const server = http.createServer(app);
@@ -89,6 +89,16 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
 app.get('/api/admin/export', requireAdmin, (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="microchess-export-${Date.now()}.json"`);
     res.json(exportData(db));
+});
+
+// Apaga todos os jogadores, partidas, replays e progresso singleplayer (zera o leaderboard).
+// Requer ?confirm=APAGAR-TUDO para evitar acionamento acidental.
+app.post('/api/admin/reset-leaderboard', requireAdmin, (req, res) => {
+    if (req.query.confirm !== 'APAGAR-TUDO') {
+        return res.status(400).json({ error: 'Confirmação ausente. Repita a chamada com ?confirm=APAGAR-TUDO' });
+    }
+    const before = resetAllData(db);
+    res.json({ ok: true, removed: before });
 });
 
 app.get('/privacy-policy', (_, res) => {
