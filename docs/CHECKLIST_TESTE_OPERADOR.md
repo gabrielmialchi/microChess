@@ -11,7 +11,7 @@ No Railway: abra o projeto → clique no serviço do servidor → aba **Variable
 
 | Variável | Valor de exemplo | Para quê serve |
 |---|---|---|
-| `ADMIN_TOKEN` | `teste-amanha-2026` (escolha sua própria senha) | libera acesso às páginas de estatísticas e exportação |
+| `ADMIN_TOKEN` | `micro-chess-26` (escolha sua própria senha) | libera acesso às páginas de estatísticas e exportação |
 | `TEST_WINDOW_START` | `2026-06-11T20:00:00-03:00` | horário de início do teste (20h, horário de Brasília) |
 | `TEST_WINDOW_END` | `2026-06-11T22:00:00-03:00` | horário de fim do teste (22h, horário de Brasília) |
 
@@ -41,7 +41,7 @@ No Railway: abra o projeto → clique no serviço do servidor → aba **Variable
 
 4. No navegador, acesse:
    ```
-   https://seu-app.up.railway.app/health
+   https://microchess-production.up.railway.app/health
    ```
    - ✅ Esperado: `{"ok":true,"rooms":0,"queue":0,"db":"ok"}`
    - ❌ Se der erro ou não carregar: o servidor não está no ar — volte ao passo 1.
@@ -50,9 +50,9 @@ No Railway: abra o projeto → clique no serviço do servidor → aba **Variable
 
 ## 2. Durante o teste — acompanhar usuários simultâneos
 
-1. Acesse (troque `SUASENHA` pelo valor que você colocou em `ADMIN_TOKEN`):
+1. Acesse (troque `micro-chess-26` pelo valor que você colocou em `ADMIN_TOKEN`):
    ```
-   https://seu-app.up.railway.app/api/admin/stats?key=SUASENHA
+   https://microchess-production.up.railway.app/api/admin/stats?key=micro-chess-26
    ```
 
 2. Aperte **F5** de tempos em tempos para atualizar os números:
@@ -111,7 +111,7 @@ porque o servidor ainda não tem um "Volume" persistente configurado (isso ficou
 
 1. Acesse:
    ```
-   https://seu-app.up.railway.app/api/admin/export?key=SUASENHA
+   https://microchess-production.up.railway.app/api/admin/export?key=micro-chess-26
    ```
 
 2. O navegador deve baixar um arquivo `.json` automaticamente (ex:
