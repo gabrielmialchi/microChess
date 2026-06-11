@@ -66,7 +66,8 @@
       "Bash(ls server/*.json server/*.toml)",
       "Bash(find . -maxdepth 2 -iname \"railway*\")",
       "Bash(git merge *)",
-      "Bash(git branch *)"
+      "Bash(git branch *)",
+      "Bash(cp db/microchess.db /tmp/test-reset.db)"
     ]
   }
 }

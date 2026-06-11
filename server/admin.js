@@ -90,4 +90,4 @@ function checkTestWindow() {
     return { configured: true, open, start: startRaw || null, end: endRaw || null };
 }
 
-module.exports = { requireAdmin, getStats, exportData, checkTestWindow };
+module.exports = { requireAdmin, getStats, exportData, checkTestWindow, resetAllData };
