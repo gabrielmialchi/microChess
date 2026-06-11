@@ -3044,6 +3044,18 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         </button>
     </div>
 
+    <!-- BUG-PRONTO: confirmação de PRONTO incompleto (pontos/peças/jogada faltando) -->
+    <div id="confirm-incomplete-popup" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.88);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
+        <div id="cip-title" style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;"></div>
+        <div id="cip-sub" style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);letter-spacing:1.5px;max-width:240px;"></div>
+        <button onclick="window.confirmIncompleteYes()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;" id="cip-yes-btn">
+            SIM
+        </button>
+        <button onclick="window.confirmIncompleteNo()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;" id="cip-no-btn">
+            NÃO
+        </button>
+    </div>
+
     <div class="panel" id="my-panel">
         <div id="my-budget" style="color:var(--accent); margin:0 0 10px; font-weight:600; font-size:1rem; font-family:'IBM Plex Mono',monospace; letter-spacing:3px;">Meus Pts: 5</div>
 
@@ -3176,6 +3188,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             searching:'PROCURANDO OPONENTE', waiting_adv:'Aguardando adversário...', match_found:'PARTIDA ENCONTRADA!',
             battle_begins:'A BATALHA COMEÇA EM...', cancel:'← CANCELAR', prepare:'PREPARE-SE!',
             ready:'PRONTO', waiting_opp:'Aguardando Oponente...', preparing_action:'Preparando Ação...', revealing:'Revelando...',
+            confirm_draft_pts:'Você ainda tem pontos para usar.', confirm_draft_sub:'Deseja seguir sem usar os pontos?',
+            confirm_position_pieces:'Você ainda tem peças não posicionadas.', confirm_position_sub:'Deseja seguir sem posicionar todas as peças?',
+            confirm_action_move:'Você não realizou nenhuma jogada.', confirm_action_sub:'Deseja passar o turno sem mover?',
             opp_ready:'Oponente: PRONTO', opp_thinking:'Oponente: pensando...', pts:'Pts', my_pts:'Meus Pts',
             conflict:'CONFLITO!', sudden_death:'MORTE SÚBITA!', white_wins:'BRANCO VENCE!', black_wins:'PRETO VENCE!', draw:'EMPATE!',
             tap_roll:'toque para rolar', resolve:'RESOLVER JOGADA', you:'VOCÊ', opponent:'OPONENTE',
@@ -3276,6 +3291,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             searching:'SEARCHING FOR OPPONENT', waiting_adv:'Waiting for opponent...', match_found:'MATCH FOUND!',
             battle_begins:'BATTLE BEGINS IN...', cancel:'← CANCEL', prepare:'GET READY!',
             ready:'READY', waiting_opp:'Waiting for Opponent...', preparing_action:'Preparing Action...', revealing:'Revealing...',
+            confirm_draft_pts:'You still have points to spend.', confirm_draft_sub:'Continue without spending them?',
+            confirm_position_pieces:'You still have unplaced pieces.', confirm_position_sub:'Continue without placing all pieces?',
+            confirm_action_move:'You haven\'t made a move.', confirm_action_sub:'Pass the turn without moving?',
             opp_ready:'Opponent: READY', opp_thinking:'Opponent: thinking...', pts:'Pts', my_pts:'My Pts',
             conflict:'CONFLICT!', sudden_death:'SUDDEN DEATH!', white_wins:'WHITE WINS!', black_wins:'BLACK WINS!', draw:'DRAW!',
             tap_roll:'tap to roll', resolve:'RESOLVE', you:'YOU', opponent:'OPPONENT',
@@ -3366,6 +3384,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             searching:'BUSCANDO OPONENTE', waiting_adv:'Esperando oponente...', match_found:'¡PARTIDA ENCONTRADA!',
             battle_begins:'LA BATALLA COMIENZA EN...', cancel:'← CANCELAR', prepare:'¡PREPÁRATE!',
             ready:'LISTO', waiting_opp:'Esperando Oponente...', preparing_action:'Preparando Acción...', revealing:'Revelando...',
+            confirm_draft_pts:'Todavía tienes puntos por gastar.', confirm_draft_sub:'¿Continuar sin usarlos?',
+            confirm_position_pieces:'Todavía tienes piezas sin colocar.', confirm_position_sub:'¿Continuar sin colocar todas las piezas?',
+            confirm_action_move:'No has realizado ninguna jugada.', confirm_action_sub:'¿Pasar el turno sin mover?',
             opp_ready:'Oponente: LISTO', opp_thinking:'Oponente: pensando...', pts:'Pts', my_pts:'Mis Pts',
             conflict:'¡CONFLICTO!', sudden_death:'¡MUERTE SÚBITA!', white_wins:'¡BLANCO GANA!', black_wins:'¡NEGRO GANA!', draw:'¡EMPATE!',
             tap_roll:'toca para tirar', resolve:'RESOLVER', you:'TÚ', opponent:'OPONENTE',
@@ -3466,6 +3487,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             searching:'SUCHE NACH GEGNER', waiting_adv:'Warte auf Gegner...', match_found:'MATCH GEFUNDEN!',
             battle_begins:'KAMPF BEGINNT IN...', cancel:'← ABBRECHEN', prepare:'MACH DICH BEREIT!',
             ready:'BEREIT', waiting_opp:'Warte auf Gegner...', preparing_action:'Bereite Aktion vor...', revealing:'Enthüllung...',
+            confirm_draft_pts:'Du hast noch Punkte übrig.', confirm_draft_sub:'Trotzdem fortfahren, ohne sie auszugeben?',
+            confirm_position_pieces:'Du hast noch nicht platzierte Figuren.', confirm_position_sub:'Trotzdem fortfahren, ohne alle Figuren zu platzieren?',
+            confirm_action_move:'Du hast keinen Zug gemacht.', confirm_action_sub:'Zug ohne Bewegung überspringen?',
             opp_ready:'Gegner: BEREIT', opp_thinking:'Gegner: überlegt...', pts:'Pkt', my_pts:'Meine Pkt',
             conflict:'KONFLIKT!', sudden_death:'PLÖTZLICHER TOD!', white_wins:'WEISS GEWINNT!', black_wins:'SCHWARZ GEWINNT!', draw:'UNENTSCHIEDEN!',
             tap_roll:'tippen zum Würfeln', resolve:'AUFLÖSEN', you:'DU', opponent:'GEGNER',
@@ -3566,6 +3590,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             searching:'CERCANDO AVVERSARIO', waiting_adv:'Aspettando avversario...', match_found:'PARTITA TROVATA!',
             battle_begins:'LA BATTAGLIA INIZIA IN...', cancel:'← ANNULLA', prepare:'PREPARATI!',
             ready:'PRONTO', waiting_opp:'Aspettando Avversario...', preparing_action:'Preparando Azione...', revealing:'Rivelando...',
+            confirm_draft_pts:'Hai ancora punti da spendere.', confirm_draft_sub:'Vuoi continuare senza usarli?',
+            confirm_position_pieces:'Hai ancora pezzi non posizionati.', confirm_position_sub:'Vuoi continuare senza posizionare tutti i pezzi?',
+            confirm_action_move:'Non hai effettuato nessuna mossa.', confirm_action_sub:'Vuoi passare il turno senza muovere?',
             opp_ready:'Avversario: PRONTO', opp_thinking:'Avversario: pensa...', pts:'Pti', my_pts:'I miei Pti',
             conflict:'CONFLITTO!', sudden_death:'MORTE IMPROVVISA!', white_wins:'BIANCO VINCE!', black_wins:'NERO VINCE!', draw:'PAREGGIO!',
             tap_roll:'tocca per lanciare', resolve:'RISOLVI', you:'TU', opponent:'AVVERSARIO',
@@ -3666,6 +3693,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             searching:'ПОИСК СОПЕРНИКА', waiting_adv:'Ожидание соперника...', match_found:'ИГРА НАЙДЕНА!',
             battle_begins:'БОЙ НАЧНЁТСЯ ЧЕРЕЗ...', cancel:'← ОТМЕНА', prepare:'ПРИГОТОВЬСЯ!',
             ready:'ГОТОВ', waiting_opp:'Ожидание соперника...', preparing_action:'Готовим Ход...', revealing:'Раскрытие...',
+            confirm_draft_pts:'У вас остались неиспользованные очки.', confirm_draft_sub:'Продолжить, не потратив их?',
+            confirm_position_pieces:'У вас остались неразмещённые фигуры.', confirm_position_sub:'Продолжить, не разместив все фигуры?',
+            confirm_action_move:'Вы не сделали ход.', confirm_action_sub:'Пропустить ход без движения?',
             opp_ready:'Соперник: ГОТОВ', opp_thinking:'Соперник: думает...', pts:'Очк', my_pts:'Мои Очки',
             conflict:'КОНФЛИКТ!', sudden_death:'ВНЕЗАПНАЯ СМЕРТЬ!', white_wins:'БЕЛЫЕ ПОБЕДИЛИ!', black_wins:'ЧЁРНЫЕ ПОБЕДИЛИ!', draw:'НИЧЬЯ!',
             tap_roll:'нажмите для броска', resolve:'РАЗРЕШИТЬ', you:'ВЫ', opponent:'СОПЕРНИК',
@@ -3766,6 +3796,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             searching:'対戦相手を探しています', waiting_adv:'相手を待っています...', match_found:'対戦相手が見つかりました！',
             battle_begins:'バトル開始まで...', cancel:'← キャンセル', prepare:'準備して！',
             ready:'準備完了', waiting_opp:'相手を待っています...', preparing_action:'アクション準備中...', revealing:'公開中...',
+            confirm_draft_pts:'まだ使えるポイントがあります。', confirm_draft_sub:'使わずに続けますか？',
+            confirm_position_pieces:'まだ配置していない駒があります。', confirm_position_sub:'すべて配置せずに続けますか？',
+            confirm_action_move:'まだ手を指していません。', confirm_action_sub:'動かさずにターンを終えますか？',
             opp_ready:'相手: 準備完了', opp_thinking:'相手: 考え中...', pts:'Pts', my_pts:'自分のPts',
             conflict:'衝突！', sudden_death:'サドンデス！', white_wins:'白の勝利！', black_wins:'黒の勝利！', draw:'引き分け！',
             tap_roll:'タップしてサイコロ', resolve:'解決', you:'あなた', opponent:'相手',
@@ -3866,6 +3899,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             searching:'상대방 찾는 중', waiting_adv:'상대방 대기 중...', match_found:'매치 발견!',
             battle_begins:'전투 시작까지...', cancel:'← 취소', prepare:'준비하세요!',
             ready:'준비', waiting_opp:'상대방 대기 중...', preparing_action:'행동 준비 중...', revealing:'공개 중...',
+            confirm_draft_pts:'아직 사용하지 않은 포인트가 있습니다.', confirm_draft_sub:'사용하지 않고 계속할까요?',
+            confirm_position_pieces:'아직 배치하지 않은 말이 있습니다.', confirm_position_sub:'모두 배치하지 않고 계속할까요?',
+            confirm_action_move:'아직 행동을 하지 않았습니다.', confirm_action_sub:'이동 없이 턴을 넘길까요?',
             opp_ready:'상대방: 준비', opp_thinking:'상대방: 생각 중...', pts:'Pts', my_pts:'내 Pts',
             conflict:'충돌!', sudden_death:'서든데스!', white_wins:'백 승리!', black_wins:'흑 승리!', draw:'무승부!',
             tap_roll:'탭하여 굴리기', resolve:'해결', you:'나', opponent:'상대방',
@@ -3966,6 +4002,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             searching:'正在寻找对手', waiting_adv:'等待对手...', match_found:'找到对手！',
             battle_begins:'战斗即将开始...', cancel:'← 取消', prepare:'准备好！',
             ready:'准备', waiting_opp:'等待对手...', preparing_action:'准备行动...', revealing:'揭示中...',
+            confirm_draft_pts:'你还有未使用的点数。', confirm_draft_sub:'要在不使用的情况下继续吗？',
+            confirm_position_pieces:'你还有未放置的棋子。', confirm_position_sub:'要在未放置全部棋子的情况下继续吗？',
+            confirm_action_move:'你还没有进行任何操作。', confirm_action_sub:'要不移动直接结束回合吗？',
             opp_ready:'对手: 已准备', opp_thinking:'对手: 思考中...', pts:'Pts', my_pts:'我的Pts',
             conflict:'冲突！', sudden_death:'突然死亡！', white_wins:'白方获胜！', black_wins:'黑方获胜！', draw:'平局！',
             tap_roll:'点击掷骰', resolve:'解决', you:'你', opponent:'对手',
@@ -5858,10 +5897,47 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         }
     };
 
+    // BUG-PRONTO: confirmação ao apertar PRONTO com algo incompleto
+    let _pendingReadyAction = null;
+
+    function _showConfirmIncomplete(titleKey, subKey, action) {
+        _pendingReadyAction = action;
+        document.getElementById('cip-title').innerText = t(titleKey);
+        document.getElementById('cip-sub').innerText   = t(subKey);
+        document.getElementById('confirm-incomplete-popup').style.display = 'flex';
+    }
+
+    window.confirmIncompleteYes = () => {
+        document.getElementById('confirm-incomplete-popup').style.display = 'none';
+        if (_pendingReadyAction) socket.emit(_pendingReadyAction);
+        _pendingReadyAction = null;
+    };
+
+    window.confirmIncompleteNo = () => {
+        document.getElementById('confirm-incomplete-popup').style.display = 'none';
+        _pendingReadyAction = null;
+    };
+
     window.setReady = () => {
-        if (state.phase === 'DRAFT')     socket.emit('draft_ready');
-        else if (state.phase === 'POSITION') socket.emit('position_ready');
-        else if (state.phase === 'ACTION')   socket.emit('action_ready');
+        if (state.phase === 'DRAFT') {
+            if (state.budget[myColor] > 0) {
+                _showConfirmIncomplete('confirm_draft_pts', 'confirm_draft_sub', 'draft_ready');
+                return;
+            }
+            socket.emit('draft_ready');
+        } else if (state.phase === 'POSITION') {
+            if (state.inventory[myColor].length > 0) {
+                _showConfirmIncomplete('confirm_position_pieces', 'confirm_position_sub', 'position_ready');
+                return;
+            }
+            socket.emit('position_ready');
+        } else if (state.phase === 'ACTION') {
+            if (!state.planning[myColor]) {
+                _showConfirmIncomplete('confirm_action_move', 'confirm_action_sub', 'action_ready');
+                return;
+            }
+            socket.emit('action_ready');
+        }
     };
 
     // ── MOVEMENT VALIDATION ───────────────────────────────────────

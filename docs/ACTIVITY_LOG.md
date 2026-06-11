@@ -85,6 +85,35 @@ juice de fim de partida.
 
 ---
 
+## [2026-06-10] BUG-PRONTO — Confirmação de PRONTO incompleto
+**Status:** ✅ Implementado (main, sem commit ainda) — aguardando teste/aprovação
+
+### Bug reportado (Gabriel)
+Na fase ACTION, dá pra clicar PRONTO sem ter planejado nenhum movimento (peça
+selecionada e não movida, ou nada selecionado). Mesma falta de aviso valia para
+DRAFT (pontos não gastos) e POSITION (peças não posicionadas).
+
+### Decisão final (revisão): popup de confirmação em vez de travar o botão
+PRONTO continua sempre clicável. Se faltar algo, abre popup in-game (mesmo
+estilo de `inactivity-self-popup`):
+- DRAFT: "Você ainda tem pontos para usar." / "Deseja seguir sem usar os pontos?"
+- POSITION: "Você ainda tem peças não posicionadas." / "Deseja seguir sem
+  posicionar todas as peças?"
+- ACTION: "Você não realizou nenhuma jogada." / "Deseja passar o turno sem mover?"
+
+SIM → emite o ready normal e segue. NÃO → fecha popup, nada é emitido, jogador
+corrige.
+
+### Feito
+- `#confirm-incomplete-popup` (HTML, perto de `return-to-game-popup`).
+- 6 chaves i18n × 9 idiomas: `confirm_draft_pts/_sub`,
+  `confirm_position_pieces/_sub`, `confirm_action_move/_sub`.
+- `setReady()`: checa `state.budget`/`state.inventory`/`state.planning` antes
+  de emitir; `confirmIncompleteYes/No` controlam o popup.
+- Sem mudanças em `server.js`. Sem risco de soft-lock (PRONTO nunca desabilita).
+
+---
+
 ## [2026-06-10] Painel de testes (stats/export/janela) — preparação para teste de carga
 
 ### Feito

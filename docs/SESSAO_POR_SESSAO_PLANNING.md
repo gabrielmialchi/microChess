@@ -103,3 +103,73 @@ Dar peso e ritmo ao ciclo commit → revelação → resolução, onde mora o "p
 - [ ] Sem regressão de performance (animações GPU-friendly: transform/opacity).
 - [ ] Playtest manual do "feel" de cada momento.
 - [ ] Merge em `main` após validação do Gabriel.
+
+---
+
+# SESSÃO BUG-PRONTO — Confirmação de PRONTO incompleto
+
+## Contexto / Bug reportado (Gabriel, 2026-06-10)
+Na fase ACTION, o jogador pode clicar PRONTO sem ter planejado nenhum movimento
+(ex.: selecionou uma peça mas não clicou num destino, ou nem selecionou peça
+nenhuma). O servidor aceita `action_ready` mesmo com `state.planning[color] ===
+null`, então o turno resolve sem que aquele jogador tenha movido peça alguma.
+Mesma lógica vale para DRAFT (pontos não gastos) e POSITION (peças não
+posicionadas).
+
+## Decisão final de design (revisão 2026-06-10)
+Em vez de desabilitar o PRONTO, o botão continua sempre clicável. Se houver
+algo incompleto, o clique em PRONTO abre um popup IN-GAME (mesmo padrão visual
+de `inactivity-self-popup`/`return-to-game-popup`) perguntando se o jogador
+quer mesmo seguir assim:
+
+- **DRAFT** — se `state.budget[myColor] > 0`: "Você ainda tem pontos para usar."
+  / "Deseja seguir sem usar os pontos?"
+- **POSITION** — se `state.inventory[myColor].length > 0`: "Você ainda tem
+  peças não posicionadas." / "Deseja seguir sem posicionar todas as peças?"
+- **ACTION** — se `!state.planning[myColor]`: "Você não realizou nenhuma
+  jogada." / "Deseja passar o turno sem mover?"
+
+Botões SIM / NÃO (i18n `t('yes')`/`t('no')`, já existentes):
+- **SIM** → emite o evento normal (`draft_ready`/`position_ready`/`action_ready`)
+  e fecha o popup — segue para a próxima fase normalmente.
+- **NÃO** → apenas fecha o popup, nada é emitido — jogador pode corrigir.
+
+Se a condição NÃO se aplica (sem pontos sobrando / sem peças no inventário /
+plano já confirmado), PRONTO funciona exatamente como hoje, sem popup.
+
+## J-PRONTO-1 — Popup de confirmação (HTML + CSS)
+- [ ] Novo `<div id="confirm-incomplete-popup">` perto de `return-to-game-popup`
+  (`html/index.html` ~3045), mesmo estilo visual: título (`#cip-title`),
+  subtítulo (`#cip-sub`), botões SIM (`window.confirmIncompleteYes()`) /
+  NÃO (`window.confirmIncompleteNo()`).
+
+## J-PRONTO-2 — i18n
+- [ ] 6 novas chaves × 9 idiomas (pt/en/es/de/it/ru/ja/ko/zh), perto da chave
+  `ready:`/`yes:`/`no:` existente em cada bloco:
+  `confirm_draft_pts`, `confirm_draft_sub`, `confirm_position_pieces`,
+  `confirm_position_sub`, `confirm_action_move`, `confirm_action_sub`.
+
+## J-PRONTO-3 — Lógica em `setReady()`
+- [ ] `html/index.html`, `window.setReady()`: antes de emitir o evento de
+  ready de cada fase, checar a condição correspondente; se incompleta, guardar
+  a ação pendente (`_pendingReadyAction`), preencher título/subtítulo via `t()`
+  e exibir o popup — sem emitir nada ainda.
+- [ ] `confirmIncompleteYes()`: emite `_pendingReadyAction`, fecha popup, limpa
+  variável.
+- [ ] `confirmIncompleteNo()`: só fecha popup, limpa variável (nada emitido).
+
+## Risco e compatibilidade
+- 🟢 Front-end apenas (`html/index.html`) — nenhuma mudança em `server.js`,
+  nenhuma mudança no fluxo padrão quando tudo está completo.
+- 🟢 Sem risco de soft-lock — PRONTO nunca fica desabilitado; o jogador sempre
+  pode confirmar SIM e seguir, mesmo sem mover/comprar/posicionar.
+- Comportamento "passar a vez" continua existindo, mas agora é uma decisão
+  consciente (popup de confirmação) em vez de acidental.
+
+## Critério de conclusão
+- [ ] DRAFT/POSITION/ACTION: clicar PRONTO com algo incompleto abre o popup com
+  a mensagem certa.
+- [ ] SIM segue normalmente; NÃO cancela e fecha o popup sem efeito.
+- [ ] Sem popup quando tudo está completo (comportamento atual preservado).
+- [ ] Textos traduzidos nos 9 idiomas.
+- [ ] Playtest: partida completa do início ao fim sem regressão.
