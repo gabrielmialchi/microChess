@@ -4634,6 +4634,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     let myColor     = 'white';
     let oppColor    = 'black';
     let resultSaved = false;
+    let _goShown    = false;   // J8: tela de fim já revelada nesta partida?
     let inGame      = false;
 
     // ── MATCHMAKING ───────────────────────────────────────────────
@@ -5110,6 +5111,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
     function launchGame() {
         resultSaved = false;
+        _goShown = false;
         inGame = true;
         lastDuelKey = null;
         const tabbar = document.getElementById('mc-tabbar');
@@ -5435,7 +5437,6 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
             const goScreen = document.getElementById('game-over-screen');
             const goResult = document.getElementById('game-over-result');
-            goScreen.style.display = 'flex';
             document.getElementById('duel-modal').style.display = 'none';
             document.getElementById('go-title').innerText   = t('game_over_title');
             document.getElementById('btn-go-menu').innerText  = t('menu');
@@ -5519,6 +5520,14 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 // Restaurar defaults MP — onclick original do HTML é returnToMenu.
                 if (_btnAgain) _btnAgain.onclick = function() { window.returnToMenu(); };
                 if (_mmrRow) _mmrRow.style.display = '';
+            }
+            // J8: anima o lance decisivo (rei caindo + shake do J5) e segura antes da tela de fim
+            syncBoard();
+            if (!_goShown) {
+                _goShown = true;
+                setTimeout(() => { goScreen.style.display = 'flex'; }, 850);
+            } else {
+                goScreen.style.display = 'flex';
             }
             return;
         } else {
