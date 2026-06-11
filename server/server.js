@@ -21,6 +21,7 @@ const { effectiveBonus, duelOdds, createSDDuel, judgeSDRound, sdSeriesOver, sdWi
 const { requireAdmin, getStats, exportData, checkTestWindow, resetAllData } = require('./admin');
 
 const app    = express();
+app.set('trust proxy', 1); // Railway roda atrás de 1 proxy reverso — necessário p/ express-rate-limit
 const server = http.createServer(app);
 // CORS — suporta lista separada por vírgula em ALLOWED_ORIGIN
 const _rawOrigins = process.env.ALLOWED_ORIGIN || '*';
