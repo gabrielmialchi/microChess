@@ -67,7 +67,9 @@
       "Bash(find . -maxdepth 2 -iname \"railway*\")",
       "Bash(git merge *)",
       "Bash(git branch *)",
-      "Bash(cp db/microchess.db /tmp/test-reset.db)"
+      "Bash(cp db/microchess.db /tmp/test-reset.db)",
+      "Bash(node -e \"const d=require\\('./analytics/microchess-export-1781226642033.json'\\); console.log\\('players',d.players.length\\); console.log\\('matches',d.matches.length\\); console.log\\('events',d.events.length\\); console.log\\('ccu',d.ccu_snapshots.length\\); console.log\\('sp',d.singleplayer_progress.length\\); console.log\\('exportedAt',d.exportedAt\\);\")",
+      "Bash(node analytics/analisar.js)"
     ]
   }
 }
