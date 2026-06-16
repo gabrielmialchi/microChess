@@ -27,8 +27,36 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-15] 🚀 Início do ciclo v1.2.x — Ajustes Pós 1º Open Test
+**Status:** 📋 Planejado — implementação a iniciar
+
+### Contexto
+Análise cruzada do 1º Open Test (feedback + dados) consolidada em
+`docs/POS_OPEN_TEST_1_DIRETRIZES.md` (itens OT-01..OT-24, tabela Hoje/Desejado/Ação,
+investigação de código). Roadmap quebrado em sessões curtas (S01–S30 + backlog) em
+`docs/SESSAO_POR_SESSAO_PLANNING.md`. Acompanhamento visual em `docs/CHECKLIST_v1.2.html`.
+
+### Prioridade (v1.2.0 — pré-requisito do próximo teste)
+- **S01** guarda servidor exército vazio (OT-02) · **S02** empate só por regra (OT-03)
+  · **S03** modo casual/ranked correto (OT-18) · **S04** reproduzir captura múltipla (OT-01).
+
+### Achados de código que viram tarefa direta
+- OT-02: `draft_ready`/`position_ready` não validam exército vazio (server.js:1533/1581).
+- OT-03: `_persistDB` faz catch-all `draw` com winnerColor null (server.js:445/453).
+- OT-18: modo da sala usa só p1 (server.js:1222).
+
+### Decisões de produto
+- OT-14: manter 9 idiomas, ptBR como padrão. OT-04: tutorial = partida scriptada.
+
+### Arquivado deste ponto
+- ADJ-JUICE A–D, BUG-PRONTO (frontend), HTP-FIX, Painel de testes → entregues; detalhe
+  resumido em `_arquivo/docs/SESSAO_POR_SESSAO_PLANNING_concluido.md`. Pendências que
+  seguem no v1.2.x: J11 (S30) e guarda de servidor do BUG-PRONTO (S01).
+
+---
+
 ## [2026-06-09] HTP-FIX — Como Jogar: bônus dinâmico do Rei
-**Status:** ✅ Completo (main)
+**Status:** ✅ Completo (main) · arquivado no ciclo v1.2.x
 
 ### Feito
 - Tela Como Jogar mostrava o Rei com `+5` fixo (desatualizado após ADJ-DESIGN item 2).

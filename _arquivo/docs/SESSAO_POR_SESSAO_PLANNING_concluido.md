@@ -4,6 +4,26 @@ Movido de docs/SESSAO_POR_SESSAO_PLANNING.md (blocos ADJ-A..D e anteriores).
 
 ---
 
+## v1.1.x — Entregue antes do ciclo v1.2.x (arquivado em 2026-06-15)
+
+Movido de `docs/SESSAO_POR_SESSAO_PLANNING.md` ao iniciar o ciclo v1.2.x. Detalhe
+completo de cada um em `docs/ACTIVITY_LOG.md` (e neste arquivo, blocos acima).
+
+| Bloco | Status | Resumo |
+|-------|--------|--------|
+| HTP-FIX | ✅ main | Como Jogar: bônus dinâmico do Rei (3 condições) |
+| ADJ-JUICE-A | ✅ branch `adj-juice` | Juice de combate: J5 captura · J6 SD · J1 revelação · J7 beat pós-duelo |
+| ADJ-JUICE-B | ✅ branch `adj-juice` | Recompensa/fim: J3 promoção→Rainha · J8 sequência de fim |
+| ADJ-JUICE-C | ✅ main | Pressão: J2 urgência do timer · J4 trava do PRONTO |
+| ADJ-JUICE-D | ✅ parcial main | J9 compra draft · J10 chip de odds · **J11 hand-off pendente decisão** |
+| BUG-PRONTO | ✅ frontend (main, sem commit) | Popup de confirmação ao clicar PRONTO incompleto — **falta guarda no servidor (ver v1.2.0 S01)** |
+| Painel de testes | ✅ main | `server/admin.js`: stats/export/janela de teste |
+
+> ⚠️ Pendências carregadas para o v1.2.x: **J11** (decisão), **guarda de servidor do BUG-PRONTO** (vira S01),
+> commit/merge da branch `adj-juice`. Ver `docs/SESSAO_POR_SESSAO_PLANNING.md`.
+
+---
+
 # SESSÃO ADJ-A — Quick Wins
 
 ## Objetivo

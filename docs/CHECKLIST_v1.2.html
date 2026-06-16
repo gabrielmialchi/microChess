@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>microChess — Checklist v1.2.x</title>
+<style>
+  :root{
+    --bg:#080808; --panel:#121212; --panel2:#1a1a1a; --line:#2a2a2a;
+    --accent:#d4a832; --accent-dim:#8a6e22; --success:#2ecc71; --danger:#e74c3c;
+    --warn:#e0a82e; --txt:#e8e2d4; --muted:#8c8576;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--txt);
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    font-size:14px; line-height:1.45; padding:0 0 80px;
+  }
+  header{
+    position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#0d0d0d,#080808);
+    border-bottom:1px solid var(--line); padding:16px 20px 12px;
+  }
+  h1{margin:0 0 2px; font-size:18px; letter-spacing:.5px}
+  h1 .v{color:var(--accent)}
+  .sub{color:var(--muted); font-size:12px; margin-bottom:10px}
+  .bar-wrap{height:10px; background:var(--panel2); border-radius:6px; overflow:hidden; border:1px solid var(--line)}
+  .bar{height:100%; width:0; background:linear-gradient(90deg,var(--accent-dim),var(--accent)); transition:width .3s}
+  .stats{display:flex; gap:16px; flex-wrap:wrap; margin-top:8px; font-size:12px; color:var(--muted)}
+  .stats b{color:var(--txt)}
+  .filters{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+  .chip{
+    background:var(--panel); border:1px solid var(--line); color:var(--muted);
+    padding:5px 12px; border-radius:20px; cursor:pointer; font-size:12px; user-select:none;
+  }
+  .chip.active{border-color:var(--accent); color:var(--accent)}
+  .chip.export{margin-left:auto; border-color:var(--accent-dim); color:var(--accent)}
+  main{max-width:1100px; margin:0 auto; padding:16px 20px}
+  .phase{margin:22px 0 8px}
+  .phase h2{font-size:14px; margin:0 0 4px; display:flex; align-items:center; gap:10px; cursor:pointer}
+  .phase h2 .pc{font-size:11px; color:var(--muted); font-weight:normal}
+  .phase .pbar-wrap{height:5px; background:var(--panel2); border-radius:4px; overflow:hidden; margin-bottom:10px}
+  .phase .pbar{height:100%; width:0; background:var(--accent-dim); transition:width .3s}
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--line);
+    border-radius:8px; padding:12px 14px; margin-bottom:10px; transition:opacity .2s;
+  }
+  .card.done{border-left-color:var(--success); opacity:.62}
+  .card.doubt{border-left-color:var(--warn)}
+  .card.hidden{display:none}
+  .card-head{display:flex; align-items:flex-start; gap:10px}
+  .chkbox{appearance:none; width:20px; height:20px; min-width:20px; margin-top:1px; border:2px solid var(--accent-dim);
+    border-radius:5px; cursor:pointer; position:relative; background:var(--panel2)}
+  .chkbox:checked{background:var(--success); border-color:var(--success)}
+  .chkbox:checked::after{content:"✓"; position:absolute; top:-2px; left:3px; color:#062; font-weight:bold; font-size:14px}
+  .ttl{flex:1}
+  .ttl .id{color:var(--accent); font-weight:600}
+  .ttl .name{font-weight:600}
+  .badges{display:flex; gap:6px; flex-wrap:wrap; margin-top:5px}
+  .b{font-size:10.5px; padding:2px 7px; border-radius:4px; border:1px solid var(--line); color:var(--muted)}
+  .b.r-low{color:var(--success); border-color:#1d3} .b.r-mid{color:var(--warn); border-color:#751}
+  .b.r-high{color:var(--danger); border-color:#822}
+  .b.ot{color:#7aa7d4; border-color:#356}
+  .b.file{color:var(--muted)}
+  .b.prio{font-weight:700; letter-spacing:.5px}
+  .b.P0{color:#080808; background:var(--danger); border-color:var(--danger)}
+  .b.P1{color:var(--accent); border-color:var(--accent-dim)}
+  .b.P2{color:var(--muted)}
+  .subs{margin:9px 0 4px; padding-left:30px; list-style:none}
+  .subs li{display:flex; gap:8px; align-items:flex-start; margin-bottom:4px; color:var(--muted); font-size:12.5px}
+  .subs input{appearance:none; width:14px; height:14px; min-width:14px; margin-top:2px; border:1.5px solid var(--accent-dim);
+    border-radius:3px; cursor:pointer; background:var(--panel2)}
+  .subs input:checked{background:var(--accent-dim)}
+  .subs input:checked + span{text-decoration:line-through; color:#5a5648}
+  .row2{display:flex; gap:10px; align-items:center; padding-left:30px; margin-top:6px}
+  .doubt-btn{background:none; border:1px solid var(--line); color:var(--muted); border-radius:6px;
+    padding:4px 10px; cursor:pointer; font-size:12px}
+  .doubt-btn.on{border-color:var(--warn); color:var(--warn)}
+  .note{flex:1; background:var(--panel2); border:1px solid var(--line); color:var(--txt); border-radius:6px;
+    padding:6px 9px; font-family:inherit; font-size:12.5px; resize:vertical; min-height:32px}
+  .note::placeholder{color:#4a463c}
+  .overlay{position:fixed; inset:0; background:rgba(0,0,0,.78); display:none; align-items:center; justify-content:center; z-index:50; padding:20px}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel); border:1px solid var(--accent-dim); border-radius:10px; max-width:760px; width:100%; max-height:85vh; display:flex; flex-direction:column}
+  .modal h3{margin:0; padding:14px 18px; border-bottom:1px solid var(--line); font-size:15px}
+  .modal pre{margin:0; padding:16px 18px; overflow:auto; white-space:pre-wrap; font-size:12.5px; color:var(--txt); flex:1}
+  .modal-foot{padding:12px 18px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end}
+  .btn{background:var(--accent-dim); border:none; color:#080808; font-weight:600; padding:7px 16px; border-radius:6px; cursor:pointer}
+  .btn.ghost{background:none; border:1px solid var(--line); color:var(--muted)}
+  .legend{color:var(--muted); font-size:11.5px; margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>microChess — Checklist <span class="v">v1.2.x</span></h1>
+  <div class="sub">Pós 1º Open Test · organizado por área de atuação · marque progresso, sinalize dúvidas, anote apontamentos. Tudo salvo neste navegador.</div>
+  <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+  <div class="stats">
+    <span><b id="st-done">0</b>/<b id="st-total">0</b> sessões concluídas (<b id="st-pct">0%</b>)</span>
+    <span>❓ <b id="st-doubt">0</b> com dúvida</span>
+    <span id="st-saved" style="color:var(--accent-dim)">salvo automaticamente</span>
+  </div>
+  <div class="filters">
+    <span class="chip active" data-f="all">Todas</span>
+    <span class="chip" data-f="p0">🅿0 críticas</span>
+    <span class="chip" data-f="pending">Pendentes</span>
+    <span class="chip" data-f="done">Concluídas</span>
+    <span class="chip" data-f="doubt">❓ Com dúvida</span>
+    <span class="chip export" id="btn-export">📋 Ver apontamentos</span>
+  </div>
+  <div class="legend">Prioridade: <b style="color:var(--danger)">P0 crítico</b> · <b style="color:var(--accent)">P1</b> · <b style="color:var(--muted)">P2</b> &nbsp;|&nbsp; Risco: <b style="color:var(--success)">🟢</b> <b style="color:var(--warn)">🟡</b> <b style="color:var(--danger)">🔴</b> &nbsp;|&nbsp; [F] frontend · [S] servidor · [DB] banco · [D] design</div>
+</header>
+<main id="app"></main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>📋 Apontamentos — dúvidas e notas</h3>
+    <pre id="export-text"></pre>
+    <div class="modal-foot">
+      <button class="btn ghost" id="btn-copy">Copiar</button>
+      <button class="btn" id="btn-close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const RISK={low:'🟢',mid:'🟡',high:'🔴'};
+const DATA=[
+ {phase:'ÁREA A — Núcleo de partida: Draft/Position/Action + responsividade', note:'engine de partida + render', sessions:[
+   {id:'S01',prio:'P0',name:'Gates rígidos do PRONTO + guarda de servidor (§7)',risk:'high',files:['F','S'],ot:['OT-02'],subs:[
+     'Draft: PRONTO desabilitado com 0 peças, habilita com ≥1 (front) + servidor rejeita draft_ready vazio',
+     'Manter popup de pontos não gastos no Draft (soft)',
+     'Positioning: PRONTO só ativa com TODAS as peças posicionadas (gate rígido)',
+     'Remover popup POSITION do BUG-PRONTO (obsoleto); Action mantém popup "passar sem mover"',
+     'Exército vazio nunca dispara GAMEOVER relâmpago']},
+   {id:'S31',prio:'P0',name:'Lentidão / responsividade de input',risk:'high',files:['F','S'],ot:['OT-25'],subs:[
+     'Medir latência clique→render em POSITION/ACTION (loop local)',
+     'Diagnosticar: falta de UI otimista / re-render total / latência Railway (local vs itch)',
+     'Separar "demora após o dado" de latência vs beat J7/J8 (ver S30)',
+     'Correção provável: render otimista no posicionamento']},
+   {id:'S04',prio:'P0',name:'Esclarecer regra de captura / peças sumindo',risk:'high',files:['S'],ot:['OT-01'],subs:[
+     '3 relatos (Muka/Dash/Vivi) "peças sumindo sem dado" → provável clareza, não bug',
+     'Reproduzir no loop local: quando rola dado (Rei) × captura direta (não-Rei), e se >1 some/jogada',
+     'Se bug: corrigir resolução ACTION/duelos','Se clareza: rotear p/ tutorial (S27) + juice (J5) + contorno (S28) + Como Jogar']},
+   {id:'S14',prio:'P1',name:'Desfazer compra no draft',risk:'mid',files:['F'],ot:['OT-07'],subs:[
+     'Undo granular sem zerar o exército','Pode aliviar domínio do Peão (OT-06/S26)']},
+ ]},
+ {phase:'ÁREA B — Resultado, ranqueada & estatísticas', note:'resolução final, persistência, MMR', sessions:[
+   {id:'S02',prio:'P0',name:'Resultado correto: empate só por regra + cancelled + motivos',risk:'high',files:['S'],ot:['OT-03'],subs:[
+     'Remover catch-all draw quando winnerColor é null (server.js:445/453)',
+     'Taxonomia: win/loss · draw_rule · draw_inactivity · cancelled (usada por S16/S18)',
+     'Auditar :916-928, :853-880, :570-580 — cada fim grava o motivo certo']},
+   {id:'S03',prio:'P0',name:'Modo casual/ranked correto no pareamento',risk:'high',files:['S'],ot:['OT-18'],subs:[
+     'Usar modo de ambos jogadores, não só p1 (server.js:1222)','Ranqueada sempre computa MMR']},
+   {id:'S22',prio:'P1',name:'V/D/E só de ranqueadas válidas',risk:'mid',files:['F','S'],ot:['OT-19'],subs:[
+     'Home/perfil/leaderboard só ranqueadas válidas','Depende de S03']},
+ ]},
+ {phase:'ÁREA C — Inatividade, abandono, desconexão & reconexão', note:'usa a taxonomia da S02', sessions:[
+   {id:'S16',prio:'P1',name:'Inatividade por fase + abandono manual (merge S15, §7)',risk:'mid',files:['F','S'],ot:['OT-08','OT-02','OT-03'],subs:[
+     '~50s sem clicar → banner de aviso + countdown',
+     'DRAFT/POSITION: AFK → CANCELAR (cancelled), ambos ao lobby + penalidade leve anti-abuso',
+     'ACTION+: AFK → checagem silenciosa de reconexão → WO para o ativo',
+     'Botão ABANDONAR PvP+Solo (confirmação): PvP→WO/cancel; Solo→hub',
+     'Oponente vê estado adequado']},
+   {id:'S10',prio:'P1',name:'Timer de fase visível (integra J2)',risk:'mid',files:['F','S'],ot:['OT-09'],subs:[
+     'Tempo restante em DRAFT/POSITION/ACTION (reusa countdown da S16)','Confirmar fonte do tempo no servidor']},
+   {id:'S17',prio:'P1',name:'Reconexão 90s + token + ciclo mobile',risk:'mid',files:['F','S'],ot:['OT-21'],subs:[
+     'Janela 90s igual p/ todos; reconnectToken','Tratar background do itch (sair do app → volta sem WO indevido)']},
+   {id:'S18',prio:'P1',name:'Empate por dupla inatividade / cancelamento pré-jogo',risk:'mid',files:['S'],ot:['OT-03'],subs:[
+     'Action+: dupla AFK → draw_inactivity','Pré-jogo: dupla AFK → cancelled','Um retorna → resolução conforme S16']},
+ ]},
+ {phase:'ÁREA D — HUD & feedback em partida', note:'elementos visíveis (sem mexer na engine)', sessions:[
+   {id:'S11',prio:'P1',name:'Nome do oponente no HUD',risk:'mid',files:['F','S'],ot:['OT-12'],subs:[
+     'Enviar nick/rank do oponente nos dados de sala','Exibir no HUD']},
+   {id:'S12',prio:'P1',name:'Feedback "PRONTO / aguardando oponente"',risk:'low',files:['F'],ot:['OT-10'],subs:['Estado claro de espera pelo oponente']},
+   {id:'S13',prio:'P1',name:'Aviso de Morte Súbita + tradução',risk:'low',files:['F'],ot:['OT-11'],subs:['Aviso antes de entrar na SD','Traduzir "Sudden Death" (integra J6)']},
+   {id:'S09',prio:'P1',name:'Ícones coloridos de resultado V/D/E',risk:'low',files:['F'],ot:['OT-17'],subs:['Cores distintas p/ vitória/derrota/empate']},
+   {id:'S30',prio:'P1',name:'Finalizar juices (ADJ-JUICE)',risk:'low',files:['F'],ot:[],subs:[
+     'Commit + playtest + merge da branch adj-juice','Decidir J11 (hand-off) ou descartar',
+     'Revisar timing J7/J8 junto com S31 (Vivi achou lento após o dado)']},
+ ]},
+ {phase:'ÁREA E — Telas, navegação & menu', note:'telas fora da partida', sessions:[
+   {id:'S33',prio:'P1',name:'Quick wins de telas/config (merge S05+S06+S07+S08+S24)',risk:'low',files:['F'],ot:['OT-13','OT-14','OT-22'],subs:[
+     'Créditos novos (verificar se já feito; remover Portfólio/Itch)',
+     'Ranked bloqueada p/ convidado no front (#mp-card-ranked)',
+     'Botão voltar com ícone (OT-13)','ptBR como idioma padrão (OT-14)','Colar senha no login (OT-22)']},
+   {id:'S19',prio:'P1',name:'Reorg menu + header + logout (Sessão 7)',risk:'low',files:['F'],ot:[],subs:[
+     'Menu: NOVO JOGO/RANKING/CONFIGS','Header avatar+rank+W/L + SAIR','COMO JOGAR/CRÉDITOS em Configs; popup logout']},
+   {id:'S21',prio:'P2',name:'Histórico de partidas + viewer de replay (merge S23, Sessão 9)',risk:'mid',files:['F'],ot:['OT-20'],subs:[
+     'screen-match-history separada do perfil','Header do replay com resumo','Corrigir viewer screen-replay (servidor OK; é frontend)']},
+   {id:'S20',prio:'P2',name:'Tela ranking explicativa (Sessão 8)',risk:'low',files:['F'],ot:[],subs:['Grid dos 14 ranks + explicação PdL','Botão LEADERBOARD GLOBAL']},
+ ]},
+ {phase:'ÁREA F — Retenção, clareza & balanceamento', note:'maior escopo; depois dos bugs', sessions:[
+   {id:'S25',prio:'P2',name:'Suavizar níveis 1–3 do solo',risk:'mid',files:['S'],ot:['OT-05'],subs:['Rebalancear dificuldade dos 3 primeiros níveis (funil cai 40→17)']},
+   {id:'S26',prio:'P2',name:'Rebalance do draft / valor das peças',risk:'mid',files:['S','D'],ot:['OT-06'],subs:['Investigar Peão 53% × Torre 5,5%','Custo/bônus e clareza percebida']},
+   {id:'S27',prio:'P2',name:'Tutorial scriptado pós-login',risk:'high',files:['F','S'],ot:['OT-04'],subs:[
+     'Sessão de design dedicada primeiro','Partida-tutorial contra bot fraco, roteirizada + dica "arraste a peça"',
+     'Absorve a clareza de captura da S04','Quebrar em sub-sessões após o design']},
+ ]},
+ {phase:'ÁREA G — Identidade visual & design (handoff)', note:'um briefing único cobre as três', sessions:[
+   {id:'S28',prio:'P1',name:'Contorno das peças dark/light',risk:'mid',files:['F','D'],ot:['OT-15'],subs:['Contorno preto em brancas, branco em pretas','Outline reforçado no dark mode','Ajuda clareza S04/OT-06']},
+   {id:'S32',prio:'P2',name:'Coesão visual menu ↔ partida',risk:'mid',files:['F','D'],ot:['OT-26'],subs:['Tela de jogo preta destoa da identidade bege/laranja (Vivi)','Alinhar paleta da partida com o menu']},
+   {id:'S29',prio:'P2',name:'Tipografia sem serifa',risk:'low',files:['F','D'],ot:['OT-16'],subs:['Fonte sem serifa no corpo (serifada só em títulos?)']},
+ ]},
+ {phase:'Backlog (não comprometido)', note:'avaliar', sessions:[
+   {id:'B1',prio:'P2',name:'Boss a cada 10 níveis',risk:'low',files:['S'],ot:['OT-23'],subs:['Não comprometido — avaliar']},
+   {id:'B2',prio:'P2',name:'Emojis para provocar amigos',risk:'low',files:['F'],ot:['OT-24'],subs:['Não comprometido — avaliar']},
+ ]},
+];
+
+const KEY='microchess_checklist_v12';
+let state=JSON.parse(localStorage.getItem(KEY)||'{}');
+let filter='all';
+const allSessions=DATA.flatMap(p=>p.sessions);
+
+function s(id){ if(!state[id]) state[id]={done:false,doubt:false,note:'',subs:{}}; return state[id]; }
+function save(){ localStorage.setItem(KEY,JSON.stringify(state)); flashSaved(); }
+let savedT; function flashSaved(){ const e=document.getElementById('st-saved'); e.textContent='✓ salvo'; clearTimeout(savedT); savedT=setTimeout(()=>e.textContent='salvo automaticamente',1200); }
+
+function matches(se){
+  const x=s(se.id);
+  if(filter==='pending') return !x.done;
+  if(filter==='done') return x.done;
+  if(filter==='doubt') return x.doubt;
+  if(filter==='p0') return se.prio==='P0';
+  return true;
+}
+
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML='';
+  DATA.forEach(p=>{
+    const visible=p.sessions.filter(se=>matches(se));
+    const done=p.sessions.filter(se=>s(se.id).done).length;
+    const sec=document.createElement('section');
+    sec.className='phase';
+    sec.innerHTML=`<h2>${p.phase} <span class="pc">${done}/${p.sessions.length}${p.note?' · '+p.note:''}</span></h2>
+      <div class="pbar-wrap"><div class="pbar" style="width:${p.sessions.length?done/p.sessions.length*100:0}%"></div></div>`;
+    p.sessions.forEach(se=>{
+      const x=s(se.id);
+      const card=document.createElement('div');
+      card.className='card'+(x.done?' done':'')+(x.doubt?' doubt':'')+(matches(se)?'':' hidden');
+      const subsHtml=se.subs.map((t,i)=>`<li><input type="checkbox" data-sub="${se.id}:${i}" ${x.subs&&x.subs[i]?'checked':''}><span>${t}</span></li>`).join('');
+      const ot=se.ot.map(o=>`<span class="b ot">${o}</span>`).join('');
+      const files=se.files.map(f=>`<span class="b file">[${f}]</span>`).join('');
+      card.innerHTML=`
+        <div class="card-head">
+          <input type="checkbox" class="chkbox" data-done="${se.id}" ${x.done?'checked':''}>
+          <div class="ttl">
+            <span class="id">${se.id}</span> · <span class="name">${se.name}</span>
+            <div class="badges"><span class="b prio ${se.prio}">${se.prio}</span><span class="b r-${se.risk}">${RISK[se.risk]}</span>${files}${ot}</div>
+          </div>
+        </div>
+        <ul class="subs">${subsHtml}</ul>
+        <div class="row2">
+          <button class="doubt-btn ${x.doubt?'on':''}" data-doubt="${se.id}">${x.doubt?'❓ dúvida':'marcar dúvida'}</button>
+          <textarea class="note" data-note="${se.id}" placeholder="apontamentos, decisões, bloqueios...">${x.note||''}</textarea>
+        </div>`;
+      sec.appendChild(card);
+    });
+    if(filter==='all'||visible.length) app.appendChild(sec);
+  });
+  updateStats();
+}
+
+function updateStats(){
+  const total=allSessions.length;
+  const done=allSessions.filter(se=>s(se.id).done).length;
+  const doubt=allSessions.filter(se=>s(se.id).doubt).length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('st-done').textContent=done;
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-pct').textContent=pct+'%';
+  document.getElementById('st-doubt').textContent=doubt;
+  document.getElementById('bar').style.width=pct+'%';
+}
+
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.done!==undefined){ s(t.dataset.done).done=t.checked; save(); render(); }
+  else if(t.dataset.sub!==undefined){ const[id,i]=t.dataset.sub.split(':'); const x=s(id); x.subs=x.subs||{}; x.subs[i]=t.checked; save(); }
+});
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.dataset.doubt!==undefined){ const x=s(t.dataset.doubt); x.doubt=!x.doubt; save(); render(); }
+  if(t.classList.contains('chip')&&t.dataset.f){ filter=t.dataset.f; document.querySelectorAll('.chip[data-f]').forEach(c=>c.classList.toggle('active',c===t)); render(); }
+});
+document.addEventListener('input',e=>{
+  if(e.target.dataset.note!==undefined){ s(e.target.dataset.note).note=e.target.value; clearTimeout(window._nt); window._nt=setTimeout(save,400); }
+});
+
+document.getElementById('btn-export').onclick=()=>{
+  let out='APONTAMENTOS — microChess v1.2.x — '+new Date().toLocaleString('pt-BR')+'\n';
+  out+='='.repeat(50)+'\n\n';
+  const total=allSessions.length, done=allSessions.filter(se=>s(se.id).done).length;
+  out+=`Progresso: ${done}/${total} sessões concluídas (${Math.round(done/total*100)}%)\n\n`;
+  let anyDoubt=false, anyNote=false;
+  out+='--- DÚVIDAS ---\n';
+  allSessions.forEach(se=>{ if(s(se.id).doubt){ anyDoubt=true; const n=s(se.id).note; out+=`❓ ${se.id} ${se.name}${n?' — '+n:''}\n`; }});
+  if(!anyDoubt) out+='(nenhuma)\n';
+  out+='\n--- NOTAS ---\n';
+  allSessions.forEach(se=>{ const n=s(se.id).note; if(n&&!s(se.id).doubt){ anyNote=true; out+=`• ${se.id} ${se.name}: ${n}\n`; }});
+  if(!anyNote) out+='(nenhuma)\n';
+  out+='\n--- PENDENTES (P0 primeiro) ---\n';
+  ['P0','P1','P2'].forEach(pr=>{ allSessions.filter(se=>!s(se.id).done&&se.prio===pr).forEach(se=>{ out+=`[ ] ${se.prio} ${se.id} ${se.name}\n`; }); });
+  document.getElementById('export-text').textContent=out;
+  document.getElementById('overlay').classList.add('show');
+};
+document.getElementById('btn-close').onclick=()=>document.getElementById('overlay').classList.remove('show');
+document.getElementById('btn-copy').onclick=()=>{ navigator.clipboard.writeText(document.getElementById('export-text').textContent); document.getElementById('btn-copy').textContent='copiado!'; setTimeout(()=>document.getElementById('btn-copy').textContent='Copiar',1200); };
+document.getElementById('overlay').onclick=e=>{ if(e.target.id==='overlay') e.currentTarget.classList.remove('show'); };
+
+render();
+</script>
+</body>
+</html>

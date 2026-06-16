@@ -136,8 +136,11 @@ Substitui o sistema AFK baseado em fase por detecção de clique do usuário:
 ### WO (Walk Over)
 Evento registrado no banco como `result = 'wo'`. Ocorre quando:
 1. Jogador desconecta durante partida ativa (já implementado)
-2. Jogador não submete ação em 45 segundos durante ACTION phase (a implementar)
-3. Jogador não coloca ready em 120 segundos durante POSITION/DRAFT (a implementar)
+2. Jogador fica AFK na fase ACTION e não retorna (checagem silenciosa de reconexão → WO)
+
+> ⚠️ **Revisado v1.2.x (15/06):** AFK em DRAFT/POSITION **não gera mais WO** — a partida é
+> **cancelada** (`result = 'cancelled'`), ambos voltam ao lobby, com penalidade leve
+> anti-abuso para quem ficou AFK. Spec em `POS_OPEN_TEST_1_DIRETRIZES.md` §7 / sessão S16.
 
 Consequências:
 - Oponente recebe vitória + MMR normal
@@ -160,9 +163,11 @@ O servidor já valida moves. Adicional:
 - Não desconectar automaticamente (pode ser bug de cliente), apenas logar
 - Validar que o `uid` no token JWT bate com o `uid` que está na sala
 
-### AFK Timeout
-- ACTION phase: timer de 45s por turno. Se um jogador não enviou `action_ready` → auto-WO
-- DRAFT/POSITION: timer de 120s. Se não enviou `draft_ready`/`position_ready` → auto-WO
+### AFK Timeout (revisado v1.2.x — ver `POS_OPEN_TEST_1_DIRETRIZES.md` §7)
+- ACTION phase: AFK + não retorna → WO para o ativo (após checagem silenciosa de reconexão)
+- DRAFT/POSITION: ~50s sem clique → banner + countdown; não retornou → **partida `cancelled`**
+  (ambos ao lobby; penalidade leve anti-abuso para quem ficou AFK). **Não é WO.**
+- Gate rígido: PRONTO desabilitado no Draft (0 peças) e no Positioning (peças não posicionadas)
 - Timer cancelado ao receber o evento de ready
 - Implementação: `setTimeout` por sala, armazenado em `room.timeouts`
 
