@@ -27,6 +27,27 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-16] S30+S31 — Responsividade de input + ajuste de juice (OT-25)
+**Status:** ✅ Implementado — pendente playtest do Gabriel
+**Área:** A — Núcleo de partida / D — HUD/juice
+
+### Feito
+- `html/index.html` `handleCellClick` POSITION: render otimista para `position_place` e
+  `position_return` — peça aparece/desaparece do tabuleiro instantaneamente, sem esperar
+  o round-trip do servidor. Corrige o "clique que não responde" em redes lentas (OT-25).
+- `html/index.html` `handleDuelUI` J7: beat pós-duelo reduzido de 800ms → 500ms
+  (elimina a percepção de "demora depois do dado" sem matar o efeito de timing).
+- J8 (850ms antes da tela de fim) mantido — adequado para o encerramento de partida.
+- J11 (hand-off plano→resolução) **descartado**: J4 já cobre o momento de commit;
+  `triggerPhaseOverlay`/`triggerReveal` cobrem a transição ACTION→REVEAL.
+
+### Notas
+- render otimista: quando o servidor confirmar via `game_state`, `state = data` sobrescreve
+  o estado local — sem divergência possível pois as guardas S01 garantem moves válidos.
+- Chaves i18n `confirm_position_pieces/_sub` continuam órfãs (inofensivo, sem risco).
+
+---
+
 ## [2026-06-15] S01 — Gates rígidos do PRONTO + guarda de servidor (OT-02)
 **Status:** ✅ Implementado (main, working tree) — pendente playtest/validação do Gabriel
 **Área:** A — Núcleo de partida

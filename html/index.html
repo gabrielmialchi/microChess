@@ -5881,11 +5881,22 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             const pAt = state.army.find(p => p.x === logicalX && p.y === logicalY);
             if (pAt && pAt.color === myColor && pAt.type !== 'K') {
                 if (localSelection?.id === pAt.id) localSelection = null;
+                // S31 — render otimista: devolve ao inventário antes do round-trip
+                state.army = state.army.filter(p => p.id !== pAt.id);
+                state.inventory[myColor].push({ id: pAt.id, type: pAt.type, color: pAt.color });
+                syncBoard();
                 socket.emit('position_return', pAt.id);
                 return;
             }
             if (localSelection?.fromInv && !pAt &&
                 ((myColor === 'white' && logicalY < 2) || (myColor === 'black' && logicalY > 1))) {
+                // S31 — render otimista: coloca no tabuleiro antes do round-trip
+                const _placing = state.inventory[myColor].find(p => p.id === localSelection.id);
+                if (_placing) {
+                    state.inventory[myColor] = state.inventory[myColor].filter(p => p.id !== localSelection.id);
+                    state.army.push({ ..._placing, x: logicalX, y: logicalY });
+                    syncBoard();
+                }
                 socket.emit('position_place', { pieceId: localSelection.id, x: logicalX, y: logicalY });
                 localSelection = null;
             }
@@ -6045,7 +6056,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const container = document.getElementById('duel-container');
 
         if (!d || !d.active) {
-            // J7: se o modal mostra um resultado, segura ~800ms antes de revelar o tabuleiro
+            // J7: segura ~500ms antes de revelar o tabuleiro (reduzido de 800ms — OT-25)
             if (modal.style.display === 'flex') {
                 if (!_duelHideScheduled) {
                     _duelHideScheduled = true;
@@ -6058,7 +6069,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                             lastDuelKey = null;
                         }
                         _duelHideScheduled = false;
-                    }, 800);
+                    }, 500);
                 }
                 return;
             }
