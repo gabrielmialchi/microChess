@@ -5367,7 +5367,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     let prevPhase      = null;
     let lastDuelKey    = null;     // detects new duel in queue
     let _lastSdRound   = 0;        // J6: detecta troca de rodada na Morte Súbita
-    let _duelHideScheduled = false; // J7: beat pós-duelo (segura o resultado antes de fechar)
+    let _duelHideScheduled = false; // J7: controla o estado de fechamento do modal de duelo
+    let _duelAutoCloseTimer = null;  // S31: timer de 15s para fechar modal se não houver input
     const _promoting = new Set();   // J3: ids de peças em animação de promoção→Rainha
     let revealBloomed  = false;    // one-shot reveal board bloom
     let _prevMyReady   = false;    // J4: detecta transição PRONTO para snap de trava
@@ -5615,6 +5616,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             syncBoard();
             if (!_goShown) {
                 _goShown = true;
+                inGame = false; // S31: freeze — game_state subsequente não desfaz a tela de fim
                 setTimeout(() => { goScreen.style.display = 'flex'; }, 850);
             } else {
                 goScreen.style.display = 'flex';
@@ -6056,30 +6058,35 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const container = document.getElementById('duel-container');
 
         if (!d || !d.active) {
-            // J7: segura ~500ms antes de revelar o tabuleiro (reduzido de 800ms — OT-25)
+            // S31: freeze no resultado — usuário fecha com RESOLVER JOGADA; auto-fecha em 15s
             if (modal.style.display === 'flex') {
                 if (!_duelHideScheduled) {
                     _duelHideScheduled = true;
                     if (rollInterval) { clearInterval(rollInterval); rollInterval = null; }
                     if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
                     localDiceAnimating = false;
-                    setTimeout(() => {
-                        if (!state.duel || !state.duel.active) {
-                            modal.style.display = 'none';
-                            lastDuelKey = null;
-                        }
-                        _duelHideScheduled = false;
-                    }, 500);
+                    let _secs = 15;
+                    const _btn = document.getElementById('close-duel');
+                    const _tick = () => {
+                        if (_secs <= 0) { window.finishDuel(); return; }
+                        if (_btn && _btn.style.display !== 'none') _btn.innerText = `${t('resolve')} (${_secs})`;
+                        _secs--;
+                        _duelAutoCloseTimer = setTimeout(_tick, 1000);
+                    };
+                    _tick();
                 }
                 return;
             }
+            if (_duelAutoCloseTimer) { clearTimeout(_duelAutoCloseTimer); _duelAutoCloseTimer = null; }
             if (rollInterval) { clearInterval(rollInterval); rollInterval = null; }
             localDiceAnimating = false;
             lastDuelKey = null;
+            _duelHideScheduled = false;
             return;
         }
 
-        _duelHideScheduled = false; // duelo ativo: cancela estado de fechamento pendente
+        if (_duelAutoCloseTimer) { clearTimeout(_duelAutoCloseTimer); _duelAutoCloseTimer = null; }
+        _duelHideScheduled = false;
 
         // Detect new duel in queue → brief pause before showing
         const duelKey = `${d.wPiece?.id}_${d.bPiece?.id}`;
@@ -6226,11 +6233,14 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const d = state.duel;
         if (!d || !d.resolveTime) return;
         if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
-        // J7: NÃO esconde aqui — o estado resolvido segura o resultado ~800ms antes de fechar.
+        if (_duelAutoCloseTimer) { clearTimeout(_duelAutoCloseTimer); _duelAutoCloseTimer = null; }
+        // S31: fecha modal imediatamente ao confirmar (sem esperar round-trip)
+        const _modal = document.getElementById('duel-modal');
+        if (_modal) _modal.style.display = 'none';
         const _cd = document.getElementById('close-duel');
-        if (_cd) _cd.style.display = 'none'; // evita clique duplo
-        // Reset para que o modal reapareça na próxima rodada da Morte Súbita.
+        if (_cd) _cd.style.display = 'none';
         lastDuelKey = null;
+        _duelHideScheduled = false;
         socket.emit('duel_resolve');
     };
 

@@ -27,6 +27,23 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-16] S31b — Freeze no duelo (15s timer) + freeze no game over (OT-25)
+**Status:** ✅ Implementado — pendente playtest
+**Área:** A — Núcleo de partida / D — HUD/juice
+
+### Feito
+- `html/index.html` `handleDuelUI`: removido auto-close do modal de duelo; após resultado,
+  RESOLVER JOGADA exibe countdown regressivo ("RESOLVER JOGADA (15)→(14)→..."); após 15s sem
+  input → `finishDuel()` automático. Modal não fecha mais sozinho após 500ms.
+- `html/index.html` `finishDuel()`: fecha o modal imediatamente ao clicar (sem esperar round-trip);
+  limpa o timer do countdown; reseta flags para próxima rodada (Morte Súbita).
+- `html/index.html` `handleDuelUI` duelo ativo: limpa `_duelAutoCloseTimer` ao iniciar novo
+  duelo (garante que timer da rodada anterior não dispare na nova).
+- `html/index.html` GAMEOVER: `inGame = false` antes de mostrar a tela de fim — impede que
+  qualquer `game_state` subsequente do servidor desfaça a tela de WIN/LOSE/DRAW.
+
+---
+
 ## [2026-06-16] S30+S31 — Responsividade de input + ajuste de juice (OT-25)
 **Status:** ✅ Implementado — pendente playtest do Gabriel
 **Área:** A — Núcleo de partida / D — HUD/juice
