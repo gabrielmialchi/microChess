@@ -27,8 +27,28 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-15] S01 — Gates rígidos do PRONTO + guarda de servidor (OT-02)
+**Status:** ✅ Implementado (main, working tree) — pendente playtest/validação do Gabriel
+**Área:** A — Núcleo de partida
+
+### Feito
+- `html/index.html` `updateUI()`: gate do PRONTO — desabilitado em DRAFT com 0 peças e em
+  POSITION com peças ainda no inventário (habilita só quando ≥1 comprada / todas posicionadas).
+- `html/index.html` `setReady()`: removido o popup de POSITION do BUG-PRONTO; mantidos o popup
+  de pontos (Draft) e "passar sem mover" (Action) + guardas defensivas.
+- `server/server.js`: `draft_ready` rejeita inventário vazio; `position_ready` rejeita peças
+  não posicionadas. `node --check server.js` OK.
+
+### Notas
+- Exército vazio não avança mais de fase → fecha OT-02 na raiz. O caso de AFK com exército
+  vazio (hang) fica para S16 (cancelar partida + voltar ao lobby).
+- Chaves i18n `confirm_position_pieces/_sub` ficam órfãs (inofensivo).
+- Ainda não commitado — branch + commit após validação (regra do ciclo).
+
+---
+
 ## [2026-06-15] 🚀 Início do ciclo v1.2.x — Ajustes Pós 1º Open Test
-**Status:** 📋 Planejado — implementação a iniciar
+**Status:** 📋 Planejado — implementação iniciada (S01)
 
 ### Contexto
 Análise cruzada do 1º Open Test (feedback + dados) consolidada em

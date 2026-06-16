@@ -5653,7 +5653,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         // Ready button
         const btnReady = document.getElementById('btn-ready');
         const myReady  = state.ready[myColor];
-        btnReady.disabled = myReady || state.phase === 'REVEAL' || state.phase === 'SUDDEN_DEATH';
+        // S01 — gate rígido do PRONTO: Draft exige ≥1 peça; Position exige todas posicionadas
+        const _myInv = state.inventory[myColor] ? state.inventory[myColor].length : 0;
+        const _gateBlocked =
+            (state.phase === 'DRAFT'    && _myInv === 0) ||
+            (state.phase === 'POSITION' && _myInv > 0);
+        btnReady.disabled = myReady || _gateBlocked || state.phase === 'REVEAL' || state.phase === 'SUDDEN_DEATH';
 
         if (state.phase === 'REVEAL') {
             btnReady.innerText = t('preparing_action');
@@ -5920,16 +5925,16 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
     window.setReady = () => {
         if (state.phase === 'DRAFT') {
+            // S01 — gate rígido: precisa de ≥1 peça comprada
+            if (state.inventory[myColor].length === 0) return;
             if (state.budget[myColor] > 0) {
                 _showConfirmIncomplete('confirm_draft_pts', 'confirm_draft_sub', 'draft_ready');
                 return;
             }
             socket.emit('draft_ready');
         } else if (state.phase === 'POSITION') {
-            if (state.inventory[myColor].length > 0) {
-                _showConfirmIncomplete('confirm_position_pieces', 'confirm_position_sub', 'position_ready');
-                return;
-            }
+            // S01 — gate rígido: todas as peças compradas devem estar posicionadas (sem popup)
+            if (state.inventory[myColor].length > 0) return;
             socket.emit('position_ready');
         } else if (state.phase === 'ACTION') {
             if (!state.planning[myColor]) {

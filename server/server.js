@@ -45,10 +45,11 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc:  ["'self'"],
-            scriptSrc:   ["'self'", "'unsafe-inline'"],   // Socket.io injeta inline
+            scriptSrc:   ["'self'", "'unsafe-inline'", 'https://cdn.socket.io'],
+            scriptSrcAttr: ["'unsafe-inline'"],            // permite onclick= e afins
             styleSrc:    ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
             fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
-            connectSrc:  ["'self'", 'ws:', 'wss:'],       // Socket.io WebSocket
+            connectSrc:  ["'self'", 'ws:', 'wss:', 'https://fonts.googleapis.com', 'https://fonts.gstatic.com'],
             workerSrc:   ["'self'", 'blob:'],              // Service Worker
             imgSrc:      ["'self'", 'data:'],
             objectSrc:   ["'none'"],
@@ -1535,6 +1536,8 @@ io.on('connection', (socket) => {
         if (!room || room.state.phase !== 'DRAFT' || !playerColor) return;
         const s = room.state;
         if (s.ready[playerColor]) return;
+        // S01 — guarda: rejeita PRONTO no Draft sem nenhuma peça comprada
+        if (s.inventory[playerColor].length === 0) return;
         const armyTypes = s.inventory[playerColor].map(p => p.type);
         logEvent('draft_army', room.players[playerColor]?.uid, room.id, { army: armyTypes });
         s.ready[playerColor] = true;
@@ -1583,6 +1586,8 @@ io.on('connection', (socket) => {
         if (!room || room.state.phase !== 'POSITION' || !playerColor) return;
         const s = room.state;
         if (s.ready[playerColor]) return;
+        // S01 — guarda: rejeita PRONTO na Posição com peças ainda no inventário
+        if (s.inventory[playerColor].length > 0) return;
         s.ready[playerColor] = true;
         if (s.ready.white && s.ready.black) {
             // Turno 0: snapshot do posicionamento para replay
