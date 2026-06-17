@@ -3145,8 +3145,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     background: var(--mc-accent, #F56200) !important; color: var(--mc-accent-ink, #1a0d06) !important;
     border-radius: var(--mc-r-md, 12px) !important;
     font-family: var(--mc-font-sans, 'Inter', sans-serif) !important;
-    font-size: 13px !important; letter-spacing: 0.05em !important;
-    border: none !important; margin-top: 20px !important; max-width: 300px !important;
+    font-size: 15px !important; font-weight: 700 !important; letter-spacing: 0.06em !important;
+    border: none !important; margin-top: 24px !important;
+    width: 90% !important; max-width: 320px !important; padding: 16px 24px !important;
 }
 
 /* ── Game over — new layout ── */
@@ -6192,6 +6193,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
         // Show result
         if (d.resolveTime) {
+            if (rollInterval) { clearInterval(rollInterval); rollInterval = null; }
             if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
             localDiceAnimating = false;
 
@@ -6230,18 +6232,18 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     };
 
     window.finishDuel = () => {
-        const d = state.duel;
-        if (!d || !d.resolveTime) return;
-        if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
         if (_duelAutoCloseTimer) { clearTimeout(_duelAutoCloseTimer); _duelAutoCloseTimer = null; }
-        // S31: fecha modal imediatamente ao confirmar (sem esperar round-trip)
+        if (window.localSincInterval) { clearInterval(window.localSincInterval); window.localSincInterval = null; }
+        // Sempre fecha o modal — independente do estado do duel (timer pode disparar quando estado já mudou)
         const _modal = document.getElementById('duel-modal');
         if (_modal) _modal.style.display = 'none';
         const _cd = document.getElementById('close-duel');
         if (_cd) _cd.style.display = 'none';
         lastDuelKey = null;
         _duelHideScheduled = false;
-        socket.emit('duel_resolve');
+        // Só emite resolve se o servidor ainda está aguardando
+        const d = state && state.duel;
+        if (d && d.resolveTime) socket.emit('duel_resolve');
     };
 
     // ── STARTUP ───────────────────────────────────────────────────

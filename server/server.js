@@ -675,8 +675,8 @@ function stateView(state, color) {
 
 function broadcast(room) {
     const { white, black } = room.players;
-    io.to(white.socketId).emit('game_state', stateView(room.state, 'white'));
-    io.to(black.socketId).emit('game_state', stateView(room.state, 'black'));
+    if (white?.socketId) io.to(white.socketId).emit('game_state', stateView(room.state, 'white'));
+    if (black?.socketId) io.to(black.socketId).emit('game_state', stateView(room.state, 'black'));
     if (room._botColor && room.state.phase !== 'GAMEOVER') {
         setImmediate(() => {
             const r = rooms.get(room.id);
@@ -1171,6 +1171,16 @@ io.on('connection', (socket) => {
     // ── MATCHMAKING ──────────────────────────────────────────────
     socket.on('queue_join', (profile) => {
         if (!checkSocketRate(socket, 'queue_join', 3, 5000)) return; // max 3 per 5s
+        // S31c: ao entrar na fila, desanexar o socket de qualquer sala anterior para evitar
+        // que broadcasts da sala antiga (ex: WO por AFK) cheguem ao novo jogo
+        if (playerRoom && playerColor) {
+            const _oldRoom = rooms.get(playerRoom);
+            if (_oldRoom && _oldRoom.players[playerColor]) {
+                _oldRoom.players[playerColor].socketId = null;
+            }
+            playerRoom  = null;
+            playerColor = null;
+        }
         const tw = checkTestWindow();
         if (!tw.open) {
             socket.emit('maintenance', { message: 'Fora do horário de testes. Volte mais tarde.', start: tw.start, end: tw.end });

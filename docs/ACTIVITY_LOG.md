@@ -27,6 +27,34 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-16] S31c — Correções do duel modal + bug crítico de sessão
+**Status:** ✅ Implementado — pendente playtest
+**Área:** A — Núcleo de partida / D — HUD
+
+### Feito
+- `html/index.html` resultado do duelo: `rollInterval` agora é limpo junto com `localSincInterval`
+  quando `d.resolveTime` está setado — dado de quem rolou primeiro parava de "girar" mas ainda
+  sobrescrevia o valor real a cada 90ms.
+- `html/index.html` `finishDuel()`: removido o guard `!d.resolveTime` que impedia o modal de
+  fechar quando o timer de 15s disparava mas o estado do servidor já tinha mudado. Agora
+  sempre fecha o modal; só emite `duel_resolve` se o servidor ainda aguarda.
+- `html/index.html` CSS `#close-duel`: botão RESOLVER maior (width 90%, padding 16px,
+  font 15px bold) — era pequeno demais para ser o CTA principal.
+- `server/server.js` `queue_join`: ao entrar na fila, nullifica `socketId` do jogador na
+  sala antiga e reseta `playerRoom/playerColor`. Impede que broadcasts da sala antiga
+  (AFK/WO/GAMEOVER) cheguem ao socket do novo jogo via `io.to(oldSocketId)`.
+- `server/server.js` `broadcast`: guarda contra `socketId` nulo — `io.to(null)` seria no-op
+  mas pode gerar warnings; agora é skip explícito.
+
+### Causa-raiz do bug de sessão
+Após refresh+rejoin+nova partida: o socket A2 ficava com `socketId` registrado em Room1
+mesmo após entrar em Room2. Quando o AFK timer de Room1 disparava, `broadcast(Room1)`
+mandava GAMEOVER via `io.to(A2.id)`. Como `inGame=true` (Room2 já ativa), o cliente
+processava o GAMEOVER, mostrava YOU WIN, e o `inGame=false` do S31b fechava a porta para
+novos `game_state` do Room2.
+
+---
+
 ## [2026-06-16] S31b — Freeze no duelo (15s timer) + freeze no game over (OT-25)
 **Status:** ✅ Implementado — pendente playtest
 **Área:** A — Núcleo de partida / D — HUD/juice
