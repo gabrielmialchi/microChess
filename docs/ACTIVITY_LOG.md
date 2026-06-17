@@ -27,6 +27,24 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-17] S14+S10+S18+S19+S22 — Undo draft + timer fase + deduplication de sessões
+**Status:** ✅ Implementado — pendente playtest
+**Área:** A, C, B, E
+
+### Feito
+- **Planning atualizado**: `SESSAO_POR_SESSAO_PLANNING.md` com ✅ em todas sessões entregues (S01, S02, S03, S04, S09, S11, S12, S13, S16, S17, S18, S19, S22, S30, S31, S31b, S31c, S33).
+- **S14 — Undo granular no Draft**: click em peça do inventário durante DRAFT devolve a peça ao orçamento. Render otimista no front + `draft_undo` event no servidor. A label "toque para devolver" já existia em 9 idiomas — agora funciona. `server.js` ~linha 1572.
+- **S18 — Dual AFK draw**: verificado — já implementado em S16. `decreeWOForInactivity` checa `pending[oppColor]` antes de decretar WO; se ambos pendentes → `draw_inactivity`. Marcado ✅.
+- **S19 — Reorg menu**: verificado — já implementado em sessões anteriores. Menu, header, COMO JOGAR/CRÉDITOS em Settings e logout confirm todos presentes. Marcado ✅.
+- **S22 — V/D/E só ranked**: `_persistDB` agora gatea wins/losses/draws em `!isCasual`. Jogos casuais não incrementam V/D/E. ELO/LP já era ranked-only. `server.js` ~linha 472.
+- **S10 — Timer de fase visível**: elemento `#phase-time-left` adicionado ao lado de `#phase-title`. `_startInactivityTracking()` atualiza o contador a cada 500ms mostrando `60-elapsed` segundos. Vermelho nos últimos 10s (complementa J2). `index.html`.
+
+### Notas para próxima sessão
+- Sessões 🅿1 restantes: S28 (contorno de peças — design), S20 (tela ranking), S21 (histórico/replay)
+- Sessões 🅿2: S25 (solo rebalance), S26 (draft rebalance), S27 (tutorial), S32 (coesão visual), S29 (tipografia)
+
+---
+
 ## [2026-06-17] S11+S13+S33 — Nome oponente no HUD + SD-banner i18n + quick wins
 **Status:** ✅ Implementado — pendente playtest
 **Área:** D — HUD & feedback / E — Quick wins

@@ -2996,6 +2996,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             </div>
         </div>
         <div id="phase-title">DRAFT</div>
+        <div id="phase-time-left" style="font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:10px;color:var(--mc-muted);text-align:center;line-height:1;margin-top:2px;min-height:14px;transition:color 0.3s;"></div>
         <div id="opp-pts">—</div>
     </div>
 
@@ -5792,7 +5793,14 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             if (localSelection?.idx === idx && localSelection?.fromInv) span.classList.add('selected');
             span.innerText = CONFIG[item.type].icon;
             span.onclick = () => {
-                if (state.phase === 'POSITION' && !state.ready[myColor]) {
+                if (state.phase === 'DRAFT' && !state.ready[myColor]) {
+                    // S14 — undo granular: devolver peça do inventário ao orçamento
+                    state.inventory[myColor] = state.inventory[myColor].filter(p => p.id !== item.id);
+                    const _cfg = CONFIG[item.type];
+                    if (_cfg?.cost) state.budget[myColor] += _cfg.cost;
+                    updateUI();
+                    socket.emit('draft_undo', { pieceId: item.id });
+                } else if (state.phase === 'POSITION' && !state.ready[myColor]) {
                     if (localSelection?.idx === idx && localSelection?.fromInv) localSelection = null;
                     else localSelection = { ...item, idx, fromInv: true };
                     updateUI();
@@ -6431,15 +6439,31 @@ if ('serviceWorker' in navigator) {
         window.ExcBanners.hideAfk();
     }
 
+    function _updatePhaseTimer(elapsed) {
+        const el = document.getElementById('phase-time-left');
+        if (!el) return;
+        if (_inactiveEmitted || !_currentPhase || _currentPhase === 'GAMEOVER' || _currentPhase === 'REVEAL') {
+            el.textContent = '';
+            return;
+        }
+        const remaining = Math.max(0, Math.ceil((60_000 - elapsed) / 1000));
+        el.textContent = remaining + 's';
+        el.style.color = remaining <= 10 ? 'var(--mc-danger,#e74c3c)' : 'var(--mc-muted)';
+    }
+
     function _startInactivityTracking() {
         _resetActivity();
         if (_inactivityInterval) clearInterval(_inactivityInterval);
         _inactivityInterval = setInterval(() => {
-            if (_inactiveEmitted) return;
             if (!_currentPhase || _currentPhase === 'GAMEOVER') return;
             const selfPopup = document.getElementById('inactivity-self-popup');
             if (selfPopup && selfPopup.style.display !== 'none') return;
             const elapsed = Date.now() - _lastActivityAt;
+            if (_inactiveEmitted) {
+                _updatePhaseTimer(60_000); // shows 0 while popup is open
+                return;
+            }
+            _updatePhaseTimer(elapsed);
             if (elapsed >= 60_000) {
                 _inactiveEmitted = true;
                 const s = window._mcSocket; if (s) s.emit('player_inactive');
@@ -6455,6 +6479,8 @@ if ('serviceWorker' in navigator) {
     function _stopInactivityTracking() {
         if (_inactivityInterval) { clearInterval(_inactivityInterval); _inactivityInterval = null; }
         window.ExcBanners.hideAfk();
+        const el = document.getElementById('phase-time-left');
+        if (el) el.textContent = '';
     }
 
     function _hideInactivityPopups() {

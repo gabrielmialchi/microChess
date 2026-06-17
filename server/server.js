@@ -469,12 +469,15 @@ const _persistDB = db.transaction((room, winnerColor, isWO, reason) => {
         bLP = applyLPChange(bRec.elo_rank ?? 0, bRec.elo_lp ?? 0, bRec.elo_shield ?? 0, bLpInput);
     }
 
+    // S22 — wins/losses/draws only for ranked (casual never counts toward stats)
     db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, draws=draws+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
-      .run(wDelta, result === 'white' ? 1 : 0, result === 'black' || result === 'wo_black' ? 1 : 0,
-           isDraw ? 1 : 0, wLP.elo_rank, wLP.elo_lp, wLP.elo_shield, wp.uid);
+      .run(wDelta, (!isCasual && result === 'white') ? 1 : 0,
+           (!isCasual && (result === 'black' || result === 'wo_black')) ? 1 : 0,
+           (!isCasual && isDraw) ? 1 : 0, wLP.elo_rank, wLP.elo_lp, wLP.elo_shield, wp.uid);
     db.prepare('UPDATE players SET mmr=mmr+?, wins=wins+?, losses=losses+?, draws=draws+?, elo_rank=?, elo_lp=?, elo_shield=? WHERE id=?')
-      .run(bDelta, result === 'black' ? 1 : 0, result === 'white' || result === 'wo_white' ? 1 : 0,
-           isDraw ? 1 : 0, bLP.elo_rank, bLP.elo_lp, bLP.elo_shield, bp.uid);
+      .run(bDelta, (!isCasual && result === 'black') ? 1 : 0,
+           (!isCasual && (result === 'white' || result === 'wo_white')) ? 1 : 0,
+           (!isCasual && isDraw) ? 1 : 0, bLP.elo_rank, bLP.elo_lp, bLP.elo_shield, bp.uid);
 
     const matchId = crypto.randomUUID();
     room._matchId = matchId;
@@ -1567,6 +1570,21 @@ io.on('connection', (socket) => {
         if (s.ready[playerColor]) return;
         s.budget[playerColor]    = 5;
         s.inventory[playerColor] = [];
+        broadcast(room);
+    });
+
+    socket.on('draft_undo', ({ pieceId } = {}) => {
+        const room = getRoom();
+        if (!room || room.state.phase !== 'DRAFT' || !playerColor) return;
+        const s = room.state;
+        if (s.ready[playerColor]) return;
+        const idx = pieceId
+            ? s.inventory[playerColor].findIndex(p => p.id === pieceId)
+            : s.inventory[playerColor].length - 1;
+        if (idx === -1) return;
+        const [piece] = s.inventory[playerColor].splice(idx, 1);
+        const cfg = CONFIG[piece.type];
+        if (cfg?.cost) s.budget[playerColor] += cfg.cost;
         broadcast(room);
     });
 

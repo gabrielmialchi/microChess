@@ -146,6 +146,48 @@
 
 ---
 
+---
+
+### T-S14-1 — Undo granular no Draft
+**Sessão:** S14 | **Arquivo:** `html/index.html`, `server/server.js`
+
+1. Iniciar PvP, entrar na fase DRAFT
+2. Comprar uma peça (ex: Peão 1pt)
+   → **Esperado:** peça aparece no inventário
+3. Clicar na peça no inventário
+   → **Esperado:** peça some do inventário, 1pt volta ao orçamento (ex: 5pt → 4pt → 5pt)
+4. Comprar Rainha (5pt), clicar nela no inventário
+   → **Esperado:** 5pt voltam, orçamento volta a 5pt
+5. Apertar PRONTO logo depois de desfazer (inventário vazio)
+   → **Esperado:** PRONTO continua bloqueado (gate da S01)
+
+---
+
+### T-S22-1 — V/D/E só em ranked (casual não conta)
+**Sessão:** S22 | **Arquivo:** `server/server.js`
+
+*(Requer acesso ao banco SQLite — `server/db/microchess.db`)*
+
+1. Jogar e vencer uma partida **Casual**
+   → Consultar: `SELECT wins FROM players WHERE username='seu_nick'`
+   → **Esperado:** wins **não** incrementou
+2. Jogar e vencer uma partida **Ranked**
+   → **Esperado:** wins incrementou em 1
+
+---
+
+### T-S10-1 — Timer de fase visível no HUD
+**Sessão:** S10 | **Arquivo:** `html/index.html`
+
+1. Iniciar PvP, entrar no DRAFT
+   → **Esperado:** abaixo do título da fase (DRAFT), aparece um contador "60s" que vai diminuindo
+2. Clicar em qualquer lugar (ex: comprar peça)
+   → **Esperado:** timer reseta para "60s"
+3. Aguardar sem clicar por ~50s
+   → **Esperado:** contador fica vermelho nos últimos 10s (integra J2)
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |
