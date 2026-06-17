@@ -5331,9 +5331,17 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     socket.on('private_room_error',   ({ error }) => window.privateRoom._onError(error));
     socket.on('rejoin_success', ({ roomId, color } = {}) => {
         localSelection = null;
+        resultSaved    = false;
+        _goShown       = false;
+        lastDuelKey    = null;
+        inGame         = true;
         if (roomId) roomID = roomId;
-        if (color)  myColor = color;
-        if (state) updateUI();
+        if (color) { myColor = color; oppColor = color === 'white' ? 'black' : 'white'; }
+        const tabbar = document.getElementById('mc-tabbar');
+        if (tabbar) tabbar.style.display = 'none';
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('game-area').style.display = 'flex';
+        // game_state chega imediatamente após (inGame=true agora) e renderiza o tabuleiro
     });
     socket.on('rejoin_failed', () => { sessionStorage.removeItem('mc_reconnect_token'); });
 
@@ -6463,16 +6471,12 @@ if ('serviceWorker' in navigator) {
             if (timerEl) timerEl.textContent = Math.max(0, Math.round((deadline - Date.now()) / 1000));
         });
 
-        socket.on('opponent_inactive', () => {
-            const popup = document.getElementById('inactivity-opp-popup');
-            const btn   = document.getElementById('inactivity-opp-return-btn');
-            if (popup) popup.style.display = 'flex';
-            if (btn)   { btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; }
+        socket.on('opponent_inactive', ({ remainMs } = {}) => {
+            window.ExcBanners && window.ExcBanners.showOppDc(remainMs || 90000);
         });
 
         socket.on('opponent_returned', ({ dismissInMs }) => {
-            const btn = document.getElementById('inactivity-opp-return-btn');
-            if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+            window.ExcBanners && window.ExcBanners.hideOppDc();
             if (_oppReturnTimer) clearTimeout(_oppReturnTimer);
             _oppReturnTimer = setTimeout(() => {
                 _hideInactivityPopups();

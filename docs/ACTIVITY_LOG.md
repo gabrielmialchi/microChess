@@ -27,6 +27,34 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-17] S17 — Reconexão mid-game (WO após 90s + banner de DC)
+**Status:** ✅ Implementado — pendente playtest
+**Área:** C — Inatividade / reconexão
+
+### Feito
+- `server/server.js` `rejoin_game`: ordem corrigida — `rejoin_success` enviado ANTES de `game_state`;
+  `game_state` agora usa `stateView(room.state, pending.color)` (peças ocultas do oponente nunca
+  chegam ao cliente que reconecta).
+- `html/index.html` `rejoin_success`: handler restaura contexto completo de jogo:
+  seta `inGame=true`, `myColor/oppColor`, `roomID`, reseta `_goShown/resultSaved/lastDuelKey`,
+  exibe `#game-area`, esconde tabbar e telas — exatamente como `launchGame()`.
+  O `game_state` que chega logo após é processado normalmente (inGame já é true).
+- `html/index.html` `opponent_inactive`: substituído show de `inactivity-opp-popup` (AFK) por
+  `ExcBanners.showOppDc(remainMs)` — banner correto para queda de conexão, com countdown de 90s.
+- `html/index.html` `opponent_returned`: chama `ExcBanners.hideOppDc()` ao reconectar oponente
+  (antes apenas habilitava botão que nunca faria sentido no contexto de DC).
+
+### Causa-raiz do bug de reconexão
+Servidor mandava `game_state` antes de `rejoin_success`. Cliente tinha `inGame=false` → state
+descartado no guard `if (!inGame || !data) return`. Ao receber `rejoin_success`, `state=null`
+→ `if (state) updateUI()` não executava. Jogador via menu vazio.
+
+### WO após 90s (já existia no servidor)
+`RECONNECT_MS = 90_000` + `pendingReconnects` + `decreeWOForInactivity` já implementados
+em sessões anteriores. Esta sessão corrige apenas o retorno do cliente à partida.
+
+---
+
 ## [2026-06-16] S31c — Correções do duel modal + bug crítico de sessão
 **Status:** ✅ Implementado — pendente playtest
 **Área:** A — Núcleo de partida / D — HUD

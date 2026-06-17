@@ -1815,8 +1815,8 @@ io.on('connection', (socket) => {
             if (opp) io.to(opp.socketId).emit('opponent_returned', { dismissInMs: 15_000 });
         }
 
-        socket.emit('game_state', room.state);
         socket.emit('rejoin_success', { roomId: pending.roomId, color: pending.color });
+        socket.emit('game_state', stateView(room.state, pending.color));
         if (uid) logEvent('reconnect_success', uid, room._matchId || pending.roomId, { roomId: pending.roomId });
         console.log(`[RECONNECT] ${uid || reconnectToken} reconectado à sala ${pending.roomId}`);
     });
