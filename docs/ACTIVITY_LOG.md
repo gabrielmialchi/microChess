@@ -27,6 +27,34 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-17] S16 — Inatividade por fase + botão ABANDONAR persistente
+**Status:** ✅ Implementado — pendente playtest
+**Área:** C — Inatividade / reconexão
+
+### Feito
+- `server/server.js` nova função `decreeCancelled(room, abuserId)`:
+  emite `game_cancelled` para AMBOS os jogadores; seta `state.cancelled=true`;
+  chama `persistMatchResult(null, false, 'cancelled')`.
+- `server/server.js` `_persistDB`: quando `result === 'cancelled'`, pula cálculo ELO
+  (wDelta=bDelta=0, nenhum W/D/L incrementado). Registro na tabela `matches` ainda ocorre.
+- `server/server.js` `decreeWOForInactivity` agora é phase-aware:
+  DRAFT/POSITION → `decreeCancelled()` · ACTION+ → WO (comportamento anterior).
+  Cobre tanto AFK timeout quanto clique em ABANDONAR.
+- `html/index.html` `#btn-abandon`: botão pequeno abaixo do PRONTO, visível em toda partida PvP e Solo.
+  Mostra popup de confirmação (SIM — ABANDONAR / CANCELAR) antes de agir.
+  Solo: `abandonConfirmYes()` → `returnToMenu()` direto.
+  PvP: emite `player_abandoned` → servidor aplica fase-aware.
+- `html/index.html` `game_cancelled` handler: exibe overlay "PARTIDA CANCELADA" por 2,5s → `returnToMenu()`.
+- `html/index.html` `returnToMenu()` limpa `#btn-abandon`, `#abandon-confirm-popup`, `#game-cancelled-overlay`.
+- `html/index.html` `rejoin_success` mostra `#btn-abandon` ao reconectar.
+
+### Nota
+Penalidade anti-abuso para DRAFT/POSITION AFK (apontada no spec como "leve") **não implementada**
+nesta sessão — requires tracking separado (`cancelled_count`) ou reutilizar `wo_count` com lógica específica.
+Deixado para S18 ou patch quando houver dados de abuso real.
+
+---
+
 ## [2026-06-17] S04 — Investigação: peças sumindo sem dado (OT-01)
 **Status:** ✅ Concluído — gap de clareza, sem bug de código
 **Área:** A — Núcleo de partida
