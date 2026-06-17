@@ -444,8 +444,10 @@ const _persistDB = db.transaction((room, winnerColor, isWO, reason) => {
             result = 'black';
         } else {
             result = reason || 'draw_rule';
-            // Standard ELO draw: score=0.5. Weaker player always gains ≥1 MMR.
-            ({ deltaA: wDelta, deltaB: bDelta } = calculateDraw(wRec.mmr, bRec.mmr));
+            if (result !== 'cancelled') {
+                // Standard ELO draw: score=0.5. Weaker player always gains ≥1 MMR.
+                ({ deltaA: wDelta, deltaB: bDelta } = calculateDraw(wRec.mmr, bRec.mmr));
+            }
         }
     } else {
         // casual: record result without MMR movement
@@ -563,11 +565,35 @@ function startAFKTimer(room, color, ms, reason) {
     }, ms);
 }
 
+function decreeCancelled(room, abuserId) {
+    const roomNow = rooms.get(room.id);
+    if (!roomNow || roomNow.state.phase === 'GAMEOVER') return;
+    if (roomNow.pending) { roomNow.pending.white = null; roomNow.pending.black = null; }
+    roomNow.state.phase     = 'GAMEOVER';
+    roomNow.state.cancelled = true;
+    clearAFKTimer(roomNow, 'white');
+    clearAFKTimer(roomNow, 'black');
+    const { white, black } = roomNow.players;
+    if (white?.socketId) io.to(white.socketId).emit('game_cancelled', { reason: 'afk_pregame' });
+    if (black?.socketId) io.to(black.socketId).emit('game_cancelled', { reason: 'afk_pregame' });
+    persistMatchResult(roomNow, null, false, 'cancelled');
+    scheduleRoomCleanup(room.id);
+    console.log(`[CANCEL] ${abuserId} abandonou no pré-jogo — partida cancelada.`);
+}
+
 function decreeWOForInactivity(room, color, reason) {
     const roomNow = rooms.get(room.id);
     if (!roomNow || roomNow.state.phase === 'GAMEOVER') return;
     const oppColor = color === 'white' ? 'black' : 'white';
-    // Both players pending → force draw
+
+    // Pré-jogo (DRAFT/POSITION): cancela sem vencedor
+    const phase = roomNow.state.phase;
+    if (phase === 'DRAFT' || phase === 'POSITION') {
+        decreeCancelled(roomNow, roomNow.players[color]?.uid || color);
+        return;
+    }
+
+    // Both players pending in ACTION+ → draw_inactivity
     if (roomNow.pending?.[oppColor]) {
         clearTimeout(roomNow.pending[oppColor].timer);
         roomNow.pending.white = null;

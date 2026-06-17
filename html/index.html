@@ -3074,7 +3074,22 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         </div>
 
         <button id="btn-ready" class="btn-ready" onclick="setReady()">PRONTO</button>
+        <button id="btn-abandon" onclick="window.abandonGame()" style="display:none;background:none;border:none;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);font-size:11px;font-weight:600;letter-spacing:1.5px;cursor:pointer;padding:8px 0 2px;width:100%;text-align:center;opacity:0.7;">ABANDONAR PARTIDA</button>
     </div>
+</div>
+
+<!-- S16: Confirmação de abandono -->
+<div id="abandon-confirm-popup" style="display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,0.88);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
+    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">ABANDONAR PARTIDA?</div>
+    <div id="abandon-confirm-sub" style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);letter-spacing:1px;max-width:260px;">Esta ação não pode ser desfeita.</div>
+    <button onclick="window.abandonConfirmYes()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">SIM — ABANDONAR</button>
+    <button onclick="window.abandonConfirmNo()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:rgba(255,255,255,0.08);color:var(--mc-bg-inv,#f5f0e8);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
+</div>
+
+<!-- S16: Overlay de partida cancelada (pré-jogo AFK) -->
+<div id="game-cancelled-overlay" style="display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,0.92);flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;">
+    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:20px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:1px;">PARTIDA CANCELADA</div>
+    <div id="game-cancelled-sub" style="font-size:12px;color:rgba(245,240,232,0.6);text-align:center;font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);letter-spacing:1px;max-width:260px;">Um jogador abandonou antes do início. Retornando ao menu...</div>
 </div>
 
 <!-- DUEL MODAL -->
@@ -5197,15 +5212,38 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         }, 1000);
     }
 
-    function launchGame() {
+    // ── ABANDONAR ────────────────────────────────────────────────
+    let _isSoloGame = false;
+    window.abandonGame = function() {
+        if (!inGame) return;
+        const popup = document.getElementById('abandon-confirm-popup');
+        if (popup) popup.style.display = 'flex';
+    };
+    window.abandonConfirmNo = function() {
+        const popup = document.getElementById('abandon-confirm-popup');
+        if (popup) popup.style.display = 'none';
+    };
+    window.abandonConfirmYes = function() {
+        window.abandonConfirmNo();
+        if (_isSoloGame) {
+            window.returnToMenu();
+        } else {
+            socket.emit('player_abandoned');
+        }
+    };
+
+    function launchGame(isSolo = false) {
         resultSaved = false;
         _goShown = false;
         inGame = true;
+        _isSoloGame = !!isSolo;
         lastDuelKey = null;
         const tabbar = document.getElementById('mc-tabbar');
         if (tabbar) tabbar.style.display = 'none';
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('game-area').style.display = 'flex';
+        const _abandonBtn = document.getElementById('btn-abandon');
+        if (_abandonBtn) _abandonBtn.style.display = 'block';
         // Reset PdL fields so previous match values don't bleed into next game-over
         const _dEl = document.getElementById('go-pdl-delta');
         const _nEl = document.getElementById('go-pdl-now');
@@ -5341,18 +5379,34 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (tabbar) tabbar.style.display = 'none';
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('game-area').style.display = 'flex';
+        const _ab = document.getElementById('btn-abandon');
+        if (_ab) _ab.style.display = 'block';
         // game_state chega imediatamente após (inGame=true agora) e renderiza o tabuleiro
     });
     socket.on('rejoin_failed', () => { sessionStorage.removeItem('mc_reconnect_token'); });
+    socket.on('game_cancelled', () => {
+        inGame = false;
+        sessionStorage.removeItem('mc_reconnect_token');
+        const ov = document.getElementById('game-cancelled-overlay');
+        if (ov) ov.style.display = 'flex';
+        setTimeout(() => { window.returnToMenu(); showScreen('menu'); }, 2500);
+    });
 
     window.returnToMenu = function() {
         inGame = false;
+        _isSoloGame = false;
         const tabbar = document.getElementById('mc-tabbar');
         if (tabbar) tabbar.style.display = '';
         document.getElementById('game-area').style.display = 'none';
         document.getElementById('game-over-screen').style.display = 'none';
         const sdOv = document.getElementById('sd-overlay');
         if (sdOv) sdOv.style.display = 'none';
+        const _abandonBtn = document.getElementById('btn-abandon');
+        if (_abandonBtn) _abandonBtn.style.display = 'none';
+        const _abandonPop = document.getElementById('abandon-confirm-popup');
+        if (_abandonPop) _abandonPop.style.display = 'none';
+        const _cancelOv = document.getElementById('game-cancelled-overlay');
+        if (_cancelOv) _cancelOv.style.display = 'none';
         window.ExcBanners && window.ExcBanners.hideAll();
         pieceElements.forEach(el => el.remove());
         pieceElements.clear();
