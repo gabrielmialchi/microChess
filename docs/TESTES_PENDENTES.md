@@ -117,6 +117,35 @@
 
 ---
 
+### T-S11-1 — Nickname do oponente no HUD
+**Sessão:** S11
+
+1. Iniciar PvP contra outro usuário
+   → **Esperado:** `#opp-meta` (abaixo do status do oponente) exibe o nickname dele durante toda a partida
+   → Antes mostrava "aguardando…" permanentemente
+
+---
+
+### T-S13-1 — Banner Morte Súbita traduzido
+**Sessão:** S13
+
+1. Chegar a uma partida com Morte Súbita ativa
+   → **Esperado:** banner laranja no topo lê "⚔ MORTE SÚBITA! — próxima colisão vai direto ao duelo" em PT
+2. Trocar o idioma para Inglês (Configurações) e repetir
+   → **Esperado:** banner lê "⚔ SUDDEN DEATH! — next collision goes straight to duel"
+
+---
+
+### T-S33-A — ptBR como idioma padrão
+**Sessão:** S33
+
+1. Abrir o jogo em aba anônima (sem localStorage) com sistema em inglês
+   → **Esperado:** interface em português (não em inglês)
+2. Trocar para inglês, fechar e reabrir
+   → **Esperado:** continua em inglês (preferência salva respeita)
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |

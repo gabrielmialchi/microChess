@@ -27,6 +27,28 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-17] S11+S13+S33 — Nome oponente no HUD + SD-banner i18n + quick wins
+**Status:** ✅ Implementado — pendente playtest
+**Área:** D — HUD & feedback / E — Quick wins
+
+### Feito
+- **S11**: `launchGame()` popula `#opp-meta` com `opponentProfile.nickname` ao iniciar partida.
+  Antes ficava "aguardando…" durante todo o jogo. Sem mudança de servidor (nickname já estava em `match_found`).
+- **S13**: Chave `sd_banner` adicionada nos 9 idiomas (pt/en/es/de/it/ru/ja/ko/zh).
+  `ExcBanners.showSuddenDeath()` agora atualiza o `<span>` do banner com `t('sudden_death') + t('sd_banner')`.
+  Texto deixa de ser hardcoded PT.
+- **S33-A (OT-14)**: Idioma padrão alterado para `'pt'` fixo quando não há `mc_lang` no localStorage.
+  Remove a lógica de `navigator.language` que fazia usuários com sistema em inglês verem a UI em EN.
+- **S09 e S12**: Verificados — já implementados (ícones/cores V/D/E e texto "✓ Aguardando..." no PRONTO). Sem mudanças.
+- **S33 demais**: Créditos ✅ já corretos; Ranked lock p/ convidado ✅ já implementado; Botão ← VOLTAR ✅ já tem ícone.
+
+### Nota
+`colar senha no login (OT-22)`: Não há handlers `onpaste` bloqueando — o problema relatado provavelmente é
+o iframe do itch.io interceptando o evento. Ação: testar direto em localhost; se funcionar, é itch-specific e
+não tem fix de código aqui.
+
+---
+
 ## [2026-06-17] S16 — Inatividade por fase + botão ABANDONAR persistente
 **Status:** ✅ Implementado — pendente playtest
 **Área:** C — Inatividade / reconexão
