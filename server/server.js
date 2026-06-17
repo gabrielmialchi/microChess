@@ -408,7 +408,7 @@ function applyBan(playerId, newWoCount) {
     }
 }
 
-const _persistDB = db.transaction((room, winnerColor, isWO) => {
+const _persistDB = db.transaction((room, winnerColor, isWO, reason) => {
     const wp = room.players.white;
     const bp = room.players.black;
     if (!wp?.uid || !bp?.uid) return null;
@@ -443,7 +443,7 @@ const _persistDB = db.transaction((room, winnerColor, isWO) => {
             ({ winnerDelta: bDelta, loserDelta: wDelta } = calcMMR(bRec.mmr, wRec.mmr));
             result = 'black';
         } else {
-            result = 'draw';
+            result = reason || 'draw_rule';
             // Standard ELO draw: score=0.5. Weaker player always gains ≥1 MMR.
             ({ deltaA: wDelta, deltaB: bDelta } = calculateDraw(wRec.mmr, bRec.mmr));
         }
@@ -451,10 +451,10 @@ const _persistDB = db.transaction((room, winnerColor, isWO) => {
         // casual: record result without MMR movement
         if (winnerColor === 'white')      result = 'white';
         else if (winnerColor === 'black') result = 'black';
-        else                              result = 'draw';
+        else                              result = reason || 'draw_rule';
     }
 
-    const isDraw = result === 'draw';
+    const isDraw = result === 'draw_rule' || result === 'draw_inactivity' || result === 'draw';
 
     // LP/ELO: only update in ranked mode
     let wLP = { elo_rank: wRec.elo_rank ?? 0, elo_lp: wRec.elo_lp ?? 0, elo_shield: wRec.elo_shield ?? 0, lpDelta: 0 };
@@ -492,7 +492,7 @@ const _persistDB = db.transaction((room, winnerColor, isWO) => {
     return { wp, bp, wDelta, bDelta, wRec, bRec, wLP, bLP };
 });
 
-function persistMatchResult(room, winnerColor, isWO = false) {
+function persistMatchResult(room, winnerColor, isWO = false, reason = null) {
     // Single player mode: don't touch MMR/LP/matches; emit level completion if human won.
     if (room._isSinglePlayer) {
         const humanColor = room._botColor === 'black' ? 'white' : 'black';
@@ -513,7 +513,7 @@ function persistMatchResult(room, winnerColor, isWO = false) {
     }
     let data;
     try {
-        data = _persistDB(room, winnerColor, isWO);
+        data = _persistDB(room, winnerColor, isWO, reason);
     } catch (e) {
         console.error('[MMR] Erro ao persistir:', e.message);
         return;
@@ -575,7 +575,7 @@ function decreeWOForInactivity(room, color, reason) {
         roomNow.state.phase = 'GAMEOVER';
         roomNow.state.draw  = true;
         roomNow.state.wo    = false;
-        persistMatchResult(roomNow, null, false);
+        persistMatchResult(roomNow, null, false, 'draw_inactivity');
         broadcast(roomNow);
         scheduleRoomCleanup(room.id);
         return;
@@ -878,7 +878,7 @@ function finishSuddenDeath(room) {
     room.resolving  = false;
     clearAFKTimer(room, 'white');
     clearAFKTimer(room, 'black');
-    persistMatchResult(room, winnerSide === 'draw' ? 'draw' : winnerSide, false);
+    persistMatchResult(room, winnerSide === 'draw' ? null : winnerSide, false, winnerSide === 'draw' ? 'draw_rule' : null);
     broadcast(room);
     scheduleRoomCleanup(room.id);
 }
@@ -923,7 +923,7 @@ function finishDuel(room) {
             room.resolving  = false;
             clearAFKTimer(room, 'white');
             clearAFKTimer(room, 'black');
-            persistMatchResult(room, 'draw', false);
+            persistMatchResult(room, null, false, 'draw_rule');
             broadcast(room);
             scheduleRoomCleanup(room.id);
             return;
@@ -1225,12 +1225,15 @@ io.on('connection', (socket) => {
         queue.push({ uid: playerId, nickname: String(nickname || 'Guerreiro').slice(0, 16), avatar: safeAvatar, timestamp: Date.now(), socketId: socket.id, match_mode: queueMode });
         logEvent('queue_enter', playerId, null, { mode: queueMode });
 
-        if (queue.length >= 2) {
-            const p1 = queue.shift();
-            const p2 = queue.shift();
+        // Find compatible opponent: same match_mode as player just queued, earliest queued
+        const newEntry   = queue[queue.length - 1];
+        const opponentIdx = queue.findIndex(p => p.uid !== newEntry.uid && p.match_mode === newEntry.match_mode);
+        if (opponentIdx > -1) {
+            const p1 = queue.splice(opponentIdx, 1)[0];
+            queue.splice(queue.findIndex(p => p.uid === newEntry.uid), 1);
+            const p2 = newEntry;
             const roomId = crypto.randomBytes(3).toString('hex');
-            // Use p1's mode preference; both should agree since mode is chosen before queuing
-            const roomMode = p1.match_mode || 'ranked';
+            const roomMode = p1.match_mode; // both players confirmed same mode
 
             const _matchStartTs = Date.now();
             const newRoom = {
