@@ -27,6 +27,41 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-17] S04 — Investigação: peças sumindo sem dado (OT-01)
+**Status:** ✅ Concluído — gap de clareza, sem bug de código
+**Área:** A — Núcleo de partida
+
+### Conclusão
+- Código de `resolveAction` revisado (linhas 693–828): captura automática de não-Rei por não-Rei parado
+  é **comportamento correto por design** (Case b). Documentado em `htp_capture` do Como Jogar.
+- Relatos "3× peças sumindo sem dado" = jogadores não associam a regra à revelação simultânea.
+- Não há caminho de código onde captura aconteça incorretamente sem dado.
+- Ação de código: nenhuma. Routing: S27 (tutorial interativo) abordará a clareza com demo da regra.
+
+---
+
+## [2026-06-17] S02+S03 — Taxonomia de resultado + modo ranked correto
+**Status:** ✅ Implementado — pendente playtest
+**Área:** B — Resultado / ranqueada
+
+### Feito
+- `server/server.js` `_persistDB`: parâmetro `reason` adicionado à transação;
+  catch-all `draw` substituído por `reason || 'draw_rule'` (ranked e casual).
+  `isDraw` detecta `draw_rule | draw_inactivity | draw` (legado) — soma no contador de empates.
+- Call sites atualizados:
+  - `decreeWOForInactivity` dupla inativa → `draw_inactivity`
+  - `finishSuddenDeath` empate → `draw_rule`
+  - `finishDuel` Kings empatam → `draw_rule`
+- `persistMatchResult` aceita `reason = null`; passa para `_persistDB`.
+- `queue_join`: troca dequeue-first-two por busca de oponente com mesmo `match_mode`;
+  ranked só pareia com ranked, casual só com casual.
+
+### Causa-raiz do OT-18 (ranked não computando)
+`roomMode = p1.match_mode` ignorava o modo do p2 — se um jogador entrava casual e outro
+ranked, o jogo rodava como casual. Novo fluxo: só pareia quando ambos têm o mesmo modo.
+
+---
+
 ## [2026-06-17] S17 — Reconexão mid-game (WO após 90s + banner de DC)
 **Status:** ✅ Implementado — pendente playtest
 **Área:** C — Inatividade / reconexão
