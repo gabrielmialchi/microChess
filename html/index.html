@@ -2461,6 +2461,7 @@
             <div class="dk-action-list">
                 <button class="dk-action-row" onclick="showScreen('profile')" id="set-profile-btn"><span class="dk-ico">○</span><span id="set-profile-label">PERFIL</span><span class="dk-arr">→</span></button>
                 <button class="dk-action-row" onclick="showScreen('how-to-play')" id="set-howtoplay-btn"><span class="dk-ico">?</span><span id="set-howtoplay-label">COMO JOGAR</span><span class="dk-arr">→</span></button>
+                <button class="dk-action-row" onclick="window.launchTutorial()" id="set-tutorial-btn"><span class="dk-ico">▶</span><span id="set-tutorial-label">JOGAR TUTORIAL</span><span class="dk-arr">→</span></button>
                 <button class="dk-action-row" onclick="showScreen('credits')" id="set-credits-btn"><span class="dk-ico">★</span><span id="set-credits-label">CRÉDITOS</span><span class="dk-arr">→</span></button>
             </div>
         </div>
@@ -5202,6 +5203,13 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         setTimeout(startCountdown, 2500);
     });
 
+    // S27: Auto-trigger tutorial on first solo game
+    socket.on('match_found', function(data) {
+        if (data && data.sp && !localStorage.getItem('mc_tutorial_seen')) {
+            window._tutorialPending = true;
+        }
+    });
+
     function startCountdown() {
         setMMState('countdown');
         let count = 3;
@@ -5262,6 +5270,11 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (_dEl) { _dEl.textContent = ''; _dEl.className = 'delta eq'; }
         if (_nEl)   _nEl.textContent = '';
         socket.emit('game_join', { roomId: roomID, color: myColor });
+        // S27: Tutorial trigger
+        if (window._tutorialPending) {
+            window._tutorialPending = false;
+            setTimeout(function() { if (window.TUT) window.TUT.start(); }, 500);
+        }
     }
 
     window.cancelMatchmaking = function() {
@@ -6642,6 +6655,324 @@ if ('serviceWorker' in navigator) {
             }
         }).observe(oppNickEl, { childList: true, subtree: true, characterData: true });
     }
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     S27 — Tutorial Engine
+     Overlay sobre jogo Solo nível-1. Sem mudanças no servidor.
+     Trigger: 1ª partida solo (auto) ou Configurações ▸ JOGAR TUTORIAL.
+     ═══════════════════════════════════════════════════════════════ -->
+
+<!-- S27: Tutorial overlay HTML -->
+<div id="tut-overlay" style="display:none;position:fixed;inset:0;z-index:9400;pointer-events:none;">
+    <div id="tut-bd" style="position:absolute;inset:0;background:rgba(0,0,0,0.65);pointer-events:all;"></div>
+    <div id="tut-spot" style="display:none;position:absolute;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.65);pointer-events:none;z-index:9401;transition:left .25s,top .25s,width .25s,height .25s;"></div>
+    <button id="tut-skip-btn" onclick="window.TUT.confirmSkip()" style="position:absolute;top:12px;right:12px;z-index:9403;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:6px;color:rgba(244,234,215,0.5);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;padding:6px 10px;cursor:pointer;pointer-events:all;">PULAR</button>
+    <div id="tut-card" style="position:absolute;bottom:0;left:0;right:0;z-index:9402;background:linear-gradient(180deg,transparent 0,rgba(11,9,7,0.97) 32px);padding:36px 20px 32px;pointer-events:all;box-sizing:border-box;">
+        <div id="tut-dots" style="display:flex;justify-content:center;gap:6px;margin-bottom:16px;"></div>
+        <div id="tut-icon" style="font-size:34px;text-align:center;margin-bottom:10px;display:none;"></div>
+        <div id="tut-title" style="font-family:'Inter',sans-serif;font-size:17px;font-weight:700;color:#f4ead7;text-align:center;margin-bottom:8px;letter-spacing:-.01em;"></div>
+        <div id="tut-body" style="font-family:'Inter',sans-serif;font-size:14px;line-height:1.55;color:rgba(244,234,215,0.68);text-align:center;margin-bottom:16px;max-width:320px;margin-left:auto;margin-right:auto;"></div>
+        <div id="tut-cta" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;color:#ff6a33;text-align:center;margin-bottom:14px;"></div>
+        <button id="tut-next-btn" onclick="window.TUT.next()" style="display:none;width:100%;max-width:280px;margin:0 auto;padding:14px;border:none;border-radius:8px;background:#ff6a33;color:#fff;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:-.01em;">Entendi ▸</button>
+    </div>
+    <div id="tut-skip-confirm" style="display:none;position:absolute;inset:0;z-index:9404;background:rgba(0,0,0,0.88);flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;pointer-events:all;box-sizing:border-box;">
+        <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:#f4ead7;text-align:center;">Pular o tutorial?</div>
+        <div style="font-family:'Inter',sans-serif;font-size:13px;color:rgba(244,234,215,0.55);text-align:center;max-width:240px;">Você pode jogá-lo de novo em Configurações.</div>
+        <button onclick="window.TUT.skip()" style="width:100%;max-width:240px;padding:12px;border:1.5px solid rgba(244,234,215,0.25);border-radius:8px;background:transparent;color:rgba(244,234,215,0.7);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Sim, pular</button>
+        <button onclick="window.TUT.hideSkipConfirm()" style="width:100%;max-width:240px;padding:12px;border:none;border-radius:8px;background:rgba(255,255,255,0.08);color:#f4ead7;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Continuar tutorial</button>
+    </div>
+</div>
+
+<!-- S27: Tutorial end screen -->
+<div id="tut-end" style="display:none;position:fixed;inset:0;z-index:9410;background:radial-gradient(ellipse at 50% 30%,#1a1200 0%,#060503 100%);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;box-sizing:border-box;text-align:center;">
+    <div style="font-size:42px;margin-bottom:14px;">🎓</div>
+    <div style="font-family:'Inter',sans-serif;font-size:26px;font-weight:800;color:#f4ead7;margin-bottom:8px;letter-spacing:-.02em;">Você aprendeu!</div>
+    <div style="font-family:'Inter',sans-serif;font-size:14px;color:rgba(244,234,215,0.5);margin-bottom:28px;">Agora você conhece as regras do microChess.</div>
+    <div id="tut-chips" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:32px;max-width:340px;"></div>
+    <button onclick="window.TUT.done()" style="width:100%;max-width:280px;padding:15px;border:none;border-radius:8px;background:#ff6a33;color:#fff;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:-.01em;">Jogar agora ▸</button>
+</div>
+
+<!-- S27: Tutorial CSS + Engine -->
+<style>
+@keyframes _tutDragPulse {
+    0%,100% { filter: drop-shadow(0 0 5px rgba(255,106,51,0.5)); }
+    50%      { filter: drop-shadow(0 0 18px rgba(255,106,51,1)); }
+}
+.tut-drag-pulse { animation: _tutDragPulse 1.1s ease-in-out infinite !important; }
+</style>
+
+<script>
+(function() {
+'use strict';
+
+var STEPS = [
+    // 0 — DRAFT: comprar
+    { spot:'#shop-btns-container',
+      title:'Bônus de combate',
+      body:'Cada peça tem um bônus que decide os duelos. Quanto maior, mais forte em combate. Toque para comprar.',
+      cta:'▸ Compre ao menos uma peça',
+      on:'draft_buy' },
+    // 1 — DRAFT: pronto
+    { spot:'#btn-ready',
+      title:'Exército montado',
+      body:'Suas peças estão prontas. Confirme para avançar ao posicionamento.',
+      cta:'▸ Toque em PRONTO',
+      on:'draft_ready' },
+    // 2 — POSITION
+    { spot:'#my-panel',
+      title:'Seu território',
+      body:'Posicione suas peças nas 2 fileiras mais próximas de você. Toque na peça do inventário, depois na casa.',
+      cta:'▸ Posicione e toque PRONTO',
+      on:'position_ready' },
+    // 3 — ACTION: arrastar
+    { spot:'#pieces-layer',
+      title:'Ação simultânea',
+      body:'Arraste uma peça para atacar a inimiga. Os dois lados agem ao mesmo tempo — ninguém vê a jogada do outro.',
+      cta:'▸ Arraste para atacar',
+      on:'action_plan',
+      drag:true },
+    // 4 — DUELO: observar (free)
+    { spot:'#duel-modal',
+      title:'Duelo!',
+      body:'Cada lado rola 1d6 e soma o bônus da peça. O maior total captura a peça inimiga.',
+      free:true },
+    // 5-9: info cards
+    { card:true, icon:'⚔', title:'Ordem dos duelos',
+      body:'A peça com maior bônus entra em combate primeiro naquele turno.' },
+    { card:true, icon:'💨', title:'Vácuo',
+      body:'Peças com bônus igual: ambas saem do tabuleiro. Nenhuma vence.' },
+    { card:true, icon:'♚', title:'O Rei é especial',
+      body:'Em empate de bônus, o Rei sempre vence. Quem perde o Rei perde a partida.' },
+    { card:true, icon:'♟', title:'Promoção',
+      body:'Peão que chega à última fileira vira Rainha (+5). Vale a pena avançar!' },
+    { card:true, icon:'⚡', title:'Morte Súbita',
+      body:'Se os dois Reis sobrevivem, 3 duelos sem bônus decidem. Empate nas 3 = empate.' },
+    // 10 — fim
+    { end:true },
+];
+
+var CHIPS = [
+    'Duelo: 1d6 + bônus',
+    'Maior total vence',
+    'Bônus igual = vácuo',
+    'Rei vence empates',
+    'Peão → Rainha na última fileira',
+    'Morte Súbita decide empates',
+];
+
+var _step = 0;
+var _prevTarget = null;
+var _duelObs = null;
+
+function _el(id) { return document.getElementById(id); }
+
+function _resetPrevTarget() {
+    if (_prevTarget) {
+        _prevTarget.style.zIndex   = _prevTarget._tutZ   || '';
+        _prevTarget.style.position = _prevTarget._tutPos || '';
+        _prevTarget = null;
+    }
+}
+
+function _spotlight(sel) {
+    _resetPrevTarget();
+    var sp = _el('tut-spot');
+    if (!sel) { sp.style.display = 'none'; return; }
+    var tgt = document.querySelector(sel);
+    if (!tgt) { sp.style.display = 'none'; return; }
+    tgt._tutZ   = tgt.style.zIndex;
+    tgt._tutPos = tgt.style.position;
+    if (!tgt.style.position || tgt.style.position === 'static') tgt.style.position = 'relative';
+    tgt.style.zIndex = '9402';
+    _prevTarget = tgt;
+    var r = tgt.getBoundingClientRect();
+    sp.style.cssText = [
+        'display:block',
+        'position:absolute',
+        'border-radius:12px',
+        'pointer-events:none',
+        'z-index:9401',
+        'transition:left .25s,top .25s,width .25s,height .25s',
+        'box-shadow:0 0 0 9999px rgba(0,0,0,0.65)',
+        'left:'  + (r.left   - 8) + 'px',
+        'top:'   + (r.top    - 8) + 'px',
+        'width:' + (r.width  + 16) + 'px',
+        'height:'+ (r.height + 16) + 'px',
+    ].join(';');
+}
+
+function _updateDots() {
+    var el = _el('tut-dots');
+    if (!el) return;
+    var total = STEPS.filter(function(s) { return !s.end; }).length;
+    var html = '';
+    for (var i = 0; i < total; i++) {
+        html += '<div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'
+              + (i === _step ? '#ff6a33' : 'rgba(244,234,215,0.22)') + ';"></div>';
+    }
+    el.innerHTML = html;
+}
+
+function _clearDrag() {
+    document.querySelectorAll('.tut-drag-pulse').forEach(function(e) {
+        e.classList.remove('tut-drag-pulse');
+    });
+}
+
+function _show() {
+    var step = STEPS[_step];
+    if (!step) return;
+
+    _clearDrag();
+
+    if (step.end) {
+        _resetPrevTarget();
+        _el('tut-overlay').style.display = 'none';
+        var chips = _el('tut-chips');
+        if (chips) chips.innerHTML = CHIPS.map(function(c) {
+            return '<div style="background:rgba(255,106,51,0.14);border:1px solid rgba(255,106,51,0.28);'
+                 + 'border-radius:20px;padding:5px 12px;font-family:\'JetBrains Mono\',monospace;'
+                 + 'font-size:11px;color:#ff8a5f;">' + c + '</div>';
+        }).join('');
+        var endEl = _el('tut-end');
+        if (endEl) endEl.style.display = 'flex';
+        return;
+    }
+
+    _el('tut-overlay').style.display = 'block';
+    _el('tut-overlay').style.pointerEvents = 'auto';
+    _updateDots();
+
+    var card = _el('tut-card');
+    var icon = _el('tut-icon');
+
+    if (step.card) {
+        _resetPrevTarget();
+        _el('tut-spot').style.display = 'none';
+        icon.style.display = 'block';
+        icon.textContent = step.icon || '';
+        _el('tut-cta').style.display = 'none';
+        _el('tut-next-btn').style.display = 'block';
+        card.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);'
+            + 'width:calc(100% - 32px);max-width:340px;z-index:9402;pointer-events:all;box-sizing:border-box;'
+            + 'background:rgba(18,13,8,0.97);border:1px solid rgba(255,106,51,0.22);border-radius:16px;'
+            + 'padding:28px 20px 24px;';
+    } else {
+        icon.style.display = 'none';
+        _el('tut-cta').style.display = step.cta ? 'block' : 'none';
+        _el('tut-cta').textContent = step.cta || '';
+        _el('tut-next-btn').style.display = step.free ? 'block' : 'none';
+        card.style.cssText = 'position:absolute;bottom:0;left:0;right:0;z-index:9402;pointer-events:all;'
+            + 'background:linear-gradient(180deg,transparent 0,rgba(11,9,7,0.97) 32px);'
+            + 'padding:36px 20px 32px;box-sizing:border-box;';
+        _spotlight(step.spot);
+
+        if (step.drag) {
+            setTimeout(function() {
+                document.querySelectorAll('.piece.white').forEach(function(e) {
+                    if (e.textContent !== '♔' && e.textContent !== '♚') {
+                        e.classList.add('tut-drag-pulse');
+                    }
+                });
+            }, 200);
+        }
+    }
+
+    _el('tut-title').textContent = step.title;
+    _el('tut-body').textContent  = step.body;
+    _updateDots();
+}
+
+function _advance() {
+    _step = Math.min(_step + 1, STEPS.length - 1);
+    _show();
+}
+
+window.TUT = {
+    start: function() {
+        window._tutorialActive = true;
+        _step = 0;
+
+        // Patch socket.emit to intercept player actions
+        var sock = window._mcSocket;
+        if (sock && !sock._tutPatched) {
+            var _orig = sock.emit.bind(sock);
+            sock.emit = function(ev) {
+                var r = _orig.apply(sock, arguments);
+                if (window._tutorialActive && window.TUT) window.TUT._onEmit(ev);
+                return r;
+            };
+            sock._tutPatched = true;
+        }
+
+        // Watch duel modal for step 3→4 transition
+        var dm = _el('duel-modal');
+        if (dm && !_duelObs) {
+            _duelObs = new MutationObserver(function() {
+                if (window._tutorialActive && _step === 3) {
+                    var visible = dm.style.display !== 'none' && dm.style.display !== '';
+                    if (visible) { setTimeout(_advance, 400); }
+                }
+            });
+            _duelObs.observe(dm, { attributes: true, attributeFilter: ['style'] });
+        }
+
+        setTimeout(_show, 400);
+    },
+
+    _onEmit: function(ev) {
+        var step = STEPS[_step];
+        if (!step || !step.on || ev !== step.on) return;
+        // action_plan: advance after short delay (duel observer handles 3→4)
+        var delay = (ev === 'action_plan') ? 0 : 300;
+        // For action_plan, duel observer triggers advance; if no duel happens,
+        // card stays visible and player can tap "Entendi ▸" if free:true
+        if (ev !== 'action_plan') {
+            setTimeout(_advance, delay);
+        }
+    },
+
+    next: function() { _advance(); },
+
+    confirmSkip: function() {
+        var sc = _el('tut-skip-confirm');
+        if (sc) sc.style.display = 'flex';
+    },
+
+    hideSkipConfirm: function() {
+        var sc = _el('tut-skip-confirm');
+        if (sc) sc.style.display = 'none';
+    },
+
+    skip: function() {
+        this.done();
+    },
+
+    done: function() {
+        window._tutorialActive = false;
+        _clearDrag();
+        _resetPrevTarget();
+        var ov = _el('tut-overlay');
+        var en = _el('tut-end');
+        if (ov) ov.style.display = 'none';
+        if (en) en.style.display = 'none';
+        var sc = _el('tut-skip-confirm');
+        if (sc) sc.style.display = 'none';
+        localStorage.setItem('mc_tutorial_seen', '1');
+        if (typeof showScreen === 'function') showScreen('menu');
+    },
+};
+
+// Settings: "JOGAR TUTORIAL" button handler
+window.launchTutorial = function() {
+    window._tutorialPending = true;
+    if (typeof window.spStartLevel === 'function') {
+        window.spStartLevel(1);
+    }
+};
+
 })();
 </script>
 </body>
