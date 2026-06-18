@@ -234,6 +234,79 @@
 
 ---
 
+---
+
+### T-S28-1 — Contorno das peças no tabuleiro
+**Sessão:** S28 | **Arquivo:** `html/index.html`
+
+1. Iniciar partida solo (light mode)
+   → **Esperado:** peças brancas têm contorno escuro visível sobre casas claras; sem glow azul
+2. Ativar dark mode, repetir
+   → **Esperado:** peças pretas têm contorno creme visível sobre casas escuras
+3. Verificar inventário: peças no inventário mantêm a aparência anterior (não foram alteradas)
+
+---
+
+### T-S32-1 — Coesão visual dark mode
+**Sessão:** S32 | **Arquivo:** `html/index.html`
+
+1. Abrir aba anônima → jogo carrega em light mode
+   → **Esperado:** interface em creme/laranja (não preta)
+2. Ativar dark mode → ir para tela de jogo
+   → **Esperado:** fundo marrom-escuro quente (#0b0907), não preto puro; accent laranja, não dourado
+3. Transitar entre menu e tela de jogo
+   → **Esperado:** paleta contínua (não parece 2 produtos diferentes)
+
+---
+
+### T-S29-1 — Tipografia Inter unificada
+**Sessão:** S29 | **Arquivo:** `html/index.html`
+
+1. Abrir qualquer tela (menu, perfil, configurações, jogo)
+   → **Esperado:** tipografia sem serifa (Inter) em todo o texto; zero ocorrências de Cinzel
+2. Verificar timer/counters (fase, PdL, orçamento)
+   → **Esperado:** JetBrains Mono para números e labels mono
+3. Verificar em mobile 360px
+   → **Esperado:** legível; sem quebra de layout
+
+---
+
+### T-S27-1 — Tutorial automático (1ª partida solo)
+**Sessão:** S27 | **Arquivo:** `html/index.html`
+
+1. Abrir aba anônima (sem `mc_tutorial_seen` no localStorage)
+2. Criar conta ou jogar como convidado → ir para Solo → escolher qualquer nível
+   → **Esperado:** tutorial inicia automaticamente após o countdown; overlay aparece com "Bônus de combate"
+3. Seguir o fluxo: comprar peça → PRONTO → posicionar → PRONTO → arrastar para atacar → observar duelo
+   → **Esperado:** overlay avança a cada ação; spotlight cobre o elemento certo
+4. Nos passos 5-9 (cards de informação): tocar "Entendi ▸"
+   → **Esperado:** avança para o próximo card sem interação de jogo
+5. Tela "Você aprendeu!" aparece com chips das 6 regras
+   → Tocar "Jogar agora ▸" → vai para menu; `mc_tutorial_seen = '1'` no localStorage
+
+---
+
+### T-S27-2 — Tutorial via Configurações
+**Sessão:** S27 | **Arquivo:** `html/index.html`
+
+1. Com `mc_tutorial_seen = '1'` já no localStorage (tutorial já visto)
+2. Ir para Configurações → clicar "JOGAR TUTORIAL"
+   → **Esperado:** vai para tela de matchmaking e inicia partida Level 1 com overlay do tutorial
+
+---
+
+### T-S27-3 — Botão Pular do tutorial
+**Sessão:** S27
+
+1. Com tutorial ativo, tocar "PULAR" no canto superior direito
+   → **Esperado:** modal de confirmação aparece "Pular o tutorial?"
+2. Tocar "Continuar tutorial"
+   → **Esperado:** modal fecha, tutorial continua no mesmo passo
+3. Tocar "PULAR" novamente → "Sim, pular"
+   → **Esperado:** overlay fecha, vai para menu; `mc_tutorial_seen = '1'` no localStorage
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |
