@@ -119,12 +119,12 @@ const MatchHistory = {
                 ? (m.lp_change_white ?? m.mmr_change_white ?? 0)
                 : (m.lp_change_black ?? m.mmr_change_black ?? 0);
             const opponentName = isWhite ? (m.black_username || '?') : (m.white_username || '?');
-            const date         = new Date(m.created_at).toLocaleDateString(undefined, { day:'numeric', month:'short' });
+            const date         = new Date((m.created_at || '').replace(' ', 'T')).toLocaleDateString(undefined, { day:'numeric', month:'short' });
 
             // result classification
             const isWin  = m.result === (isWhite ? 'white' : 'black') || (isWhite ? m.result === 'wo_black' : m.result === 'wo_white');
             const isLose = m.result === (isWhite ? 'black' : 'white') || (isWhite ? m.result === 'wo_white' : m.result === 'wo_black');
-            const isDraw = m.result === 'draw';
+            const isDraw = m.result === 'draw' || m.result === 'draw_rule' || m.result === 'draw_inactivity';
             const isWO   = m.result === 'wo_white' || m.result === 'wo_black';
 
             let badgeClass, badgeLetter;

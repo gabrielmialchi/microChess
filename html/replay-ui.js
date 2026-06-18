@@ -74,7 +74,7 @@ const ReplayViewer = {
         // Turn label + count
         const labelEl = document.getElementById('rp-turn-label');
         const countEl = document.getElementById('rp-turn-count');
-        if (labelEl) labelEl.textContent = isPos ? _t('turn_positioning') : `Turno ${this.turnIndex}`;
+        if (labelEl) labelEl.textContent = isPos ? _t('turn_positioning') : `${_t('turn_label')} ${this.turnIndex}`;
         if (countEl) countEl.textContent = `T${this.turnIndex}/${turns.length - 1}`;
 
         // Board

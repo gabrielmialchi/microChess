@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS matches (
     id               TEXT PRIMARY KEY,
     player_white_id  TEXT NOT NULL,
     player_black_id  TEXT NOT NULL,
-    result           TEXT CHECK(result IN ('white','black','draw','wo_white','wo_black')),
+    result           TEXT CHECK(result IN ('white','black','draw','draw_rule','draw_inactivity','cancelled','wo_white','wo_black')),
     mmr_change_white INTEGER DEFAULT 0,
     mmr_change_black INTEGER DEFAULT 0,
     total_turns      INTEGER DEFAULT 0,
