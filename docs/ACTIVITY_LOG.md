@@ -471,4 +471,30 @@ corrige.
 
 ---
 
+---
+
+## [2026-06-18] S34 — Sistema de emojis in-game ✅
+
+### Feito
+- **DB** (`server/db/database.js`): migration `ALTER TABLE players ADD COLUMN emoji_config TEXT DEFAULT NULL`.
+- **Servidor** (`server.js`):
+  - `EMOJI_CURATED` Set com 42 emojis (exclui 🖕🫦👅❤️‍🔥).
+  - `PATCH /auth/emojis`: valida lista curada + salva `emoji_config` como JSON no banco.
+  - Login retorna `emoji_config` no payload (SELECT inclui a coluna).
+  - Socket `emoji_send`: cooldown server-side 8s por jogador, repassa `emoji_recv` ao oponente.
+- **Frontend** (`html/index.html`):
+  - Game-area: `#emoji-game-btn` (fixed bottom-right, oculto em Solo) + `#emoji-wheel` (4 slots).
+  - `emoji_recv` → `#emoji-popup` centralizado no board com animação bounce + fade-out 2s.
+  - Cooldown client-side (visual) + server-side (validação).
+  - `returnToMenu()` oculta botão e fecha wheel.
+- **Perfil** (`html/index.html`): seção "EMOJIS DA PARTIDA" com 4 slots + picker inline (grid curado, sem modal).
+- **auth-frontend.js**: `_emojiOnLogin(data.emoji_config)` ao fazer login.
+- Convidados: emojis salvos em `localStorage.mc_emojis`; jogadores autenticados: banco + localStorage (cache).
+
+### Arquivos alterados
+- `server/server.js`
+- `server/db/database.js`
+- `html/index.html`
+- `html/auth-frontend.js`
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

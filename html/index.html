@@ -2601,6 +2601,18 @@
         <!-- hidden span to keep i18n ref alive -->
         <span id="prof-stats-label" style="display:none;"></span>
 
+        <!-- S34: Emoji config -->
+        <div class="ph-section-label" id="prof-emoji-label">EMOJIS DA PARTIDA</div>
+        <div id="emoji-slots-row" style="display:flex;gap:12px;justify-content:center;padding:4px 0 2px;">
+            <button id="emoji-slot-0" onclick="window._emojiPickOpen(0)" style="width:52px;height:52px;font-size:26px;border:2px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.06);cursor:pointer;transition:border-color 0.2s;">😀</button>
+            <button id="emoji-slot-1" onclick="window._emojiPickOpen(1)" style="width:52px;height:52px;font-size:26px;border:2px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.06);cursor:pointer;transition:border-color 0.2s;">😎</button>
+            <button id="emoji-slot-2" onclick="window._emojiPickOpen(2)" style="width:52px;height:52px;font-size:26px;border:2px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.06);cursor:pointer;transition:border-color 0.2s;">😤</button>
+            <button id="emoji-slot-3" onclick="window._emojiPickOpen(3)" style="width:52px;height:52px;font-size:26px;border:2px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.06);cursor:pointer;transition:border-color 0.2s;">🔥</button>
+        </div>
+        <div id="emoji-picker-inline" style="display:none;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px 8px;background:rgba(0,0,0,0.2);border-radius:12px;margin-top:6px;max-width:320px;align-self:center;">
+        </div>
+        <div id="emoji-picker-hint" style="display:none;font-size:11px;color:rgba(245,240,232,0.45);text-align:center;letter-spacing:1px;padding:2px 0 6px;font-family:'JetBrains Mono',monospace;">Escolha o emoji para o slot selecionado</div>
+
         <!-- actions -->
         <div class="ph-actions">
             <button class="ph-action-btn" id="btn-match-history" onclick="typeof MatchHistory!=='undefined' && MatchHistory.open((typeof Session!=='undefined'?Session.get():null)?.id)">HISTÓRICO DE PARTIDAS</button>
@@ -3088,7 +3100,14 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         <button id="btn-ready" class="btn-ready" onclick="setReady()">PRONTO</button>
         <button id="btn-abandon" onclick="window.abandonGame()" style="display:none;background:none;border:none;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-sans,'JetBrains Mono',monospace);font-size:11px;font-weight:600;letter-spacing:1.5px;cursor:pointer;padding:8px 0 2px;width:100%;text-align:center;opacity:0.7;">ABANDONAR PARTIDA</button>
     </div>
+
+    <!-- S34: Emoji wheel -->
+    <div id="emoji-wheel" style="display:none;position:fixed;bottom:136px;right:8px;z-index:600;flex-direction:column;gap:8px;align-items:center;"></div>
+    <button id="emoji-game-btn" style="display:none;position:fixed;bottom:76px;right:12px;z-index:600;width:48px;height:48px;border-radius:50%;background:var(--mc-accent,#ff6a33);border:none;cursor:pointer;font-size:24px;box-shadow:0 2px 12px rgba(0,0,0,0.45);align-items:center;justify-content:center;transition:opacity 0.2s,transform 0.15s;" onclick="window._emojiToggleWheel()" title="Enviar emoji">😀</button>
 </div>
+
+<!-- S34: Emoji popup (centered over board) -->
+<div id="emoji-popup" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-60%);z-index:800;pointer-events:none;user-select:none;font-size:72px;line-height:1;text-align:center;"></div>
 
 <!-- S16: Confirmação de abandono -->
 <div id="abandon-confirm-popup" style="display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,0.88);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
@@ -4731,6 +4750,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     window.API_BASE = SERVER_URL;
     const socket = io(SERVER_URL);
     window._mcSocket = socket;
+    if (window._emojiWireSocket) window._emojiWireSocket(socket);
 
     // On reconnect: attempt to restore in-progress game
     socket.on('connect', () => {
@@ -5270,6 +5290,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (_dEl) { _dEl.textContent = ''; _dEl.className = 'delta eq'; }
         if (_nEl)   _nEl.textContent = '';
         socket.emit('game_join', { roomId: roomID, color: myColor });
+        // S34: Show emoji btn only in PvP
+        if (window._emojiSetPvP) window._emojiSetPvP(!isSolo);
         // S27: Tutorial trigger
         if (window._tutorialPending) {
             window._tutorialPending = false;
@@ -5420,6 +5442,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     window.returnToMenu = function() {
         inGame = false;
         _isSoloGame = false;
+        if (window._emojiSetPvP) window._emojiSetPvP(false);
+        if (window._emojiCloseWheel) window._emojiCloseWheel();
         const tabbar = document.getElementById('mc-tabbar');
         if (tabbar) tabbar.style.display = '';
         document.getElementById('game-area').style.display = 'none';
@@ -6973,6 +6997,225 @@ window.launchTutorial = function() {
     }
 };
 
+})();
+</script>
+
+<!-- S34: Sistema de emojis in-game -->
+<style>
+@keyframes _emojiPopIn {
+    0%   { opacity:0; transform:translate(-50%,-60%) scale(0.4); }
+    55%  { opacity:1; transform:translate(-50%,-60%) scale(1.18); }
+    75%  { transform:translate(-50%,-60%) scale(0.92); }
+    100% { opacity:1; transform:translate(-50%,-60%) scale(1); }
+}
+@keyframes _emojiPopOut {
+    0%   { opacity:1; transform:translate(-50%,-60%) scale(1); }
+    100% { opacity:0; transform:translate(-50%,-68%) scale(0.7); }
+}
+.ew-btn {
+    width:44px;height:44px;border-radius:50%;font-size:22px;
+    border:2px solid rgba(255,255,255,0.18);
+    background:rgba(20,16,10,0.88);
+    cursor:pointer;transition:transform 0.12s,border-color 0.12s;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.5);
+}
+.ew-btn:hover { transform:scale(1.15); border-color:var(--mc-accent,#ff6a33); }
+.ew-btn:disabled { opacity:0.35; cursor:default; transform:none; }
+</style>
+<script>
+(function() {
+    var CURATED = ['😀','😆','😂','🥲','😝','🥺','😬','😑','🫢','🤫','🤔','🥱','🫣','😱','🤨','🧐','😒','🙄','😤','😞','😟','😨','😖','😳','🤯','🫨','🥴','😵','🥵','🥶','🫩','😴','😇','😎','🤡','💩','☠️','👽','💥','🙈','🔥','🎉'];
+    var DEFAULT_EMOJIS = ['😀','😎','😤','🔥'];
+    var _emojis = DEFAULT_EMOJIS.slice();
+    var _wheelOpen = false;
+    var _cooldownUntil = 0;
+    var _cooldownTimer = null;
+    var _isPvP = false;
+    var _pickerSlot = -1;
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function _el(id) { return document.getElementById(id); }
+
+    function _loadEmojisFromStorage() {
+        try {
+            var saved = localStorage.getItem('mc_emojis');
+            if (saved) { var arr = JSON.parse(saved); if (Array.isArray(arr) && arr.length === 4) { _emojis = arr; } }
+        } catch (_) {}
+    }
+
+    function _saveEmojisToStorage() {
+        localStorage.setItem('mc_emojis', JSON.stringify(_emojis));
+    }
+
+    function _updateWheelBtns() {
+        var wheel = _el('emoji-wheel');
+        if (!wheel) return;
+        wheel.innerHTML = '';
+        var now = Date.now();
+        var disabled = now < _cooldownUntil;
+        _emojis.forEach(function(e, i) {
+            var btn = document.createElement('button');
+            btn.className = 'ew-btn';
+            btn.textContent = e;
+            btn.disabled = disabled;
+            btn.setAttribute('data-idx', i);
+            btn.onclick = function() { window._emojiSend(i); };
+            wheel.appendChild(btn);
+        });
+        var mainBtn = _el('emoji-game-btn');
+        if (mainBtn) mainBtn.textContent = _emojis[0] || '😀';
+    }
+
+    function _updateSlotBtns() {
+        for (var i = 0; i < 4; i++) {
+            var btn = _el('emoji-slot-' + i);
+            if (btn) btn.textContent = _emojis[i];
+        }
+    }
+
+    function _buildPicker() {
+        var container = _el('emoji-picker-inline');
+        if (!container || container.children.length > 0) return;
+        CURATED.forEach(function(e) {
+            var btn = document.createElement('button');
+            btn.textContent = e;
+            btn.style.cssText = 'width:40px;height:40px;font-size:22px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);border-radius:8px;cursor:pointer;transition:border-color 0.15s,background 0.15s;';
+            btn.onmouseenter = function() { btn.style.borderColor = 'var(--mc-accent,#ff6a33)'; btn.style.background = 'rgba(255,106,51,0.12)'; };
+            btn.onmouseleave = function() { btn.style.borderColor = 'rgba(255,255,255,0.1)'; btn.style.background = 'rgba(255,255,255,0.05)'; };
+            btn.onclick = function() { window._emojiPickSelect(e); };
+            container.appendChild(btn);
+        });
+    }
+
+    // ── Profile: emoji picker ─────────────────────────────────────
+    window._emojiPickOpen = function(slotIdx) {
+        _buildPicker();
+        var picker = _el('emoji-picker-inline');
+        var hint   = _el('emoji-picker-hint');
+        if (!picker) return;
+        if (_pickerSlot === slotIdx && picker.style.display !== 'none') {
+            picker.style.display = 'none';
+            if (hint) hint.style.display = 'none';
+            _pickerSlot = -1;
+            // un-highlight all slots
+            for (var i = 0; i < 4; i++) { var s = _el('emoji-slot-' + i); if (s) s.style.borderColor = 'rgba(255,255,255,0.12)'; }
+            return;
+        }
+        _pickerSlot = slotIdx;
+        picker.style.display = 'flex';
+        if (hint) hint.style.display = 'block';
+        for (var j = 0; j < 4; j++) {
+            var s = _el('emoji-slot-' + j);
+            if (s) s.style.borderColor = (j === slotIdx) ? 'var(--mc-accent,#ff6a33)' : 'rgba(255,255,255,0.12)';
+        }
+        picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    window._emojiPickSelect = function(emoji) {
+        if (_pickerSlot < 0) return;
+        _emojis[_pickerSlot] = emoji;
+        _saveEmojisToStorage();
+        _updateSlotBtns();
+        _updateWheelBtns();
+        var picker = _el('emoji-picker-inline');
+        var hint   = _el('emoji-picker-hint');
+        if (picker) picker.style.display = 'none';
+        if (hint)   hint.style.display = 'none';
+        for (var i = 0; i < 4; i++) { var s = _el('emoji-slot-' + i); if (s) s.style.borderColor = 'rgba(255,255,255,0.12)'; }
+        _pickerSlot = -1;
+        // persist to server if authenticated
+        var tok = (typeof Session !== 'undefined' && Session.get) ? (Session.get() || {}).token : null;
+        if (tok) {
+            fetch('/auth/emojis', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok }, body: JSON.stringify({ emojis: _emojis }) }).catch(function() {});
+        }
+    };
+
+    // ── Game: wheel toggle ────────────────────────────────────────
+    window._emojiToggleWheel = function() {
+        var wheel = _el('emoji-wheel');
+        if (!wheel) return;
+        _wheelOpen = !_wheelOpen;
+        wheel.style.display = _wheelOpen ? 'flex' : 'none';
+        if (_wheelOpen) { _updateWheelBtns(); }
+    };
+
+    window._emojiCloseWheel = function() {
+        _wheelOpen = false;
+        var wheel = _el('emoji-wheel');
+        if (wheel) wheel.style.display = 'none';
+    };
+
+    // ── Game: send emoji ──────────────────────────────────────────
+    window._emojiSend = function(idx) {
+        if (Date.now() < _cooldownUntil) return;
+        var emoji = _emojis[idx];
+        if (!emoji) return;
+        window._emojiCloseWheel();
+        if (window._mcSocket) window._mcSocket.emit('emoji_send', { emoji: emoji });
+        _cooldownUntil = Date.now() + 8000;
+        var btn = _el('emoji-game-btn');
+        if (btn) btn.style.opacity = '0.4';
+        clearTimeout(_cooldownTimer);
+        _cooldownTimer = setTimeout(function() {
+            if (btn) btn.style.opacity = '1';
+        }, 8000);
+    };
+
+    // ── Game: receive emoji ───────────────────────────────────────
+    function _showEmojiPopup(emoji) {
+        var popup = _el('emoji-popup');
+        if (!popup) return;
+        popup.textContent = emoji;
+        popup.style.display = 'block';
+        popup.style.animation = 'none';
+        popup.offsetWidth; // reflow
+        popup.style.animation = '_emojiPopIn 0.45s cubic-bezier(0.22,1.6,0.36,1) forwards';
+        clearTimeout(popup._hideTimer);
+        popup._hideTimer = setTimeout(function() {
+            popup.style.animation = '_emojiPopOut 0.35s ease-in forwards';
+            setTimeout(function() { popup.style.display = 'none'; }, 350);
+        }, 1800);
+    }
+
+    // ── PvP flag: set by launchGame ───────────────────────────────
+    window._emojiSetPvP = function(isPvP) {
+        _isPvP = isPvP;
+        var btn = _el('emoji-game-btn');
+        if (btn) btn.style.display = isPvP ? 'flex' : 'none';
+        if (!isPvP) window._emojiCloseWheel();
+    };
+
+    // ── Socket wiring (runs after socket is ready) ────────────────
+    window._emojiWireSocket = function(socket) {
+        socket.on('emoji_recv', function(data) {
+            if (data && data.emoji) _showEmojiPopup(data.emoji);
+        });
+    };
+
+    // ── Init: load from storage + update UI ──────────────────────
+    _loadEmojisFromStorage();
+    _updateSlotBtns();
+
+    // Load from server on login
+    window._emojiOnLogin = function(emojiConfig) {
+        if (Array.isArray(emojiConfig) && emojiConfig.length === 4) {
+            _emojis = emojiConfig;
+            _saveEmojisToStorage();
+            _updateSlotBtns();
+            _updateWheelBtns();
+        }
+    };
+
+    // Close wheel when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!_wheelOpen) return;
+        var btn = _el('emoji-game-btn');
+        var wheel = _el('emoji-wheel');
+        if (btn && !btn.contains(e.target) && wheel && !wheel.contains(e.target)) {
+            window._emojiCloseWheel();
+        }
+    }, true);
 })();
 </script>
 </body>

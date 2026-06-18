@@ -234,7 +234,7 @@ app.post('/auth/login', authLimiter, async (req, res) => {
     const emailNorm  = String(email).toLowerCase().trim();
     const email_hash = hashEmail(emailNorm);
     const player = db.prepare(
-        'SELECT id, username, password_hash, mmr, pw_version, lang, elo_rank, elo_lp FROM players WHERE email_hash = ?'
+        'SELECT id, username, password_hash, mmr, pw_version, lang, elo_rank, elo_lp, emoji_config FROM players WHERE email_hash = ?'
     ).get(email_hash);
     if (!player) {
         await checkPassword(password, _DUMMY_HASH);
@@ -244,7 +244,8 @@ app.post('/auth/login', authLimiter, async (req, res) => {
     if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' });
     db.prepare("UPDATE players SET last_seen = datetime('now') WHERE id = ?").run(player.id);
     const token = signToken({ id: player.id, username: player.username, pv: player.pw_version ?? 0 });
-    res.json({ token, id: player.id, username: player.username, mmr: player.mmr, lang: player.lang || 'en', elo: getEloDisplay(player.elo_rank ?? 0, player.elo_lp ?? 0) });
+    const emojiCfg = player.emoji_config ? JSON.parse(player.emoji_config) : null;
+    res.json({ token, id: player.id, username: player.username, mmr: player.mmr, lang: player.lang || 'en', elo: getEloDisplay(player.elo_rank ?? 0, player.elo_lp ?? 0), emoji_config: emojiCfg });
     logEvent('session_start', player.id, null, null);
 });
 
@@ -300,6 +301,24 @@ const _deleteAccount = db.transaction((playerId) => {
     db.prepare('DELETE FROM replays WHERE match_id IN (SELECT id FROM matches WHERE player_white_id=? OR player_black_id=?)').run(playerId, playerId);
     db.prepare('DELETE FROM matches WHERE player_white_id=? OR player_black_id=?').run(playerId, playerId);
     db.prepare('DELETE FROM players WHERE id=?').run(playerId);
+});
+
+const EMOJI_CURATED = new Set([
+    '😀','😆','😂','🥲','😝','🥺','😬','😑','🫢','🤫','🤔','🥱','🫣','😱','🤨','🧐',
+    '😒','🙄','😤','😞','😟','😨','😖','😳','🤯','🫨','🥴','😵','🥵','🥶','🫩','😴',
+    '😇','😎','🤡','💩','☠️','👽','💥','🙈','🔥','🎉',
+]);
+
+app.patch('/auth/emojis', (req, res) => {
+    const decoded = requireAuth(req.headers.authorization);
+    if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
+    const emojis = req.body?.emojis;
+    if (!Array.isArray(emojis) || emojis.length !== 4)
+        return res.status(400).json({ error: 'Envie exatamente 4 emojis' });
+    if (!emojis.every(e => typeof e === 'string' && EMOJI_CURATED.has(e)))
+        return res.status(400).json({ error: 'Emoji não permitido' });
+    db.prepare('UPDATE players SET emoji_config=? WHERE id=?').run(JSON.stringify(emojis), decoded.id);
+    res.json({ ok: true });
 });
 
 app.delete('/auth/account', (req, res) => {
@@ -1931,6 +1950,19 @@ io.on('connection', (socket) => {
             room.pending[playerColor] = null;
         }
         decreeWOForInactivity(room, playerColor, 'abandono');
+    });
+
+    socket.on('emoji_send', ({ emoji } = {}) => {
+        const room = getRoom();
+        if (!room || !playerColor) return;
+        if (typeof emoji !== 'string' || !EMOJI_CURATED.has(emoji)) return;
+        const now = Date.now();
+        room.emojiCooldown = room.emojiCooldown || {};
+        if (room.emojiCooldown[playerColor] && now - room.emojiCooldown[playerColor] < 8000) return;
+        room.emojiCooldown[playerColor] = now;
+        const oppColor = playerColor === 'white' ? 'black' : 'white';
+        const oppSocket = room.sockets?.[oppColor];
+        if (oppSocket) io.to(oppSocket).emit('emoji_recv', { emoji, from: playerColor });
     });
 });
 

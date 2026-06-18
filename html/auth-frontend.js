@@ -165,6 +165,7 @@ const AuthUI = {
             Session.save(session);
             this.hide();
             if (data.lang && window.selectLanguage) window.selectLanguage(data.lang, true);
+            if (data.emoji_config && window._emojiOnLogin) window._emojiOnLogin(data.emoji_config);
             await MenuPopulator.populate(session);
         } catch {
             if (err) err.textContent = (window.t && window.t('err_connection')) || 'Erro de conexão com o servidor.';

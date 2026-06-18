@@ -309,6 +309,51 @@
 
 ---
 
+### T-S34-1 — Enviar emoji durante partida PvP
+**Sessão:** S34
+
+1. Duas abas, iniciar PvP, chegar a qualquer fase (DRAFT/POSITION/ACTION)
+   → **Esperado:** botão de emoji (laranja, 😀, bottom-right) aparece em ambas as abas
+2. Clicar no botão → wheel com 4 emojis abre
+3. Clicar num emoji (ex: 😤)
+   → **Esperado para o clicante:** wheel fecha; botão fica em 40% opacidade por ~8s
+   → **Esperado para o oponente:** emoji 😤 grande aparece centralizado no board por ~2s com animação bounce + fade-out
+4. Clicar novamente antes de 8s → nada acontece (cooldown server-side e visual)
+5. Após 8s → botão volta opaco, wheel reabre normalmente
+
+---
+
+### T-S34-2 — Solo sem botão de emoji
+**Sessão:** S34
+
+1. Iniciar modo Solo (vs bot)
+   → **Esperado:** botão de emoji NÃO aparece durante toda a partida
+
+---
+
+### T-S34-3 — Config de emojis no Perfil
+**Sessão:** S34
+
+1. Ir para Perfil → seção "EMOJIS DA PARTIDA": 4 slots (😀 😎 😤 🔥 por padrão)
+2. Clicar no 1º slot (😀)
+   → **Esperado:** grid inline com 42 emojis abre abaixo dos slots; slot 1 destacado em laranja
+3. Clicar em 🤯
+   → **Esperado:** grid fecha; slot 1 agora mostra 🤯
+4. Entrar numa partida PvP → clicar o botão → wheel mostra 🤯 como 1º emoji
+
+---
+
+### T-S34-4 — Persistência (autenticado)
+**Sessão:** S34
+
+*(Requer conta cadastrada)*
+
+1. Configurar emojis no Perfil (ex: 🤯 😇 😴 🎉)
+2. Fazer logout → relogar
+   → **Esperado:** slots no Perfil e wheel in-game mantêm os 4 emojis configurados
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |

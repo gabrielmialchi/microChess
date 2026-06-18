@@ -55,6 +55,7 @@ const newCols = [
     'ALTER TABLE matches ADD COLUMN lp_change_black INTEGER DEFAULT 0',
     'ALTER TABLE matches ADD COLUMN match_mode      TEXT DEFAULT \'ranked\'',
     'ALTER TABLE matches ADD COLUMN ttm_ms INTEGER DEFAULT 0',
+    "ALTER TABLE players ADD COLUMN emoji_config TEXT DEFAULT NULL",
 ];
 for (const sql of newCols) {
     try { db.exec(sql); } catch (_) {}

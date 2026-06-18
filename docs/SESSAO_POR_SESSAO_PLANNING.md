@@ -253,14 +253,14 @@ emoji_recv  { emoji: '😤', from: 'white' }  → servidor → oponente
 - `PATCH /api/profile/emojis` — salva os 4 emojis; validação: must be in curated list.
 
 ### Checklist de implementação
-- [ ] **DB**: `ALTER TABLE players ADD COLUMN emoji_config TEXT` (migration no `auth.js` ou `schema.sql`).
-- [ ] **Servidor**: handler `emoji_send` — valida cooldown server-side (8s), repassa `emoji_recv` ao oponente.
-- [ ] **API**: `PATCH /api/profile/emojis` — valida lista curada, salva no banco.
-- [ ] **Frontend — profile**: seção "EMOJIS DA PARTIDA" com 4 slots + `#emoji-picker` (grid).
-- [ ] **Frontend — game**: `#emoji-btn` + `#emoji-wheel` (posição, cooldown visual, ocultar em solo).
-- [ ] **Frontend — game**: handler `emoji_recv` → `#emoji-popup` (bounce + fade-out 2s).
-- [ ] **Frontend — init**: ao entrar no jogo, carregar `emoji_config` do servidor (autenticados) ou `localStorage` (convidados) para popular a wheel.
-- [ ] Registrar T-S34 em `TESTES_PENDENTES.md`.
+- [x] **DB**: `ALTER TABLE players ADD COLUMN emoji_config TEXT` (migration em `database.js`).
+- [x] **Servidor**: handler `emoji_send` — valida cooldown server-side (8s), repassa `emoji_recv` ao oponente.
+- [x] **API**: `PATCH /auth/emojis` — valida lista curada, salva no banco.
+- [x] **Frontend — profile**: seção "EMOJIS DA PARTIDA" com 4 slots + picker inline (grid curado, sem modal).
+- [x] **Frontend — game**: `#emoji-game-btn` + `#emoji-wheel` (fixed bottom-right, cooldown visual, oculto em solo).
+- [x] **Frontend — game**: handler `emoji_recv` → `#emoji-popup` centralizado (bounce + fade-out 2s).
+- [x] **Frontend — init**: `_emojiOnLogin` ao logar; `localStorage` para convidados.
+- [x] Registrar T-S34 em `TESTES_PENDENTES.md`.
 
 ---
 
