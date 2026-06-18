@@ -307,6 +307,8 @@
 
 ---
 
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |
@@ -315,3 +317,36 @@
 | S30+S31 | Render otimista no POSITION + juice | Gabriel (feedback aplicado em S31b/S31c) |
 | S31b | Freeze modal duelo 15s + freeze game over | Gabriel (feedback aplicado em S31c) |
 | S31c | Dado girando + timer + bug sessão | Gabriel ("Dado e Timer - OK") |
+
+---
+
+## 📋 Resumo — pendentes por área
+
+| # | Sessão | Teste | Área |
+|---|--------|-------|------|
+| 1 | S03 | T-S03-1 — Ranked só pareia com Ranked | Servidor |
+| 2 | S17 | T-S17-1 — Reconexão mid-game restaura partida | Servidor |
+| 3 | S17 | T-S17-2 — WO por timeout de reconexão (90s) | Servidor |
+| 4 | S17 | T-S17-3 — Reconexão de convidado (token) | Servidor |
+| 5 | S02 | T-S02-1 — Taxonomia de resultado no banco | Banco |
+| 6 | S16 | T-S16-1 — Botão ABANDONAR visível | Frontend |
+| 7 | S16 | T-S16-2 — Abandonar no pré-jogo → cancelamento | Frontend |
+| 8 | S16 | T-S16-3 — Abandonar em ACTION → W.O. | Frontend |
+| 9 | S16 | T-S16-4 — AFK timeout pré-jogo → cancelamento | Frontend |
+| 10 | S16 | T-S16-5 — ABANDONAR no Solo | Frontend |
+| 11 | S11 | T-S11-1 — Nickname do oponente no HUD | Frontend |
+| 12 | S13 | T-S13-1 — Banner Morte Súbita traduzido | Frontend |
+| 13 | S33 | T-S33-A — ptBR como idioma padrão | Frontend |
+| 14 | S14 | T-S14-1 — Undo granular no Draft | Frontend |
+| 15 | S22 | T-S22-1 — V/D/E só em ranked | Banco |
+| 16 | S10 | T-S10-1 — Timer de fase visível no HUD | Frontend |
+| 17 | S21 | T-S21-1 — Empate no histórico | Frontend |
+| 18 | S21 | T-S21-2 — Replay viewer funcional | Frontend |
+| 19 | S21 | T-S21-3 — Date legível no Firefox | Frontend |
+| 20 | S21 | T-S21-4 — CHECK constraint no banco novo | Banco |
+| 21 | S28 | T-S28-1 — Contorno das peças | Visual |
+| 22 | S32 | T-S32-1 — Coesão visual dark mode | Visual |
+| 23 | S29 | T-S29-1 — Tipografia Inter unificada | Visual |
+| 24 | S27 | T-S27-1 — Tutorial automático (1ª partida) | Frontend |
+| 25 | S27 | T-S27-2 — Tutorial via Configurações | Frontend |
+| 26 | S27 | T-S27-3 — Botão Pular do tutorial | Frontend |

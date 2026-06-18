@@ -19,15 +19,27 @@ Jogo de xadrez simplificado **4x4** para 2 jogadores online. Mecânicas únicas:
 ```
 microChess/
 ├── html/
-│   └── index.html          ← Frontend completo (~1.200 linhas, monolítico)
+│   ├── index.html          ← Frontend completo (~6.000 linhas, monolítico)
+│   ├── auth-frontend.js    ← Autenticação JWT frontend
+│   ├── rank-ui.js          ← Perfil, histórico de partidas, leaderboard
+│   └── replay-ui.js        ← Viewer de replay turno a turno
 ├── server/
-│   ├── server.js           ← Backend Node.js + Socket.io (~544 linhas)
-│   ├── package.json        ← express + socket.io
+│   ├── server.js           ← Backend Node.js + Socket.io
+│   ├── movegen.js          ← Validação de movimentos (importado por server.js)
+│   ├── auth.js             ← Lógica JWT e autenticação
+│   ├── mmr.js              ← Cálculo de MMR/PdL
+│   ├── replay.js           ← Gravação e recuperação de replays
+│   ├── bot-strategies/     ← Estratégias dos bots por nível (NN-name.js + index.js)
+│   ├── db/
+│   │   ├── schema.sql      ← Schema do banco (com CHECK constraints)
+│   │   └── microchess.db   ← SQLite (gerado em runtime)
+│   ├── package.json        ← express + socket.io + better-sqlite3 + bcrypt + jsonwebtoken
 │   └── node_modules/
 └── docs/
     ├── PROJECT_CONTEXT.md  ← Este arquivo
     ├── SESSAO_POR_SESSAO_PLANNING.md
-    └── ACTIVITY_LOG.md
+    ├── ACTIVITY_LOG.md
+    └── TESTES_PENDENTES.md
 ```
 
 ### Arquivos que NÃO devem ser reescritos
@@ -74,60 +86,44 @@ microChess/
 
 ---
 
-## Sistemas Implementados
+## Sistemas Implementados (v1.2.x — ciclo pós 1º Open Test)
 
-Todos os sistemas do plano original (sessões 1–18, Design-A..L, SP, PRE-OT-A..G, etc.) estão ✅ concluídos.
+Ver `docs/SESSAO_POR_SESSAO_PLANNING.md` para detalhes por sessão. Resumo:
 
-## Próximo Ciclo — Ajustes Pós-Open Test
+| Sessão | Área | Status | O que entregou |
+|--------|------|--------|----------------|
+| S01 | Núcleo | ✅ | Gates rígidos do PRONTO (draft + position) |
+| S31 | Núcleo | ✅ | Responsividade de input — render otimista no POSITION + juice |
+| S04 | Núcleo | ✅ | Regra de captura esclarecida (não era bug, roteado para S27) |
+| S14 | Núcleo | ✅ | Undo granular no Draft (devolver peça específica) |
+| S02 | Resultado | ✅ | Taxonomia de resultado: win/draw_rule/draw_inactivity/cancelled |
+| S03 | Resultado | ✅ | Pareamento ranked×ranked, casual×casual correto |
+| S22 | Resultado | ✅ | V/D/E só em ranked; casual não afeta stats |
+| S16 | Inatividade | ✅ | Detecção por clique (50s/60s), ABANDONAR manual, cancelamento pré-jogo |
+| S10 | Inatividade | ✅ | Timer de fase visível no HUD com alerta <10s |
+| S17 | Reconexão | ✅ | Janela 90s, reconnectToken em sessionStorage (inclusive convidados) |
+| S18 | Reconexão | ✅ | Empate por dupla inatividade; cancelamento por dupla AFK no pré-jogo |
+| S11 | HUD | ✅ | Nome do oponente no HUD durante toda a partida |
+| S12 | HUD | ✅ | Feedback "PRONTO / aguardando oponente" |
+| S13 | HUD | ✅ | Aviso Morte Súbita + tradução ptBR/EN |
+| S09 | HUD | ✅ | Ícones V/D/E coloridos (game over, perfil, histórico) |
+| S30 | HUD | ✅ | Juices J1–J11 finalizados |
+| S19 | Telas | ✅ | Reorg menu + header + logout |
+| S21 | Telas | ✅ | Histórico de partidas + replay viewer corrigido |
+| S20 | Telas | ✅ | Tela ranking explicativa |
+| S33 | Telas | ✅ | Quick wins: créditos, ranked-bloqueado p/ convidado, ptBR default |
+| S25 | Retenção | ✅ | Bots L1–L3 suavizados |
+| S26 | Retenção | ⏳ | Rebalance draft — REVERTIDO, aguardar playtest controlado |
+| S27 | Retenção | ✅ | Tutorial scriptado completo (10 passos, overlay/spotlight, TUT engine) |
+| S28 | Design | ✅ | Contorno das peças (text-shadow 8-direções) light+dark |
+| S32 | Design | ✅ | Coesão visual menu↔partida (paleta quente unificada) |
+| S29 | Design | ✅ | Tipografia: Inter + JetBrains Mono (Cinzel/IBM removidos) |
 
-Ver `docs/SESSAO_POR_SESSAO_PLANNING.md` para o plano detalhado de cada sessão.
+## Próximo — Backlog
 
-### ⏳ ADJ-A — Quick wins (independente)
-- **BLOCO A**: Ranked desabilitado para convidados — botão bloqueado visualmente no frontend
-- **BLOCO B**: Deletar todos os usuários cadastrados (sqlite, one-shot)
-- **BLOCO F**: Atualizar tela de Créditos — nova estrutura "Desenvolvido por / O6 GAMES · Desenvolvimento de Projeto por / Gabriel Mialchi", remover Portfólio e Itch.io
-
-### ⏳ ADJ-B — Sistema de Inatividade (substituição completa)
-Substitui o sistema AFK baseado em fase por detecção de clique do usuário:
-- 50s sem clicar → banner de aviso com countdown 10s
-- 60s sem clicar → `player_inactive` emitido; popup "INATIVO POR MAIS DE 60 SEGUNDOS" com VOLTAR(90s) e ABANDONAR
-- Oponente vê: "OPONENTE INATIVO, AGUARDANDO AÇÃO"
-- Ao retornar: oponente tem 15s para fechar popup
-- Sem resposta em 90s → WO
-
-### ⏳ ADJ-C — Sistema de Desconexão (rework)
-- Janela de 90s para reconectar (era 60s; convidados tinham WO imediato — agora igual para todos)
-- Convidados recebem `reconnectToken` ao entrar na partida (guardado em sessionStorage)
-- Reutiliza popup "OPONENTE INATIVO" do ADJ-B
-
-### ⏳ ADJ-D — Empate por dupla inatividade/desconexão
-- Ambos inativos/desconectados → DRAW forçado
-- Um retorna enquanto outro ainda está pending → popup "RETORNAR AO JOGO? SIM/NÃO" com 15s
-- NÃO ou timer esgota → WO contra quem estava pending (retornado vence)
-
-#### Sessão 7 — Reorganização de Navegação + Header + Logout
-- Menu: apenas NOVO JOGO / RANKING / CONFIGURAÇÕES
-- Header do menu: avatar + apelido + rank + W/L (esquerda) + btn SAIR (direita)
-- Configurações: adicionar COMO JOGAR e CRÉDITOS
-- Popup de confirmação de logout (Sim/Não)
-- Logout também disponível na tela de Perfil
-
-#### Sessão 8 — Tela RANKING Explicativa + Leaderboard
-- Nova tela `screen-ranking`: grid visual dos 14 ranks + explicação do PdL
-- Botão LEADERBOARD GLOBAL na tela ranking → screen-leaderboard
-- Back do leaderboard → screen-ranking
-
-#### Sessão 9 — Histórico de Partidas (tela própria) + Replay melhorado
-- Nova tela `screen-match-history`: lista separada do perfil
-- Perfil: botão HISTÓRICO → screen-match-history
-- Replay: header com resumo (oponente, rank, data, PdL delta)
-- Back do replay → screen-match-history
-
-#### Sessão 10 — Reconexão com tolerância de 60s
-- Disconnect durante partida: aguarda 60s antes de WO
-- `rejoin_game` event: restaura sala e socketId ao reconectar
-- Frontend: countdown "aguardando reconexão" para o oponente
-- Convidados: WO imediato (sem token, sem reconexão)
+- **OP-1**: Limpar banco de usuários (one-shot, só na véspera do próximo teste)
+- **S34 (OT-24)**: Sistema de emojis in-game (ver SESSAO_POR_SESSAO_PLANNING.md)
+- **OT-23**: Boss a cada 10 níveis no solo (não comprometido)
 
 ---
 
@@ -230,8 +226,9 @@ game_reconnect_token    → servidor envia token de reconexão para convidados
 ### Frontend
 - **Vanilla JavaScript** — sem frameworks
 - **Socket.io client** 4.7.4 — CDN
-- **Fontes**: Cinzel, Cinzel Decorative, IBM Plex Mono (Google Fonts)
-- **Paleta**: `--bg: #080808`, `--accent: #d4a832`, `--success: #2ecc71`, `--danger: #e74c3c`
+- **Fontes**: Inter (texto/títulos, pesos 400-800) + JetBrains Mono (números/labels) — Google Fonts
+- **Paleta dark**: `--bg: #0b0907`, `--bg2: #16110b`, `--accent: #ff6a33`, cells marrons (`#2a231a`/`#4c3c28`)
+- **Paleta light**: creme/laranja (design system `--mc-*` vars)
 
 ### Banco de Dados
 - **SQLite** via better-sqlite3 (arquivo: `server/db/microchess.db`)

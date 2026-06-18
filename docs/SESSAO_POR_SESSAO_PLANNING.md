@@ -208,9 +208,64 @@ Atravessa as áreas respeitando a prioridade. O **bloco crítico (v1.2.0)** vem 
 
 ---
 
+---
+
+# S34 — Emojis in-game `[F][S]` 🟢 🅿2 — fecha OT-24
+
+**Objetivo:** Comunicação expressiva e não-verbal durante a partida. Sem chat; sem agressividade.
+
+## Spec resumida
+
+### Wheel in-game
+- Botão `#emoji-btn` fixo na game-area (bottom-right, fora do board) durante PvP.
+- Clicar abre `#emoji-wheel`: roda com 4 emojis configurados pelo jogador.
+- Clicar num emoji: envia `emoji_send` ao servidor; fecha a wheel.
+- **Cooldown de 8s por jogador** (botão desabilitado + timer visual).
+- Disponível em TODAS as fases (DRAFT, POSITION, ACTION, SUDDEN_DEATH).
+- **Solo mode**: botão oculto (bot não responde; não faz sentido).
+- **Convidados**: podem usar emojis — configuração salva em `localStorage` (não no banco).
+
+### Pop-up no oponente
+- Servidor repassa o emoji via `emoji_recv` para o socket do oponente.
+- Frontend renderiza `#emoji-popup` temporário (2s) sobre o board com animação de entrada (bounce + fade-out).
+- Não bloqueia interação.
+
+### Config no Perfil
+- Nova seção "EMOJIS DA PARTIDA" na `screen-profile`.
+- 4 slots clicáveis (inicializam com emojis padrão: 😀 😎 😤 🔥).
+- Clicar num slot → abre `#emoji-picker`: grid com emojis curados (lista abaixo).
+- Seleção salva: jogadores autenticados → `players.emoji_config` (JSON `[e1,e2,e3,e4]`); convidados → `localStorage.mc_emojis`.
+
+### Lista curada (42 emojis — sem agressivos)
+```
+😀 😆 😂 🥲 😝 🥺 😬 😑 🫢 🤫 🤔 🥱 🫣 😱 🤨 🧐 😒 🙄 😤 😞 😟 😨 😖 😳 🤯 🫨 🥴 😵 🥵 🥶 🫩 😴 😇 😎 🤡 💩 ☠️ 👽 💥 🙈 🔥 🎉
+```
+Excluídos explicitamente: 🖕 🫦 👅 ❤️‍🔥
+
+### Eventos Socket novos
+```
+emoji_send  { emoji: '😤' }                 → cliente → servidor
+emoji_recv  { emoji: '😤', from: 'white' }  → servidor → oponente
+```
+
+### DB (só para autenticados)
+- Coluna `emoji_config TEXT DEFAULT NULL` em `players` (JSON string `["😀","😎","😤","🔥"]`).
+- `PATCH /api/profile/emojis` — salva os 4 emojis; validação: must be in curated list.
+
+### Checklist de implementação
+- [ ] **DB**: `ALTER TABLE players ADD COLUMN emoji_config TEXT` (migration no `auth.js` ou `schema.sql`).
+- [ ] **Servidor**: handler `emoji_send` — valida cooldown server-side (8s), repassa `emoji_recv` ao oponente.
+- [ ] **API**: `PATCH /api/profile/emojis` — valida lista curada, salva no banco.
+- [ ] **Frontend — profile**: seção "EMOJIS DA PARTIDA" com 4 slots + `#emoji-picker` (grid).
+- [ ] **Frontend — game**: `#emoji-btn` + `#emoji-wheel` (posição, cooldown visual, ocultar em solo).
+- [ ] **Frontend — game**: handler `emoji_recv` → `#emoji-popup` (bounce + fade-out 2s).
+- [ ] **Frontend — init**: ao entrar no jogo, carregar `emoji_config` do servidor (autenticados) ou `localStorage` (convidados) para popular a wheel.
+- [ ] Registrar T-S34 em `TESTES_PENDENTES.md`.
+
+---
+
 ## Backlog (não comprometido — avaliar)
 - [ ] OT-23 — Boss a cada 10 níveis no solo (conteúdo).
-- [ ] OT-24 — Emojis para provocar amigos (social).
 
 ---
 
