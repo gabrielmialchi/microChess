@@ -723,6 +723,11 @@ function stateView(state, color) {
 
 function broadcast(room) {
     const { white, black } = room.players;
+    const curTurn = room.state?.turn ?? 0;
+    if ((room._lastBroadcastTurn ?? -1) !== curTurn) {
+        room._lastBroadcastTurn = curTurn;
+        room.emojiUsedThisTurn = {};
+    }
     if (white?.socketId) io.to(white.socketId).emit('game_state', stateView(room.state, 'white'));
     if (black?.socketId) io.to(black.socketId).emit('game_state', stateView(room.state, 'black'));
     if (room._botColor && room.state.phase !== 'GAMEOVER') {
@@ -1956,10 +1961,9 @@ io.on('connection', (socket) => {
         const room = getRoom();
         if (!room || !playerColor) return;
         if (typeof emoji !== 'string' || !EMOJI_CURATED.has(emoji)) return;
-        const now = Date.now();
-        room.emojiCooldown = room.emojiCooldown || {};
-        if (room.emojiCooldown[playerColor] && now - room.emojiCooldown[playerColor] < 8000) return;
-        room.emojiCooldown[playerColor] = now;
+        room.emojiUsedThisTurn = room.emojiUsedThisTurn || {};
+        if (room.emojiUsedThisTurn[playerColor]) return;
+        room.emojiUsedThisTurn[playerColor] = true;
         const oppColor = playerColor === 'white' ? 'black' : 'white';
         const oppSocket = room.sockets?.[oppColor];
         if (oppSocket) io.to(oppSocket).emit('emoji_recv', { emoji, from: playerColor });

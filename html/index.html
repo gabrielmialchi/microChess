@@ -7029,8 +7029,9 @@ window.launchTutorial = function() {
     var DEFAULT_EMOJIS = ['😀','😎','😤','🔥'];
     var _emojis = DEFAULT_EMOJIS.slice();
     var _wheelOpen = false;
-    var _cooldownUntil = 0;
+    var _usedThisTurn = false;
     var _cooldownTimer = null;
+    var _lastKnownTurn = -1;
     var _isPvP = false;
     var _pickerSlot = -1;
 
@@ -7052,8 +7053,7 @@ window.launchTutorial = function() {
         var wheel = _el('emoji-wheel');
         if (!wheel) return;
         wheel.innerHTML = '';
-        var now = Date.now();
-        var disabled = now < _cooldownUntil;
+        var disabled = _usedThisTurn;
         _emojis.forEach(function(e, i) {
             var btn = document.createElement('button');
             btn.className = 'ew-btn';
@@ -7147,19 +7147,29 @@ window.launchTutorial = function() {
     };
 
     // ── Game: send emoji ──────────────────────────────────────────
+    function _startCooldown() {
+        _usedThisTurn = true;
+        var btn = _el('emoji-game-btn');
+        if (btn) { btn.style.opacity = '0.4'; btn.title = 'Aguarde o próximo turno'; }
+        clearTimeout(_cooldownTimer);
+        _cooldownTimer = setTimeout(function() { _resetCooldown(); }, 20000);
+    }
+
+    function _resetCooldown() {
+        _usedThisTurn = false;
+        clearTimeout(_cooldownTimer);
+        var btn = _el('emoji-game-btn');
+        if (btn) { btn.style.opacity = '1'; btn.title = 'Enviar emoji'; }
+        _updateWheelBtns();
+    }
+
     window._emojiSend = function(idx) {
-        if (Date.now() < _cooldownUntil) return;
+        if (_usedThisTurn) return;
         var emoji = _emojis[idx];
         if (!emoji) return;
         window._emojiCloseWheel();
         if (window._mcSocket) window._mcSocket.emit('emoji_send', { emoji: emoji });
-        _cooldownUntil = Date.now() + 8000;
-        var btn = _el('emoji-game-btn');
-        if (btn) btn.style.opacity = '0.4';
-        clearTimeout(_cooldownTimer);
-        _cooldownTimer = setTimeout(function() {
-            if (btn) btn.style.opacity = '1';
-        }, 8000);
+        _startCooldown();
     };
 
     // ── Game: receive emoji ───────────────────────────────────────
@@ -7183,13 +7193,20 @@ window.launchTutorial = function() {
         _isPvP = isPvP;
         var btn = _el('emoji-game-btn');
         if (btn) btn.style.display = isPvP ? 'flex' : 'none';
-        if (!isPvP) window._emojiCloseWheel();
+        if (!isPvP) { window._emojiCloseWheel(); _resetCooldown(); _lastKnownTurn = -1; }
     };
 
     // ── Socket wiring (runs after socket is ready) ────────────────
     window._emojiWireSocket = function(socket) {
         socket.on('emoji_recv', function(data) {
             if (data && data.emoji) _showEmojiPopup(data.emoji);
+        });
+        socket.on('game_state', function(data) {
+            var turn = data && data.turn != null ? data.turn : -1;
+            if (turn !== _lastKnownTurn) {
+                _lastKnownTurn = turn;
+                if (_usedThisTurn) _resetCooldown();
+            }
         });
     };
 
