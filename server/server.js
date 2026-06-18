@@ -795,12 +795,22 @@ function resolveAction(state) {
 
         let handledW = false, handledB = false;
 
+        // DEFESA DO REI: a peça que defende o Rei atacado tem um Duelo EXTRA antes
+        // da peça que ataca o Rei, INDEPENDENTE do bônus. Por isso o duelo de defesa
+        // recebe priority alta (DEFENSE_PRI) para o sort mantê-lo à frente; o duelo
+        // de ataque ao Rei só ocorre se o atacante sobreviver (checagem de validade
+        // da fila em finishDuel).
+        const DEFENSE_PRI = 1000;
         if (wGoesToKingB && bInterceptsW) {
-            duelQueue.push({ type: 'attack', attackerColor: 'black', wPiece: pieceW, bPiece: pieceB, txW: pieceW.x, tyW: pieceW.y, txB: pB.tx, tyB: pB.ty, priority: pieceB.bonus });
+            // Duelo 1: defensor preto (pieceB) intercepta o atacante branco (pieceW) — resolve primeiro
+            duelQueue.push({ type: 'attack', attackerColor: 'black', wPiece: pieceW, bPiece: pieceB, txW: pieceW.x, tyW: pieceW.y, txB: pB.tx, tyB: pB.ty, priority: DEFENSE_PRI });
+            // Duelo 2: branco ataca o Rei preto — só se pieceW sobreviver
             duelQueue.push({ type: 'attack', attackerColor: 'white', wPiece: pieceW, bPiece: kingB, txW: pW.tx, tyW: pW.ty, txB: kingB.x, tyB: kingB.y, priority: pieceW.bonus });
             handledW = true; handledB = true;
         } else if (bGoesToKingW && wInterceptsB) {
-            duelQueue.push({ type: 'attack', attackerColor: 'white', wPiece: pieceW, bPiece: pieceB, txW: pW.tx, tyW: pW.ty, txB: pieceB.x, tyB: pieceB.y, priority: pieceW.bonus });
+            // Duelo 1: defensor branco (pieceW) intercepta o atacante preto (pieceB) — resolve primeiro
+            duelQueue.push({ type: 'attack', attackerColor: 'white', wPiece: pieceW, bPiece: pieceB, txW: pW.tx, tyW: pW.ty, txB: pieceB.x, tyB: pieceB.y, priority: DEFENSE_PRI });
+            // Duelo 2: preto ataca o Rei branco — só se pieceB sobreviver
             duelQueue.push({ type: 'attack', attackerColor: 'black', wPiece: kingW, bPiece: pieceB, txW: kingW.x, tyW: kingW.y, txB: pB.tx, tyB: pB.ty, priority: pieceB.bonus });
             handledW = true; handledB = true;
         }

@@ -545,4 +545,14 @@ corrige.
 - **JOGAR NOVAMENTE (PvP):** antes ia ao menu; agora re-entra no matchmaking do **último modo jogado** (`window._lastPvpMode`, casual/ranked, rastreado em `goMatchmaking`). Solo mantém comportamento (próxima fase/retry).
 - **Arquivos:** `html/index.html`, `server/server.js`.
 
+---
+
+## [2026-06-18] Fix duelo — defesa do Rei resolvia na ordem errada ✅
+
+- **Bug:** quando peça A ataca o Rei e peça B (defensora) ataca a peça A, os dois duelos certos eram empilhados (defesa + ataque ao Rei), mas o `duelQueue.sort` por bônus reordenava — colocando o duelo ataque-ao-Rei (bônus maior) ANTES do duelo de defesa. Resultado: o Rei duelava direto com o atacante e o defensor só ocupava a casa.
+- **Regra correta:** a defesa do Rei tem um Duelo extra ANTES do ataque ao Rei, **independente do bônus**. O ataque ao Rei só ocorre se o atacante sobreviver à defesa.
+- **Fix:** os dois ramos de defesa em `resolveAction` (`wGoesToKingB && bInterceptsW` e `bGoesToKingW && wInterceptsB`) dão `priority: DEFENSE_PRI (1000)` ao duelo de defesa → o sort o mantém à frente. O encadeamento condicional já era tratado pela checagem de validade da fila em `finishDuel` (duelo 2 é pulado se o atacante morreu na defesa).
+- **Não afeta** o duelo-duplo (duas peças atacam o Rei adversário: maior bônus primeiro) nem o desempate de bônus igual (`contested_king`).
+- **Arquivo:** `server/server.js`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

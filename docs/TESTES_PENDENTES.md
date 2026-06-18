@@ -446,6 +446,21 @@
 
 ---
 
+### T-DUEL-1 — Defesa do Rei resolve antes (independente do bônus)
+**Arquivo:** `server/server.js`
+
+1. Montar a situação: peça inimiga (ex: Torre Preta) ataca seu Rei E sua peça (ex: Cavalo Branco) ataca essa Torre no mesmo turno
+   → **Esperado — Duelo 1:** Cavalo Branco × Torre Preta (defesa), ANTES de qualquer duelo com o Rei
+2. Se a Torre vencer o Duelo 1
+   → **Esperado:** Cavalo capturado + **Duelo 2:** Torre Preta × Rei Branco
+3. Se o Cavalo vencer o Duelo 1
+   → **Esperado:** Torre capturada, NÃO há duelo com o Rei (Rei defendido com sucesso)
+4. Repetir com bônus do atacante MAIOR que o do defensor (ex: Rainha ataca o Rei, Peão defende)
+   → **Esperado:** mesmo assim a defesa (Peão × Rainha) resolve primeiro — independente do bônus
+5. Conferir que o duelo-duplo normal não regrediu: duas peças atacam o Rei adversário no mesmo turno → maior bônus resolve primeiro
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |
