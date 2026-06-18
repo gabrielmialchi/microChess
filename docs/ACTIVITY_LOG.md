@@ -27,6 +27,25 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-18] S27 — Tutorial scriptado (S27-A+B+C completo)
+**Status:** ✅ Implementado — pendente playtest
+**Área:** F — Retenção / onboarding
+
+### Feito
+- **Trigger automático**: 1ª partida solo de qualquer sessão → `localStorage.mc_tutorial_seen` ausente → `_tutorialPending = true` no `match_found`; limpo em `launchGame`.
+- **Configurações**: botão "JOGAR TUTORIAL" em Configurações chama `window.launchTutorial()` → `_tutorialPending = true; spStartLevel(1)`.
+- **Overlay engine** (`TUT`): backdrop dim + spotlight via `box-shadow 9999px` + card de dica. Steps 0-3 bloqueantes (aguardam emit do socket via patch em `_mcSocket`); step 4 livre (MutationObserver no `#duel-modal`); steps 5-9 info cards; step 10 tela de conclusão.
+- **10 passos**: Bônus → Exército pronto → Território → Ação+arrastar → Duelo → Ordem → Vácuo → Rei → Promoção → Morte Súbita → Tela final "Você aprendeu!".
+- **Drag hint**: classe `.tut-drag-pulse` (CSS `@keyframes`) em peças não-Rei do jogador no passo 3.
+- **Pular**: botão sempre visível → confirmação → `TUT.done()`.
+- **Bot**: jogo contra Level 1 (Recruta) — 1 peão, passa 70% dos turnos. Sem mudanças no servidor.
+- **Arquivos**: `html/index.html` — 4 inserções pontuais + bloco `<div id="tut-overlay">` + `<div id="tut-end">` + `<style>` + `<script>` antes de `</body>`.
+
+### Nota de implementação
+Step 3→4 (ACTION→DUEL) usa MutationObserver em `#duel-modal` para detectar abertura. Se o jogador não atacar, step 4 fica com "Entendi ▸" (free). Info cards (5-9) não dependem de estado de jogo.
+
+---
+
 ## [2026-06-18] S28+S32+S29 — Design: contorno de peças, coesão visual, tipografia
 **Status:** ✅ Implementado — pendente playtest
 **Área:** G — Identidade visual
