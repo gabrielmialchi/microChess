@@ -53,8 +53,8 @@ function promotePawns(army) {
     for (const p of army) {
         if (p.type === 'P' &&
             ((p.color === 'white' && p.y === 3) || (p.color === 'black' && p.y === 0))) {
-            p.type  = 'N'; // Peão promove a Cavalo (não Rainha) — S26 rebalance OT-06
-            p.bonus = 3;   // = CONFIG.N.bonus
+            p.type  = 'Q'; // Peão promove a Rainha
+            p.bonus = 5;   // = CONFIG.Q.bonus
             delete p.buffed;
         }
     }

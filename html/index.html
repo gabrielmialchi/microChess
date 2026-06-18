@@ -11,8 +11,7 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@700&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- flag-icons: apenas as 9 bandeiras usadas no seletor de idioma (inline — sem CDN) -->
     <style>
     .fi{background-size:contain;background-position:50%;background-repeat:no-repeat;display:inline-block}
@@ -311,19 +310,19 @@
 
     <style>
         :root {
-            --bg: #080808;
-            --bg2: #0e0e0e;
+            --bg: #0b0907;
+            --bg2: #16110b;
             --panel-bg: #111111;
             --panel-border: rgba(255,255,255,0.07);
             --text-color: #f0ece4;
             --text-muted: rgba(240,236,228,0.4);
-            --board-gap: #1e1e1e;
-            --cell-light: #272727;
-            --cell-dark: #141414;
-            --topbar-bg: #181818;
-            --accent: #d4a832;
-            --accent-glow: rgba(212,168,50,0.35);
-            --accent-dim: rgba(212,168,50,0.15);
+            --board-gap: #1a1510;
+            --cell-light: #2a231a;
+            --cell-dark: #4c3c28;
+            --topbar-bg: #18140e;
+            --accent: #ff6a33;
+            --accent-glow: rgba(255,106,51,0.40);
+            --accent-dim: rgba(255,106,51,0.15);
             --success: #2ecc71;
             --danger: #e74c3c;
             --white-p: #f4f0e8;
@@ -358,8 +357,8 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Cinzel', serif;
-            background: var(--bg);
+            font-family: 'Inter', serif;
+            background: radial-gradient(ellipse at 50% 32%, #16110b 0%, #0b0907 100%);
             color: var(--text-color);
             display: flex;
             flex-direction: column;
@@ -402,7 +401,7 @@
             cursor: pointer;
             border-radius: 6px;
             font-size: 0.85rem;
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', serif;
             letter-spacing: 4px;
             text-transform: uppercase;
             transition: transform 0.15s, box-shadow 0.2s;
@@ -449,7 +448,7 @@
         #opp-status {
             font-size: 10px;
             font-weight: 600;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             letter-spacing: 1.5px;
             text-transform: uppercase;
             transition: color 0.3s;
@@ -457,7 +456,7 @@
 
         #opp-pts {
             font-size: 10px;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             color: var(--text-muted);
         }
 
@@ -468,7 +467,7 @@
             width: 100%;
             letter-spacing: 5px;
             font-size: 0.85rem;
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', serif;
             font-weight: 700;
             text-transform: uppercase;
             transition: color 0.3s;
@@ -620,14 +619,25 @@
         @media (min-width: 450px) { .piece { font-size: 50px; } }
 
         .piece.white {
-            color: var(--white-p);
-            filter: var(--white-glow);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            color: #f8f4ee;
+            filter: none;
+            text-shadow:
+                0.7px 0 0 #14100a, -0.7px 0 0 #14100a, 0 0.7px 0 #14100a, 0 -0.7px 0 #14100a,
+                0.7px 0.7px 0 #14100a, 0.7px -0.7px 0 #14100a, -0.7px 0.7px 0 #14100a, -0.7px -0.7px 0 #14100a,
+                1.4px 0 0 #14100a, -1.4px 0 0 #14100a, 0 1.4px 0 #14100a, 0 -1.4px 0 #14100a,
+                1.4px 1.4px 0 #14100a, 1.4px -1.4px 0 #14100a, -1.4px 1.4px 0 #14100a, -1.4px -1.4px 0 #14100a,
+                0 0 8px rgba(245,98,0,0.9), 0 0 16px rgba(245,98,0,0.9);
         }
 
         .piece.black {
-            color: var(--black-p);
-            filter: var(--black-glow);
+            color: #15110b;
+            filter: none;
+            text-shadow:
+                0.7px 0 0 #f4ead7, -0.7px 0 0 #f4ead7, 0 0.7px 0 #f4ead7, 0 -0.7px 0 #f4ead7,
+                0.7px 0.7px 0 #f4ead7, 0.7px -0.7px 0 #f4ead7, -0.7px 0.7px 0 #f4ead7, -0.7px -0.7px 0 #f4ead7,
+                1.4px 0 0 #f4ead7, -1.4px 0 0 #f4ead7, 0 1.4px 0 #f4ead7, 0 -1.4px 0 #f4ead7,
+                1.4px 1.4px 0 #f4ead7, 1.4px -1.4px 0 #f4ead7, -1.4px 1.4px 0 #f4ead7, -1.4px -1.4px 0 #f4ead7,
+                0 0 8px rgba(69,56,255,0.9), 0 0 16px rgba(69,56,255,0.9);
         }
 
         .piece.ghost {
@@ -728,7 +738,7 @@
             border: 1px solid var(--panel-border);
             border-radius: 6px;
             font-size: 1rem;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             letter-spacing: -1px;
             transition: background 0.15s, border-color 0.15s, transform 0.12s;
         }
@@ -779,7 +789,7 @@
             margin: 0 0 10px 0;
             font-weight: 600;
             font-size: 1rem;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             letter-spacing: 3px;
             display: inline-block;
         }
@@ -840,7 +850,7 @@
             border-radius: 8px;
             margin-top: 12px;
             font-size: 0.8rem;
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', serif;
             color: #000;
             letter-spacing: 4px;
             text-transform: uppercase;
@@ -927,7 +937,7 @@
         }
 
         #phase-overlay .ov-label {
-            font-family: 'Cinzel Decorative', serif;
+            font-family: 'Inter', serif;
             font-size: clamp(1.8rem, 8vw, 2.6rem);
             color: var(--accent);
             letter-spacing: 8px;
@@ -935,7 +945,7 @@
         }
 
         #phase-overlay .ov-sub {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.65rem;
             letter-spacing: 6px;
             color: rgba(255,255,255,0.3);
@@ -1014,7 +1024,7 @@
             margin-top: 0;
             margin-bottom: 28px;
             font-size: 1.3rem;
-            font-family: 'Cinzel Decorative', serif;
+            font-family: 'Inter', serif;
             text-shadow: 0 0 24px rgba(255,255,255,0.25);
             transition: color 0.3s;
             position: relative; z-index: 1;
@@ -1061,7 +1071,7 @@
             font-size: 0.78rem;
             letter-spacing: 2px;
             margin-bottom: 14px;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .card-theme-black .duel-name-badge {
@@ -1074,7 +1084,7 @@
             font-size: 0.78rem;
             letter-spacing: 2px;
             margin-bottom: 14px;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .dice-interactive {
@@ -1149,7 +1159,7 @@
             font-weight: 900;
             color: var(--accent);
             line-height: 1;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             text-shadow: 0 0 24px var(--accent-glow);
         }
 
@@ -1157,7 +1167,7 @@
             font-size: 0.7rem;
             color: rgba(255,255,255,0.35);
             margin-top: 7px;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             letter-spacing: 1px;
         }
 
@@ -1168,7 +1178,7 @@
             align-self: flex-start;
             margin-bottom: 6px;
             font-weight: 600;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             text-transform: uppercase;
         }
 
@@ -1206,7 +1216,7 @@
         }
 
         #game-over-screen h1 {
-            font-family: 'Cinzel Decorative', serif;
+            font-family: 'Inter', serif;
             font-size: 1rem;
             color: rgba(255,255,255,0.2);
             letter-spacing: 8px;
@@ -1224,7 +1234,7 @@
         }
 
         #game-over-result {
-            font-family: 'Cinzel Decorative', serif;
+            font-family: 'Inter', serif;
             font-size: clamp(2rem, 8vw, 3rem);
             margin: 0 0 52px 0;
             text-transform: uppercase;
@@ -1244,7 +1254,7 @@
 
         /* ── DUEL WAITING TEXT ── */
         .duel-waiting {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.65rem;
             letter-spacing: 4px;
             color: rgba(255,255,255,0.2);
@@ -1306,14 +1316,14 @@
         }
 
         .menu-player-name {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.78rem; font-weight: 600;
             letter-spacing: 1px;
             color: var(--text-color);
         }
 
         .menu-rank-badge {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.62rem;
             color: var(--text-muted);
             letter-spacing: 1px;
@@ -1321,7 +1331,7 @@
 
         .menu-stats-pill {
             display: flex; gap: 6px;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.68rem;
             color: var(--text-muted);
         }
@@ -1338,7 +1348,7 @@
         }
 
         .menu-logo {
-            font-family: 'Cinzel Decorative', serif;
+            font-family: 'Inter', serif;
             font-size: clamp(2rem, 9vw, 3rem);
             color: var(--accent);
             letter-spacing: 8px;
@@ -1349,7 +1359,7 @@
         }
 
         .menu-version {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.6rem; letter-spacing: 5px;
             color: var(--accent-glow);
             text-transform: uppercase;
@@ -1366,7 +1376,7 @@
 
         .menu-btn {
             width: 100%; padding: 14px 20px;
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', serif;
             font-size: 0.82rem; font-weight: 700;
             letter-spacing: 4px; text-transform: uppercase;
             border-radius: 8px; cursor: pointer;
@@ -1407,7 +1417,7 @@
         .menu-footer {
             width: 100%; text-align: center;
             padding: 14px 20px;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.6rem; letter-spacing: 2px;
             color: rgba(255,255,255,0.15);
             border-top: 1px solid rgba(255,255,255,0.05);
@@ -1430,7 +1440,7 @@
             background: transparent;
             border: 1px solid rgba(255,255,255,0.12);
             color: var(--text-muted);
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.7rem; letter-spacing: 2px;
             padding: 8px 14px; border-radius: 6px;
             cursor: pointer; transition: all 0.15s;
@@ -1441,7 +1451,7 @@
         .mm-state.active { display: flex; }
 
         .mm-title {
-            font-family: 'Cinzel Decorative', serif;
+            font-family: 'Inter', serif;
             font-size: 1rem; letter-spacing: 6px;
             color: var(--accent); text-align: center;
             margin-bottom: 32px;
@@ -1463,13 +1473,13 @@
         }
 
         .mm-nickname {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.85rem; font-weight: 600;
             color: var(--text-color); letter-spacing: 2px;
         }
 
         .mm-searching-text {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.7rem; letter-spacing: 4px;
             color: #e67e22; text-transform: uppercase;
             animation: pulse-fade 1.6s ease infinite;
@@ -1500,18 +1510,18 @@
         }
 
         .mm-vs-label {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.6rem; letter-spacing: 3px; color: var(--text-muted);
         }
 
         .mm-vs-text {
-            font-family: 'Cinzel Decorative', serif;
+            font-family: 'Inter', serif;
             font-size: 1.4rem; color: rgba(255,255,255,0.2);
             letter-spacing: 4px;
         }
 
         .mm-countdown-num {
-            font-family: 'Cinzel Decorative', serif;
+            font-family: 'Inter', serif;
             font-size: clamp(5rem, 20vw, 8rem);
             color: var(--accent);
             text-shadow: 0 0 60px var(--accent-glow);
@@ -1524,7 +1534,7 @@
         }
 
         .mm-countdown-sub {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.65rem; letter-spacing: 6px;
             color: rgba(255,255,255,0.25); text-transform: uppercase;
             margin-top: 8px;
@@ -1544,7 +1554,7 @@
         }
 
         .htp-title {
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', serif;
             font-size: 0.9rem; font-weight: 700; letter-spacing: 5px;
             color: var(--accent);
         }
@@ -1558,7 +1568,7 @@
         }
 
         .htp-section-title {
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', serif;
             font-size: 0.78rem; font-weight: 700; letter-spacing: 4px;
             color: var(--accent); text-transform: uppercase;
             margin: 24px 0 10px; padding-bottom: 6px;
@@ -1567,7 +1577,7 @@
         .htp-section-title:first-child { margin-top: 0; }
 
         .htp-body p {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.78rem; line-height: 1.7;
             color: rgba(240,236,228,0.7);
             margin-bottom: 10px;
@@ -1575,7 +1585,7 @@
 
         .htp-rule {
             display: flex; gap: 10px; margin-bottom: 8px;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.75rem; line-height: 1.6;
             color: rgba(240,236,228,0.65);
         }
@@ -1595,7 +1605,7 @@
         }
 
         .crd-thanks {
-            font-family: 'Cinzel Decorative', serif;
+            font-family: 'Inter', serif;
             font-size: clamp(1.4rem, 6vw, 2rem);
             color: var(--accent); letter-spacing: 4px;
             animation: title-glow 3s ease infinite alternate;
@@ -1605,14 +1615,14 @@
         .crd-section { margin-bottom: 28px; }
 
         .crd-label {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.6rem; letter-spacing: 4px;
             color: var(--text-muted); text-transform: uppercase;
             margin-bottom: 6px;
         }
 
         .crd-name {
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', serif;
             font-size: 1rem; font-weight: 700; letter-spacing: 2px;
             color: var(--text-color);
         }
@@ -1623,7 +1633,7 @@
         }
 
         .crd-link {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.7rem; letter-spacing: 2px;
             color: color-mix(in srgb, var(--accent) 60%, transparent);
             text-decoration: none;
@@ -1652,7 +1662,7 @@
         }
 
         .set-title {
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', serif;
             font-size: 0.9rem; font-weight: 700; letter-spacing: 5px;
             color: var(--accent);
         }
@@ -1664,7 +1674,7 @@
         }
 
         .set-section-label {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.62rem; letter-spacing: 4px;
             color: var(--text-muted); text-transform: uppercase;
             margin-bottom: 14px;
@@ -1699,7 +1709,7 @@
         }
 
         .flag-lang-code {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.6rem; letter-spacing: 2px;
             color: var(--text-muted); text-transform: uppercase;
         }
@@ -1708,7 +1718,7 @@
 
         .set-profile-btn {
             width: 100%; padding: 14px 20px;
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', serif;
             font-size: 0.82rem; font-weight: 700; letter-spacing: 4px;
             text-transform: uppercase;
             background: rgba(255,255,255,0.04);
@@ -1734,7 +1744,7 @@
         }
 
         .prof-title {
-            font-family: 'Cinzel', serif;
+            font-family: 'Inter', serif;
             font-size: 0.9rem; font-weight: 700; letter-spacing: 5px;
             color: var(--accent);
         }
@@ -1746,7 +1756,7 @@
         }
 
         .prof-label {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.62rem; letter-spacing: 4px;
             color: var(--text-muted); text-transform: uppercase;
             margin-bottom: 12px;
@@ -1777,7 +1787,7 @@
             background: rgba(255,255,255,0.04);
             border: 1px solid var(--panel-border);
             border-radius: 8px; color: var(--text-color);
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.9rem; letter-spacing: 2px;
             outline: none; margin-bottom: 28px;
             transition: border-color 0.15s;
@@ -1797,13 +1807,13 @@
         }
 
         .stat-val {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 1.6rem; font-weight: 600;
             color: var(--accent); line-height: 1;
         }
 
         .stat-name {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.6rem; letter-spacing: 2px;
             color: var(--text-muted); text-transform: uppercase;
             margin-top: 4px;
@@ -1811,7 +1821,7 @@
 
         .prof-save-btn {
             width: 100%; padding: 14px;
-            font-family: 'Cinzel', serif; font-size: 0.82rem;
+            font-family: 'Inter', serif; font-size: 0.82rem;
             font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
             background: var(--accent); color: #000;
             border: none; border-radius: 8px; cursor: pointer;
@@ -1825,7 +1835,7 @@
         /* back button reuse */
         .screen-back-btn {
             padding: 8px 18px;
-            font-family: 'Cinzel', serif; font-size: 0.7rem;
+            font-family: 'Inter', serif; font-size: 0.7rem;
             font-weight: 700; letter-spacing: 3px;
             background: transparent;
             border: 1px solid rgba(255,255,255,0.12);
@@ -1936,10 +1946,10 @@
 .sysmodal.warn{border-color:var(--mc-warn-soft,rgba(215,130,0,0.2))}
 .sysmodal.danger{border-color:var(--mc-danger-soft,rgba(212,58,42,0.12))}
 .sysmodal-icon{font-size:36px;text-align:center;line-height:1}
-.sysmodal-eyebrow{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--mc-muted,rgba(24,19,12,0.56));text-align:center}
+.sysmodal-eyebrow{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--mc-muted,rgba(24,19,12,0.56));text-align:center}
 .sysmodal-title{font-size:20px;font-weight:700;letter-spacing:-0.02em;text-align:center;line-height:1.2;color:var(--mc-ink,#18130c)}
 .sysmodal-body{font-size:13px;color:var(--mc-muted,rgba(24,19,12,0.56));text-align:center;line-height:1.55}
-.sysmodal-timer{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:36px;font-weight:600;letter-spacing:4px;text-align:center;color:var(--mc-warn,#d97700)}
+.sysmodal-timer{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:36px;font-weight:600;letter-spacing:4px;text-align:center;color:var(--mc-warn,#d97700)}
 .sysmodal-row{display:flex;gap:8px}
 .sysmodal-btn{flex:1;height:48px;border-radius:var(--mc-r-md,12px);font-family:var(--mc-font-sans,'Inter',sans-serif);font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:1px solid var(--mc-rule-strong,rgba(24,19,12,0.20));background:var(--mc-surface,#fbf7ee);color:var(--mc-ink,#18130c);transition:opacity 0.2s}
 .sysmodal-btn.full{width:100%}
@@ -1950,7 +1960,7 @@
 .sysmodal-ring{width:80px;height:80px;border-radius:50%;border:2px solid var(--mc-rule-strong,rgba(24,19,12,0.20));display:grid;place-items:center;margin:0 auto;font-size:32px;position:relative}
 .sysmodal-ring::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--mc-warn,#d97700);border-right-color:transparent;animation:sysmodal-spin 1s linear infinite}
 @keyframes sysmodal-spin{to{transform:rotate(360deg)}}
-.sysmodal-reconnect-timer{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:42px;font-weight:600;text-align:center;letter-spacing:-0.02em;color:var(--mc-warn,#d97700)}
+.sysmodal-reconnect-timer{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:42px;font-weight:600;text-align:center;letter-spacing:-0.02em;color:var(--mc-warn,#d97700)}
 .sysmodal .mc-field{width:100%}
 .sysmodal .mc-input{width:100%;height:44px;font-size:13px}
 </style>
@@ -2085,16 +2095,16 @@
     <button class="screen-back-btn" onclick="showScreen('menu')">← <span id="gm-back-label" class="back-label">VOLTAR</span></button>
   </div>
   <div style="padding:0 20px 20px;text-align:center;">
-    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="gm-title">GAME MODE</div>
+    <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="gm-title">GAME MODE</div>
   </div>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;gap:14px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
     <!-- SP-4.1: 2-card layout (SOLO / ONLINE). i18n keys aplicados em SP-4.2: gm-solo-label/desc, gm-online-label/desc. -->
     <button id="gm-card-solo" onclick="window.openSoloHub()" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
-      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-solo-label">SOLO</div>
+      <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-solo-label">SOLO</div>
       <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="gm-solo-desc">15 fases contra a CPU</div>
     </button>
     <button id="gm-card-online" onclick="window.spGoOnline()" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
-      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-online-label">ONLINE</div>
+      <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="gm-online-label">ONLINE</div>
       <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="gm-online-desc">Jogadores reais online</div>
     </button>
     <!-- SP-8.3: layout legado (Casual/Ranqueada/Tutorial + FIND MATCH) e JS associado (selectGameMode/startMatchmakingWithMode/_selectedMode) removidos. Substituidos por SOLO -> openSoloHub e ONLINE -> spGoOnline. Rollback via git history. -->
@@ -2107,20 +2117,20 @@
     <button class="screen-back-btn" onclick="showScreen('game-mode')">← <span id="mp-back-label" class="back-label">VOLTAR</span></button>
   </div>
   <div style="padding:0 20px 20px;text-align:center;">
-    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="mp-title">ONLINE</div>
+    <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="mp-title">ONLINE</div>
   </div>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;gap:12px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
     <button id="mp-card-casual" onclick="window.selectMultiplayerMode('casual')" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
-      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="mp-casual-label">Casual</div>
+      <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="mp-casual-label">Casual</div>
       <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="mp-casual-desc">Jogue sem afetar seu XP</div>
       <div id="mp-check-casual" style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mc-accent);place-items:center;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     </button>
     <button id="mp-card-ranked" onclick="window.selectMultiplayerMode('ranked')" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
-      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="mp-ranked-label">Ranqueada</div>
+      <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="mp-ranked-label">Ranqueada</div>
       <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="mp-ranked-desc">Compete por XP e suba no ranking</div>
       <div id="mp-check-ranked" style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mc-accent);place-items:center;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.8 7L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     </button>
-    <button id="mp-find-btn" onclick="window.startMatchmakingMP()" disabled style="margin-top:8px;width:100%;height:52px;border:none;border-radius:var(--mc-r-md);background:var(--mc-accent);color:var(--mc-accent-ink);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:not-allowed;opacity:0.4;transition:opacity 0.2s;"><span id="mp-find-label">FIND MATCH</span></button>
+    <button id="mp-find-btn" onclick="window.startMatchmakingMP()" disabled style="margin-top:8px;width:100%;height:52px;border:none;border-radius:var(--mc-r-md);background:var(--mc-accent);color:var(--mc-accent-ink);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:not-allowed;opacity:0.4;transition:opacity 0.2s;"><span id="mp-find-label">FIND MATCH</span></button>
   </div>
 </div>
 
@@ -2130,15 +2140,15 @@
     <button class="screen-back-btn" onclick="showScreen('game-mode')">← <span id="sh-back-label" class="back-label">VOLTAR</span></button>
   </div>
   <div style="padding:0 20px 20px;text-align:center;">
-    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="sh-title">SOLO</div>
+    <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="sh-title">SOLO</div>
   </div>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;gap:14px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
     <button id="sh-card-continue" onclick="window.continueSolo()" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
-      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);"><span id="sh-continue-label">CONTINUAR</span> — <span id="sh-continue-phase">Fase 1</span></div>
+      <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:15px;font-weight:700;color:var(--mc-ink);"><span id="sh-continue-label">CONTINUAR</span> — <span id="sh-continue-phase">Fase 1</span></div>
       <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="sh-continue-desc">Retomar de onde parou</div>
     </button>
     <button id="sh-card-new" onclick="window.openNewSoloModal()" style="position:relative;width:100%;padding:20px 16px;border-radius:var(--mc-r-lg,12px);border:1.5px solid var(--mc-rule);background:var(--mc-surface);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;box-sizing:border-box;">
-      <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="sh-new-label">NOVO</div>
+      <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:15px;font-weight:700;color:var(--mc-ink);" id="sh-new-label">NOVO</div>
       <div style="font-family:var(--mc-font-sans);font-size:12px;color:var(--mc-muted);margin-top:4px;" id="sh-new-desc">Começar do início (Fase 1)</div>
     </button>
   </div>
@@ -2184,7 +2194,7 @@
     <button class="screen-back-btn" onclick="showScreen('solo-hub')">← <span id="sm-back-label" class="back-label">VOLTAR</span></button>
   </div>
   <div style="padding:0 20px 20px;text-align:center;">
-    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="sm-title">MAPA SOLO</div>
+    <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink);font-weight:700;" id="sm-title">MAPA SOLO</div>
   </div>
   <div id="sm-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px 80px;max-width:600px;width:100%;margin:0 auto;box-sizing:border-box;">
     <!-- 15 cards inseridos via window.buildSPMap() na primeira entrada -->
@@ -2324,9 +2334,9 @@
 #screen-how-to-play{justify-content:flex-start;padding:0;overflow-y:hidden;align-items:stretch;}
 #screen-credits{justify-content:flex-start;padding:0;overflow-y:auto;align-items:stretch;}
 .dk-scroll{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px;max-width:480px;width:100%;margin:0 auto;box-sizing:border-box;}
-.dk-sec-label{font:500 10px var(--mc-font-mono,'IBM Plex Mono',monospace);letter-spacing:0.14em;text-transform:uppercase;color:var(--mc-muted,rgba(24,19,12,0.56));}
+.dk-sec-label{font:500 10px var(--mc-font-mono,'JetBrains Mono',monospace);letter-spacing:0.14em;text-transform:uppercase;color:var(--mc-muted,rgba(24,19,12,0.56));}
 .dk-lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.dk-lang-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:56px;border-radius:var(--mc-r-md,12px);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));background:var(--mc-surface,#fbf7ee);cursor:pointer;font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mc-muted,rgba(24,19,12,0.56));transition:border-color 0.15s,background 0.15s,color 0.15s;}
+.dk-lang-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:56px;border-radius:var(--mc-r-md,12px);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));background:var(--mc-surface,#fbf7ee);cursor:pointer;font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mc-muted,rgba(24,19,12,0.56));transition:border-color 0.15s,background 0.15s,color 0.15s;}
 .dk-lang-btn.selected{border-color:var(--mc-accent,#d4a832);background:color-mix(in srgb,var(--mc-accent,#d4a832) 10%,transparent);color:var(--mc-accent,#d4a832);}
 .dk-flag{width:24px;height:18px;border-radius:3px;overflow:hidden;display:inline-block;}
 .dk-toggle-row{display:flex;align-items:center;padding:0 14px;height:48px;gap:12px;background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,12px);}
@@ -2336,40 +2346,40 @@
 .dk-toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform 0.18s;}
 .dk-toggle.on::after{transform:translateX(16px);}
 .dk-action-list{display:flex;flex-direction:column;gap:6px;}
-.dk-action-row{height:48px;display:flex;align-items:center;padding:0 14px;gap:12px;background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,12px);cursor:pointer;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--mc-ink,#18130c);text-align:left;width:100%;}
+.dk-action-row{height:48px;display:flex;align-items:center;padding:0 14px;gap:12px;background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,12px);cursor:pointer;font-family:var(--mc-font-serif,'Inter',serif);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--mc-ink,#18130c);text-align:left;width:100%;}
 .dk-action-row .dk-ico{width:20px;text-align:center;font-size:16px;opacity:0.4;flex-shrink:0;}
 .dk-action-row .dk-arr{margin-left:auto;opacity:0.3;font-size:16px;}
 .dk-action-row:active{background:color-mix(in srgb,var(--mc-accent,#d4a832) 6%,transparent);}
-.dk-ver{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:10px;color:var(--mc-muted,rgba(24,19,12,0.56));text-align:center;letter-spacing:0.06em;}
+.dk-ver{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:10px;color:var(--mc-muted,rgba(24,19,12,0.56));text-align:center;letter-spacing:0.06em;}
 .dk-htp-scroll{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;max-width:480px;width:100%;margin:0 auto;box-sizing:border-box;}
 .dk-htp-steps{display:flex;flex-direction:column;gap:8px;}
 .dk-htp-step{background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,12px);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;}
-.dk-htp-num{width:24px;height:24px;border-radius:50%;background:var(--mc-accent,#d4a832);color:var(--mc-accent-ink,#18130c);font:700 11px var(--mc-font-mono,'IBM Plex Mono',monospace);display:grid;place-items:center;flex-shrink:0;margin-top:1px;}
+.dk-htp-num{width:24px;height:24px;border-radius:50%;background:var(--mc-accent,#d4a832);color:var(--mc-accent-ink,#18130c);font:700 11px var(--mc-font-mono,'JetBrains Mono',monospace);display:grid;place-items:center;flex-shrink:0;margin-top:1px;}
 .dk-htp-title{font-size:13px;font-weight:600;color:var(--mc-ink,#18130c);}
 .dk-htp-desc{font-size:12px;color:var(--mc-muted,rgba(24,19,12,0.56));line-height:1.5;margin-top:3px;white-space:pre-line;}
 .dk-htp-bonus{background:color-mix(in srgb,var(--mc-surface,#fbf7ee) 50%,var(--mc-rule,rgba(24,19,12,0.06)) 50%);border-radius:var(--mc-r-md,12px);padding:12px 14px;}
 .dk-piece-table{display:grid;grid-template-columns:auto 1fr auto;gap:5px 10px;font-size:12px;align-items:center;}
 .dk-piece-table .dk-p{font-size:20px;text-align:center;}
 .dk-piece-table .dk-n{font-weight:600;color:var(--mc-ink,#18130c);}
-.dk-piece-table .dk-b{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;font-weight:600;color:var(--mc-accent,#d4a832);}
+.dk-piece-table .dk-b{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;font-weight:600;color:var(--mc-accent,#d4a832);}
 .dk-king-block{margin-top:10px;padding-top:9px;border-top:1px solid var(--mc-rule,rgba(24,19,12,0.1));}
 .dk-king-head{display:flex;align-items:center;gap:10px;}
 .dk-king-head .dk-p{font-size:20px;}
 .dk-king-head .dk-n{font-weight:600;color:var(--mc-ink,#18130c);}
 .dk-king-conds{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:11px;align-items:center;margin-top:5px;padding-left:30px;}
 .dk-king-conds .dk-kc-l{color:var(--mc-muted,rgba(24,19,12,0.56));}
-.dk-king-conds .dk-b{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-weight:600;color:var(--mc-accent,#d4a832);}
+.dk-king-conds .dk-b{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-weight:600;color:var(--mc-accent,#d4a832);}
 .dk-htp-note{font-size:12px;color:var(--mc-muted,rgba(24,19,12,0.56));line-height:1.5;padding:12px 14px;border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,12px);background:var(--mc-surface,#fbf7ee);}
 .dk-crd-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;text-align:center;}
-.dk-crd-logo{font-family:var(--mc-font-serif,'Cinzel',serif);font-size:28px;font-weight:700;color:var(--mc-ink,#18130c);}
+.dk-crd-logo{font-family:var(--mc-font-serif,'Inter',serif);font-size:28px;font-weight:700;color:var(--mc-ink,#18130c);}
 .dk-crd-logo em{font-style:normal;color:var(--mc-accent,#d4a832);}
-.dk-crd-version{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;letter-spacing:0.12em;color:var(--mc-muted,rgba(24,19,12,0.56));margin-top:4px;}
+.dk-crd-version{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;letter-spacing:0.12em;color:var(--mc-muted,rgba(24,19,12,0.56));margin-top:4px;}
 .dk-crd-rule{width:40px;height:1px;background:var(--mc-rule-strong,rgba(24,19,12,0.18));}
 .dk-crd-name{font-size:17px;font-weight:700;color:var(--mc-ink,#18130c);}
 .dk-crd-role{font-size:13px;color:var(--mc-muted,rgba(24,19,12,0.56));margin-top:4px;}
-.dk-crd-studio{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--mc-muted,rgba(24,19,12,0.56));}
+.dk-crd-studio{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--mc-muted,rgba(24,19,12,0.56));}
 .dk-crd-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-.dk-crd-link{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));text-decoration:none;padding:6px 12px;border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-pill,999px);}
+.dk-crd-link{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));text-decoration:none;padding:6px 12px;border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-pill,999px);}
 .dk-crd-feedback{font-size:12px;color:var(--mc-accent,#d4a832);text-decoration:underline;text-underline-offset:2px;cursor:pointer;background:none;border:none;padding:0;}
 </style>
 
@@ -2456,7 +2466,7 @@
         </div>
         <div class="dk-ver">microChess v1.0 · o6 games</div>
         <div style="text-align:center;padding:4px 0 8px;">
-          <a href="#" id="link-privacy-policy" target="_blank" style="font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;color:var(--mc-muted);text-decoration:none;opacity:0.7;"><span id="pp-link-text">Política de Privacidade</span></a>
+          <a href="#" id="link-privacy-policy" target="_blank" style="font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;color:var(--mc-muted);text-decoration:none;opacity:0.7;"><span id="pp-link-text">Política de Privacidade</span></a>
         </div>
     </div>
 </div>
@@ -2465,28 +2475,28 @@
 <style>
 #screen-profile{justify-content:flex-start;padding:0;overflow-y:auto;}
 .ph-topbar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:12px 16px;gap:8px;position:sticky;top:0;background:var(--mc-bg,#f7f2e8);z-index:10;border-bottom:1px solid var(--mc-rule,rgba(24,19,12,0.08));}
-.ph-topbar .ph-title{text-align:center;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink,#18130c);font-weight:700;}
-.ph-save-btn{background:var(--mc-accent,#d4a832);color:var(--mc-accent-ink,#18130c);border:none;border-radius:var(--mc-r-md,8px);padding:7px 14px;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:11px;font-weight:700;letter-spacing:1.5px;cursor:pointer;}
+.ph-topbar .ph-title{text-align:center;font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;letter-spacing:3px;color:var(--mc-ink,#18130c);font-weight:700;}
+.ph-save-btn{background:var(--mc-accent,#d4a832);color:var(--mc-accent-ink,#18130c);border:none;border-radius:var(--mc-r-md,8px);padding:7px 14px;font-family:var(--mc-font-serif,'Inter',serif);font-size:11px;font-weight:700;letter-spacing:1.5px;cursor:pointer;}
 .ph-scroll{padding:16px 16px 32px;display:flex;flex-direction:column;gap:16px;max-width:480px;margin:0 auto;width:100%;box-sizing:border-box;}
 .ph-hero{display:flex;align-items:center;gap:14px;padding:16px;background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-lg,12px);}
 .ph-avatar-xl{width:64px;height:64px;border-radius:50%;background:var(--mc-ink,#18130c);color:var(--mc-surface,#fbf7ee);display:grid;place-items:center;font-size:30px;flex-shrink:0;}
 .ph-hero-info{display:flex;flex-direction:column;gap:3px;}
-.ph-display-name{font-family:var(--mc-font-serif,'Cinzel',serif);font-size:15px;font-weight:700;color:var(--mc-ink,#18130c);letter-spacing:1px;}
+.ph-display-name{font-family:var(--mc-font-serif,'Inter',serif);font-size:15px;font-weight:700;color:var(--mc-ink,#18130c);letter-spacing:1px;}
 .ph-elo-name{font-size:13px;color:var(--mc-muted,rgba(24,19,12,0.56));}
-.ph-pdl-val{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:12px;color:var(--mc-accent,#d4a832);font-weight:600;}
+.ph-pdl-val{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:12px;color:var(--mc-accent,#d4a832);font-weight:600;}
 .ph-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .ph-stat{background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,8px);padding:12px 14px;display:flex;flex-direction:column;gap:4px;}
 .ph-stat.full{grid-column:span 2;}
-.ph-stat-val{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:22px;font-weight:700;color:var(--mc-ink,#18130c);}
+.ph-stat-val{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:22px;font-weight:700;color:var(--mc-ink,#18130c);}
 .ph-stat-name{font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));letter-spacing:0.5px;}
 .ph-wr{display:flex;align-items:center;gap:10px;}
-.ph-wr-pct{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:13px;font-weight:600;color:var(--mc-ink,#18130c);min-width:38px;}
+.ph-wr-pct{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:13px;font-weight:600;color:var(--mc-ink,#18130c);min-width:38px;}
 .ph-wr-track{flex:1;height:6px;background:var(--mc-rule,rgba(24,19,12,0.08));border-radius:3px;overflow:hidden;}
 .ph-wr-fill{height:100%;background:var(--mc-accent,#d4a832);border-radius:3px;transition:width 0.4s;}
 .ph-guest-cta{background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-lg,12px);padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;}
 .ph-guest-cta-text{font-size:13px;color:var(--mc-muted,rgba(24,19,12,0.56));}
-.ph-guest-cta-btn{background:var(--mc-accent,#d4a832);color:var(--mc-accent-ink,#18130c);border:none;border-radius:var(--mc-r-md,8px);padding:10px 20px;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:11px;font-weight:700;letter-spacing:1.5px;cursor:pointer;}
-.ph-section-label{font-family:var(--mc-font-serif,'Cinzel',serif);font-size:10px;letter-spacing:2px;color:var(--mc-muted,rgba(24,19,12,0.56));font-weight:700;}
+.ph-guest-cta-btn{background:var(--mc-accent,#d4a832);color:var(--mc-accent-ink,#18130c);border:none;border-radius:var(--mc-r-md,8px);padding:10px 20px;font-family:var(--mc-font-serif,'Inter',serif);font-size:11px;font-weight:700;letter-spacing:1.5px;cursor:pointer;}
+.ph-section-label{font-family:var(--mc-font-serif,'Inter',serif);font-size:10px;letter-spacing:2px;color:var(--mc-muted,rgba(24,19,12,0.56));font-weight:700;}
 .ph-av-sublabel{font-size:10px;color:var(--mc-muted,rgba(24,19,12,0.56));letter-spacing:1px;margin-top:2px;}
 .ph-av-picker{display:flex;flex-direction:column;gap:6px;}
 .ph-av-row{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;}
@@ -2495,10 +2505,10 @@
 .av-opt .p-w{color:#fff;text-shadow:0 0 6px rgba(245,98,0,0.8);}
 .av-opt .p-b{color:var(--mc-ink,#18130c);text-shadow:0 0 6px rgba(69,56,255,0.8);}
 .ph-nick-wrap{display:flex;flex-direction:column;gap:6px;}
-.ph-nick-input{width:100%;padding:12px 14px;background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,8px);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;color:var(--mc-ink,#18130c);box-sizing:border-box;}
+.ph-nick-input{width:100%;padding:12px 14px;background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,8px);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;color:var(--mc-ink,#18130c);box-sizing:border-box;}
 .ph-nick-input:focus{outline:none;border-color:var(--mc-accent,#d4a832);}
 .ph-actions{display:flex;flex-direction:column;gap:6px;}
-.ph-action-btn{width:100%;padding:12px 14px;border-radius:var(--mc-r-md,8px);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:11px;letter-spacing:1.5px;cursor:pointer;text-align:left;border:1px solid var(--mc-rule,rgba(24,19,12,0.08));background:var(--mc-surface,#fbf7ee);color:var(--mc-ink,#18130c);}
+.ph-action-btn{width:100%;padding:12px 14px;border-radius:var(--mc-r-md,8px);font-family:var(--mc-font-serif,'Inter',serif);font-size:11px;letter-spacing:1.5px;cursor:pointer;text-align:left;border:1px solid var(--mc-rule,rgba(24,19,12,0.08));background:var(--mc-surface,#fbf7ee);color:var(--mc-ink,#18130c);}
 .ph-action-btn.danger{border-color:rgba(212,58,42,0.3);color:var(--mc-danger,#d43a2a);background:transparent;}
 .ph-action-btn.danger-soft{border-color:rgba(212,58,42,0.15);color:rgba(212,58,42,0.5);background:transparent;font-size:10px;}
 </style>
@@ -2614,8 +2624,8 @@
 .mh-result.draw{background:rgba(24,19,12,0.06);color:var(--mc-muted,rgba(24,19,12,0.56));}
 .mh-info{flex:1;min-width:0;}
 .mh-opp{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mc-ink,#18130c);}
-.mh-meta{font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));margin-top:2px;font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);}
-.mh-pdl{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;font-weight:600;flex-shrink:0;min-width:44px;text-align:right;}
+.mh-meta{font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));margin-top:2px;font-family:var(--mc-font-mono,'JetBrains Mono',monospace);}
+.mh-pdl{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;font-weight:600;flex-shrink:0;min-width:44px;text-align:right;}
 .mh-pdl.up{color:var(--mc-success,#2f9e5d);}
 .mh-pdl.dn{color:var(--mc-danger,#d43a2a);}
 .mh-pdl.eq{color:var(--mc-muted,rgba(24,19,12,0.56));}
@@ -2633,13 +2643,13 @@
 .rp-match-res.lose{background:var(--mc-danger-soft,rgba(212,58,42,0.10));color:var(--mc-danger,#d43a2a);}
 .rp-match-res.draw{background:rgba(24,19,12,0.06);color:var(--mc-muted,rgba(24,19,12,0.56));}
 .rp-match-opp{font-size:13px;font-weight:600;flex:1;color:var(--mc-ink,#18130c);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.rp-match-pdl{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;font-weight:600;white-space:nowrap;}
+.rp-match-pdl{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;font-weight:600;white-space:nowrap;}
 .rp-match-pdl.up{color:var(--mc-success,#2f9e5d);}
 .rp-match-pdl.dn{color:var(--mc-danger,#d43a2a);}
 .rp-match-pdl.eq{color:var(--mc-muted,rgba(24,19,12,0.56));}
 .rp-turn-row{display:flex;align-items:center;justify-content:space-between;}
-.rp-turn-label{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;text-transform:uppercase;color:var(--mc-muted,rgba(24,19,12,0.56));}
-.rp-turn-count{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));}
+.rp-turn-label{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;text-transform:uppercase;color:var(--mc-muted,rgba(24,19,12,0.56));}
+.rp-turn-count{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));}
 .rp-board-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;}
 .rp-board{display:grid;grid-template-columns:repeat(4,1fr);width:min(280px,76vw);height:min(280px,76vw);border-radius:var(--mc-r-md,12px);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(24,19,12,0.16);}
 .rp-cell{aspect-ratio:1;display:grid;place-items:center;background:var(--mc-cell-light,#eee9de);}
@@ -2653,7 +2663,7 @@
 .rp-duel-banner{flex-shrink:0;padding:8px 16px;background:var(--mc-danger-soft,rgba(212,58,42,0.10));border-top:1px solid rgba(212,58,42,0.15);font-size:12px;color:var(--mc-danger,#d43a2a);display:none;align-items:center;gap:8px;}
 .rp-duel-banner.visible{display:flex;}
 .rp-controls{flex-shrink:0;padding:10px 16px;display:flex;align-items:center;gap:8px;border-top:1px solid var(--mc-rule,rgba(24,19,12,0.08));background:var(--mc-surface,#fbf7ee);}
-.rp-ctrl{height:40px;border-radius:var(--mc-r-sm,8px);border:1px solid var(--mc-rule-strong,rgba(24,19,12,0.18));background:transparent;color:var(--mc-ink,#18130c);font:500 11px var(--mc-font-mono,'IBM Plex Mono',monospace);letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.rp-ctrl{height:40px;border-radius:var(--mc-r-sm,8px);border:1px solid var(--mc-rule-strong,rgba(24,19,12,0.18));background:transparent;color:var(--mc-ink,#18130c);font:500 11px var(--mc-font-mono,'JetBrains Mono',monospace);letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
 .rp-ctrl.primary{background:var(--mc-ink,#18130c);color:var(--mc-surface,#fbf7ee);border-color:var(--mc-ink,#18130c);flex:1;}
 .rp-ctrl.playing{background:var(--mc-accent,#d4a832);color:var(--mc-accent-ink,#18130c);border-color:var(--mc-accent,#d4a832);flex:1;}
 .rp-ctrl.icon{width:40px;flex-shrink:0;}
@@ -2706,11 +2716,11 @@
 #screen-ranking{justify-content:flex-start;padding:0;overflow-y:auto;align-items:stretch;}
 #screen-leaderboard{justify-content:flex-start;padding:0;overflow-y:hidden;align-items:stretch;}
 .rk-topbar{height:52px;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--mc-rule,rgba(24,19,12,0.08));background:var(--mc-bg,#f7f2e8);flex-shrink:0;position:sticky;top:0;z-index:10;}
-.rk-topbar .rk-title{font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;letter-spacing:3px;font-weight:700;position:absolute;left:0;right:0;text-align:center;color:var(--mc-ink,#18130c);pointer-events:none;}
+.rk-topbar .rk-title{font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;letter-spacing:3px;font-weight:700;position:absolute;left:0;right:0;text-align:center;color:var(--mc-ink,#18130c);pointer-events:none;}
 .rk-scroll{display:flex;flex-direction:column;gap:0;max-width:480px;margin:0 auto;width:100%;padding-bottom:24px;}
 .rk-explainer{margin:12px 16px;padding:12px 14px;background:var(--mc-surface,#fbf7ee);border:1px solid var(--mc-rule,rgba(24,19,12,0.08));border-radius:var(--mc-r-md,8px);font-size:12px;color:var(--mc-muted,rgba(24,19,12,0.56));line-height:1.6;}
 .rk-explainer strong{color:var(--mc-ink,#18130c);}
-.rk-expl-title{font-family:var(--mc-font-serif,'Cinzel',serif);font-size:10px;letter-spacing:2px;font-weight:700;color:var(--mc-muted,rgba(24,19,12,0.56));margin-bottom:6px;}
+.rk-expl-title{font-family:var(--mc-font-serif,'Inter',serif);font-size:10px;letter-spacing:2px;font-weight:700;color:var(--mc-muted,rgba(24,19,12,0.56));margin-bottom:6px;}
 .rk-ladder{padding:8px 16px;display:flex;flex-direction:column;}
 .rk-group{position:relative;display:flex;flex-direction:column;}
 .rk-group::before{content:'';position:absolute;left:21px;top:0;bottom:0;width:2px;background:var(--mc-rule,rgba(24,19,12,0.08));}
@@ -2722,21 +2732,21 @@
 .rk-info-name{font-size:13px;font-weight:600;color:var(--mc-ink,#18130c);}
 .rk-pdl-bar{height:4px;border-radius:99px;background:var(--mc-rule,rgba(24,19,12,0.08));overflow:hidden;margin-top:5px;}
 .rk-pdl-fill{height:100%;background:var(--mc-accent,#d4a832);border-radius:99px;}
-.rk-badge{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 7px;border-radius:99px;border:1px solid var(--mc-rule,rgba(24,19,12,0.10));color:var(--mc-muted,rgba(24,19,12,0.56));white-space:nowrap;}
+.rk-badge{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 7px;border-radius:99px;border:1px solid var(--mc-rule,rgba(24,19,12,0.10));color:var(--mc-muted,rgba(24,19,12,0.56));white-space:nowrap;}
 .rk-badge.you{border-color:var(--mc-accent,#d4a832);color:var(--mc-accent,#d4a832);background:color-mix(in srgb,var(--mc-accent,#d4a832) 10%,transparent);}
 .rk-badge.top{border-color:rgba(193,130,0,0.6);color:#c18200;background:rgba(193,130,0,0.1);}
 .rk-lb-btn-wrap{padding:0 16px 8px;}
-.rk-lb-btn{width:100%;height:44px;border-radius:var(--mc-r-md,8px);background:transparent;border:1px solid var(--mc-rule-strong,rgba(24,19,12,0.18));color:var(--mc-ink,#18130c);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:12px;letter-spacing:1.5px;cursor:pointer;}
+.rk-lb-btn{width:100%;height:44px;border-radius:var(--mc-r-md,8px);background:transparent;border:1px solid var(--mc-rule-strong,rgba(24,19,12,0.18));color:var(--mc-ink,#18130c);font-family:var(--mc-font-serif,'Inter',serif);font-size:12px;letter-spacing:1.5px;cursor:pointer;}
 /* Leaderboard */
 .lb-hdr{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--mc-rule,rgba(24,19,12,0.08));background:var(--mc-surface,#fbf7ee);flex-shrink:0;}
-.lb-hdr .hc{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));}
+.lb-hdr .hc{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));}
 .lb-hdr .hc-pos{width:28px;text-align:center;flex-shrink:0;}
 .lb-hdr .hc-av{width:28px;flex-shrink:0;}
 .lb-hdr .hc-name{flex:1;}
 .lb-hdr .hc-wl{width:48px;text-align:right;flex-shrink:0;}
 .lb-r{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--mc-rule,rgba(24,19,12,0.08));}
 .lb-r.you{background:color-mix(in srgb,var(--mc-accent,#d4a832) 8%,transparent);}
-.lb-r .rc-pos{width:28px;font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:12px;font-weight:600;text-align:center;flex-shrink:0;color:var(--mc-muted,rgba(24,19,12,0.56));}
+.lb-r .rc-pos{width:28px;font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:12px;font-weight:600;text-align:center;flex-shrink:0;color:var(--mc-muted,rgba(24,19,12,0.56));}
 .lb-r.top3 .rc-pos{color:var(--mc-ink,#18130c);}
 .lb-r .rc-pos.gold{color:#c18200;}
 .lb-r .rc-pos.silver{color:#7a8a9a;}
@@ -2745,14 +2755,14 @@
 .lb-r .rc-player{flex:1;min-width:0;}
 .lb-r .rc-name{font-size:13px;font-weight:600;color:var(--mc-ink,#18130c);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .lb-r .rc-elo{font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));}
-.lb-r .rc-wl{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));width:48px;text-align:right;flex-shrink:0;}
+.lb-r .rc-wl{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));width:48px;text-align:right;flex-shrink:0;}
 .lb-you-strip{padding:8px 16px;background:color-mix(in srgb,var(--mc-accent,#ff5a1f) 8%,transparent);border-top:1px solid color-mix(in srgb,var(--mc-accent,#ff5a1f) 20%,transparent);display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.lb-you-strip .ys-pos{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:12px;font-weight:700;color:var(--mc-accent,#d4a832);width:28px;text-align:center;flex-shrink:0;}
+.lb-you-strip .ys-pos{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:12px;font-weight:700;color:var(--mc-accent,#d4a832);width:28px;text-align:center;flex-shrink:0;}
 .lb-you-strip .ys-av{width:28px;height:28px;border-radius:50%;background:color-mix(in srgb,var(--mc-accent,#d4a832) 10%,transparent);border:1px solid var(--mc-accent,#d4a832);display:grid;place-items:center;font-size:16px;flex-shrink:0;color:var(--mc-ink,#18130c);}
 .lb-you-strip .ys-info{flex:1;min-width:0;}
 .lb-you-strip .ys-name{font-size:13px;font-weight:600;color:var(--mc-ink,#18130c);}
 .lb-you-strip .ys-elo{font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));}
-.lb-you-strip .ys-wl{font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));}
+.lb-you-strip .ys-wl{font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;color:var(--mc-muted,rgba(24,19,12,0.56));}
 </style>
 
 <!-- RANKING SCREEN (explicação dos ranks + acesso ao leaderboard) -->
@@ -2816,11 +2826,11 @@
 <div id="sd-overlay" style="display:none;position:fixed;inset:0;z-index:2500;justify-content:center;align-items:center;flex-direction:column;gap:24px;background:rgba(0,0,0,0.97);pointer-events:none;animation:none;">
     <div style="display:flex;align-items:center;gap:28px;">
         <span style="font-size:52px;filter:drop-shadow(0 0 14px rgba(245,98,0,0.85));line-height:1;">♔</span>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,0.35);letter-spacing:5px;">VS</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,0.35);letter-spacing:5px;">VS</span>
         <span style="font-size:52px;filter:drop-shadow(0 0 14px rgba(69,56,255,0.85));line-height:1;">♚</span>
     </div>
-    <div id="sd-title" style="font-family:'Cinzel Decorative',serif;font-size:clamp(1.6rem,7vw,2.4rem);color:var(--mc-danger);letter-spacing:8px;text-align:center;text-shadow:0 0 30px color-mix(in srgb,var(--mc-danger) 70%,transparent);animation:exc-pulse-anim 1s ease-in-out infinite;">MORTE SÚBITA</div>
-    <div id="sd-sub" style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:6px;color:rgba(255,255,255,0.35);text-transform:uppercase;text-align:center;"></div>
+    <div id="sd-title" style="font-family:'Inter',serif;font-size:clamp(1.6rem,7vw,2.4rem);color:var(--mc-danger);letter-spacing:8px;text-align:center;text-shadow:0 0 30px color-mix(in srgb,var(--mc-danger) 70%,transparent);animation:exc-pulse-anim 1s ease-in-out infinite;">MORTE SÚBITA</div>
+    <div id="sd-sub" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:6px;color:rgba(255,255,255,0.35);text-transform:uppercase;text-align:center;"></div>
 </div>
 
 <!-- PHASE TRANSITION OVERLAY -->
@@ -2899,7 +2909,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
 /* Phase pill */
 #phase-title {
-    font-family: var(--mc-font-mono, 'IBM Plex Mono', monospace) !important;
+    font-family: var(--mc-font-mono, 'JetBrains Mono', monospace) !important;
     font-size: 11px !important; font-weight: 600 !important;
     letter-spacing: 0.12em !important; text-transform: uppercase !important;
     color: var(--mc-accent, #F56200) !important;
@@ -2913,7 +2923,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
 /* Timer */
 #opp-pts {
-    font-family: var(--mc-font-mono, 'IBM Plex Mono', monospace) !important;
+    font-family: var(--mc-font-mono, 'JetBrains Mono', monospace) !important;
     font-size: 13px !important; font-weight: 500 !important;
     color: var(--mc-muted, rgba(26,22,18,0.45)) !important;
     text-align: right; letter-spacing: 0 !important;
@@ -2922,9 +2932,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
 /* Inventory header */
 .inv-header { display:flex; align-items:center; justify-content:space-between; width:100%; padding:0 0 8px; }
-.inv-label { font-size:11px; font-family:var(--mc-font-mono,'IBM Plex Mono',monospace); color:var(--mc-muted,rgba(26,22,18,0.45)); text-transform:uppercase; letter-spacing:0.08em; }
+.inv-label { font-size:11px; font-family:var(--mc-font-mono,'JetBrains Mono',monospace); color:var(--mc-muted,rgba(26,22,18,0.45)); text-transform:uppercase; letter-spacing:0.08em; }
 #btn-reset-draft {
-    font-size:11px; font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);
+    font-size:11px; font-family:var(--mc-font-mono,'JetBrains Mono',monospace);
     color:var(--mc-muted,rgba(26,22,18,0.45)); background:transparent;
     border:none; cursor:pointer; padding:4px 8px; border-radius:6px;
     transition:color 0.2s,background 0.2s;
@@ -2951,7 +2961,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 [data-theme="dark"] .exc-danger { background: rgba(229,62,62,0.15); }
 [data-theme="dark"] .exc-warn   { background: rgba(217,119,0,0.15); }
 [data-theme="dark"] .exc-info   { background: rgba(245,98,0,0.12); }
-.exc-timer { font-family: var(--mc-font-mono, 'IBM Plex Mono', monospace); font-size: 15px; font-weight: 700; min-width: 28px; text-align: right; flex-shrink: 0; }
+.exc-timer { font-family: var(--mc-font-mono, 'JetBrains Mono', monospace); font-size: 15px; font-weight: 700; min-width: 28px; text-align: right; flex-shrink: 0; }
 .exc-pulse { animation: exc-pulse-anim 1s ease-in-out infinite; }
 @keyframes exc-pulse-anim { 0%,100%{opacity:1} 50%{opacity:0.35} }
 /* J2 — urgência do timer: últimos 5s do aviso de inatividade ficam vermelhos + pulso acelerado */
@@ -2996,7 +3006,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             </div>
         </div>
         <div id="phase-title">DRAFT</div>
-        <div id="phase-time-left" style="font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);font-size:10px;color:var(--mc-muted);text-align:center;line-height:1;margin-top:2px;min-height:14px;transition:color 0.3s;"></div>
+        <div id="phase-time-left" style="font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:10px;color:var(--mc-muted);text-align:center;line-height:1;margin-top:2px;min-height:14px;transition:color 0.3s;"></div>
         <div id="opp-pts">—</div>
     </div>
 
@@ -3015,50 +3025,50 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
     <!-- Inactivity popup — shown to the inactive player -->
     <div id="inactivity-self-popup" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.85);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
-        <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">INATIVO POR MAIS DE 60 SEGUNDOS</div>
-        <button onclick="window.inactivityReturn()" id="inactivity-return-btn" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
+        <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">INATIVO POR MAIS DE 60 SEGUNDOS</div>
+        <button onclick="window.inactivityReturn()" id="inactivity-return-btn" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
             VOLTAR (<span id="inactivity-return-timer">90</span>)
         </button>
-        <button onclick="window.inactivityAbandon()" id="inactivity-abandon-btn" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
+        <button onclick="window.inactivityAbandon()" id="inactivity-abandon-btn" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
             ABANDONAR PARTIDA
         </button>
     </div>
 
     <!-- Inactivity popup — shown to the active player waiting -->
     <div id="inactivity-opp-popup" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.85);flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;">
-        <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;">OPONENTE INATIVO</div>
-        <div style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);letter-spacing:1.5px;">AGUARDANDO AÇÃO</div>
-        <button onclick="window.inactivityOppReturn()" id="inactivity-opp-return-btn" disabled style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:not-allowed;opacity:0.4;">
+        <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;">OPONENTE INATIVO</div>
+        <div style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'JetBrains Mono',monospace);letter-spacing:1.5px;">AGUARDANDO AÇÃO</div>
+        <button onclick="window.inactivityOppReturn()" id="inactivity-opp-return-btn" disabled style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:not-allowed;opacity:0.4;">
             VOLTAR
         </button>
     </div>
 
     <!-- Return-to-game prompt — shown when reconnecting while opponent was also pending -->
     <div id="return-to-game-popup" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.88);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
-        <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">RETORNAR AO JOGO?</div>
-        <div style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);letter-spacing:1.5px;max-width:240px;">Seu oponente voltou. Deseja continuar a partida?</div>
-        <button onclick="window.rtgYes()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
+        <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">RETORNAR AO JOGO?</div>
+        <div style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'JetBrains Mono',monospace);letter-spacing:1.5px;max-width:240px;">Seu oponente voltou. Deseja continuar a partida?</div>
+        <button onclick="window.rtgYes()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
             SIM (<span id="rtg-timer">15</span>)
         </button>
-        <button onclick="window.rtgNo()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
+        <button onclick="window.rtgNo()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">
             NÃO
         </button>
     </div>
 
     <!-- BUG-PRONTO: confirmação de PRONTO incompleto (pontos/peças/jogada faltando) -->
     <div id="confirm-incomplete-popup" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.88);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
-        <div id="cip-title" style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;"></div>
-        <div id="cip-sub" style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);letter-spacing:1.5px;max-width:240px;"></div>
-        <button onclick="window.confirmIncompleteYes()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;" id="cip-yes-btn">
+        <div id="cip-title" style="font-family:var(--mc-font-serif,'Inter',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;"></div>
+        <div id="cip-sub" style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'JetBrains Mono',monospace);letter-spacing:1.5px;max-width:240px;"></div>
+        <button onclick="window.confirmIncompleteYes()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:var(--mc-accent,#d4a832);color:#fff;font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;" id="cip-yes-btn">
             SIM
         </button>
-        <button onclick="window.confirmIncompleteNo()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;" id="cip-no-btn">
+        <button onclick="window.confirmIncompleteNo()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;" id="cip-no-btn">
             NÃO
         </button>
     </div>
 
     <div class="panel" id="my-panel">
-        <div id="my-budget" style="color:var(--accent); margin:0 0 10px; font-weight:600; font-size:1rem; font-family:'IBM Plex Mono',monospace; letter-spacing:3px;">Meus Pts: 5</div>
+        <div id="my-budget" style="color:var(--accent); margin:0 0 10px; font-weight:600; font-size:1rem; font-family:'JetBrains Mono',monospace; letter-spacing:3px;">Meus Pts: 5</div>
 
         <div class="inventory-area">
             <div class="inv-header">
@@ -3075,22 +3085,22 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         </div>
 
         <button id="btn-ready" class="btn-ready" onclick="setReady()">PRONTO</button>
-        <button id="btn-abandon" onclick="window.abandonGame()" style="display:none;background:none;border:none;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);font-size:11px;font-weight:600;letter-spacing:1.5px;cursor:pointer;padding:8px 0 2px;width:100%;text-align:center;opacity:0.7;">ABANDONAR PARTIDA</button>
+        <button id="btn-abandon" onclick="window.abandonGame()" style="display:none;background:none;border:none;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-sans,'JetBrains Mono',monospace);font-size:11px;font-weight:600;letter-spacing:1.5px;cursor:pointer;padding:8px 0 2px;width:100%;text-align:center;opacity:0.7;">ABANDONAR PARTIDA</button>
     </div>
 </div>
 
 <!-- S16: Confirmação de abandono -->
 <div id="abandon-confirm-popup" style="display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,0.88);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
-    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">ABANDONAR PARTIDA?</div>
-    <div id="abandon-confirm-sub" style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);letter-spacing:1px;max-width:260px;">Esta ação não pode ser desfeita.</div>
-    <button onclick="window.abandonConfirmYes()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">SIM — ABANDONAR</button>
-    <button onclick="window.abandonConfirmNo()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:rgba(255,255,255,0.08);color:var(--mc-bg-inv,#f5f0e8);font-family:var(--mc-font-serif,'Cinzel',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
+    <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">ABANDONAR PARTIDA?</div>
+    <div id="abandon-confirm-sub" style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'JetBrains Mono',monospace);letter-spacing:1px;max-width:260px;">Esta ação não pode ser desfeita.</div>
+    <button onclick="window.abandonConfirmYes()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">SIM — ABANDONAR</button>
+    <button onclick="window.abandonConfirmNo()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:rgba(255,255,255,0.08);color:var(--mc-bg-inv,#f5f0e8);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
 </div>
 
 <!-- S16: Overlay de partida cancelada (pré-jogo AFK) -->
 <div id="game-cancelled-overlay" style="display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,0.92);flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;">
-    <div style="font-family:var(--mc-font-serif,'Cinzel',serif);font-size:20px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:1px;">PARTIDA CANCELADA</div>
-    <div id="game-cancelled-sub" style="font-size:12px;color:rgba(245,240,232,0.6);text-align:center;font-family:var(--mc-font-sans,'IBM Plex Mono',monospace);letter-spacing:1px;max-width:260px;">Um jogador abandonou antes do início. Retornando ao menu...</div>
+    <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:20px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:1px;">PARTIDA CANCELADA</div>
+    <div id="game-cancelled-sub" style="font-size:12px;color:rgba(245,240,232,0.6);text-align:center;font-family:var(--mc-font-sans,'JetBrains Mono',monospace);letter-spacing:1px;max-width:260px;">Um jogador abandonou antes do início. Retornando ao menu...</div>
 </div>
 
 <!-- DUEL MODAL -->
@@ -3103,7 +3113,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
 /* Duel status → pill */
 #duel-status {
-    font-family: var(--mc-font-mono, 'IBM Plex Mono', monospace) !important;
+    font-family: var(--mc-font-mono, 'JetBrains Mono', monospace) !important;
     font-size: 12px !important; font-weight: 600 !important;
     letter-spacing: 0.12em !important; text-transform: uppercase !important;
     color: var(--mc-danger, #d43a2a) !important;
@@ -3131,7 +3141,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 .duel-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:10px; }
 .duel-vs-sep {
     display:flex; align-items:center; padding:0 4px;
-    font-family:var(--mc-font-mono,'IBM Plex Mono',monospace);
+    font-family:var(--mc-font-mono,'JetBrains Mono',monospace);
     font-size:12px; font-weight:700; letter-spacing:0.1em;
     color:var(--mc-muted,rgba(24,19,12,0.56));
 }
@@ -3144,7 +3154,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     width: 100%;
 }
 .duel-card.opp { background: var(--mc-surface, #fbf7ee) !important; border: 1px solid var(--mc-rule, rgba(24,19,12,0.10)) !important; }
-.opp-label { font-family:var(--mc-font-mono,'IBM Plex Mono',monospace); font-size:10px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--mc-muted,rgba(24,19,12,0.56)); }
+.opp-label { font-family:var(--mc-font-mono,'JetBrains Mono',monospace); font-size:10px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--mc-muted,rgba(24,19,12,0.56)); }
 
 /* Name badge — light */
 .card-theme-white .duel-name-badge { background:var(--mc-accent-soft,rgba(245,98,0,0.1)) !important; color:var(--mc-accent,#F56200) !important; border:1px solid transparent !important; }
@@ -3176,10 +3186,10 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 .lose-text { color: var(--mc-danger, #d43a2a) !important; text-shadow: none !important; }
 
 .gameover { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:20px; padding:24px; text-align:center; width:100%; max-width:360px; }
-.gameover .verdict { font-family:var(--mc-font-mono,'IBM Plex Mono',monospace); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--mc-muted,rgba(24,19,12,0.56)); margin-bottom:4px; }
+.gameover .verdict { font-family:var(--mc-font-mono,'JetBrains Mono',monospace); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--mc-muted,rgba(24,19,12,0.56)); margin-bottom:4px; }
 
 .go-mmr { display:flex; gap:8px; align-items:center; padding:10px 16px; background:var(--mc-surface,#fbf7ee); border-radius:100px; border:1px solid var(--mc-rule,rgba(24,19,12,0.10)); }
-.go-mmr .delta { font-family:var(--mc-font-mono,'IBM Plex Mono',monospace); font-weight:700; font-size:15px; }
+.go-mmr .delta { font-family:var(--mc-font-mono,'JetBrains Mono',monospace); font-weight:700; font-size:15px; }
 .go-mmr .delta.up { color:var(--mc-success,#2f9e5d); }
 .go-mmr .delta.dn { color:var(--mc-danger,#d43a2a); }
 .go-mmr .delta.eq { color:var(--mc-muted,rgba(24,19,12,0.56)); }
@@ -4590,6 +4600,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             apply(saved);
         } else if (mq && mq.matches) {
             apply('dark');
+        } else {
+            apply('light');
         }
         // React to OS theme changes only when user has no saved preference
         if (mq) mq.addEventListener('change', e => {
@@ -4792,7 +4804,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             if (!banner && grid && grid.parentNode) {
                 banner = document.createElement('div');
                 banner.id = 'sm-completed-banner';
-                banner.style.cssText = 'margin:0 0 12px 0;padding:10px 14px;background:var(--mc-success-soft);border:1px solid var(--mc-success);border-radius:var(--mc-r-md,8px);color:var(--mc-ink);text-align:center;font-family:var(--mc-font-serif,Cinzel,serif);font-size:13px;';
+                banner.style.cssText = 'margin:0 0 12px 0;padding:10px 14px;background:var(--mc-success-soft);border:1px solid var(--mc-success);border-radius:var(--mc-r-md,8px);color:var(--mc-ink);text-align:center;font-family:var(--mc-font-serif,Inter,sans-serif);font-size:13px;';
                 banner.textContent = t('sp_completed_all_explore');
                 grid.parentNode.insertBefore(banner, grid);
             } else if (banner) {
@@ -4922,7 +4934,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                   '<span id="sm-card-' + n + '-num" style="font-family:var(--mc-font-mono,monospace);font-size:16px;font-weight:700;color:var(--mc-ink);">' + n + '</span>' +
                   '<span id="sm-card-' + n + '-state" style="font-size:14px;line-height:1;">🔒</span>' +
                 '</div>' +
-                '<div id="sm-card-' + n + '-name" style="font-family:var(--mc-font-serif,Cinzel,serif);font-size:11px;color:var(--mc-muted);margin-top:6px;text-align:left;">' + _spPhaseName(n) + '</div>';
+                '<div id="sm-card-' + n + '-name" style="font-family:var(--mc-font-serif,Inter,sans-serif);font-size:11px;color:var(--mc-muted);margin-top:6px;text-align:left;">' + _spPhaseName(n) + '</div>';
             grid.appendChild(btn);
         }
         _spMapBuilt = true;
@@ -5177,7 +5189,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             if (!badge) {
                 badge = document.createElement('div');
                 badge.id = '_mm-unranked-badge';
-                badge.style.cssText = 'margin-top:8px;padding:4px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:3px;color:rgba(240,236,228,0.45);font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:2px;';
+                badge.style.cssText = 'margin-top:8px;padding:4px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:3px;color:rgba(240,236,228,0.45);font-family:\'Inter\',sans-serif;font-size:9px;letter-spacing:2px;';
                 badge.textContent = t('unranked_match');
                 document.getElementById('mm-found')?.appendChild(badge);
             }
@@ -5640,7 +5652,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 if (!goBadge) {
                     goBadge = document.createElement('div');
                     goBadge.id = '_go-unranked-badge';
-                    goBadge.style.cssText = 'margin-top:6px;padding:4px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:rgba(240,236,228,0.35);font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:2px;';
+                    goBadge.style.cssText = 'margin-top:6px;padding:4px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:rgba(240,236,228,0.35);font-family:\'Inter\',sans-serif;font-size:9px;letter-spacing:2px;';
                     goBadge.textContent = t('unranked_match');
                     goResult.insertAdjacentElement('afterend', goBadge);
                 }
@@ -5906,7 +5918,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 el.style.setProperty('--py', `${visualY * 100}%`);
             }
 
-            // J3: detecta promoção Peão → Cavalo (type muda P→N)
+            // J3: detecta promoção Peão → Rainha (type muda P→Q)
             const _prevType = el.dataset.type;
             el.innerText = CONFIG[p.type].icon;
             el.dataset.type = p.type;
