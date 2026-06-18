@@ -6872,7 +6872,7 @@ function _show() {
     }
 
     _el('tut-overlay').style.display = 'block';
-    _el('tut-overlay').style.pointerEvents = 'auto';
+    _el('tut-overlay').style.pointerEvents = 'none'; // pai não bloqueia; cada filho define o seu
     _updateDots();
 
     var card = _el('tut-card');
