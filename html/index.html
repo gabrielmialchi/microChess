@@ -5906,11 +5906,11 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 el.style.setProperty('--py', `${visualY * 100}%`);
             }
 
-            // J3: detecta promoção Peão → Rainha (type muda P→Q)
+            // J3: detecta promoção Peão → Cavalo (type muda P→N)
             const _prevType = el.dataset.type;
             el.innerText = CONFIG[p.type].icon;
             el.dataset.type = p.type;
-            if (_prevType === 'P' && p.type === 'Q') {
+            if (_prevType === 'P' && p.type !== 'P') {
                 _promoting.add(p.id);
                 setTimeout(() => _promoting.delete(p.id), 720);
             }
