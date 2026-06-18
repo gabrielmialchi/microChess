@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}html,body{margin:0}
+  @keyframes p4pulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 6px rgba(255,106,51,.5))}50%{transform:scale(1.1);filter:drop-shadow(0 0 16px rgba(255,106,51,.95))}}
+  @keyframes p4dash{to{background-position:0 14px}}
+  @keyframes p4ringpulse{0%,100%{box-shadow:inset 0 0 0 2px rgba(255,106,51,.95),0 0 0 2000px rgba(0,0,0,.5)}50%{box-shadow:inset 0 0 0 2px rgba(255,106,51,.5),0 0 14px rgba(255,106,51,.5),0 0 0 2000px rgba(0,0,0,.5)}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#f5f3ee;font-family:'Inter',system-ui,sans-serif;color:#18130c;padding:40px 32px 90px;">
+  <div style="max-width:1060px;margin:0 auto;">
+
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#ff5a1f;">P4 · S27</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(24,19,12,.4);">Maior alavanca de retenção · OT-04</span>
+    </div>
+    <h1 style="font-size:34px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px;">Tutorial — Spec de UX</h1>
+    <p style="font-size:15px;line-height:1.55;color:rgba(24,19,12,.62);max-width:690px;margin:0 0 24px;">
+      Entregável de UX (o código vem depois). Tutorial <strong>totalmente roteirizado</strong>: o jogador vive o loop das 3 fases uma vez e cada regra aparece no contexto ideal. <strong>O tabuleiro nunca some</strong> — o backdrop só escurece o redor e abre um spotlight sobre o elemento em foco, que continua <strong>interativo</strong>. Em passos bloqueantes, é a própria ação (comprar/arrastar/promover) que libera o passo — sem botão "próximo".
+    </p>
+
+    <!-- decisions strip -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:32px;">
+      <sc-for list="{{ decisions }}" as="d" hint-placeholder-count="8">
+        <div style="background:#fff;border:1px solid rgba(24,19,12,.1);border-radius:11px;padding:11px 13px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(24,19,12,.42);margin-bottom:4px;">{{ d.k }}</div>
+          <div style="font-size:12.5px;font-weight:600;line-height:1.35;color:#18130c;">{{ d.v }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ── 1 · OVERLAY UX FRAMES ── -->
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#ff5a1f;margin-bottom:4px;">1 · Padrão visual da dica</div>
+    <p style="font-size:13.5px;color:rgba(24,19,12,.55);margin:0 0 18px;max-width:640px;">Tabuleiro visível + spotlight no foco (o redor escurece) + card de dica na base. <strong>Pular</strong> no topo; pontos de progresso. A linha "▸" diz como avançar. Ambiente quente (P2), peças do P1.</p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:40px;">
+      <sc-for list="{{ frames }}" as="f" hint-placeholder-count="4">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(24,19,12,.5);margin-bottom:8px;">{{ f.cap }}</div>
+          <div style="position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(24,19,12,.14);box-shadow:0 16px 40px -16px rgba(24,19,12,.45);background:radial-gradient(ellipse at 50% 32%,#16110b 0%,#0b0907 100%);height:440px;">
+            <!-- topbar -->
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;height:42px;padding:0 12px;background:#18140e;border-bottom:1px solid rgba(244,239,228,.08);position:relative;z-index:1;">
+              <div style="font-size:10px;color:rgba(244,239,228,.5);">Tutorial</div>
+              <div style="justify-self:center;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.12em;color:#ff6a33;background:rgba(255,106,51,.14);border-radius:99px;padding:3px 9px;">{{ f.phase }}</div>
+              <div style="justify-self:end;font-size:10px;color:rgba(244,239,228,.5);">·</div>
+            </div>
+            <!-- game area: board always visible -->
+            <div style="position:absolute;left:0;right:0;top:42px;bottom:160px;display:flex;align-items:center;justify-content:center;">
+              <div style="position:relative;">
+                <div style="display:grid;grid-template-columns:repeat(4,42px);grid-template-rows:repeat(4,42px);border-radius:8px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.5);">
+                  <sc-for list="{{ f.cells }}" as="c" hint-placeholder-count="16">
+                    <div style="{{ c.cellStyle }}"><sc-if value="{{ c.p }}" hint-placeholder-val="{{ true }}"><span style="{{ c.pStyle }}">{{ c.p }}</span></sc-if></div>
+                  </sc-for>
+                </div>
+                <sc-if value="{{ f.isDrag }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:absolute;left:60px;top:24px;width:3px;height:60px;background:repeating-linear-gradient(180deg,#ff6a33 0 7px,transparent 7px 14px);background-size:3px 14px;animation:p4dash .6s linear infinite;"></div>
+                  <div style="position:absolute;left:34px;top:-22px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#ff8a5f;">arraste ▸</div>
+                </sc-if>
+              </div>
+            </div>
+            <!-- spotlight: transparent focus, box-shadow dims the rest -->
+            <div style="{{ f.spotStyle }}"></div>
+            <!-- front modal content (draft shop / duel / conclusion) -->
+            <sc-if value="{{ f.isDraft }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute;left:0;right:0;top:108px;display:flex;justify-content:center;z-index:2;">
+                <div style="background:#1f1a12;border:1px solid rgba(255,106,51,.45);border-radius:12px;padding:11px 13px;width:196px;box-shadow:0 0 24px rgba(255,106,51,.2);">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.1em;color:#ff8a5f;margin-bottom:7px;">LOJA · TOQUE PARA COMPRAR</div>
+                  <sc-for list="{{ f.shop }}" as="s" hint-placeholder-count="3">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#e9e2d4;padding:3px 0;">
+                      <span style="font-size:18px;color:#f8f4ee;text-shadow:0 0 1px #14100a,0 0 5px rgba(245,98,0,.7);width:20px;">{{ s.g }}</span>
+                      <span style="flex:1;">{{ s.n }}</span>
+                      <span style="font-family:'JetBrains Mono',monospace;font-weight:600;color:#ff8a5f;">{{ s.c }}</span>
+                    </div>
+                  </sc-for>
+                  <div style="margin-top:7px;padding-top:7px;border-top:1px solid rgba(244,239,228,.1);font-size:9.5px;line-height:1.4;color:rgba(244,239,228,.5);">{{ f.shopNote }}</div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ f.isDuel }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute;left:0;right:0;top:120px;display:flex;justify-content:center;gap:10px;z-index:2;">
+                <sc-for list="{{ f.duelCards }}" as="c" hint-placeholder-count="2">
+                  <div style="{{ c.wrap }}">
+                    <span style="{{ c.glyphStyle }}">{{ c.g }}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(244,239,228,.6);">{{ c.roll }}</span>
+                    <span style="{{ c.totalStyle }}">{{ c.total }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ f.isFim }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute;left:0;right:0;top:118px;display:flex;flex-direction:column;align-items:center;gap:11px;z-index:2;">
+                <span style="font-size:40px;color:#f8f4ee;text-shadow:0 0 1px #14100a,0 0 14px rgba(245,98,0,.9);">♕</span>
+                <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:210px;">
+                  <sc-for list="{{ f.chips }}" as="ch" hint-placeholder-count="7">
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:8.5px;color:#ff8a5f;border:1px solid rgba(255,106,51,.3);border-radius:99px;padding:3px 7px;">{{ ch }}</span>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <!-- skip -->
+            <div style="position:absolute;top:50px;right:12px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(244,239,228,.7);background:rgba(0,0,0,.4);border-radius:99px;padding:4px 9px;z-index:3;">Pular ✕</div>
+            <!-- hint card -->
+            <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#1f1a12;border:1px solid rgba(244,239,228,.12);border-radius:14px;padding:13px 14px;z-index:3;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:.1em;color:#ff6a33;">PASSO {{ f.step }}/10</span>
+                <span style="{{ f.gateBadge }}">{{ f.gate }}</span>
+              </div>
+              <div style="font-size:14px;font-weight:700;color:#f4efe4;margin-bottom:4px;">{{ f.title }}</div>
+              <div style="font-size:11.5px;line-height:1.45;color:rgba(244,239,228,.66);">{{ f.copy }}</div>
+              <div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#ff8a5f;">▸ {{ f.advance }}</div>
+              <div style="display:flex;gap:4px;margin-top:10px;">{{ f.dots }}</div>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ── 2 · TEACHING MAP ── -->
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#ff5a1f;margin-bottom:14px;">2 · Mapa de ensino — 10 passos pelas 3 fases</div>
+    <div style="background:#fff;border:1px solid rgba(24,19,12,.1);border-radius:14px;overflow:hidden;margin-bottom:40px;">
+      <div style="display:grid;grid-template-columns:36px 92px 1fr 1.3fr 78px;gap:12px;padding:10px 16px;background:#efe9de;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(24,19,12,.5);">
+        <div>#</div><div>Fase</div><div>Regra ensinada</div><div>Dica (copy)</div><div>Trava</div>
+      </div>
+      <sc-for list="{{ beats }}" as="b" hint-placeholder-count="10">
+        <div style="display:grid;grid-template-columns:36px 92px 1fr 1.3fr 78px;gap:12px;padding:12px 16px;border-top:1px solid rgba(24,19,12,.06);align-items:start;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#ff5a1f;">{{ b.n }}</div>
+          <div><span style="{{ b.phaseStyle }}">{{ b.phase }}</span></div>
+          <div style="font-size:13px;font-weight:600;color:#18130c;">{{ b.lesson }}</div>
+          <div style="font-size:12px;line-height:1.45;color:rgba(24,19,12,.6);">{{ b.copy }}</div>
+          <div><span style="{{ b.gateStyle }}">{{ b.gate }}</span></div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- King note -->
+    <div style="background:rgba(255,90,31,.06);border:1px solid rgba(255,90,31,.25);border-radius:12px;padding:14px 16px;margin-bottom:40px;font-size:13px;line-height:1.55;color:#18130c;">
+      <strong>⚠ Rei — atenção na implementação:</strong> custo <strong>0</strong> e <strong>bônus dinâmico</strong> conforme entra em combate (ataca · colide · é atacado sem se mover). O passo 1 (apresentação dos bônus) deve renderizar o valor do Rei a partir do código (não fixar "+4"), para ser corrigido/ajustado lá. Promoção: o Peão vira <strong>Rainha</strong>.
+    </div>
+
+    <!-- ── 3 · SCRIPTED MATCH ── -->
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#ff5a1f;margin-bottom:4px;">3 · Roteiro do bot — partida fixa</div>
+    <p style="font-size:13.5px;color:rgba(24,19,12,.55);margin:0 0 18px;max-width:640px;">Movimentos e dados <strong>fixos</strong> — o jogador chega sempre ao mesmo estado. Posições/dados são tunáveis na implementação.</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px;">
+      <sc-for list="{{ turns }}" as="t" hint-placeholder-count="6">
+        <div style="background:#fff;border:1px solid rgba(24,19,12,.1);border-radius:14px;padding:15px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#18130c;">{{ t.label }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#ff5a1f;background:rgba(255,90,31,.1);border-radius:99px;padding:3px 8px;">{{ t.rule }}</span>
+          </div>
+          <div style="display:flex;justify-content:center;margin-bottom:11px;">
+            <div style="display:grid;grid-template-columns:repeat(4,34px);grid-template-rows:repeat(4,34px);border-radius:6px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.18);">
+              <sc-for list="{{ t.cells }}" as="c" hint-placeholder-count="16">
+                <div style="{{ c.cellStyle }}"><sc-if value="{{ c.p }}" hint-placeholder-val="{{ true }}"><span style="{{ c.pStyle }}">{{ c.p }}</span></sc-if></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="font-size:11.5px;line-height:1.5;color:rgba(24,19,12,.7);">{{ t.move }}</div>
+          <sc-if value="{{ t.hasDice }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top:9px;display:flex;flex-wrap:wrap;gap:6px;">
+              <sc-for list="{{ t.dice }}" as="d" hint-placeholder-count="2">
+                <span style="{{ d.style }}">{{ d.txt }}</span>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ── 4 · DRAG HINT + FLOW ── -->
+    <div style="background:#18130c;border-radius:16px;padding:22px 24px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#ff8a5f;margin-bottom:14px;">4 · Dica de ARRASTAR + regras de fluxo</div>
+      <div style="display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:center;">
+        <div style="position:relative;background:radial-gradient(ellipse at 50% 40%,#16110b,#0b0907);border-radius:12px;height:150px;display:flex;align-items:center;justify-content:center;">
+          <div style="position:relative;width:120px;height:60px;">
+            <span style="position:absolute;left:0;top:8px;font-size:34px;color:#f8f4ee;text-shadow:0 0 1px #14100a,0 0 8px rgba(245,98,0,.9);animation:p4pulse 1.4s ease-in-out infinite;">♖</span>
+            <div style="position:absolute;left:36px;top:26px;width:74px;height:3px;background:repeating-linear-gradient(90deg,#ff6a33 0 7px,transparent 7px 14px);background-size:14px 3px;animation:p4dash .6s linear infinite;"></div>
+            <div style="position:absolute;right:-4px;top:18px;width:26px;height:26px;border-radius:6px;box-shadow:inset 0 0 0 2px rgba(255,106,51,.9);"></div>
+            <div style="position:absolute;right:30px;top:-6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#ff8a5f;">arraste ▸</div>
+          </div>
+        </div>
+        <div style="font-size:13px;line-height:1.65;color:rgba(255,255,255,.72);">
+          <strong style="color:#fff;">Como avança:</strong> o elemento em foco (peça, loja, casa-alvo) é o único interativo dentro do spotlight. O jogador faz a ação real ali — e isso libera o próximo passo. <strong>Sem botão "próximo"</strong> nos passos bloqueantes.<br><br>
+          <strong style="color:#fff;">Dica de arrastar:</strong> peça com <em>glow pulsante</em> (escala 1→1.08 + aura), <em>trilha pontilhada</em> até a casa-alvo, <em>ring laranja</em> na casa, rótulo "arraste ▸". Tocar sem arrastar → trilha repete 1×.<br>
+          <strong style="color:#fff;">Trava (misto):</strong> chave (comprar, posicionar, arrastar, promover) bloqueia até a ação certa; demonstrações (duelos, vácuo, morte súbita) são livres (toque para rolar). <strong style="color:#fff;">Pular:</strong> topo direito → confirma → menu. <strong style="color:#fff;">Gatilho:</strong> auto na 1ª partida + Config ▸ Como Jogar. <strong style="color:#fff;">Fim:</strong> "Você aprendeu!" + CTA ranqueada.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1060,&quot;height&quot;:1480}}">
+class Component extends DCLogic {
+  ringSmall(color){
+    const d=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+    return d.map(([x,y])=>`${x}px ${y}px 0 ${color}`).join(', ');
+  }
+  pStyle(color,size){
+    if(color==='w') return { color:'#f8f4ee', fontSize:size+'px', lineHeight:1, textShadow:this.ringSmall('#14100a')+', 0 0 6px rgba(245,98,0,.85)' };
+    return { color:'#15110b', fontSize:size+'px', lineHeight:1, textShadow:this.ringSmall('#f4ead7')+', 0 0 6px rgba(69,56,255,.85)' };
+  }
+  board(place, rings, size){
+    rings=rings||{}; size=size||22; const out=[];
+    for(let y=3;y>=0;y--) for(let x=0;x<4;x++){
+      const isLight=(x+y)%2===0; const key=x+','+y;
+      const cs={ background:isLight?'#2a231a':'#4c3c28', display:'flex', alignItems:'center', justifyContent:'center' };
+      if(rings[key]) cs.boxShadow='inset 0 0 0 2px #ff6a33';
+      const cell={ cellStyle:cs, p:null, pStyle:{} };
+      const pc=place[key];
+      if(pc){ cell.p=pc[0]; cell.pStyle=this.pStyle(pc[1],size); if(pc[2]==='pulse') cell.pStyle.animation='p4pulse 1.4s ease-in-out infinite'; }
+      out.push(cell);
+    }
+    return out;
+  }
+  die(kind,win){
+    const base={ fontFamily:"'JetBrains Mono',monospace", fontSize:'10px', fontWeight:600, padding:'4px 8px', borderRadius:'6px', border:'1px solid' };
+    if(win) return { ...base, color:'#2a8f52', borderColor:'rgba(42,143,82,.4)', background:'rgba(42,143,82,.08)' };
+    if(kind==='tie') return { ...base, color:'#c18200', borderColor:'rgba(193,130,0,.4)', background:'rgba(193,130,0,.08)' };
+    return { ...base, color:'rgba(24,19,12,.55)', borderColor:'rgba(24,19,12,.18)', background:'#faf7f1' };
+  }
+
+  renderVals(){
+    const ps=(p)=>({ fontFamily:"'JetBrains Mono',monospace", fontSize:'9px', fontWeight:600, letterSpacing:'.06em', textTransform:'uppercase', padding:'3px 7px', borderRadius:'99px', ...p });
+    const phaseColors={ DRAFT:{color:'#ff5a1f',background:'rgba(255,90,31,.1)'}, POSITION:{color:'#2a8f52',background:'rgba(42,143,82,.1)'}, ACTION:{color:'#2a6fdb',background:'rgba(42,111,219,.1)'}, 'M.SÚBITA':{color:'#d43a2a',background:'rgba(212,58,42,.1)'}, FIM:{color:'rgba(24,19,12,.5)',background:'rgba(24,19,12,.06)'} };
+    const gateStyle=(g)=> g==='Bloqueia'? ps({color:'#d43a2a',background:'rgba(212,58,42,.1)'}) : ps({color:'rgba(24,19,12,.45)',background:'rgba(24,19,12,.06)'});
+    const gateBadge=(g)=>({ fontFamily:"'JetBrains Mono',monospace", fontSize:'8.5px', letterSpacing:'.06em', textTransform:'uppercase', color: g==='livre'?'rgba(244,239,228,.5)':'#ff8a5f', background:'rgba(255,255,255,.06)', borderRadius:'99px', padding:'2px 7px' });
+    const dots=(active)=>React.createElement('span',{style:{display:'flex',gap:'4px'}},
+      Array.from({length:10}).map((_,i)=>React.createElement('span',{key:i,style:{width: i===active-1?'14px':'5px',height:'5px',borderRadius:'99px',background:i<active?'#ff6a33':'rgba(244,239,228,.2)',transition:'all .2s'}})));
+
+    // spotlight via box-shadow trick (transparent focus, dims the rest)
+    const dim='0 0 0 2000px rgba(0,0,0,.55)';
+    const spot=(o)=>({ position:'absolute', left:o.left, top:o.top, width:o.w, height:o.h, borderRadius:o.r||'12px', boxShadow: o.ring? ('inset 0 0 0 2px rgba(255,106,51,.9), '+dim) : dim, pointerEvents:'none', zIndex:1 });
+
+    const base={ '1,0':['♔','w'], '2,1':['♖','w'], '0,1':['♙','w'], '1,3':['♚','b'], '2,3':['♜','b'] };
+    const dragPlace={ '1,0':['♔','w'], '2,0':['♖','w','pulse'], '0,1':['♙','w'], '1,3':['♚','b'], '2,3':['♜','b'] };
+
+    const dc=(g,roll,total,win,wc)=>({ g, roll, total,
+      wrap:{ background:'#1f1a12', border:'1px solid '+(win?'rgba(42,143,82,.5)':'rgba(244,239,228,.12)'), borderRadius:'12px', padding:'11px 13px', display:'flex', flexDirection:'column', alignItems:'center', gap:'5px', width:'80px' },
+      glyphStyle:{ fontSize:'28px', color: wc==='w'?'#f8f4ee':'#15110b', textShadow:(wc==='w'?'0 0 1px #14100a':'0 0 1px #f4ead7')+',0 0 6px '+(wc==='w'?'rgba(245,98,0,.8)':'rgba(69,56,255,.8)') },
+      totalStyle:{ fontFamily:"'JetBrains Mono',monospace", fontSize:'19px', fontWeight:700, color: win?'#3fb369':'#f4efe4' } });
+
+    const frames=[
+      { cap:'DRAFT · bônus', phase:'DRAFT', step:1, gate:'bloqueia', title:'Monte seu exército', copy:'Cada peça vale seu custo no dado. Toque para comprar Torre e Peão.', advance:'Compre as peças para liberar',
+        cells:this.board(base), isDraft:true, spotStyle:spot({left:'calc(50% - 105px)',top:'104px',w:'210px',h:'138px'}),
+        shop:[{g:'♜',n:'Torre',c:'+4'},{g:'♟',n:'Peão',c:'+1'},{g:'♚',n:'Rei',c:'0 · din.'}], shopNote:'Rei: custo 0 · bônus dinâmico (valor vem do código)' },
+      { cap:'ACTION · arrastar', phase:'ACTION', step:3, gate:'bloqueia', title:'Arraste para jogar', copy:'Os dois planejam ao mesmo tempo. Arraste a Torre até a casa em destaque.', advance:'Arraste a Torre para avançar',
+        cells:this.board(dragPlace,{'2,2':true}), isDrag:true, spotStyle:spot({left:'calc(50% - 96px)',top:'78px',w:'192px',h:'186px',r:'10px'}) },
+      { cap:'ACTION · duelo', phase:'ACTION', step:4, gate:'livre', title:'O duelo: 1d6 + bônus', copy:'A Torre tirou menos no dado e venceu pelo bônus. Maior total leva.', advance:'Toque para rolar · depois Resolver',
+        cells:this.board(base), isDuel:true, spotStyle:spot({left:'calc(50% - 110px)',top:'112px',w:'220px',h:'120px'}),
+        duelCards:[ dc('♖','d2 +4','6',true,'w'), dc('♟','d4 +1','5',false,'b') ] },
+      { cap:'FIM · conclusão', phase:'FIM', step:10, gate:'CTA', title:'Você aprendeu!', copy:'Pronto para valer. Suba no ranking.', advance:'Toque em Jogar ranqueada',
+        cells:this.board(base), isFim:true, spotStyle:spot({left:'calc(50% - 95px)',top:'108px',w:'190px',h:'128px'}),
+        chips:['Bônus','Duelo','Empate=vácuo','Rei vence','Ordem','Promoção','M.Súbita'] },
+    ].map(f=>({ ...f, dots:dots(f.step), gateBadge:gateBadge(f.gate) }));
+
+    const beats=[
+      { n:1, phase:'DRAFT', lesson:'Bônus das peças', copy:'Q+5 · R+4 · N+3 · B+2 · P+1 · Rei custo 0 (bônus dinâmico). Compre Torre + Peão.', gate:'Bloqueia' },
+      { n:2, phase:'POSITION', lesson:'Seu território', copy:'Posicione nas suas 2 fileiras. O oponente só vê na revelação.', gate:'Bloqueia' },
+      { n:3, phase:'ACTION', lesson:'Simultâneo + arrastar', copy:'Ambos planejam escondido e revelam juntos. Arraste a peça.', gate:'Bloqueia' },
+      { n:4, phase:'ACTION', lesson:'O duelo (1d6 + bônus)', copy:'Colidiu? Cada um rola 1d6 e soma o bônus. Maior total vence.', gate:'Livre' },
+      { n:5, phase:'ACTION', lesson:'Ordem dos duelos', copy:'Maior bônus resolve primeiro. Bônus iguais → rolagem de desempate decide a ordem.', gate:'Livre' },
+      { n:6, phase:'ACTION', lesson:'Empate = vácuo', copy:'Empate no dado remove as DUAS peças do tabuleiro.', gate:'Livre' },
+      { n:7, phase:'ACTION', lesson:'O Rei vence empates', copy:'Exceção: em empate, o Rei sobrevive e vence.', gate:'Livre' },
+      { n:8, phase:'ACTION', lesson:'Promoção → Rainha', copy:'Peão na última fileira vira Rainha (+5).', gate:'Bloqueia' },
+      { n:9, phase:'M.SÚBITA', lesson:'Morte Súbita', copy:'Só Reis: 3 rodadas de 1d6 SEM bônus. Mais vitórias vence; empate nas 3 = partida empatada.', gate:'Livre' },
+      { n:10, phase:'FIM', lesson:'Você aprendeu!', copy:'Resumo das regras + CTA para a 1ª ranqueada.', gate:'—' },
+    ].map(b=>({ ...b, phaseStyle:ps(phaseColors[b.phase]||phaseColors.FIM), gateStyle:gateStyle(b.gate) }));
+
+    const turns=[
+      { label:'T1 · ARRASTAR + DUELO', rule:'Bônus decide',
+        cells:this.board({ '1,0':['♔','w'], '2,1':['♖','w'], '0,1':['♙','w'], '1,3':['♚','b'], '0,3':['♜','b'] }, {'2,1':true}),
+        move:'Torre sobe e colide com o Peão preto. Dado menor, mas o +4 vence.',
+        dice:[{txt:'♖ d2 +4 = 6 ✓', style:this.die('w',true)}, {txt:'♟ d4 +1 = 5', style:this.die('b',false)}] },
+      { label:'T2 · ORDEM DOS DUELOS', rule:'Maior bônus 1º',
+        cells:this.board({ '1,0':['♔','w'], '2,1':['♖','w'], '0,1':['♙','w'], '1,3':['♚','b'], '0,2':['♝','b'], '2,2':['♟','b'] }, {'2,2':true,'0,1':true}),
+        move:'Dois choques no turno: o da Torre (+4) resolve antes do Peão (+1). Bônus iguais usariam o desempate.',
+        dice:[{txt:'1º · prioridade 4', style:this.die('n',false)}, {txt:'2º · prioridade 1', style:this.die('n',false)}] },
+      { label:'T3 · EMPATE = VÁCUO', rule:'Ambas saem',
+        cells:this.board({ '1,0':['♔','w'], '2,2':['♖','w'], '1,3':['♚','b'] }, {'2,2':true}),
+        move:'Torre × Torre com total igual. Empate → as duas somem do tabuleiro.',
+        dice:[{txt:'♖ d3 +4 = 7', style:this.die('tie',false)}, {txt:'♜ d3 +4 = 7', style:this.die('tie',false)}] },
+      { label:'T4 · REI VENCE EMPATE', rule:'Rei sobrevive',
+        cells:this.board({ '1,1':['♔','w'], '1,2':['♞','b'], '2,3':['♚','b'] }, {'1,1':true}),
+        move:'O Cavalo ataca seu Rei e empata no total. O Rei é exceção: sobrevive e vence.',
+        dice:[{txt:'♔ din. = 6 ✓', style:this.die('w',true)}, {txt:'♞ d3 +3 = 6', style:this.die('tie',false)}] },
+      { label:'T5 · PROMOÇÃO → RAINHA', rule:'Peão vira ♕',
+        cells:this.board({ '1,0':['♔','w'], '0,3':['♙','w'], '2,3':['♚','b'] }, {'0,3':true}),
+        move:'Seu Peão alcança a última fileira e se transforma em Rainha (+5).',
+        dice:null },
+      { label:'T6 · MORTE SÚBITA', rule:'Rei × Rei',
+        cells:this.board({ '1,1':['♔','w'], '2,2':['♚','b'] }, {'1,1':true,'2,2':true}),
+        move:'Só os Reis restam: 3 rodadas de 1d6 SEM bônus. Você vence 2 a 1.',
+        dice:[{txt:'Rodadas 2 × 1 ✓', style:this.die('w',true)}] },
+    ].map(t=>({ ...t, hasDice: !!t.dice }));
+
+    const decisions=[
+      { k:'Gatilho', v:'Auto na 1ª partida + Configurações ▸ Como Jogar' },
+      { k:'Dica', v:'Overlay + spotlight + card na base' },
+      { k:'Trava', v:'Misto — chave bloqueia, demo livre' },
+      { k:'Bot', v:'Totalmente roteirizado (fixo)' },
+      { k:'Arrastar', v:'Glow pulsante + trilha/seta animada' },
+      { k:'Pular', v:'Sempre visível (topo direito)' },
+      { k:'Fim', v:'"Você aprendeu!" + CTA ranqueada' },
+      { k:'Escopo', v:'Completo — 10 regras, 3 fases' },
+    ];
+
+    return { frames, beats, turns, decisions };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  .lab-pre::-webkit-scrollbar{height:8px}
+  input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:99px;background:rgba(24,19,12,.16);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:#ff5a1f;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#f5f3ee;font-family:'Inter',system-ui,sans-serif;color:#18130c;padding:40px 32px 80px;">
+  <div style="max-width:1000px;margin:0 auto;">
+
+    <!-- header -->
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#ff5a1f;">P1 · S28</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(24,19,12,.4);">Prioridade 1 · OT-15 / OT-01</span>
+    </div>
+    <h1 style="font-size:34px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px;">Contorno das peças</h1>
+    <p style="font-size:15px;line-height:1.55;color:rgba(24,19,12,.62);max-width:620px;margin:0 0 28px;">
+      Peças brancas (<code style="font-family:'JetBrains Mono',monospace;font-size:13px;">#f8f4ee</code>) somem sobre casas claras; peças pretas somem sobre casas escuras no dark mode. O glow sozinho não resolve em light mode. Solução: um <strong>contorno por text-shadow de 8 direções</strong> — escuro nas brancas, claro nas pretas — independente de tema e de casa. Calibre abaixo e copie a spec.
+    </p>
+
+    <!-- controls -->
+    <div style="background:#fff;border:1px solid rgba(24,19,12,.1);border-radius:16px;padding:20px 22px;margin-bottom:28px;box-shadow:0 1px 3px rgba(24,19,12,.05);">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+        <button onClick="{{ presetRecommended }}" style="{{ btnRecStyle }}">Recomendado · contorno + glow suave</button>
+        <button onClick="{{ presetOutlineOnly }}" style="{{ btnOnlyStyle }}">Só contorno</button>
+        <button onClick="{{ presetStrong }}" style="{{ btnStrongStyle }}">Contorno forte</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:8px;"><span>Espessura do contorno</span><span style="font-family:'JetBrains Mono',monospace;color:#ff5a1f;">{{ outlineW }}px</span></div>
+          <input type="range" min="0" max="2.5" step="0.1" value="{{ outlineW }}" onInput="{{ setOutlineW }}" style="width:100%;">
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:8px;"><span>Brilho / aura</span><button onClick="{{ toggleGlow }}" style="{{ glowToggleStyle }}">{{ glowLabel }}</button></div>
+          <input type="range" min="0" max="0.9" step="0.05" value="{{ glowI }}" onInput="{{ setGlowI }}" style="width:100%;">
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:8px;"><span>Densidade (camadas)</span><span style="font-family:'JetBrains Mono',monospace;color:#ff5a1f;">{{ ringsLabel }}</span></div>
+          <input type="range" min="1" max="2" step="1" value="{{ rings }}" onInput="{{ setRings }}" style="width:100%;">
+        </div>
+      </div>
+    </div>
+
+    <!-- comparison: two columns ATUAL / PROPOSTO, each light + dark board -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:32px;">
+      <sc-for list="{{ columns }}" as="col" hint-placeholder-count="2">
+        <div style="background:{{ col.frame }};border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:{{ col.labelColor }};">{{ col.label }}</span>
+            <span style="font-size:11px;color:{{ col.subColor }};">{{ col.sub }}</span>
+          </div>
+          <div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap;">
+            <sc-for list="{{ col.boards }}" as="b" hint-placeholder-count="2">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                <div style="display:grid;grid-template-columns:repeat(4,46px);grid-template-rows:repeat(4,46px);border-radius:8px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.18);">
+                  <sc-for list="{{ b.cells }}" as="c" hint-placeholder-count="16">
+                    <div style="{{ c.cellStyle }}"><sc-if value="{{ c.p }}" hint-placeholder-val="{{ true }}"><span style="{{ c.pStyle }}">{{ c.p }}</span></sc-if></div>
+                  </sc-for>
+                </div>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:{{ b.tagColor }};">{{ b.tag }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- spec output -->
+    <div style="background:#18130c;border-radius:16px;padding:22px 24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#ff8a5f;">Spec CSS · aplicar em index.html</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.4);">substitui .piece.white / .piece.black (~linha 622)</span>
+      </div>
+      <pre class="lab-pre" style="margin:0;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.7;color:#e9e2d4;white-space:pre;">{{ specCss }}</pre>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1);font-size:12.5px;line-height:1.6;color:rgba(255,255,255,.6);">
+        <strong style="color:rgba(255,255,255,.85);">Onde:</strong> bloco <code style="color:#ff8a5f;">.piece.white</code> / <code style="color:#ff8a5f;">.piece.black</code> (~linha 622). Trocar <code style="color:#ff8a5f;">filter:var(--white-glow)</code> pelo <code style="color:#ff8a5f;">text-shadow</code> acima. As variáveis <code style="color:#ff8a5f;">--white-glow/--black-glow</code> continuam usadas por inventário/seleção — não remover, só deixar de aplicar no glyph do tabuleiro.
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:1180}}">
+class Component extends DCLogic {
+  state = { outlineW: 1.1, glowOn: true, glowI: 0.45, rings: 1 };
+
+  setOutlineW = (e) => this.setState({ outlineW: parseFloat(e.target.value) });
+  setGlowI = (e) => this.setState({ glowI: parseFloat(e.target.value), glowOn: parseFloat(e.target.value) > 0 });
+  setRings = (e) => this.setState({ rings: parseInt(e.target.value) });
+  toggleGlow = () => this.setState(s => ({ glowOn: !s.glowOn }));
+  presetRecommended = () => this.setState({ outlineW: 1.1, glowOn: true, glowI: 0.45, rings: 1 });
+  presetOutlineOnly = () => this.setState({ outlineW: 1.3, glowOn: false, glowI: 0, rings: 1 });
+  presetStrong = () => this.setState({ outlineW: 1.6, glowOn: true, glowI: 0.55, rings: 2 });
+
+  // 8-direction outline ring(s)
+  ring(color, w, rings) {
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+    let parts = [];
+    for (let r = 1; r <= rings; r++) {
+      const ww = (w * r / rings).toFixed(2);
+      dirs.forEach(([x,y]) => parts.push(`${(x*ww)}px ${(y*ww)}px 0 ${color}`));
+    }
+    return parts;
+  }
+  glowParts(rgb, i) {
+    if (!this.state.glowOn || i <= 0) return [];
+    return [`0 0 8px rgba(${rgb},${i})`, `0 0 16px rgba(${rgb},${i})`];
+  }
+  shadowW() {
+    return [...this.ring('#14100a', this.state.outlineW, this.state.rings), ...this.glowParts('245,98,0', this.state.glowI)].join(', ');
+  }
+  shadowB() {
+    return [...this.ring('#f4ead7', this.state.outlineW, this.state.rings), ...this.glowParts('69,56,255', this.state.glowI)].join(', ');
+  }
+
+  // board scaffolding — placement covers all 4 piece×cell combos
+  placement() {
+    return {
+      '0,0':['♔','w'], '0,1':['♕','w'], '1,0':['♖','w'], '1,1':['♘','w'],
+      '2,2':['♚','b'], '2,3':['♛','b'], '3,2':['♜','b'], '3,3':['♝','b']
+    };
+  }
+  cells(mode, variant) {
+    const cl = mode === 'light' ? '#d9c9ae' : '#2a231a';
+    const cd = mode === 'light' ? '#a08c70' : '#4c3c28';
+    const place = this.placement();
+    const out = [];
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+      const isLight = (r + c) % 2 === 0;
+      const cell = { cellStyle: { background: isLight ? cl : cd, display:'flex', alignItems:'center', justifyContent:'center' }, p: null, pStyle: {} };
+      const pc = place[r + ',' + c];
+      if (pc) {
+        cell.p = pc[0];
+        const isW = pc[1] === 'w';
+        if (variant === 'atual') {
+          cell.pStyle = isW
+            ? { color:'#f8f4ee', fontSize:'30px', lineHeight:1, filter:'drop-shadow(0 0 7px rgba(52,130,210,.9)) drop-shadow(0 2px 4px rgba(0,0,0,.35))', textShadow:'0 2px 4px rgba(0,0,0,.5)' }
+            : { color:'#0d0a06', fontSize:'30px', lineHeight:1, filter:'drop-shadow(0 0 8px rgba(140,80,190,.85)) drop-shadow(0 2px 4px rgba(0,0,0,.25))' };
+        } else {
+          cell.pStyle = isW
+            ? { color:'#f8f4ee', fontSize:'30px', lineHeight:1, textShadow: this.shadowW() }
+            : { color:'#15110b', fontSize:'30px', lineHeight:1, textShadow: this.shadowB() };
+        }
+      }
+      out.push(cell);
+    }
+    return out;
+  }
+
+  specCss() {
+    const w = this.shadowW(), b = this.shadowB();
+    const wrap = (s) => s.replace(/, /g, ',\n               ');
+    return `.piece.white {\n  color: #f8f4ee;\n  filter: none;\n  text-shadow: ${wrap(w)};\n}\n.piece.black {\n  color: #15110b;\n  filter: none;\n  text-shadow: ${wrap(b)};\n}`;
+  }
+
+  renderVals() {
+    const pillBase = { fontFamily:"'Inter',sans-serif", fontSize:'12px', fontWeight:600, padding:'9px 14px', borderRadius:'10px', cursor:'pointer', border:'1px solid rgba(24,19,12,.14)' };
+    const on = { ...pillBase, background:'#ff5a1f', color:'#fff', borderColor:'#ff5a1f' };
+    const off = { ...pillBase, background:'#fff', color:'#3a3227' };
+    const s = this.state;
+    const isRec = s.outlineW===1.1 && s.glowOn && Math.abs(s.glowI-0.45)<0.001 && s.rings===1;
+    const isOnly = !s.glowOn && Math.abs(s.outlineW-1.3)<0.001;
+    const isStrong = s.glowOn && Math.abs(s.outlineW-1.6)<0.001 && s.rings===2;
+    return {
+      outlineW: s.outlineW.toFixed(1),
+      glowI: s.glowI,
+      rings: s.rings,
+      ringsLabel: s.rings === 1 ? '1×' : '2×',
+      glowLabel: s.glowOn ? 'LIGADO' : 'DESLIGADO',
+      setOutlineW: this.setOutlineW, setGlowI: this.setGlowI, setRings: this.setRings, toggleGlow: this.toggleGlow,
+      presetRecommended: this.presetRecommended, presetOutlineOnly: this.presetOutlineOnly, presetStrong: this.presetStrong,
+      glowToggleStyle: { ...(s.glowOn?on:off), padding:'2px 10px', fontSize:'10px', borderRadius:'99px' },
+      btnRecStyle: isRec?on:off, btnOnlyStyle: isOnly?on:off, btnStrongStyle: isStrong?on:off,
+      specCss: this.specCss(),
+      columns: [
+        { label:'ATUAL', sub:'glow only', frame:'#ece6db', labelColor:'rgba(24,19,12,.5)', subColor:'rgba(24,19,12,.4)',
+          boards:[
+            { cells:this.cells('light','atual'), tag:'Light mode', tagColor:'rgba(24,19,12,.45)' },
+            { cells:this.cells('dark','atual'), tag:'Dark mode', tagColor:'rgba(24,19,12,.45)' },
+          ] },
+        { label:'PROPOSTO', sub:'contorno + aura', frame:'#fff4ef', labelColor:'#ff5a1f', subColor:'rgba(24,19,12,.45)',
+          boards:[
+            { cells:this.cells('light','proposto'), tag:'Light mode', tagColor:'rgba(24,19,12,.45)' },
+            { cells:this.cells('dark','proposto'), tag:'Dark mode', tagColor:'rgba(24,19,12,.45)' },
+          ] },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

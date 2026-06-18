@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}html,body{margin:0}</style>
+</helmet>
+<div style="min-height:100vh;background:#f5f3ee;font-family:'Inter',system-ui,sans-serif;color:#18130c;padding:40px 32px 80px;">
+  <div style="max-width:1000px;margin:0 auto;">
+
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#ff5a1f;">P3 · S29</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(24,19,12,.4);">Prioridade 2 · OT-16</span>
+    </div>
+    <h1 style="font-size:34px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px;">Tipografia</h1>
+    <p style="font-size:15px;line-height:1.55;color:rgba(24,19,12,.62);max-width:660px;margin:0 0 26px;">
+      Hoje 5 fontes competem: <strong>Cinzel Decorative</strong> e <strong>Cinzel</strong> (dois serifs display), <strong>Inter</strong>, e <strong>dois monos</strong> redundantes (IBM Plex + JetBrains). O design system já aponta para Inter + JetBrains Mono. A questão do designer — serif melhora leitura no mobile? — se resolve assim: <strong>serif só em títulos</strong> (identidade), nunca no corpo. Veja as duas hierarquias aplicadas a uma tela real.
+    </p>
+
+    <!-- today: 5 fonts -->
+    <div style="background:#fff;border:1px solid rgba(24,19,12,.1);border-radius:14px;padding:18px 20px;margin-bottom:28px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(24,19,12,.45);margin-bottom:14px;">Hoje · 5 fontes carregadas</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;">
+        <sc-for list="{{ today }}" as="t" hint-placeholder-count="5">
+          <div style="border-left:2px solid {{ t.bar }};padding-left:12px;">
+            <div style="{{ t.sample }}">{{ t.text }}</div>
+            <div style="font-size:11px;color:rgba(24,19,12,.5);margin-top:5px;">{{ t.font }}</div>
+            <div style="font-size:10.5px;color:rgba(24,19,12,.38);">{{ t.role }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:14px;font-size:12.5px;color:#d43a2a;">⚠ Dois monos fazendo o mesmo papel · serif decorativo difícil de ler em telas pequenas.</div>
+    </div>
+
+    <!-- option switch -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+      <span style="font-size:12px;font-weight:600;color:rgba(24,19,12,.5);">Hierarquia:</span>
+      <button onClick="{{ setA }}" style="{{ aBtn }}">A · Sans unificado (2 fontes)</button>
+      <button onClick="{{ setB }}" style="{{ bBtn }}">B · Serif de marca (3 fontes)</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:360px 1fr;gap:32px;align-items:start;">
+      <!-- phone mockup -->
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#ff5a1f;margin-bottom:12px;">{{ optName }} · em contexto</div>
+        <div style="border-radius:22px;overflow:hidden;border:1px solid rgba(24,19,12,.12);box-shadow:0 18px 44px -18px rgba(24,19,12,.4);background:#f7f2e8;">
+          <!-- menu header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border-bottom:1px solid rgba(24,19,12,.08);">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:34px;height:34px;border-radius:50%;background:#18130c;color:#ff5a1f;display:grid;place-items:center;font-size:18px;">♛</div>
+              <div>
+                <div style="{{ ty.name }}">Guerreiro</div>
+                <div style="{{ ty.meta }}">Cavaleiro · Elite</div>
+              </div>
+            </div>
+            <div style="{{ ty.logo }}">micro<span style="color:#ff5a1f;">Chess</span>.</div>
+          </div>
+          <!-- screen body -->
+          <div style="padding:22px 18px 24px;">
+            <div style="{{ ty.eyebrow }}">RANKING</div>
+            <div style="{{ ty.h1 }}">Sua escalada</div>
+            <div style="{{ ty.sub }}">Vença partidas para acumular XP e subir de divisão.</div>
+            <div style="{{ ty.body }}">Ao atingir 100 XP você é promovido. Ao subir de grupo, ganha um Escudo ×3 que absorve rebaixamentos.</div>
+            <!-- hud strip -->
+            <div style="margin-top:18px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1px solid rgba(24,19,12,.08);border-radius:12px;">
+              <div style="{{ ty.pill }}">AÇÃO</div>
+              <div style="flex:1;"></div>
+              <div style="{{ ty.timer }}">0:18</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- token table -->
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(24,19,12,.45);margin-bottom:12px;">Tokens · {{ optName }}</div>
+        <div style="background:#fff;border:1px solid rgba(24,19,12,.1);border-radius:14px;overflow:hidden;">
+          <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:118px 1fr;gap:14px;padding:13px 16px;border-bottom:1px solid rgba(24,19,12,.06);align-items:center;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.04em;color:rgba(24,19,12,.5);">{{ t.role }}</div>
+              <div>
+                <div style="{{ t.sample }}">{{ t.text }}</div>
+                <div style="font-size:11px;color:rgba(24,19,12,.45);margin-top:3px;font-family:'JetBrains Mono',monospace;">{{ t.spec }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:14px;padding:14px 16px;background:{{ recBg }};border:1px solid {{ recBorder }};border-radius:12px;font-size:13px;line-height:1.55;color:#18130c;">{{ recNote }}</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:1080}}">
+class Component extends DCLogic {
+  state = { opt: 'A' };
+  setA = () => this.setState({ opt:'A' });
+  setB = () => this.setState({ opt:'B' });
+
+  renderVals() {
+    const opt = this.state.opt;
+    const pill = { fontFamily:"'Inter',sans-serif", fontSize:'12px', fontWeight:600, padding:'8px 13px', borderRadius:'10px', cursor:'pointer', border:'1px solid rgba(24,19,12,.14)' };
+    const on = { ...pill, background:'#ff5a1f', color:'#fff', borderColor:'#ff5a1f' };
+    const off = { ...pill, background:'#fff', color:'#3a3227' };
+
+    // applied typography per option
+    const INTER = "'Inter',system-ui,sans-serif";
+    const MONO = "'JetBrains Mono',monospace";
+    const CINZEL = "'Cinzel',serif";
+
+    let ty, tokens, optName, recNote, recBg, recBorder;
+
+    const common = {
+      logo:{ fontFamily:INTER, fontWeight:800, fontSize:'16px', letterSpacing:'-.04em', color:'#18130c' },
+      name:{ fontFamily:INTER, fontWeight:700, fontSize:'14px', color:'#18130c', lineHeight:1.1 },
+      meta:{ fontFamily:INTER, fontWeight:500, fontSize:'11px', color:'rgba(24,19,12,.5)', marginTop:'2px' },
+      sub:{ fontFamily:INTER, fontWeight:500, fontSize:'13px', color:'rgba(24,19,12,.55)', marginTop:'8px', lineHeight:1.4 },
+      body:{ fontFamily:INTER, fontWeight:400, fontSize:'14.5px', color:'rgba(24,19,12,.78)', marginTop:'10px', lineHeight:1.6 },
+      timer:{ fontFamily:MONO, fontWeight:600, fontSize:'15px', color:'#18130c', fontVariantNumeric:'tabular-nums' },
+    };
+
+    if (opt === 'A') {
+      optName = 'A · Sans unificado';
+      ty = {
+        ...common,
+        eyebrow:{ fontFamily:MONO, fontWeight:500, fontSize:'11px', letterSpacing:'.16em', textTransform:'uppercase', color:'#ff5a1f' },
+        h1:{ fontFamily:INTER, fontWeight:800, fontSize:'27px', letterSpacing:'-.02em', color:'#18130c', marginTop:'6px' },
+        pill:{ fontFamily:MONO, fontWeight:600, fontSize:'11px', letterSpacing:'.12em', textTransform:'uppercase', color:'#ff5a1f', background:'rgba(255,90,31,.12)', borderRadius:'99px', padding:'4px 11px' },
+      };
+      tokens = [
+        { role:'Logo', text:'microChess.', spec:'Inter 800 · 40px · -1.5px', sample:{ fontFamily:INTER, fontWeight:800, fontSize:'22px', letterSpacing:'-.04em' } },
+        { role:'Título tela', text:'RANKING', spec:'Inter 700 · 13px · .18em UC', sample:{ fontFamily:INTER, fontWeight:700, fontSize:'13px', letterSpacing:'.18em', textTransform:'uppercase' } },
+        { role:'H1 / seção', text:'Sua escalada', spec:'Inter 800 · 27px · -.02em', sample:{ fontFamily:INTER, fontWeight:800, fontSize:'22px', letterSpacing:'-.02em' } },
+        { role:'Corpo', text:'Vença para subir.', spec:'Inter 400 · 15px · 1.6', sample:{ fontFamily:INTER, fontWeight:400, fontSize:'15px' } },
+        { role:'Label', text:'EYEBROW · CÓDIGO', spec:'JetBrains 500 · 11px · .16em', sample:{ fontFamily:MONO, fontWeight:500, fontSize:'11px', letterSpacing:'.14em', textTransform:'uppercase', color:'rgba(24,19,12,.6)' } },
+        { role:'Número/timer', text:'0:18 · 1482', spec:'JetBrains 600 · tabular', sample:{ fontFamily:MONO, fontWeight:600, fontSize:'15px' } },
+      ];
+      recNote = '✓ Recomendado para máxima legibilidade mobile e alinhamento ao design system (Inter + JetBrains Mono). Remove Cinzel, Cinzel Decorative e IBM Plex Mono — de 5 para 2 fontes. Logo mantém o caráter no peso 800.';
+      recBg = 'rgba(42,143,82,.08)'; recBorder = 'rgba(42,143,82,.3)';
+    } else {
+      optName = 'B · Serif de marca';
+      ty = {
+        ...common,
+        eyebrow:{ fontFamily:MONO, fontWeight:500, fontSize:'11px', letterSpacing:'.16em', textTransform:'uppercase', color:'#ff5a1f' },
+        h1:{ fontFamily:CINZEL, fontWeight:700, fontSize:'24px', letterSpacing:'.01em', color:'#18130c', marginTop:'8px' },
+        pill:{ fontFamily:MONO, fontWeight:600, fontSize:'11px', letterSpacing:'.12em', textTransform:'uppercase', color:'#ff5a1f', background:'rgba(255,90,31,.12)', borderRadius:'99px', padding:'4px 11px' },
+      };
+      tokens = [
+        { role:'Logo', text:'microChess.', spec:'Inter 800 · 40px · -1.5px', sample:{ fontFamily:INTER, fontWeight:800, fontSize:'22px', letterSpacing:'-.04em' } },
+        { role:'Título tela', text:'RANKING', spec:'Cinzel 700 · 14px · .2em UC', sample:{ fontFamily:CINZEL, fontWeight:700, fontSize:'14px', letterSpacing:'.2em', textTransform:'uppercase' } },
+        { role:'H1 / seção', text:'Sua escalada', spec:'Cinzel 700 · 24px', sample:{ fontFamily:CINZEL, fontWeight:700, fontSize:'21px' } },
+        { role:'Corpo', text:'Vença para subir.', spec:'Inter 400 · 15px · 1.6', sample:{ fontFamily:INTER, fontWeight:400, fontSize:'15px' } },
+        { role:'Label', text:'EYEBROW · CÓDIGO', spec:'JetBrains 500 · 11px · .16em', sample:{ fontFamily:MONO, fontWeight:500, fontSize:'11px', letterSpacing:'.14em', textTransform:'uppercase', color:'rgba(24,19,12,.6)' } },
+        { role:'Número/timer', text:'0:18 · 1482', spec:'JetBrains 600 · tabular', sample:{ fontFamily:MONO, fontWeight:600, fontSize:'15px' } },
+      ];
+      recNote = 'Mantém a alma de xadrez: Cinzel só em títulos (display, com letter-spacing). Corpo segue em Inter — serif em texto corrido prejudica leitura no mobile. Remove Cinzel Decorative e IBM Plex Mono — de 5 para 3 fontes.';
+      recBg = 'rgba(255,90,31,.06)'; recBorder = 'rgba(255,90,31,.25)';
+    }
+
+    return {
+      setA:this.setA, setB:this.setB,
+      aBtn: opt==='A'?on:off, bBtn: opt==='B'?on:off,
+      optName, ty, tokens, recNote, recBg, recBorder,
+      today: [
+        { text:'RANKING', font:'Cinzel Decorative', role:'títulos de tela', bar:'#d43a2a', sample:{ fontFamily:"'Cinzel Decorative',serif", fontWeight:700, fontSize:'17px' } },
+        { text:'PRONTO', font:'Cinzel', role:'HUD / fases', bar:'#c18200', sample:{ fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:'16px', letterSpacing:'.1em' } },
+        { text:'Corpo & UI', font:'Inter', role:'design system', bar:'#2a8f52', sample:{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:'16px' } },
+        { text:'0:18 · 1482', font:'IBM Plex Mono', role:'timer / contador', bar:'#8a6a3d', sample:{ fontFamily:"'IBM Plex Mono',monospace", fontWeight:600, fontSize:'16px' } },
+        { text:'0:18 · 1482', font:'JetBrains Mono', role:'mono do DS', bar:'#8a6a3d', sample:{ fontFamily:"'JetBrains Mono',monospace", fontWeight:600, fontSize:'16px' } },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
