@@ -497,4 +497,20 @@ corrige.
 - `html/index.html`
 - `html/auth-frontend.js`
 
+---
+
+## [2026-06-18] Bugs 1º teste + S35 (tutorial encenado) ✅
+
+### Bugs corrigidos (1ª testagem do S34)
+- **Tutorial travado:** `#tut-overlay` (pai) tinha `pointer-events:auto` e interceptava o clique na área recortada do backdrop. `#game-area` cria stacking-context (`z-index:1`), então elevar z-index do alvo não escapava do overlay. Fix: spotlight via **clip-path no backdrop** + overlay pai `pointer-events:none`.
+- **Emoji não chegava ao oponente:** `room.sockets` nunca era populado. Fix: `room.players[oppColor]?.socketId`.
+- **Quem abandona aparecia como vencedor:** cliente derivava vencedor pelo Rei vivo; em WO nenhum Rei morre → `wk` sempre existia. Fix: checar `state.afk` antes dos Reis.
+- **Bandeiras dos idiomas sumiram:** CSP `imgSrc` bloqueava `cdn.jsdelivr.net`. Fix: adicionado à diretiva.
+
+### S35 — Tutorial encenado standalone
+- Novo motor `TUT2` (bloco isolado em `index.html`): roteiro determinístico, sem RNG, sem servidor. Reusa containers/CSS reais.
+- Cenário: compra Torre+Peão (5pts), posiciona em casas fixas, Torre captura Peão preto (duelo forçado), promove Peão→Rainha. 10 passos + cards.
+- Substitui o overlay-sobre-jogo-real do S27. Gatilhos: 1º solo nível 1 (`confirmStartSPLevel`) + Config ▸ JOGAR TUTORIAL.
+- **Arquivos:** `html/index.html`, `server/server.js` (CSP + emoji + abandon).
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

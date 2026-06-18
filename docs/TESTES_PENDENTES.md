@@ -354,6 +354,45 @@
 
 ---
 
+### T-S35-1 — Tutorial encenado: fluxo completo
+**Sessão:** S35 | **Arquivo:** `html/index.html`
+
+1. Aba anônima (sem `mc_tutorial_seen`). Configurações → JOGAR TUTORIAL
+   → **Esperado:** abre direto o tabuleiro do tutorial (não inicia partida real). Loja mostra só Torre(4) e Peão(1).
+2. Comprar Torre e Peão (a loja desabilita cada uma após comprada; orçamento 5→1→0)
+   → **Esperado:** avança sozinho para o passo PRONTO ao ter as duas
+3. PRONTO → POSICIONAR: tocar peça do inventário → casa em destaque acende; tocar nela posiciona
+   → **Esperado:** só a casa em destaque aceita; PRONTO habilita quando as duas estão posicionadas
+4. AÇÃO: tocar a Torre → casa do Peão preto acende; tocar nela
+   → **Esperado:** duelo determinístico "Torre vence", Peão preto é capturado, Torre avança
+5. Cards (ordem/vácuo/Rei): tocar "Entendi ▸" avança cada um
+6. PROMOÇÃO: tocar o Peão → casa da última fileira acende; tocar nela
+   → **Esperado:** Peão vira Rainha (♙→♕) com animação
+7. Card Morte Súbita → "Você aprendeu!" → Jogar agora
+   → **Esperado:** volta ao menu; `mc_tutorial_seen = '1'`
+
+---
+
+### T-S35-2 — Spotlight não trava interação
+**Sessão:** S35
+
+1. Em cada passo bloqueante (comprar/posicionar/atacar/promover)
+   → **Esperado:** o elemento em destaque é clicável (a tela escurecida ao redor NÃO bloqueia o clique no alvo)
+2. Botão PULAR (topo direito) → "Pular o tutorial?" → "Sim, pular"
+   → **Esperado:** fecha, volta ao menu, `mc_tutorial_seen = '1'`
+
+---
+
+### T-S35-3 — Auto-trigger 1º solo
+**Sessão:** S35
+
+1. Conta/convidado sem `mc_tutorial_seen`, ir ao Solo → iniciar Nível 1
+   → **Esperado:** tutorial encenado abre ANTES do jogo (não inicia a partida real)
+2. Concluir/pular tutorial → menu. Iniciar Nível 1 de novo
+   → **Esperado:** agora inicia a partida solo normal (tutorial não repete)
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |

@@ -5045,6 +5045,11 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         const m = document.getElementById('sm-start-modal');
         if (m) m.style.display = 'none';
         if (typeof level !== 'number' || level < 1 || level > 15) return;
+        // S35: 1ª vez no solo (nível 1) → tutorial encenado standalone antes do jogo
+        if (level === 1 && !localStorage.getItem('mc_tutorial_seen') && window.TUT2) {
+            window.TUT2.start();
+            return;
+        }
         // Marcar contexto Solo — SP-8.1 lerá window.spActiveLevel para customizar gameOver buttons.
         window.spActiveLevel = level;
         // Preparar tela matchmaking (espelha goMatchmaking, sem queue_join). Server responde rápido com match_found.
@@ -5292,11 +5297,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         socket.emit('game_join', { roomId: roomID, color: myColor });
         // S34: Show emoji btn only in PvP
         if (window._emojiSetPvP) window._emojiSetPvP(!isSolo);
-        // S27: Tutorial trigger
-        if (window._tutorialPending) {
-            window._tutorialPending = false;
-            setTimeout(function() { if (window.TUT) window.TUT.start(); }, 500);
-        }
+        // S35: tutorial é standalone (TUT2) — não roda mais sobre o jogo real
+        window._tutorialPending = false;
     }
 
     window.cancelMatchmaking = function() {
@@ -6995,12 +6997,9 @@ window.TUT = {
     },
 };
 
-// Settings: "JOGAR TUTORIAL" button handler
+// Settings: "JOGAR TUTORIAL" button handler → tutorial encenado standalone (S35)
 window.launchTutorial = function() {
-    window._tutorialPending = true;
-    if (typeof window.spStartLevel === 'function') {
-        window.spStartLevel(1);
-    }
+    if (window.TUT2) window.TUT2.start();
 };
 
 })();
@@ -7239,6 +7238,410 @@ window.launchTutorial = function() {
             window._emojiCloseWheel();
         }
     }, true);
+})();
+</script>
+<!-- S35: Tutorial encenado standalone (TUT2) — roteiro determinístico, sem servidor -->
+<script>
+(function() {
+'use strict';
+
+var ICON = { Q:'♕', R:'♖', N:'♘', B:'♗', P:'♙', K:'♔' };
+var BONUS = { Q:5, R:4, N:3, B:2, P:1, K:5 };
+function _el(id) { return document.getElementById(id); }
+
+// ── Modelo de jogo roteirizado ────────────────────────────────
+var G = null;           // { pieces, inv, budget, sel }
+var _els = {};          // pieceId → elemento DOM em #pieces-layer
+var _step = 0;
+var _active = false;
+var _cellClick = null;  // handler(x,y) corrente
+var _readyHandler = null;
+
+var TOTAL_STEPS = 10;   // passos não-finais (para os dots)
+
+// ── Render nos containers REAIS ───────────────────────────────
+function _hud(phaseLabel, budget) {
+    var pt = _el('phase-title'); if (pt) pt.textContent = phaseLabel;
+    var os = _el('opp-status');  if (os) os.textContent = 'TUTORIAL';
+    var om = _el('opp-meta');    if (om) om.textContent = 'Aprenda jogando';
+    var op = _el('opp-pts');     if (op) op.textContent = '';
+    var mb = _el('my-budget');   if (mb) mb.textContent = budget != null ? ('Meus Pts: ' + budget) : '';
+    var ptl = _el('phase-time-left'); if (ptl) ptl.textContent = '';
+}
+
+function _renderBoard(highlights) {
+    var b = _el('main-board'); if (!b) return;
+    b.innerHTML = '';
+    for (var r = 0; r < 4; r++) {
+        for (var c = 0; c < 4; c++) {
+            var lx = c, ly = 3 - r;
+            var cell = document.createElement('div');
+            var dark = ((lx + ly) % 2) === 0;
+            cell.className = 'cell ' + (dark ? 'dark' : 'light');
+            if (highlights && highlights.some(function(h) { return h.x === lx && h.y === ly; }))
+                cell.classList.add('highlight');
+            (function(x, y) { cell.onclick = function() { if (_cellClick) _cellClick(x, y); }; })(lx, ly);
+            b.appendChild(cell);
+        }
+    }
+}
+
+function _syncPieces(captured) {
+    var layer = _el('pieces-layer'); if (!layer) return;
+    Object.keys(_els).forEach(function(id) {
+        if (!G.pieces.some(function(p) { return p.id === id; })) {
+            var el = _els[id];
+            if (captured && captured.indexOf(id) >= 0) {
+                el.classList.add('piece-capturing');
+                setTimeout((function(e) { return function() { e.remove(); }; })(el), 660);
+            } else { el.remove(); }
+            delete _els[id];
+        }
+    });
+    G.pieces.forEach(function(p) {
+        var vx = p.x, vy = 3 - p.y;
+        var el = _els[p.id];
+        if (!el) {
+            el = document.createElement('div');
+            el.dataset.id = p.id;
+            el.style.setProperty('--px', (vx * 100) + '%');
+            el.style.setProperty('--py', (vy * 100) + '%');
+            layer.appendChild(el);
+            _els[p.id] = el;
+            el.classList.add('piece-entering');
+            setTimeout((function(e) { return function() { e.classList.remove('piece-entering'); }; })(el), 480);
+        } else {
+            el.style.setProperty('--px', (vx * 100) + '%');
+            el.style.setProperty('--py', (vy * 100) + '%');
+        }
+        var prevType = el.dataset.type;
+        el.dataset.type = p.type;
+        el.textContent = ICON[p.type];
+        el.className = 'piece ' + p.color;
+        if (G.sel && !G.sel.fromInv && G.sel.id === p.id) el.classList.add('selected');
+        if (prevType === 'P' && p.type !== 'P') {
+            el.classList.add('piece-promoting');
+            setTimeout((function(e) { return function() { e.classList.remove('piece-promoting'); }; })(el), 740);
+        }
+    });
+}
+
+function _clearPieces() { var l = _el('pieces-layer'); if (l) l.innerHTML = ''; _els = {}; }
+
+function _renderShop(items, onBuy) {
+    var sc = _el('shop-btns-container'); if (!sc) return;
+    sc.innerHTML = '';
+    items.forEach(function(it) {
+        var btn = document.createElement('button');
+        btn.innerText = ICON[it.type] + '(' + it.cost + ')';
+        btn.disabled = !!it.disabled;
+        btn.onclick = function() { onBuy(it.type); };
+        sc.appendChild(btn);
+    });
+}
+
+function _renderInv(onPick) {
+    var st = _el('my-inv-stack'); if (!st) return;
+    st.innerHTML = '';
+    G.inv.forEach(function(it, idx) {
+        var sp = document.createElement('span');
+        sp.className = 'inv-piece white' + ((G.sel && G.sel.fromInv && G.sel.idx === idx) ? ' selected' : '');
+        sp.innerText = ICON[it.type];
+        (function(i) { sp.onclick = function() { if (onPick) onPick(i); }; })(idx);
+        st.appendChild(sp);
+    });
+}
+
+function _setReadyBtn(label, enabled, handler) {
+    var btn = _el('btn-ready'); if (!btn) return;
+    btn.style.display = label ? 'block' : 'none';
+    if (!label) return;
+    btn.textContent = label;
+    btn.disabled = !enabled;
+    _readyHandler = handler;
+    btn.onclick = function() { if (_readyHandler) _readyHandler(); };
+}
+
+// ── Overlay (reusa o DOM #tut-*) ──────────────────────────────
+function _dots() {
+    var el = _el('tut-dots'); if (!el) return;
+    var html = '';
+    for (var i = 0; i < TOTAL_STEPS; i++)
+        html += '<div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'
+              + (i === _step ? '#ff6a33' : 'rgba(244,234,215,0.22)') + ';"></div>';
+    el.innerHTML = html;
+}
+
+function _spot(sel) {
+    var sp = _el('tut-spot'), bd = _el('tut-bd');
+    if (bd) bd.style.clipPath = '';
+    if (!sel) { if (sp) sp.style.display = 'none'; return; }
+    var tgt = document.querySelector(sel);
+    if (!tgt) { if (sp) sp.style.display = 'none'; return; }
+    var r = tgt.getBoundingClientRect(), pad = 8;
+    var x1 = r.left - pad, y1 = r.top - pad, x2 = r.right + pad, y2 = r.bottom + pad;
+    var W = window.innerWidth, H = window.innerHeight;
+    if (bd) bd.style.clipPath = 'polygon(0px 0px,' + W + 'px 0px,' + W + 'px ' + H + 'px,0px ' + H + 'px,0px 0px,'
+        + x1 + 'px ' + y1 + 'px,' + x1 + 'px ' + y2 + 'px,' + x2 + 'px ' + y2 + 'px,' + x2 + 'px ' + y1 + 'px,' + x1 + 'px ' + y1 + 'px)';
+    if (sp) sp.style.cssText = 'display:block;position:fixed;border-radius:12px;pointer-events:none;z-index:9401;'
+        + 'box-shadow:0 0 0 2px rgba(255,106,51,0.7),0 0 0 4px rgba(255,106,51,0.2);'
+        + 'transition:left .25s,top .25s,width .25s,height .25s;'
+        + 'left:' + x1 + 'px;top:' + y1 + 'px;width:' + (x2 - x1) + 'px;height:' + (y2 - y1) + 'px;';
+}
+
+function _card(o) {
+    _el('tut-overlay').style.display = 'block';
+    _el('tut-overlay').style.pointerEvents = 'none';
+    _dots();
+    var card = _el('tut-card'), icon = _el('tut-icon');
+    if (o.center) {
+        _spot(null);
+        icon.style.display = 'block';
+        icon.textContent = o.icon || '';
+        card.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);'
+            + 'width:calc(100% - 32px);max-width:340px;z-index:9402;pointer-events:all;box-sizing:border-box;'
+            + 'background:rgba(18,13,8,0.97);border:1px solid rgba(255,106,51,0.22);border-radius:16px;padding:28px 20px 24px;';
+    } else {
+        icon.style.display = 'none';
+        card.style.cssText = 'position:absolute;bottom:0;left:0;right:0;z-index:9402;pointer-events:all;'
+            + 'background:linear-gradient(180deg,transparent 0,rgba(11,9,7,0.97) 32px);padding:36px 20px 32px;box-sizing:border-box;';
+        _spot(o.spot);
+    }
+    _el('tut-title').textContent = o.title || '';
+    _el('tut-body').innerHTML = o.body || '';
+    var cta = _el('tut-cta');
+    cta.style.display = o.cta ? 'block' : 'none';
+    cta.textContent = o.cta || '';
+    _el('tut-next-btn').style.display = o.next ? 'block' : 'none';
+}
+
+// ── Cenário roteirizado ───────────────────────────────────────
+function _targetFor(type) { return type === 'R' ? { x:3, y:1 } : { x:1, y:1 }; }
+
+function _baseKings() {
+    return [
+        { id:'wK', type:'K', color:'white', x:1, y:0 },
+        { id:'bK', type:'K', color:'black', x:2, y:3 },
+    ];
+}
+
+function _go(n) {
+    _step = n;
+    _cellClick = null;
+    var btn = _el('btn-ready'); if (btn) { btn.disabled = true; btn.onclick = function() { if (_readyHandler) _readyHandler(); }; }
+
+    if (n === 0) {
+        // DRAFT — comprar Torre + Peão
+        G = { pieces: _baseKings(), inv: [], budget: 5, sel: null };
+        _hud('DRAFT', G.budget);
+        _setReadyBtn('PRONTO', false, null);
+        _clearPieces();
+        _renderBoard(null);
+        _syncPieces();
+        function paintShop() {
+            _renderShop([
+                { type:'R', cost:4, disabled: G.inv.some(function(p){return p.type==='R';}) || G.budget < 4 },
+                { type:'P', cost:1, disabled: G.inv.some(function(p){return p.type==='P';}) || G.budget < 1 },
+            ], function(type) {
+                if (G.inv.some(function(p){return p.type===type;})) return;
+                G.inv.push({ id:'w'+type, type:type, color:'white' });
+                G.budget -= (type === 'R' ? 4 : 1);
+                _hud('DRAFT', G.budget);
+                _renderInv(null);
+                paintShop();
+                if (G.inv.some(function(p){return p.type==='R';}) && G.inv.some(function(p){return p.type==='P';}))
+                    setTimeout(function() { _go(1); }, 450);
+            });
+        }
+        paintShop();
+        _renderInv(null);
+        _card({ spot:'#shop-btns-container', title:'Monte seu exército',
+            body:'Cada peça vale seu custo no dado de combate. Compre a <b>Torre (+4)</b> e o <b>Peão (+1)</b> — juntos custam seus 5 pontos.',
+            cta:'▸ Compre a Torre e o Peão' });
+
+    } else if (n === 1) {
+        // DRAFT — pronto
+        _hud('DRAFT', G.budget);
+        _setReadyBtn('PRONTO', true, function() { _go(2); });
+        _card({ spot:'#btn-ready', title:'Exército montado',
+            body:'Torre e Peão recrutados, 5 pontos gastos. Confirme para posicionar.',
+            cta:'▸ Toque em PRONTO' });
+
+    } else if (n === 2) {
+        // POSITION — posicionar nas casas em destaque
+        G.sel = null;
+        _hud('POSICIONAR', null);
+        _setReadyBtn('PRONTO', false, function() { if (G.inv.length === 0) _go(3); });
+        function repaint() {
+            var hl = (G.sel && G.sel.fromInv) ? [ _targetFor(G.sel.type) ] : null;
+            _renderBoard(hl);
+            _syncPieces();
+            _renderInv(function(i) {
+                if (G.sel && G.sel.fromInv && G.sel.idx === i) G.sel = null;
+                else G.sel = { fromInv:true, idx:i, type:G.inv[i].type };
+                repaint();
+            });
+        }
+        _cellClick = function(x, y) {
+            if (!G.sel || !G.sel.fromInv) return;
+            var tg = _targetFor(G.sel.type);
+            if (x !== tg.x || y !== tg.y) return;
+            var it = G.inv[G.sel.idx];
+            G.pieces.push({ id:it.id, type:it.type, color:'white', x:x, y:y });
+            G.inv.splice(G.sel.idx, 1);
+            G.sel = null;
+            repaint();
+            var btnR = _el('btn-ready'); if (btnR) btnR.disabled = G.inv.length !== 0;
+        };
+        _renderShop([], function(){});
+        repaint();
+        _card({ spot:'#my-panel', title:'Seu território',
+            body:'Posicione nas 2 fileiras mais próximas de você. Toque na peça do inventário e depois na <b>casa em destaque</b>.',
+            cta:'▸ Posicione as duas e toque PRONTO' });
+
+    } else if (n === 3) {
+        // ACTION — mover Torre para capturar o Peão preto
+        G.sel = null;
+        G.pieces.push({ id:'bP', type:'P', color:'black', x:3, y:2 });
+        _hud('AÇÃO', null);
+        _setReadyBtn('', false, null);
+        function repaintA(hl) { _renderBoard(hl); _syncPieces(); }
+        _cellClick = function(x, y) {
+            var torre = G.pieces.find(function(p){return p.id==='wR';});
+            if (!torre) return;
+            if (x === 3 && y === 1) { // selecionar a Torre
+                G.sel = { id:'wR' };
+                repaintA([ { x:3, y:2 } ]);
+                return;
+            }
+            if (G.sel && x === 3 && y === 2) { // atacar o Peão preto
+                _cellClick = null;
+                G.sel = null;
+                _go(4);
+            }
+        };
+        repaintA(null);
+        _card({ spot:'#pieces-layer', title:'Ação simultânea',
+            body:'Os dois lados jogam ao mesmo tempo — ninguém vê a jogada do outro. Toque na <b>Torre</b> e depois na casa do <b>Peão preto</b> em destaque.',
+            cta:'▸ Ataque o Peão preto' });
+
+    } else if (n === 4) {
+        // DUELO — determinístico: Torre vence pelo bônus
+        _hud('DUELO', null);
+        _card({ title:'Duelo: 1d6 + bônus',
+            body:'<b>Torre</b> 🎲 3 +4 = <b>7</b> · <b>Peão</b> 🎲 5 +1 = 6 → a Torre tirou menos no dado, mas o <b>+4</b> venceu. Maior total captura.',
+            next:false });
+        setTimeout(function() {
+            // captura + avanço da Torre
+            G.pieces = G.pieces.filter(function(p){return p.id!=='bP';});
+            var torre = G.pieces.find(function(p){return p.id==='wR';});
+            if (torre) { torre.x = 3; torre.y = 2; }
+            _syncPieces(['bP']);
+            setTimeout(function() { _el('tut-next-btn').style.display = 'block'; }, 500);
+        }, 700);
+
+    } else if (n === 5) {
+        _card({ center:true, icon:'⚔', title:'Ordem dos duelos',
+            body:'Quando há vários choques no mesmo turno, a peça de <b>maior bônus</b> resolve primeiro.', next:true });
+    } else if (n === 6) {
+        _card({ center:true, icon:'💨', title:'Vácuo',
+            body:'Duelo com <b>bônus iguais</b>: as duas peças saem do tabuleiro. Ninguém vence.', next:true });
+    } else if (n === 7) {
+        _card({ center:true, icon:'♚', title:'O Rei é especial',
+            body:'Em empate de bônus, o <b>Rei sempre vence</b>. E quem perde o Rei perde a partida.', next:true });
+
+    } else if (n === 8) {
+        // PROMOÇÃO — avançar Peão à última fileira → Rainha
+        _clearPieces();
+        G = { pieces: [
+            { id:'wK', type:'K', color:'white', x:1, y:0 },
+            { id:'wP2', type:'P', color:'white', x:1, y:2 },
+            { id:'bK', type:'K', color:'black', x:2, y:3 },
+        ], inv: [], budget: 0, sel: null };
+        _hud('PROMOÇÃO', null);
+        _setReadyBtn('', false, null);
+        _renderShop([], function(){});
+        _renderInv(null);
+        function repaintP(hl) { _renderBoard(hl); _syncPieces(); }
+        _cellClick = function(x, y) {
+            var pawn = G.pieces.find(function(p){return p.id==='wP2';});
+            if (!pawn) return;
+            if (x === 1 && y === 2) { G.sel = { id:'wP2' }; repaintP([ { x:1, y:3 } ]); return; }
+            if (G.sel && x === 1 && y === 3) {
+                _cellClick = null;
+                pawn.x = 1; pawn.y = 3; pawn.type = 'Q'; G.sel = null;
+                _syncPieces();
+                setTimeout(function() { _go(9); }, 900);
+            }
+        };
+        repaintP(null);
+        _card({ spot:'#pieces-layer', title:'Promoção → Rainha',
+            body:'Peão que alcança a <b>última fileira</b> vira <b>Rainha (+5)</b>. Toque no Peão e avance para a casa em destaque.',
+            cta:'▸ Promova o Peão' });
+
+    } else if (n === 9) {
+        _card({ center:true, icon:'⚡', title:'Morte Súbita',
+            body:'Se os dois Reis sobrevivem, 3 duelos sem bônus decidem. Empate nos 3 = empate.', next:true });
+
+    } else { // fim
+        _end();
+    }
+}
+
+var CHIPS = [
+    'Duelo: 1d6 + bônus', 'Maior total vence', 'Bônus igual = vácuo',
+    'Rei vence empates', 'Peão → Rainha na última fileira', 'Morte Súbita decide empates',
+];
+
+function _end() {
+    _spot(null);
+    _el('tut-overlay').style.display = 'none';
+    var chips = _el('tut-chips');
+    if (chips) chips.innerHTML = CHIPS.map(function(c) {
+        return '<div style="background:rgba(255,106,51,0.14);border:1px solid rgba(255,106,51,0.28);'
+             + 'border-radius:20px;padding:5px 12px;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#ff8a5f;">' + c + '</div>';
+    }).join('');
+    var endEl = _el('tut-end'); if (endEl) endEl.style.display = 'flex';
+}
+
+function _cleanup() {
+    _active = false;
+    _cellClick = null;
+    _readyHandler = null;
+    _clearPieces();
+    var b = _el('main-board'); if (b) b.innerHTML = '';
+    var sc = _el('shop-btns-container'); if (sc) sc.innerHTML = '';
+    var st = _el('my-inv-stack'); if (st) st.innerHTML = '';
+    var br = _el('btn-ready'); if (br) { br.onclick = null; br.disabled = false; br.textContent = 'PRONTO'; }
+    var ga = _el('game-area'); if (ga) ga.style.display = 'none';
+    ['tut-overlay','tut-end','tut-skip-confirm'].forEach(function(id) { var e = _el(id); if (e) e.style.display = 'none'; });
+    var tb = document.getElementById('mc-tabbar'); if (tb) tb.style.display = '';
+}
+
+window.TUT2 = {
+    start: function() {
+        _active = true;
+        document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+        var tb = document.getElementById('mc-tabbar'); if (tb) tb.style.display = 'none';
+        var ga = _el('game-area'); if (ga) ga.style.display = 'flex';
+        var ab = _el('btn-abandon'); if (ab) ab.style.display = 'none';
+        // redireciona os controles do overlay (#tut-* chamam window.TUT.*) para o TUT2
+        window.TUT = window.TUT2;
+        setTimeout(function() { _go(0); }, 350);
+    },
+    next: function() {
+        if (_step >= TOTAL_STEPS) { _end(); return; }
+        _go(_step + 1);
+    },
+    confirmSkip: function() { var sc = _el('tut-skip-confirm'); if (sc) sc.style.display = 'flex'; },
+    hideSkipConfirm: function() { var sc = _el('tut-skip-confirm'); if (sc) sc.style.display = 'none'; },
+    skip: function() { this.done(); },
+    done: function() {
+        localStorage.setItem('mc_tutorial_seen', '1');
+        _cleanup();
+        if (typeof showScreen === 'function') showScreen('menu');
+    },
+};
 })();
 </script>
 </body>

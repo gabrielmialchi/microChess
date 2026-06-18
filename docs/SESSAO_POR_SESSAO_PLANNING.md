@@ -210,6 +210,26 @@ Atravessa as áreas respeitando a prioridade. O **bloco crítico (v1.2.0)** vem 
 
 ---
 
+# S35 — Tutorial encenado standalone `[F]` 🔴 🅿2 — substitui S27 (fecha OT-04 com fidelidade ao P4)
+
+**Decisão (Gabriel):** roteiro completo encenado — tabuleiro determinístico, sem RNG, sem servidor.
+
+## Spec
+- **Motor novo `TUT2`** (bloco isolado em `index.html`, antes de `</body>`): roda **standalone**, não sobre uma partida real. Reusa os containers/CSS reais (`#main-board`, `#pieces-layer`, `#shop-btns-container`, `#my-inv-stack`, `#btn-ready`, HUD) com lógica determinística própria. **Zero socket, zero mudança no `server.js`.**
+- **Cenário fixo:** jogador compra Torre(+4)+Peão(+1) = 5 pts exatos; posiciona em casas em destaque; Torre captura Peão preto num duelo forçado (Torre 🎲3+4=7 vence Peão 🎲5+1=6); depois promove um Peão à Rainha.
+- **10 passos:** 0 comprar Torre+Peão · 1 PRONTO · 2 posicionar · 3 atacar Peão preto · 4 duelo (Torre vence) · 5 ordem dos duelos · 6 vácuo · 7 Rei · 8 promoção encenada · 9 Morte Súbita · fim "Você aprendeu!".
+- **Gatilhos:** auto na 1ª vez no solo nível 1 (`confirmStartSPLevel` redireciona para `TUT2.start()` antes do jogo) + Config ▸ JOGAR TUTORIAL. Antigo overlay-sobre-jogo-real (`window.TUT`/`_tutorialPending`) desativado.
+- **Overlay reusado:** mesmo DOM `#tut-*`/`#tut-end`; `TUT2.start()` faz `window.TUT = window.TUT2` para os controles do overlay apontarem ao motor novo.
+
+### Checklist
+- [x] Motor `TUT2` com render próprio nos containers reais (board/pieces/shop/inv/HUD/ready).
+- [x] Cenário determinístico: compra travada em Torre+Peão, posição em casas fixas, duelo forçado, promoção encenada.
+- [x] Gatilho auto (1º solo nível 1) + Config; desativado o overlay antigo.
+- [x] Spotlight via clip-path no backdrop (sem stacking-context trap do `#game-area`).
+- [x] Registrar T-S35 em `TESTES_PENDENTES.md`.
+
+---
+
 # S34 — Emojis in-game `[F][S]` 🟢 🅿2 — fecha OT-24
 
 **Objetivo:** Comunicação expressiva e não-verbal durante a partida. Sem chat; sem agressividade.
