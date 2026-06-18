@@ -3100,14 +3100,13 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         <button id="btn-ready" class="btn-ready" onclick="setReady()">PRONTO</button>
         <button id="btn-abandon" onclick="window.abandonGame()" style="display:none;background:none;border:none;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-sans,'JetBrains Mono',monospace);font-size:11px;font-weight:600;letter-spacing:1.5px;cursor:pointer;padding:8px 0 2px;width:100%;text-align:center;opacity:0.7;">ABANDONAR PARTIDA</button>
     </div>
-
-    <!-- S34: Emoji wheel -->
-    <div id="emoji-wheel" style="display:none;position:fixed;bottom:136px;right:8px;z-index:600;flex-direction:column;gap:8px;align-items:center;"></div>
-    <button id="emoji-game-btn" style="display:none;position:fixed;bottom:76px;right:12px;z-index:600;width:48px;height:48px;border-radius:50%;background:var(--mc-accent,#ff6a33);border:none;cursor:pointer;font-size:24px;box-shadow:0 2px 12px rgba(0,0,0,0.45);align-items:center;justify-content:center;transition:opacity 0.2s,transform 0.15s;" onclick="window._emojiToggleWheel()" title="Enviar emoji">😀</button>
 </div>
 
-<!-- S34: Emoji popup (centered over board) -->
-<div id="emoji-popup" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-60%);z-index:800;pointer-events:none;user-select:none;font-size:72px;line-height:1;text-align:center;"></div>
+<!-- S34: Emoji — FORA de #game-area (que tem z-index:1 e isola o stacking context).
+     z-index alto p/ ficar acima do duelo (1000), sd-overlay (2500) e game-over (6000). -->
+<div id="emoji-wheel" style="display:none;position:fixed;bottom:136px;right:8px;z-index:7000;flex-direction:column;gap:8px;align-items:center;"></div>
+<button id="emoji-game-btn" style="display:none;position:fixed;bottom:76px;right:12px;z-index:7000;width:48px;height:48px;border-radius:50%;background:var(--mc-accent,#ff6a33);border:none;cursor:pointer;font-size:24px;box-shadow:0 2px 12px rgba(0,0,0,0.45);align-items:center;justify-content:center;transition:opacity 0.2s,transform 0.15s;" onclick="window._emojiToggleWheel()" title="Enviar emoji">😀</button>
+<div id="emoji-popup" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-60%);z-index:7050;pointer-events:none;user-select:none;font-size:72px;line-height:1;text-align:center;"></div>
 
 <!-- S16: Confirmação de abandono -->
 <div id="abandon-confirm-popup" style="display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,0.88);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
@@ -5181,6 +5180,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             socket.emit('queue_train', getQueueProfile({ uid: myUid, nickname: p.nickname, avatar: p.avatar }));
         } else {
             const _mode = mode === 'casual' ? 'casual' : 'ranked';
+            window._lastPvpMode = _mode; // p/ "JOGAR NOVAMENTE" repetir o mesmo modo
             socket.emit('queue_join', getQueueProfile({ uid: myUid, nickname: p.nickname, avatar: p.avatar, match_mode: _mode }));
         }
     };
@@ -5725,8 +5725,12 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
                 if (_mmrRow) _mmrRow.style.display = 'none';
                 if (goBadge) goBadge.style.display = 'none';
             } else {
-                // Restaurar defaults MP — onclick original do HTML é returnToMenu.
-                if (_btnAgain) _btnAgain.onclick = function() { window.returnToMenu(); };
+                // MP: "JOGAR NOVAMENTE" re-entra no matchmaking do último modo jogado (casual/ranked).
+                if (_btnAgain) _btnAgain.onclick = function() {
+                    var mode = window._lastPvpMode || 'casual';
+                    window.returnToMenu();              // limpa o estado da partida anterior
+                    if (window.goMatchmaking) window.goMatchmaking(mode);
+                };
                 if (_mmrRow) _mmrRow.style.display = '';
             }
             // J8: anima o lance decisivo (rei caindo + shake do J5) e segura antes da tela de fim
@@ -7153,12 +7157,14 @@ window.launchTutorial = function() {
     };
 
     // ── Game: send emoji ──────────────────────────────────────────
+    var EMOJI_COOLDOWN_MS = 2000; // cooldown curto — spam liberado
+
     function _startCooldown() {
         _usedThisTurn = true;
         var btn = _el('emoji-game-btn');
-        if (btn) { btn.style.opacity = '0.4'; btn.title = 'Aguarde o próximo turno'; }
+        if (btn) { btn.style.opacity = '0.4'; btn.title = 'Aguarde…'; }
         clearTimeout(_cooldownTimer);
-        _cooldownTimer = setTimeout(function() { _resetCooldown(); }, 20000);
+        _cooldownTimer = setTimeout(function() { _resetCooldown(); }, EMOJI_COOLDOWN_MS);
     }
 
     function _resetCooldown() {
@@ -7173,7 +7179,7 @@ window.launchTutorial = function() {
         if (_usedThisTurn) return;
         var emoji = _emojis[idx];
         if (!emoji) return;
-        window._emojiCloseWheel();
+        // não fecha a wheel — permite tocar de novo a cada 2s (spam liberado)
         if (window._mcSocket) window._mcSocket.emit('emoji_send', { emoji: emoji });
         _startCooldown();
     };

@@ -536,4 +536,13 @@ corrige.
 - **Limpeza entre partidas:** `_emojiSetPvP` sempre reseta o cooldown ao entrar/sair.
 - **Arquivos:** `html/index.html`, `server/server.js`.
 
+---
+
+## [2026-06-18] Emoji camada superior + cooldown 2s + JOGAR NOVAMENTE ✅
+
+- **Emoji na camada superior:** botão/wheel/popup movidos para FORA de `#game-area` (que tem `z-index:1` e isolava o stacking context — mesma armadilha do tutorial). Agora filhos diretos de `<body>` com z-index 7000/7050 → ficam acima do duelo (1000), sd-overlay (2500) e game-over (6000). Emojis utilizáveis durante rolagem de dados, tela de resultados e tela final (win/lose). Sala persiste 60s pós-jogo, então o emoji ainda chega na tela final.
+- **Cooldown 20s → 2s** (cliente `EMOJI_COOLDOWN_MS=2000` + servidor `< 2000`); wheel não fecha mais ao enviar (spam liberado).
+- **JOGAR NOVAMENTE (PvP):** antes ia ao menu; agora re-entra no matchmaking do **último modo jogado** (`window._lastPvpMode`, casual/ranked, rastreado em `goMatchmaking`). Solo mantém comportamento (próxima fase/retry).
+- **Arquivos:** `html/index.html`, `server/server.js`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

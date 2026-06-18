@@ -1963,10 +1963,10 @@ io.on('connection', (socket) => {
         const room = getRoom();
         if (!room || !playerColor) return;
         if (typeof emoji !== 'string' || !EMOJI_CURATED.has(emoji)) return;
-        // Cooldown de 20s por jogador; o início de um novo turno zera (ver broadcast).
+        // Cooldown curto de 2s por jogador (spam liberado).
         const now = Date.now();
         room.emojiLast = room.emojiLast || {};
-        if (room.emojiLast[playerColor] && (now - room.emojiLast[playerColor]) < 20000) return;
+        if (room.emojiLast[playerColor] && (now - room.emojiLast[playerColor]) < 2000) return;
         room.emojiLast[playerColor] = now;
         const oppColor = playerColor === 'white' ? 'black' : 'white';
         const oppSocketId = room.players[oppColor]?.socketId;
