@@ -159,12 +159,12 @@ Atravessa as áreas respeitando a prioridade. O **bloco crítico (v1.2.0)** vem 
 - [x] COMO JOGAR e CRÉDITOS movidos para Configurações. Popup de confirmação de logout.
   *(Verificado: tudo já implementado em sessões anteriores — sem código novo necessário.)*
 
-## S21 — Histórico de partidas + viewer de replay `[F]` 🟡 🅿2 — fecha OT-20 (merge do antigo S23, Sessão 9)
-- [ ] `screen-match-history` (lista separada do perfil); header do replay com resumo (oponente, rank, data, PdL).
-- [ ] **Corrigir o viewer `screen-replay`** (servidor grava/serve OK — confirmado; o problema é frontend).
+## ✅ S21 — Histórico de partidas + viewer de replay `[F]` 🟡 🅿2 — fecha OT-20 (merge do antigo S23, Sessão 9)
+- [x] `screen-match-history` (lista separada do perfil); header do replay com resumo (oponente, rank, data, PdL). — já existia.
+- [x] **Corrigir o viewer `screen-replay`**: `isDraw` corrigido (draw_rule/draw_inactivity), date parsing Firefox, schema CHECK constraint, turn label i18n.
 
-## S20 — Tela ranking explicativa `[F]` 🟢 🅿2 (Sessão 8)
-- [ ] `screen-ranking`: grid dos 14 ranks + explicação do PdL; botão LEADERBOARD GLOBAL.
+## ✅ S20 — Tela ranking explicativa `[F]` 🟢 🅿2 (Sessão 8)
+- [x] `screen-ranking`: grid dos 14 ranks + explicação do PdL; botão LEADERBOARD GLOBAL. — já existia, verificado.
 
 ## ✅ S33 — Quick wins de telas/config `[F]` 🟢 🅿1 (merge S05+S06+S07+S08+S24)
 - [x] **Créditos** (OT—/ADJ-A F): "Desenvolvido por / O6 GAMES · Gabriel Mialchi"; remover Portfólio e Itch.
@@ -178,11 +178,11 @@ Atravessa as áreas respeitando a prioridade. O **bloco crítico (v1.2.0)** vem 
 # ÁREA F — Retenção, clareza & balanceamento
 `[S][D]` — solo, dificuldade, draft e onboarding. Maior escopo; depois dos bugs.
 
-## S25 — Suavizar níveis 1–3 do solo `[S]` 🟡 🅿2 — fecha OT-05
-- [ ] Rebalancear dificuldade/composição inimiga dos 3 primeiros níveis (funil cai 40→17).
+## ✅ S25 — Suavizar níveis 1–3 do solo `[S]` 🟡 🅿2 — fecha OT-05
+- [x] L1 recruta: 1 Peão (1pt), 70% passa. L2 aprendiz: 2 Peões nos cantos, 50% passa. L3 defensor: aleatório ≤3pts.
 
-## S26 — Rebalance do draft / valor das peças `[S][D]` 🟡 🅿2 — fecha OT-06
-- [ ] Investigar domínio do Peão (53%) × Torre ignorada (5,5%): custo/bônus e clareza percebida.
+## ✅ S26 — Rebalance do draft / valor das peças `[S][D]` 🟡 🅿2 — fecha OT-06
+- [x] Investigado: domínio é estratégia ótima real (P→Q = win trivial). Fix: promoção P→N (Cavalo, bônus 3).
 
 ## S27 — Tutorial scriptado pós-login `[F][S]` 🔴 🅿2 — fecha OT-04 (maior alavanca de retenção)
 - [ ] **Sessão de design dedicada primeiro.** Partida-tutorial scriptada contra bot fraco,

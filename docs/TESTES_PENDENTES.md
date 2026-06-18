@@ -188,6 +188,52 @@
 
 ---
 
+### T-S21-1 — Empate no histórico de partidas
+**Sessão:** S21 | **Arquivo:** `html/rank-ui.js`
+
+1. Jogar Morte Súbita até empate (0×0 nos dados)
+2. Abrir perfil → HISTÓRICO DE PARTIDAS
+   → **Esperado:** partida aparece com badge **E** (cor muted/cinza), não "D"
+3. Se o match foi Ranked e o jogador mais fraco ganhou LP, badge PdL mostra `= 0 PdL` (display de empate)
+   → se `lpDelta > 0` na DB mas UI mostra `= 0 PdL`, é comportamento atual esperado
+
+---
+
+### T-S21-2 — Replay viewer funcional
+**Sessão:** S21 | **Arquivo:** `html/replay-ui.js`
+
+1. Na tela de histórico, clicar no ▶ de uma partida com replay disponível
+   → **Esperado:** tela de replay abre; header mostra "vs NomeOponente" + badge V/D/E + delta PdL
+2. Verificar o board: peças visíveis no posicionamento inicial
+3. Clicar ▶ AUTO para avançar automaticamente
+   → **Esperado:** peças movem a cada 1s; label de turno atualiza ("Turno 1", "Turno 2"…)
+4. Clicar ⏮ / ⏭ para navegar manualmente
+   → **Esperado:** navega sem erro; ⏮ desabilita no turno 0; ⏭ desabilita no último
+5. Clicar ← VOLTAR → retorna ao histórico
+
+---
+
+### T-S21-3 — Date legível no histórico (Firefox)
+**Sessão:** S21 | **Arquivo:** `html/rank-ui.js`
+
+1. Abrir o histórico no **Firefox**
+   → **Esperado:** data da partida aparece legível (ex: "17 de jun") não "Invalid Date"
+   → *(Antes: `new Date("2026-06-17 15:30:00")` retornava Invalid Date no Firefox)*
+
+---
+
+### T-S21-4 — CHECK constraint no banco novo
+**Sessão:** S21 | **Arquivo:** `server/db/schema.sql`
+
+*(Só necessário se criar um banco do zero — ex: apagar `microchess.db` e reiniciar)*
+
+1. Apagar `server/db/microchess.db`, reiniciar servidor
+2. Jogar uma partida que termine em empate (Morte Súbita 0×0)
+   → **Esperado:** sem erro no log do servidor; match aparece no histórico
+   → *(Antes: `draw_rule` seria rejeitado pelo CHECK constraint antigo)*
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |

@@ -27,6 +27,63 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-17] S26 — Rebalance draft: promoção do Peão
+**Status:** ✅ Implementado — pendente playtest
+**Área:** F — Retenção / balanceamento
+
+### Feito
+- **`server/movegen.js` `promotePawns`**: Peão promove para Cavalo (N, bônus 3) em vez de Rainha (Q, bônus 5).
+  - Antes: 5 Peões → 5 Rainhas (bônus 5 cada) = estratégia dominante e fácil (funil OT-06: 52,7% dos drafts)
+  - Depois: 5 Peões → 5 Cavalos (bônus 3 cada) — ainda forte, mas Rainha e Torre voltam a ser alternativas competitivas
+  - Motivo de escolha: não alterar custo do Peão (quebraria checks `budget >= 1` em 8+ arquivos de estratégia do bot)
+- **`html/index.html` linha 5913**: animação de promoção (J3) detecta `_prevType === 'P' && p.type !== 'P'` em vez de `p.type === 'Q'` — compatível com qualquer alvo futuro.
+
+### Decisão de design
+Investigado OT-06: domínio do Peão (52,7%) é estratégia ótima confirmada (não falta de clareza). 5 Peões promovendo a 5 Rainhas é win-condition trivial. Fix: reduzir o payoff da promoção sem remover a mecânica.
+
+---
+
+## [2026-06-17] S25 — Suavizar níveis 1–3 do solo
+**Status:** ✅ Implementado — pendente playtest
+**Área:** F — Retenção / solo
+
+### Feito
+- **L1 (01-recruta.js)**: compra 1 Peão (1pt, 4pts desperdiçados), posiciona na fileira de trás, passa 70% dos turnos.
+  Resultado: jogador enfrenta Rei + 1 Peão. Vitória praticamente garantida para qualquer estratégia.
+- **L2 (02-aprendiz.js)**: compra 2 Peões (2pts), posiciona nos cantos da fileira de frente, passa 50% dos turnos.
+  Antes: 5 Peões formavam parede inteira (4pt de frente + 1 de trás). Agora: brecha de 2 colunas no meio.
+- **L3 (03-defensor.js)**: compra peças baratas aleatórias até gastar 3pts (era 5pts com 2 Bispos).
+  Movimento: 45% avança, 55% aleatório — igual ao antigo Recruta mas com menos peças.
+
+### Progressão nova vs. antiga
+| Nível | Antes | Depois |
+|-------|-------|--------|
+| L1    | peças aleatórias (até 5pts) + move 45%→Rei | 1 Peão, 70% passa |
+| L2    | 5 Peões (parede completa), avança sempre | 2 Peões (cantos), 50% passa |
+| L3    | 2 Bispos + 1 Peão (defensivo) | peças aleatórias ≤3pts, semi-aleatório |
+
+### Notas para próxima sessão
+- Sessões restantes 🅿2: S26 (draft rebalance), S27 (tutorial — requer design), S32 (coesão visual — requer design), S29 (tipografia — requer design), S28 (deixado por último)
+
+---
+
+## [2026-06-17] S20+S21 — Ranking verificado + correções do histórico/replay
+**Status:** ✅ Implementado — pendente playtest
+**Área:** E — Telas
+
+### Feito
+- **S20 — Verificado**: `screen-ranking` com grid de 14 ranks, explainer, botão LEADERBOARD GLOBAL e back do leaderboard → ranking já existia completamente. Marcado ✅ sem código novo.
+- **S21-A — isDraw corrigido** (`rank-ui.js:127`): `m.result === 'draw'` não cobria `draw_rule` nem `draw_inactivity` (taxonomia do S02). Empates apareciam como "D" (Derrota) no histórico e no header do replay. Fix: `isDraw = m.result === 'draw' || m.result === 'draw_rule' || m.result === 'draw_inactivity'`.
+- **S21-B — Date parsing** (`rank-ui.js:122`): `new Date(m.created_at)` retornava Invalid Date no Firefox (SQLite usa espaço em vez de T). Fix: `.replace(' ', 'T')`.
+- **S21-C — Schema CHECK constraint** (`schema.sql`): `result TEXT CHECK(...)` só aceitava os 5 valores antigos; novos valores do S02 (`draw_rule`, `draw_inactivity`, `cancelled`) seriam rejeitados em bancos frescos. Constraint atualizada com todos os 8 valores.
+- **S21-D — Turn label i18n** (`replay-ui.js:77`): turno de action usava `"Turno X"` hardcoded em PT. Trocado por `t('turn_label') + " " + turnIndex`.
+
+### Notas para próxima sessão
+- Sessões 🅿1/🅿2 restantes: S28 (contorno de peças — design), S25 (solo rebalance), S26 (draft rebalance), S27 (tutorial), S32 (coesão visual), S29 (tipografia)
+- S28 requer handoff de design antes de implementar
+
+---
+
 ## [2026-06-17] S14+S10+S18+S19+S22 — Undo draft + timer fase + deduplication de sessões
 **Status:** ✅ Implementado — pendente playtest
 **Área:** A, C, B, E
