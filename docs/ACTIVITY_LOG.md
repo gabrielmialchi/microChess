@@ -525,4 +525,15 @@ corrige.
 - **Fix regressão:** `_cleanup` restaura handlers inline de `#btn-ready`/`#close-duel` (antes anulava, quebrando setReady/finishDuel no jogo real após o tutorial).
 - **Arquivos:** `html/index.html`, `docs/TUTORIAL_L10N_PLAN.md` (novo).
 
+---
+
+## [2026-06-18] Fix emoji — popup não aparecia + cooldown 20s ✅
+
+- **Causa raiz:** o bloco de emoji define `window._emojiWireSocket`, mas o IIFE principal tentava chamá-lo logo após criar o socket — momento em que `_emojiWireSocket` ainda era `undefined` (o bloco de emoji só executa depois). Resultado: o listener `emoji_recv` nunca era registrado e o popup nunca surgia no oponente.
+- **Fix:** a fiação passou para a init do próprio bloco de emoji (`if (window._mcSocket) window._emojiWireSocket(window._mcSocket)`), com fallback por polling.
+- **Cooldown 20s (refinado conforme feedback):** servidor trocou a flag booleana por timestamp `room.emojiLast[color]` (bloqueia < 20s); o início de um novo turno (`turnCount`) zera. Adicionado `state.turnCount` (incrementa em `resolveAction`) e exposto como `turn` no `stateView` (cliente já reseta o cooldown na virada de turno).
+- **Popup:** duração reduzida para ~1s (entra 0.4s + segura 0.3s + sai 0.3s).
+- **Limpeza entre partidas:** `_emojiSetPvP` sempre reseta o cooldown ao entrar/sair.
+- **Arquivos:** `html/index.html`, `server/server.js`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

@@ -4750,7 +4750,8 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     window.API_BASE = SERVER_URL;
     const socket = io(SERVER_URL);
     window._mcSocket = socket;
-    if (window._emojiWireSocket) window._emojiWireSocket(socket);
+    // Nota: a fiação do emoji (_emojiWireSocket) é feita pelo próprio bloco de emoji,
+    // que executa depois deste IIFE; aqui ela ainda seria undefined.
 
     // On reconnect: attempt to restore in-progress game
     socket.on('connect', () => {
@@ -7185,12 +7186,13 @@ window.launchTutorial = function() {
         popup.style.display = 'block';
         popup.style.animation = 'none';
         popup.offsetWidth; // reflow
-        popup.style.animation = '_emojiPopIn 0.45s cubic-bezier(0.22,1.6,0.36,1) forwards';
+        popup.style.animation = '_emojiPopIn 0.4s cubic-bezier(0.22,1.6,0.36,1) forwards';
         clearTimeout(popup._hideTimer);
+        // duração total ~1s: entra (0.4s) + segura (~0.3s) + sai (0.3s)
         popup._hideTimer = setTimeout(function() {
-            popup.style.animation = '_emojiPopOut 0.35s ease-in forwards';
-            setTimeout(function() { popup.style.display = 'none'; }, 350);
-        }, 1800);
+            popup.style.animation = '_emojiPopOut 0.3s ease-in forwards';
+            setTimeout(function() { popup.style.display = 'none'; }, 300);
+        }, 700);
     }
 
     // ── PvP flag: set by launchGame ───────────────────────────────
@@ -7198,7 +7200,10 @@ window.launchTutorial = function() {
         _isPvP = isPvP;
         var btn = _el('emoji-game-btn');
         if (btn) btn.style.display = isPvP ? 'flex' : 'none';
-        if (!isPvP) { window._emojiCloseWheel(); _resetCooldown(); _lastKnownTurn = -1; }
+        // começa cada partida com cooldown limpo (e ao sair, fecha a wheel)
+        window._emojiCloseWheel();
+        _resetCooldown();
+        _lastKnownTurn = -1;
     };
 
     // ── Socket wiring (runs after socket is ready) ────────────────
@@ -7218,6 +7223,19 @@ window.launchTutorial = function() {
     // ── Init: load from storage + update UI ──────────────────────
     _loadEmojisFromStorage();
     _updateSlotBtns();
+
+    // Fiação do socket: este bloco roda DEPOIS do IIFE principal, então
+    // window._mcSocket já existe aqui (o IIFE principal tentou chamar
+    // _emojiWireSocket cedo demais, quando ainda era undefined).
+    if (window._mcSocket) {
+        window._emojiWireSocket(window._mcSocket);
+    } else {
+        var _wireTries = 0;
+        var _wireIv = setInterval(function() {
+            if (window._mcSocket) { window._emojiWireSocket(window._mcSocket); clearInterval(_wireIv); }
+            else if (++_wireTries > 50) { clearInterval(_wireIv); }
+        }, 100);
+    }
 
     // Load from server on login
     window._emojiOnLogin = function(emojiConfig) {

@@ -690,6 +690,7 @@ function scheduleRoomCleanup(roomId) {
 function createState() {
     return {
         phase:     'DRAFT',
+        turnCount: 0,   // incrementa a cada resolução de ACTION (usado p/ reset do cooldown de emoji)
         budget:    { white: 5, black: 5 },
         army: [
             { id: 'wk1', type: 'K', x: 1, y: 0, color: 'white', bonus: 5, buffed: false },
@@ -718,15 +719,15 @@ function stateView(state, color) {
         duel = { ...duel, effBonus: { white: ebW, black: ebB }, odds: duelOdds(ebW, ebB) };
     }
     // Always hide opponent's planning to prevent WebSocket snooping
-    return { ...state, duel, planning: { ...state.planning, [opp]: null } };
+    return { ...state, turn: state.turnCount ?? 0, duel, planning: { ...state.planning, [opp]: null } };
 }
 
 function broadcast(room) {
     const { white, black } = room.players;
-    const curTurn = room.state?.turn ?? 0;
+    const curTurn = room.state?.turnCount ?? 0;
     if ((room._lastBroadcastTurn ?? -1) !== curTurn) {
         room._lastBroadcastTurn = curTurn;
-        room.emojiUsedThisTurn = {};
+        room.emojiLast = {}; // novo turno zera o cooldown de emoji de ambos
     }
     if (white?.socketId) io.to(white.socketId).emit('game_state', stateView(room.state, 'white'));
     if (black?.socketId) io.to(black.socketId).emit('game_state', stateView(room.state, 'black'));
@@ -744,6 +745,7 @@ function checkFinalDuel(army) {
 }
 
 function resolveAction(state) {
+    state.turnCount = (state.turnCount || 0) + 1; // novo turno de ACTION resolvido → reset do cooldown de emoji
     const pW = state.planning.white;
     const pB = state.planning.black;
     let army      = JSON.parse(JSON.stringify(state.army));
@@ -1961,9 +1963,11 @@ io.on('connection', (socket) => {
         const room = getRoom();
         if (!room || !playerColor) return;
         if (typeof emoji !== 'string' || !EMOJI_CURATED.has(emoji)) return;
-        room.emojiUsedThisTurn = room.emojiUsedThisTurn || {};
-        if (room.emojiUsedThisTurn[playerColor]) return;
-        room.emojiUsedThisTurn[playerColor] = true;
+        // Cooldown de 20s por jogador; o início de um novo turno zera (ver broadcast).
+        const now = Date.now();
+        room.emojiLast = room.emojiLast || {};
+        if (room.emojiLast[playerColor] && (now - room.emojiLast[playerColor]) < 20000) return;
+        room.emojiLast[playerColor] = now;
         const oppColor = playerColor === 'white' ? 'black' : 'white';
         const oppSocketId = room.players[oppColor]?.socketId;
         if (oppSocketId) io.to(oppSocketId).emit('emoji_recv', { emoji, from: playerColor });
