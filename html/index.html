@@ -2718,9 +2718,8 @@
         <div id="rp-duel-text"></div>
     </div>
     <div class="rp-controls">
-        <button class="rp-ctrl icon" id="btn-replay-prev" onclick="ReplayViewer.prev()">⏮</button>
-        <button class="rp-ctrl primary" id="btn-replay-play" onclick="ReplayViewer.play()">▶ AUTO</button>
-        <button class="rp-ctrl icon" id="btn-replay-next" onclick="ReplayViewer.next()">⏭</button>
+        <button class="rp-ctrl primary" id="btn-replay-prev" onclick="ReplayViewer.prev()">⏮ ANTERIOR</button>
+        <button class="rp-ctrl primary" id="btn-replay-next" onclick="ReplayViewer.next()">PRÓXIMO ⏭</button>
     </div>
 </div>
 
@@ -4533,7 +4532,6 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         set('replay-title-el', 'textContent', t('replay_title'));
         set('replay-turn-label','textContent', t('turn_label'));
         set('btn-replay-prev', 'textContent', t('replay_prev'));
-        set('btn-replay-play', 'textContent', t('replay_auto'));
         set('btn-replay-next', 'textContent', t('replay_next'));
     }
 

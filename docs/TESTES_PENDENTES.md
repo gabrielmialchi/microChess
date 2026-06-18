@@ -461,6 +461,44 @@
 
 ---
 
+### T-S36-1 — Botão abandonar (X vermelho, canto sup. dir.)
+**Sessão:** S36 | **Arquivo:** `html/index.html`
+
+1. Iniciar partida (PvP ou Solo)
+   → **Esperado:** quadrado vermelho com X branco no canto superior direito (no top-bar, ao lado dos pontos)
+2. Clicar no X → confirmação de abandono abre; CANCELAR fecha; SIM segue o fluxo (WO/cancel/solo→hub)
+3. Ao terminar a partida (tela de fim)
+   → **Esperado:** o X não aparece sobre a tela de game-over
+
+---
+
+### T-S37-1 — Tipo de duelo na tela de dados
+**Sessão:** S37
+
+1. Provocar cada tipo e conferir o texto no topo da tela de dados:
+   - Duas peças para a mesma casa → **DISPUTA DE ESPAÇO**
+   - Bônus iguais disputando Reis → **DESEMPATE**
+   - Defesa do Rei (peça defende o Rei atacado) → **DEFESA DO REI**
+   - Peça ataca o Rei → **CAPTURA DO REI**
+   - Morte Súbita → **MORTE SÚBITA**
+2. Trocar idioma (ex: inglês) → os tipos aparecem traduzidos
+
+---
+
+### T-S39-1 — Replay com duelos navegáveis
+**Sessão:** S39 | **Arquivo:** `html/replay-ui.js`
+
+1. Abrir um replay de partida que teve duelos
+   → **Esperado:** apenas botões ⏮ ANTERIOR e PRÓXIMO ⏭ (sem AUTO)
+2. Navegar com NEXT
+   → **Esperado:** sequência intercala turnos e duelos: `Posicionamento → Turno 1 → Duelo 1 · Tipo → Turno 2 → …`
+3. Num passo de duelo
+   → **Esperado:** sobreposição com o resultado dos dados (vencedor, totais) + o tipo do duelo
+4. Replays antigos (gravados antes do `duelType`)
+   → **Esperado:** funcionam; tipo do duelo cai para "CONFLITO" (sem quebrar)
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |

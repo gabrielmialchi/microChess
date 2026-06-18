@@ -555,4 +555,14 @@ corrige.
 - **Não afeta** o duelo-duplo (duas peças atacam o Rei adversário: maior bônus primeiro) nem o desempate de bônus igual (`contested_king`).
 - **Arquivo:** `server/server.js`.
 
+---
+
+## [2026-06-18] Polimento S36/S37/S38/S39 ✅
+
+- **S36 — Abandonar:** quadrado vermelho com X branco no canto superior direito do `#top-bar` (agrupado com `#opp-pts`); removido o botão de texto sob o PRONTO. Fica atrás do game-over (stacking) — some quando a partida acaba.
+- **S37 — Tipo de duelo:** `#duel-status` mostra o tipo (Disputa de Espaço / Desempate / Defesa do Rei / Captura do Rei / Morte Súbita) em vez de "CONFLITO!". Derivado de `state.duel` no cliente (`duelKindLabel`, exposto p/ replay); keys nos 9 idiomas. Tutorial também rotula.
+- **S38 — i18n (bugs reportados):** "JOGAR TUTORIAL" agora troca de idioma (`refreshSettingsScreen` + key `play_tutorial` nos 9 idiomas); "PULAR" + confirmação do tutorial via `TUT_TXT` + `_tutApplyI18n` (no start e em `selectLanguage`). **Pendente:** sweep dos overlays in-game hardcoded (inatividade, abandonar, cancelada, sair, retornar) — ver planning S38.
+- **S39 — Replay:** removido o botão AUTO (só PREV/NEXT); duelos viram **passos navegáveis** com sobreposição (dados + tipo). Servidor: `buildDuelSnapshot` ganhou `duelType`. Sequência: `[Posição] → [Turno 1] → [Duelo 1 · Tipo] → [Turno 2] → …`.
+- **Arquivos:** `html/index.html`, `html/replay-ui.js`, `server/replay.js`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

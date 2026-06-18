@@ -39,46 +39,30 @@ Detalhes por data em `docs/ACTIVITY_LOG.md`.
 
 # POLIMENTO — sessões curtas independentes
 
-## ⏳ S36 — Botão Abandonar no canto superior direito `[F]` 🟢 🅿1
-**Objetivo:** tirar o "ABANDONAR PARTIDA" de baixo do PRONTO e encaixá-lo na UI como um
-ícone de saída claro.
-- [ ] Mover o gatilho de abandono para o **canto superior direito** da tela de partida.
-- [ ] **Quadrado vermelho** (seguir paleta `--mc-danger`/design do jogo) com um **X branco** no centro.
-- [ ] Manter a confirmação existente (`#abandon-confirm-popup`) e o fluxo de WO/cancel/solo.
-- [ ] Remover/ocultar o antigo `#btn-abandon` de texto sob o PRONTO.
-- [ ] Garantir que não conflite com o botão de emoji (também no canto) — posicionar lado a lado.
+## ✅ S36 — Botão Abandonar no canto superior direito `[F]` 🟢 🅿1
+- [x] Quadrado vermelho (`--mc-danger`) com X branco no canto sup. dir. do `#top-bar` (agrupado com `#opp-pts`).
+- [x] Removido o botão de texto sob o PRONTO; confirmação e fluxo WO/cancel/solo mantidos.
+- [x] Fica atrás do game-over (stacking de `#game-area` z1) — some na partida encerrada.
 
-## ⏳ S37 — Tipo de duelo na tela de dados `[F][S]` 🟢 🅿1
-**Objetivo:** o `#duel-status` mostra o **tipo do duelo** em vez de "CONFLITO!".
-- [ ] Tipos (i18n nos 9 idiomas):
-  - **Disputa de Espaço** — duas peças movem para a mesma casa (`frontal`).
-  - **Desempate** — bônus iguais disputando Reis opostos (`contested_king`).
-  - **Defesa do Rei** — peça defende o Rei atacado (duelo de defesa do par interceptação).
-  - **Captura do Rei** — uma peça ataca o Rei diretamente (`attack` contra K).
-  - **Morte Súbita** — `suddenDeath`.
-  - *(Captura simples não abre tela de dados — é auto-captura; não precisa de rótulo.)*
-- [ ] Servidor anexa um `duelKind` a cada item do `duelQueue`/`state.duel` (fonte única).
-- [ ] Cliente mapeia `duelKind` → string traduzida no `#duel-status` (mantém "MORTE SÚBITA" para SD).
+## ✅ S37 — Tipo de duelo na tela de dados `[F]` 🟢 🅿1
+- [x] `#duel-status` mostra o tipo (Disputa de Espaço / Desempate / Defesa do Rei / Captura do Rei / Morte Súbita).
+- [x] Derivado de `state.duel` no cliente (`duelKindLabel`) — sem mudança no servidor. Keys nos 9 idiomas. Tutorial também rotula.
 
-## ⏳ S38 — Auditoria de localização (i18n) `[F]` 🟢 🅿1
-**Bug reportado:** ao trocar o idioma, "JOGAR TUTORIAL" (Config) e "PULAR" (tutorial +
-confirmação) seguem em PT. Vários textos estão hardcoded.
-- [ ] Corrigir os reportados: `#set-tutorial-label`, `#tut-skip-btn`, `#tut-skip-confirm`
-      (título/sub/botões) — passar para `t()`/`TUT_TXT` e re-renderizar em `selectLanguage`.
-- [ ] **Varredura profunda:** localizar todo texto hardcoded em `html/index.html` (e `*.js`)
-      que deveria usar `t()`; listar e migrar.
-- [ ] Garantir que `selectLanguage(lang)` re-renderiza os textos do tutorial e dos overlays
-      que não passam por `updateUI()`.
-- [ ] Tutorial: completar `TUT_TXT` se algum passo ainda cair em fallback indevido.
+## 🟡 S38 — Auditoria de localização (i18n) `[F]` 🟢 🅿1 — PARCIAL
+- [x] Reportados corrigidos: `#set-tutorial-label` (key `play_tutorial` 9 idiomas + `refreshSettingsScreen`); `#tut-skip-btn`/`#tut-skip-confirm` (`TUT_TXT` + `_tutApplyI18n`).
+- [ ] **Sweep pendente — overlays in-game hardcoded** (precisam de keys nos 9 idiomas + entrar no `refreshOverlays`):
+  - `#inactivity-self-popup` ("INATIVO POR MAIS DE 60 SEGUNDOS", VOLTAR, ABANDONAR)
+  - `#inactivity-opp-popup` ("OPONENTE INATIVO", "AGUARDANDO AÇÃO", VOLTAR)
+  - `#return-to-game-popup` ("RETORNAR AO JOGO?", sub, SIM/NÃO)
+  - `#abandon-confirm-popup` ("ABANDONAR PARTIDA?", sub, SIM — ABANDONAR, CANCELAR)
+  - `#game-cancelled-overlay` ("PARTIDA CANCELADA", sub)
+  - `#exc-leave-overlay` ("Sair da partida?", aviso de W.O.)
+- [ ] Conferir `screen-how-to-play` e outros textos estáticos com varredura `grep` de acentuação.
 
-## ⏳ S39 — Replay melhorado `[F]` 🟡 🅿2
-**Objetivo:** navegação turno a turno mais clara, com os duelos visíveis.
-- [ ] **Remover o botão AUTO**; manter apenas **PREV** e **NEXT**.
-- [ ] Inserir **passos de duelo** entre turnos: quando um turno teve duelo(s), exibir uma
-      sobreposição com o **resultado dos dados** + o **tipo do duelo** (reusa S37).
-- [ ] Linha de navegação conceitual:
-      `[T0] → [T1] → [Duel1 : Tipo] → [T2] → [Duel2 : Tipo] → [T3] …`
-- [ ] Usar os dados já gravados no replay (`type: 'duel'`, `buildDuelSnapshot`) — sem novo backend.
+## ✅ S39 — Replay melhorado `[F]` 🟡 🅿2
+- [x] Removido o botão AUTO; só PREV/NEXT.
+- [x] Duelos viram **passos navegáveis** com sobreposição (dados + tipo). `buildDuelSnapshot` ganhou `duelType`.
+- [x] Sequência: `[Posição] → [Turno 1] → [Duelo 1 · Tipo] → [Turno 2] → …`. Reusa os dados já gravados.
 
 ---
 

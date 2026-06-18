@@ -25,6 +25,7 @@ function buildDuelSnapshot(duel, result) {
         bPiece:  duel.bPiece?.id,
         wType:   duel.wPiece?.type,
         bType:   duel.bPiece?.type,
+        duelType: duel.type,        // frontal | attack | contested_king (p/ rótulo de tipo no replay/S37)
         rolls:   { white: duel.rolls.white, black: duel.rolls.black },
         bonuses: { white: effectiveBonus(duel.wPiece, 'white', duel),
                    black: effectiveBonus(duel.bPiece, 'black', duel) },
