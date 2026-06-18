@@ -5636,7 +5636,9 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sessionStorage.removeItem('mc_reconnect_token');
             const wk = state.army.find(p => p.type === 'K' && p.color === 'white');
             const bk = state.army.find(p => p.type === 'K' && p.color === 'black');
-            const winnerColor = state.draw ? 'draw' : (wk ? 'white' : (bk ? 'black' : 'draw'));
+            const winnerColor = state.draw ? 'draw'
+                : (state.wo && state.afk) ? (state.afk === 'white' ? 'black' : 'white')
+                : (wk ? 'white' : (bk ? 'black' : 'draw'));
 
             const goScreen = document.getElementById('game-over-screen');
             const goResult = document.getElementById('game-over-result');
@@ -6793,37 +6795,41 @@ var _duelObs = null;
 function _el(id) { return document.getElementById(id); }
 
 function _resetPrevTarget() {
-    if (_prevTarget) {
-        _prevTarget.style.zIndex   = _prevTarget._tutZ   || '';
-        _prevTarget.style.position = _prevTarget._tutPos || '';
-        _prevTarget = null;
-    }
+    _prevTarget = null;
+    var bd = _el('tut-bd');
+    if (bd) bd.style.clipPath = '';
 }
 
 function _spotlight(sel) {
     _resetPrevTarget();
     var sp = _el('tut-spot');
+    var bd = _el('tut-bd');
     if (!sel) { sp.style.display = 'none'; return; }
     var tgt = document.querySelector(sel);
     if (!tgt) { sp.style.display = 'none'; return; }
-    tgt._tutZ   = tgt.style.zIndex;
-    tgt._tutPos = tgt.style.position;
-    if (!tgt.style.position || tgt.style.position === 'static') tgt.style.position = 'relative';
-    tgt.style.zIndex = '9402';
     _prevTarget = tgt;
     var r = tgt.getBoundingClientRect();
+    var pad = 8;
+    var x1 = r.left - pad, y1 = r.top - pad;
+    var x2 = r.right + pad, y2 = r.bottom + pad;
+    var W = window.innerWidth, H = window.innerHeight;
+    // Clip backdrop to exclude the spotlight area — clicks inside pass through to the real element
+    if (bd) bd.style.clipPath = 'polygon(' +
+        '0px 0px,' + W + 'px 0px,' + W + 'px ' + H + 'px,0px ' + H + 'px,0px 0px,' +
+        x1 + 'px ' + y1 + 'px,' + x1 + 'px ' + y2 + 'px,' + x2 + 'px ' + y2 + 'px,' + x2 + 'px ' + y1 + 'px,' + x1 + 'px ' + y1 + 'px' +
+    ')';
     sp.style.cssText = [
         'display:block',
-        'position:absolute',
+        'position:fixed',
         'border-radius:12px',
         'pointer-events:none',
         'z-index:9401',
+        'box-shadow:0 0 0 2px rgba(255,106,51,0.7),0 0 0 4px rgba(255,106,51,0.2)',
         'transition:left .25s,top .25s,width .25s,height .25s',
-        'box-shadow:0 0 0 9999px rgba(0,0,0,0.65)',
-        'left:'  + (r.left   - 8) + 'px',
-        'top:'   + (r.top    - 8) + 'px',
-        'width:' + (r.width  + 16) + 'px',
-        'height:'+ (r.height + 16) + 'px',
+        'left:'  + x1 + 'px',
+        'top:'   + y1 + 'px',
+        'width:' + (x2 - x1) + 'px',
+        'height:'+ (y2 - y1) + 'px',
     ].join(';');
 }
 

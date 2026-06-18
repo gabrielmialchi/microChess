@@ -51,7 +51,7 @@ app.use(helmet({
             fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
             connectSrc:  ["'self'", 'ws:', 'wss:', 'https://fonts.googleapis.com', 'https://fonts.gstatic.com'],
             workerSrc:   ["'self'", 'blob:'],              // Service Worker
-            imgSrc:      ["'self'", 'data:'],
+            imgSrc:      ["'self'", 'data:', 'https://cdn.jsdelivr.net'],
             objectSrc:   ["'none'"],
             baseUri:     ["'self'"],
         },
@@ -1965,8 +1965,8 @@ io.on('connection', (socket) => {
         if (room.emojiUsedThisTurn[playerColor]) return;
         room.emojiUsedThisTurn[playerColor] = true;
         const oppColor = playerColor === 'white' ? 'black' : 'white';
-        const oppSocket = room.sockets?.[oppColor];
-        if (oppSocket) io.to(oppSocket).emit('emoji_recv', { emoji, from: playerColor });
+        const oppSocketId = room.players[oppColor]?.socketId;
+        if (oppSocketId) io.to(oppSocketId).emit('emoji_recv', { emoji, from: playerColor });
     });
 });
 
