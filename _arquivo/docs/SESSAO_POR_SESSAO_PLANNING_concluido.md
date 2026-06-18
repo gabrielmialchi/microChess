@@ -621,3 +621,63 @@ no combate e melhorar a curva do single player**, sem descaracterizar o blefe si
 - [ ] `npm test` verde + `node --check server.js`.
 - [ ] Playtest manual: duelo normal, choque frontal, ataque ao Rei, promoção, Morte Súbita, odds visíveis.
 - [ ] Merge em `main` só após validação.
+
+---
+---
+
+# CICLO v1.2.x (Pós 1º Open Test) — CONCLUÍDO — arquivado 2026-06-18
+
+> Movido de `docs/SESSAO_POR_SESSAO_PLANNING.md`. Detalhes de cada sessão também em
+> `docs/ACTIVITY_LOG.md`. Todas ✅ exceto S26 (⏳ aguarda playtest controlado — segue no planning ativo).
+
+## ÁREA A — Núcleo de partida
+- ✅ **S01** — Gates rígidos do PRONTO + guarda de servidor (Draft ≥1 peça; Position todas posicionadas). Fecha OT-02.
+- ✅ **S31** — Responsividade de input: render otimista no POSITION. Fecha OT-25.
+- ✅ **S04** — Regra de captura esclarecida (não era bug → roteado para tutorial). Investiga OT-01.
+- ✅ **S14** — Undo granular no draft (devolve peça específica). Fecha OT-07.
+
+## ÁREA B — Resultado, ranqueada & estatísticas
+- ✅ **S02** — Taxonomia de resultado: win/loss/draw_rule/draw_inactivity/cancelled. Fecha OT-03.
+- ✅ **S03** — Pareamento casual×casual / ranked×ranked correto. Fecha OT-18.
+- ✅ **S22** — V/D/E só de ranqueadas válidas. Fecha OT-19.
+
+## ÁREA C — Inatividade, abandono, desconexão & reconexão
+- ✅ **S16** — Inatividade por fase + abandono manual (pré-jogo cancela, ACTION+ vira WO). Fecha OT-08.
+- ✅ **S10** — Timer de fase visível no HUD (`#phase-time-left`). Fecha OT-09.
+- ✅ **S17** — Reconexão 90s + reconnectToken + ciclo mobile. Fecha OT-21.
+- ✅ **S18** — Empate por dupla inatividade / cancelamento pré-jogo (parte de S16).
+
+## ÁREA D — HUD & feedback
+- ✅ **S11** — Nome do oponente no HUD. Fecha OT-12.
+- ✅ **S12** — Feedback "PRONTO / aguardando oponente" (via J4). Fecha OT-10.
+- ✅ **S13** — Aviso de Morte Súbita + tradução. Fecha OT-11.
+- ✅ **S09** — Ícones coloridos V/D/E. Fecha OT-17.
+- ✅ **S30** — Finalização dos juices (A–D, J7/J8/J11). ADJ-JUICE.
+
+## ÁREA E — Telas, navegação & menu
+- ✅ **S19** — Reorg menu + header + logout (já existia).
+- ✅ **S21** — Histórico + viewer de replay corrigido (isDraw, date Firefox, CHECK constraint). Fecha OT-20.
+- ✅ **S20** — Tela ranking explicativa (já existia).
+- ✅ **S33** — Quick wins: créditos, ranked bloqueada p/ convidado, botão voltar com ícone, ptBR default. (merge S05-S08+S24)
+
+## ÁREA F — Retenção & balanceamento
+- ✅ **S25** — Bots L1–L3 suavizados. Fecha OT-05.
+- ✅ **S27** — Tutorial scriptado (substituído por S35). Fecha OT-04.
+
+## ÁREA G — Identidade visual & design
+- ✅ **S28** — Contorno das peças (text-shadow 8-direções). Fecha OT-15.
+- ✅ **S32** — Coesão visual menu↔partida (paleta quente). Fecha OT-26.
+- ✅ **S29** — Tipografia Inter + JetBrains Mono. Fecha OT-16.
+
+## Social / Tutorial (S34–S35)
+- ✅ **S34** — Emojis in-game (wheel 4 slots, popup no oponente, config no Perfil, coluna `emoji_config`, cooldown 2s, camada superior). Fecha OT-24.
+- ✅ **S35** — Tutorial encenado standalone (TUT2): roteiro determinístico, dado rolável, Rainha×Rei, Morte Súbita real, i18n pt/en. Substitui S27 / fecha OT-04.
+  - i18n dos 7 idiomas restantes: ver `docs/TUTORIAL_L10N_PLAN.md`.
+
+## Fixes pós-teste (2026-06-18)
+- ✅ Tutorial destravado (clip-path no backdrop; overlay pai `pointer-events:none`).
+- ✅ Emoji popup (listener `emoji_recv` reposicionado para a init do bloco) + cooldown 2s + camada superior.
+- ✅ Abandono mostrava vencedor errado (checar `state.afk` antes dos Reis).
+- ✅ Bandeiras de idioma (CSP `imgSrc` liberou cdn.jsdelivr.net).
+- ✅ JOGAR NOVAMENTE (PvP) re-entra no matchmaking do último modo.
+- ✅ Defesa do Rei resolve antes do ataque ao Rei (priority alta no duelo de defesa).
