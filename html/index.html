@@ -6716,10 +6716,10 @@ if ('serviceWorker' in navigator) {
 <!-- S27: Tutorial end screen -->
 <div id="tut-end" style="display:none;position:fixed;inset:0;z-index:9410;background:radial-gradient(ellipse at 50% 30%,#1a1200 0%,#060503 100%);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;box-sizing:border-box;text-align:center;">
     <div style="font-size:42px;margin-bottom:14px;">🎓</div>
-    <div style="font-family:'Inter',sans-serif;font-size:26px;font-weight:800;color:#f4ead7;margin-bottom:8px;letter-spacing:-.02em;">Você aprendeu!</div>
-    <div style="font-family:'Inter',sans-serif;font-size:14px;color:rgba(244,234,215,0.5);margin-bottom:28px;">Agora você conhece as regras do microChess.</div>
+    <div id="tut-end-title" style="font-family:'Inter',sans-serif;font-size:26px;font-weight:800;color:#f4ead7;margin-bottom:8px;letter-spacing:-.02em;">Você aprendeu!</div>
+    <div id="tut-end-sub" style="font-family:'Inter',sans-serif;font-size:14px;color:rgba(244,234,215,0.5);margin-bottom:28px;">Agora você conhece as regras do microChess.</div>
     <div id="tut-chips" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:32px;max-width:340px;"></div>
-    <button onclick="window.TUT.done()" style="width:100%;max-width:280px;padding:15px;border:none;border-radius:8px;background:#ff6a33;color:#fff;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:-.01em;">Jogar agora ▸</button>
+    <button id="tut-end-btn" onclick="window.TUT.done()" style="width:100%;max-width:280px;padding:15px;border:none;border-radius:8px;background:#ff6a33;color:#fff;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:-.01em;">Jogar agora ▸</button>
 </div>
 
 <!-- S27: Tutorial CSS + Engine -->
@@ -7247,7 +7247,55 @@ window.launchTutorial = function() {
 
 var ICON = { Q:'♕', R:'♖', N:'♘', B:'♗', P:'♙', K:'♔' };
 var BONUS = { Q:5, R:4, N:3, B:2, P:1, K:5 };
+var DICE = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 function _el(id) { return document.getElementById(id); }
+
+// ── i18n do tutorial (ver docs/TUTORIAL_L10N_PLAN.md) ─────────
+// Rótulos do duelo (conflict/you/opponent/resolve/tap_roll/pts/...) reusam window.t().
+// Só o texto dos PASSOS vive aqui. Idiomas ausentes caem para 'pt'.
+var TUT_TXT = {
+    pt: {
+        hud_draft:'DRAFT', hud_position:'POSICIONAR', hud_action:'AÇÃO', hud_duel:'DUELO', hud_promo:'PROMOÇÃO', hud_sd:'MORTE SÚBITA',
+        opp_status:'TUTORIAL', opp_meta:'Aprenda jogando', ready_btn:'PRONTO',
+        s0_title:'Monte seu exército', s0_body:'Cada peça vale seu custo no dado de combate. Compre a <b>Torre (+4)</b> e o <b>Peão (+1)</b> — juntos custam seus 5 pontos.', s0_cta:'▸ Compre a Torre e o Peão',
+        s1_title:'Exército montado', s1_body:'Torre e Peão recrutados, 5 pontos gastos. Confirme para posicionar.', s1_cta:'▸ Toque em PRONTO',
+        s2_title:'Seu território', s2_body:'Posicione nas 2 fileiras mais próximas de você. Toque na peça do inventário e depois na <b>casa em destaque</b>.', s2_cta:'▸ Posicione as duas e toque PRONTO',
+        s3_title:'Ação simultânea', s3_body:'Os dois lados jogam ao mesmo tempo. Mova a <b>Torre</b> para a casa em destaque — o <b>Peão preto</b> vai para a mesma casa. Quando duas peças se encontram, há <b>Duelo</b>.', s3_cta:'▸ Mova a Torre para o choque',
+        s5_title:'Ordem dos duelos', s5_body:'Quando há vários choques no mesmo turno, a peça de <b>maior bônus</b> resolve primeiro.',
+        s6_title:'Vácuo', s6_body:'Duelo com <b>bônus iguais</b>: as duas peças saem do tabuleiro. Ninguém vence.',
+        s7_title:'O Rei é especial', s7_body:'Atacar o Rei gera Duelo. Em empate de total, o <b>Rei sempre vence</b>. E quem perde o Rei perde a partida.',
+        s8_title:'Promoção → Rainha', s8_body:'Peão que alcança a <b>última fileira</b> vira <b>Rainha (+5)</b>. Toque no Peão e avance para a casa em destaque.', s8_cta:'▸ Promova o Peão',
+        s9_title:'Rainha ataca o Rei', s9_body:'Mesmo a Rainha (+5) perde para o Rei num empate de total. Mova a Rainha sobre o <b>Rei preto</b> e veja o Duelo.', s9_cta:'▸ Ataque o Rei preto',
+        s10_title:'Morte Súbita', s10_body:'Os dois Reis sobreviveram. Agora <b>3 rodadas</b> sem bônus decidem: maior dado vence a rodada. Role o dado!',
+        end_title:'Você aprendeu!', end_sub:'Agora você conhece as regras do microChess.', end_btn:'Jogar agora ▸',
+        chip1:'Duelo: 1d6 + bônus', chip2:'Maior total vence', chip3:'Bônus igual = vácuo', chip4:'Rei vence empates', chip5:'Peão → Rainha na última fileira', chip6:'Morte Súbita decide empates',
+    },
+    en: {
+        hud_draft:'DRAFT', hud_position:'PLACE', hud_action:'ACTION', hud_duel:'DUEL', hud_promo:'PROMOTION', hud_sd:'SUDDEN DEATH',
+        opp_status:'TUTORIAL', opp_meta:'Learn by playing', ready_btn:'READY',
+        s0_title:'Build your army', s0_body:'Each piece is worth its cost on the combat die. Buy the <b>Rook (+4)</b> and the <b>Pawn (+1)</b> — together they cost your 5 points.', s0_cta:'▸ Buy the Rook and the Pawn',
+        s1_title:'Army assembled', s1_body:'Rook and Pawn recruited, 5 points spent. Confirm to place them.', s1_cta:'▸ Tap READY',
+        s2_title:'Your territory', s2_body:'Place in the 2 rows closest to you. Tap a piece in your inventory, then the <b>highlighted square</b>.', s2_cta:'▸ Place both and tap READY',
+        s3_title:'Simultaneous action', s3_body:'Both sides play at once. Move the <b>Rook</b> to the highlighted square — the <b>black Pawn</b> moves to the same square. When two pieces meet, there is a <b>Duel</b>.', s3_cta:'▸ Move the Rook into the clash',
+        s5_title:'Duel order', s5_body:'When several clashes happen in one turn, the piece with the <b>highest bonus</b> resolves first.',
+        s6_title:'Mutual loss', s6_body:'A duel with <b>equal bonuses</b>: both pieces leave the board. Nobody wins.',
+        s7_title:'The King is special', s7_body:'Attacking the King starts a Duel. On a tie total, the <b>King always wins</b>. And losing your King loses the game.',
+        s8_title:'Promotion → Queen', s8_body:'A Pawn that reaches the <b>last rank</b> becomes a <b>Queen (+5)</b>. Tap the Pawn and advance to the highlighted square.', s8_cta:'▸ Promote the Pawn',
+        s9_title:'Queen attacks the King', s9_body:'Even the Queen (+5) loses to the King on a tie total. Move the Queen onto the <b>black King</b> and watch the Duel.', s9_cta:'▸ Attack the black King',
+        s10_title:'Sudden Death', s10_body:'Both Kings survived. Now <b>3 rounds</b> with no bonus decide it: the higher die wins the round. Roll the die!',
+        end_title:'You learned it!', end_sub:'You now know the rules of microChess.', end_btn:'Play now ▸',
+        chip1:'Duel: 1d6 + bonus', chip2:'Highest total wins', chip3:'Equal bonus = mutual loss', chip4:'King wins ties', chip5:'Pawn → Queen on last rank', chip6:'Sudden Death decides ties',
+    },
+};
+function _tt(key) {
+    var L = localStorage.getItem('mc_lang') || 'pt';
+    var tbl = TUT_TXT[L] || TUT_TXT.pt;
+    return (tbl && tbl[key]) || TUT_TXT.pt[key] || key;
+}
+function _pieceName(type) {
+    if (window.t) { var n = window.t('piece_' + type); if (n && n !== 'piece_' + type) return n; }
+    return { Q:'Rainha', R:'Torre', N:'Cavalo', B:'Bispo', P:'Peão', K:'Rei' }[type] || type;
+}
 
 // ── Modelo de jogo roteirizado ────────────────────────────────
 var G = null;           // { pieces, inv, budget, sel }
@@ -7257,15 +7305,15 @@ var _active = false;
 var _cellClick = null;  // handler(x,y) corrente
 var _readyHandler = null;
 
-var TOTAL_STEPS = 10;   // passos não-finais (para os dots)
+var TOTAL_STEPS = 12;   // passos não-finais (para os dots)
 
 // ── Render nos containers REAIS ───────────────────────────────
 function _hud(phaseLabel, budget) {
     var pt = _el('phase-title'); if (pt) pt.textContent = phaseLabel;
-    var os = _el('opp-status');  if (os) os.textContent = 'TUTORIAL';
-    var om = _el('opp-meta');    if (om) om.textContent = 'Aprenda jogando';
+    var os = _el('opp-status');  if (os) os.textContent = _tt('opp_status');
+    var om = _el('opp-meta');    if (om) om.textContent = _tt('opp_meta');
     var op = _el('opp-pts');     if (op) op.textContent = '';
-    var mb = _el('my-budget');   if (mb) mb.textContent = budget != null ? ('Meus Pts: ' + budget) : '';
+    var mb = _el('my-budget');   if (mb) mb.textContent = budget != null ? ((window.t ? window.t('my_pts') : 'Pts') + ': ' + budget) : '';
     var ptl = _el('phase-time-left'); if (ptl) ptl.textContent = '';
 }
 
@@ -7425,6 +7473,100 @@ function _baseKings() {
     ];
 }
 
+// ── Duelo (reusa #duel-modal e as classes reais; dado rolável, resultado controlado) ──
+function _duelCard(side, type, bonus, tappable) {
+    var theme = side === 'white' ? 'card-theme-white' : 'card-theme-black';
+    var label = tappable ? (window.t ? window.t('you') : 'VOCÊ') : (window.t ? window.t('opponent') : 'OPONENTE');
+    return '<div class="duel-col"><div class="opp-label">' + label + '</div>'
+        + '<div class="duel-card ' + (tappable ? '' : 'opp ') + theme + '">'
+        + '<div class="duel-name-badge">' + _pieceName(type) + ' +' + bonus + '</div>'
+        + '<div class="dice-interactive" id="tutd-' + side + '"><div class="dice-unicode" id="tutdv-' + side + '">🎲</div></div>'
+        + (tappable ? '<div class="duel-waiting" id="tutd-wait">' + (window.t ? window.t('tap_roll') : 'toque para rolar') + '</div>' : '')
+        + '</div></div>';
+}
+
+function _duelResult(side, roll, bonus, total) {
+    var dice = _el('tutd-' + side); if (!dice || !dice.parentNode) return;
+    var box = document.createElement('div');
+    box.className = 'result-box show';
+    box.innerHTML = '<div class="result-total">' + total + '</div>'
+        + '<div class="result-math">' + (window.t ? window.t('pts') : 'Pts') + ' (' + roll + ') + Bônus (' + bonus + ')</div>';
+    dice.parentNode.appendChild(box);
+}
+
+// cfg: { wType,wBonus,bType,bBonus, wRoll,bRoll (null=random), winner ('white'|'black'|'draw'|null),
+//        sd (bool), sdStatus (texto), onDone(winner) }
+function _duel(cfg) {
+    var modal = _el('duel-modal'); if (!modal) { if (cfg.onDone) cfg.onDone('white'); return; }
+    modal.style.display = 'flex';
+    modal.classList.remove('modal-enter'); void modal.offsetWidth; modal.classList.add('modal-enter');
+    modal.style.background = cfg.sd
+        ? 'radial-gradient(ellipse at 50% 50%, rgba(80,0,0,0.97) 0%, rgba(0,0,0,0.97) 100%)'
+        : 'rgba(0,0,0,0.97)';
+    var status = _el('duel-status');
+    if (status) { status.classList.toggle('sudden-death', !!cfg.sd); status.textContent = cfg.sd ? cfg.sdStatus : (window.t ? window.t('conflict') : 'CONFLITO!'); }
+    var cont = _el('duel-container');
+    if (cont) cont.innerHTML = _duelCard('white', cfg.wType, cfg.wBonus, true)
+        + '<div class="duel-vs-sep">VS</div>'
+        + _duelCard('black', cfg.bType, cfg.bBonus, false);
+    var cd = _el('close-duel'); if (cd) cd.style.display = 'none';
+
+    var rolled = false;
+    var dw = _el('tutd-white');
+    if (dw) dw.onclick = function() {
+        if (rolled) return; rolled = true;
+        var wEl = _el('tutdv-white'), bEl = _el('tutdv-black');
+        var waitEl = _el('tutd-wait'); if (waitEl) waitEl.style.visibility = 'hidden';
+        var iv = setInterval(function() {
+            if (wEl) wEl.textContent = DICE[Math.floor(Math.random() * 6)];
+            if (bEl) bEl.textContent = DICE[Math.floor(Math.random() * 6)];
+        }, 85);
+        setTimeout(function() {
+            clearInterval(iv);
+            var wr = cfg.wRoll != null ? cfg.wRoll : (1 + Math.floor(Math.random() * 6));
+            var br = cfg.bRoll != null ? cfg.bRoll : (1 + Math.floor(Math.random() * 6));
+            if (wEl) wEl.textContent = DICE[wr - 1];
+            if (bEl) bEl.textContent = DICE[br - 1];
+            var tw = wr + cfg.wBonus, tb = br + cfg.bBonus;
+            var winner = cfg.winner;
+            if (!winner) winner = tw > tb ? 'white' : (tb > tw ? 'black' : 'draw');
+            _duelResult('white', wr, cfg.wBonus, tw);
+            _duelResult('black', br, cfg.bBonus, tb);
+            if (!cfg.sd && status)
+                status.textContent = winner === 'white' ? (window.t ? window.t('white_wins') : 'BRANCO VENCE!')
+                                   : winner === 'black' ? (window.t ? window.t('black_wins') : 'PRETO VENCE!')
+                                   : (window.t ? window.t('draw') : 'EMPATE!');
+            if (winner === 'white') { var pw = _el('tutd-white'); if (pw) pw.classList.add('winner-pulse'); }
+            else if (winner === 'black') { var pb = _el('tutd-black'); if (pb) pb.classList.add('winner-pulse'); }
+            if (cd) {
+                cd.textContent = window.t ? window.t('resolve') : 'RESOLVER JOGADA';
+                cd.style.display = 'block';
+                cd.onclick = function() { cd.onclick = null; modal.style.display = 'none'; if (cfg.onDone) cfg.onDone(winner); };
+            }
+        }, 1000);
+    };
+}
+
+// Morte Súbita real: até 3 rodadas, random, 0 bônus, sem tela de win/lose → tela final
+function _startSD() {
+    var round = 1, wWins = 0, bWins = 0;
+    function statusText() { return (window.t ? window.t('sudden_death') : 'MORTE SÚBITA!') + ' · ' + round + '/3 · ' + wWins + '×' + bWins; }
+    function nextRound() {
+        if (round > 3 || wWins === 2 || bWins === 2) {
+            var m = _el('duel-modal'); if (m) m.style.display = 'none';
+            _end();
+            return;
+        }
+        _duel({ wType:'K', wBonus:0, bType:'K', bBonus:0, sd:true, sdStatus: statusText(),
+            onDone: function(winner) {
+                if (winner === 'white') wWins++; else if (winner === 'black') bWins++;
+                round++;
+                setTimeout(nextRound, 280);
+            } });
+    }
+    nextRound();
+}
+
 function _go(n) {
     _step = n;
     _cellClick = null;
@@ -7433,8 +7575,8 @@ function _go(n) {
     if (n === 0) {
         // DRAFT — comprar Torre + Peão
         G = { pieces: _baseKings(), inv: [], budget: 5, sel: null };
-        _hud('DRAFT', G.budget);
-        _setReadyBtn('PRONTO', false, null);
+        _hud(_tt('hud_draft'), G.budget);
+        _setReadyBtn(_tt('ready_btn'), false, null);
         _clearPieces();
         _renderBoard(null);
         _syncPieces();
@@ -7446,7 +7588,7 @@ function _go(n) {
                 if (G.inv.some(function(p){return p.type===type;})) return;
                 G.inv.push({ id:'w'+type, type:type, color:'white' });
                 G.budget -= (type === 'R' ? 4 : 1);
-                _hud('DRAFT', G.budget);
+                _hud(_tt('hud_draft'), G.budget);
                 _renderInv(null);
                 paintShop();
                 if (G.inv.some(function(p){return p.type==='R';}) && G.inv.some(function(p){return p.type==='P';}))
@@ -7455,23 +7597,19 @@ function _go(n) {
         }
         paintShop();
         _renderInv(null);
-        _card({ spot:'#shop-btns-container', title:'Monte seu exército',
-            body:'Cada peça vale seu custo no dado de combate. Compre a <b>Torre (+4)</b> e o <b>Peão (+1)</b> — juntos custam seus 5 pontos.',
-            cta:'▸ Compre a Torre e o Peão' });
+        _card({ spot:'#shop-btns-container', title:_tt('s0_title'), body:_tt('s0_body'), cta:_tt('s0_cta') });
 
     } else if (n === 1) {
         // DRAFT — pronto
-        _hud('DRAFT', G.budget);
-        _setReadyBtn('PRONTO', true, function() { _go(2); });
-        _card({ spot:'#btn-ready', title:'Exército montado',
-            body:'Torre e Peão recrutados, 5 pontos gastos. Confirme para posicionar.',
-            cta:'▸ Toque em PRONTO' });
+        _hud(_tt('hud_draft'), G.budget);
+        _setReadyBtn(_tt('ready_btn'), true, function() { _go(2); });
+        _card({ spot:'#btn-ready', title:_tt('s1_title'), body:_tt('s1_body'), cta:_tt('s1_cta') });
 
     } else if (n === 2) {
         // POSITION — posicionar nas casas em destaque
         G.sel = null;
-        _hud('POSICIONAR', null);
-        _setReadyBtn('PRONTO', false, function() { if (G.inv.length === 0) _go(3); });
+        _hud(_tt('hud_position'), null);
+        _setReadyBtn(_tt('ready_btn'), false, function() { if (G.inv.length === 0) _go(3); });
         function repaint() {
             var hl = (G.sel && G.sel.fromInv) ? [ _targetFor(G.sel.type) ] : null;
             _renderBoard(hl);
@@ -7495,15 +7633,13 @@ function _go(n) {
         };
         _renderShop([], function(){});
         repaint();
-        _card({ spot:'#my-panel', title:'Seu território',
-            body:'Posicione nas 2 fileiras mais próximas de você. Toque na peça do inventário e depois na <b>casa em destaque</b>.',
-            cta:'▸ Posicione as duas e toque PRONTO' });
+        _card({ spot:'#my-panel', title:_tt('s2_title'), body:_tt('s2_body'), cta:_tt('s2_cta') });
 
     } else if (n === 3) {
-        // ACTION — mover Torre para capturar o Peão preto
+        // ACTION — Torre e Peão preto movem para a MESMA casa → colisão → Duelo
         G.sel = null;
-        G.pieces.push({ id:'bP', type:'P', color:'black', x:3, y:2 });
-        _hud('AÇÃO', null);
+        G.pieces.push({ id:'bP', type:'P', color:'black', x:3, y:3 }); // Peão preto à frente, vai colidir em (3,2)
+        _hud(_tt('hud_action'), null);
         _setReadyBtn('', false, null);
         function repaintA(hl) { _renderBoard(hl); _syncPieces(); }
         _cellClick = function(x, y) {
@@ -7514,41 +7650,40 @@ function _go(n) {
                 repaintA([ { x:3, y:2 } ]);
                 return;
             }
-            if (G.sel && x === 3 && y === 2) { // atacar o Peão preto
+            if (G.sel && x === 3 && y === 2) { // mover para o ponto de choque
                 _cellClick = null;
                 G.sel = null;
                 _go(4);
             }
         };
         repaintA(null);
-        _card({ spot:'#pieces-layer', title:'Ação simultânea',
-            body:'Os dois lados jogam ao mesmo tempo — ninguém vê a jogada do outro. Toque na <b>Torre</b> e depois na casa do <b>Peão preto</b> em destaque.',
-            cta:'▸ Ataque o Peão preto' });
+        _card({ spot:'#pieces-layer', title:_tt('s3_title'), body:_tt('s3_body'), cta:_tt('s3_cta') });
 
     } else if (n === 4) {
-        // DUELO — determinístico: Torre vence pelo bônus
-        _hud('DUELO', null);
-        _card({ title:'Duelo: 1d6 + bônus',
-            body:'<b>Torre</b> 🎲 3 +4 = <b>7</b> · <b>Peão</b> 🎲 5 +1 = 6 → a Torre tirou menos no dado, mas o <b>+4</b> venceu. Maior total captura.',
-            next:false });
+        // COLISÃO + DUELO rolável (resultado controlado: Torre vence)
+        _hud(_tt('hud_duel'), null);
+        _el('tut-overlay').style.display = 'none';
+        // anima Torre (3,1)→(3,2) e Peão preto (3,3)→(3,2): mesma casa
+        var torreEl = _els['wR'], bpEl = _els['bP'];
+        if (torreEl) { torreEl.style.setProperty('--px', '300%'); torreEl.style.setProperty('--py', '100%'); }
+        if (bpEl)    { bpEl.style.setProperty('--px', '300%');    bpEl.style.setProperty('--py', '100%'); }
         setTimeout(function() {
-            // captura + avanço da Torre
-            G.pieces = G.pieces.filter(function(p){return p.id!=='bP';});
-            var torre = G.pieces.find(function(p){return p.id==='wR';});
-            if (torre) { torre.x = 3; torre.y = 2; }
-            _syncPieces(['bP']);
-            setTimeout(function() { _el('tut-next-btn').style.display = 'block'; }, 500);
-        }, 700);
+            _duel({ wType:'R', wBonus:4, bType:'P', bBonus:1, wRoll:3, bRoll:5, winner:'white',
+                onDone: function() {
+                    G.pieces = G.pieces.filter(function(p){return p.id!=='bP';});
+                    var torre = G.pieces.find(function(p){return p.id==='wR';});
+                    if (torre) { torre.x = 3; torre.y = 2; }
+                    _syncPieces(['bP']);
+                    setTimeout(function() { _go(5); }, 450);
+                } });
+        }, 650);
 
     } else if (n === 5) {
-        _card({ center:true, icon:'⚔', title:'Ordem dos duelos',
-            body:'Quando há vários choques no mesmo turno, a peça de <b>maior bônus</b> resolve primeiro.', next:true });
+        _card({ center:true, icon:'⚔', title:_tt('s5_title'), body:_tt('s5_body'), next:true });
     } else if (n === 6) {
-        _card({ center:true, icon:'💨', title:'Vácuo',
-            body:'Duelo com <b>bônus iguais</b>: as duas peças saem do tabuleiro. Ninguém vence.', next:true });
+        _card({ center:true, icon:'💨', title:_tt('s6_title'), body:_tt('s6_body'), next:true });
     } else if (n === 7) {
-        _card({ center:true, icon:'♚', title:'O Rei é especial',
-            body:'Em empate de bônus, o <b>Rei sempre vence</b>. E quem perde o Rei perde a partida.', next:true });
+        _card({ center:true, icon:'♚', title:_tt('s7_title'), body:_tt('s7_body'), next:true });
 
     } else if (n === 8) {
         // PROMOÇÃO — avançar Peão à última fileira → Rainha
@@ -7558,7 +7693,7 @@ function _go(n) {
             { id:'wP2', type:'P', color:'white', x:1, y:2 },
             { id:'bK', type:'K', color:'black', x:2, y:3 },
         ], inv: [], budget: 0, sel: null };
-        _hud('PROMOÇÃO', null);
+        _hud(_tt('hud_promo'), null);
         _setReadyBtn('', false, null);
         _renderShop([], function(){});
         _renderInv(null);
@@ -7575,27 +7710,59 @@ function _go(n) {
             }
         };
         repaintP(null);
-        _card({ spot:'#pieces-layer', title:'Promoção → Rainha',
-            body:'Peão que alcança a <b>última fileira</b> vira <b>Rainha (+5)</b>. Toque no Peão e avance para a casa em destaque.',
-            cta:'▸ Promova o Peão' });
+        _card({ spot:'#pieces-layer', title:_tt('s8_title'), body:_tt('s8_body'), cta:_tt('s8_cta') });
 
     } else if (n === 9) {
-        _card({ center:true, icon:'⚡', title:'Morte Súbita',
-            body:'Se os dois Reis sobrevivem, 3 duelos sem bônus decidem. Empate nos 3 = empate.', next:true });
+        // RAINHA ataca o REI → Duelo → Rei vence (empate de total, Rei leva). Rainha capturada.
+        G.sel = null;
+        _hud(_tt('hud_action'), null);
+        _setReadyBtn('', false, null);
+        function repaintQ(hl) { _renderBoard(hl); _syncPieces(); }
+        _cellClick = function(x, y) {
+            var q = G.pieces.find(function(p){return p.id==='wP2';});
+            if (!q) return;
+            if (x === 1 && y === 3) { G.sel = { id:'wP2' }; repaintQ([ { x:2, y:3 } ]); return; }
+            if (G.sel && x === 2 && y === 3) {
+                _cellClick = null; G.sel = null;
+                _el('tut-overlay').style.display = 'none';
+                var qEl = _els['wP2'];
+                if (qEl) { qEl.style.setProperty('--px', '200%'); qEl.style.setProperty('--py', '0%'); } // (2,3)
+                setTimeout(function() {
+                    _duel({ wType:'Q', wBonus:5, bType:'K', bBonus:5, wRoll:4, bRoll:4, winner:'black',
+                        onDone: function() {
+                            G.pieces = G.pieces.filter(function(p){return p.id!=='wP2';});
+                            _syncPieces(['wP2']);
+                            setTimeout(function() { _go(10); }, 450);
+                        } });
+                }, 650);
+            }
+        };
+        repaintQ(null);
+        _card({ spot:'#pieces-layer', title:_tt('s9_title'), body:_tt('s9_body'), cta:_tt('s9_cta') });
+
+    } else if (n === 10) {
+        // Morte Súbita — intro; ao avançar, roda a MD3 real
+        _hud(_tt('hud_sd'), null);
+        _card({ center:true, icon:'⚡', title:_tt('s10_title'), body:_tt('s10_body'), next:true });
+
+    } else if (n === 11) {
+        // Morte Súbita REAL: MD3 aleatório, 0 bônus, sem tela de win/lose → tela final
+        _hud(_tt('hud_sd'), null);
+        _el('tut-overlay').style.display = 'none';
+        _startSD();
 
     } else { // fim
         _end();
     }
 }
 
-var CHIPS = [
-    'Duelo: 1d6 + bônus', 'Maior total vence', 'Bônus igual = vácuo',
-    'Rei vence empates', 'Peão → Rainha na última fileira', 'Morte Súbita decide empates',
-];
-
 function _end() {
     _spot(null);
     _el('tut-overlay').style.display = 'none';
+    var et = _el('tut-end-title'); if (et) et.textContent = _tt('end_title');
+    var es = _el('tut-end-sub');   if (es) es.textContent = _tt('end_sub');
+    var eb = _el('tut-end-btn');   if (eb) eb.textContent = _tt('end_btn');
+    var CHIPS = [ _tt('chip1'), _tt('chip2'), _tt('chip3'), _tt('chip4'), _tt('chip5'), _tt('chip6') ];
     var chips = _el('tut-chips');
     if (chips) chips.innerHTML = CHIPS.map(function(c) {
         return '<div style="background:rgba(255,106,51,0.14);border:1px solid rgba(255,106,51,0.28);'
@@ -7612,7 +7779,10 @@ function _cleanup() {
     var b = _el('main-board'); if (b) b.innerHTML = '';
     var sc = _el('shop-btns-container'); if (sc) sc.innerHTML = '';
     var st = _el('my-inv-stack'); if (st) st.innerHTML = '';
-    var br = _el('btn-ready'); if (br) { br.onclick = null; br.disabled = false; br.textContent = 'PRONTO'; }
+    // restaura os handlers inline originais (setReady/finishDuel) — não deixar null senão quebra o jogo real
+    var br = _el('btn-ready'); if (br) { br.onclick = function() { if (window.setReady) window.setReady(); }; br.disabled = false; br.textContent = 'PRONTO'; }
+    var dm = _el('duel-modal'); if (dm) dm.style.display = 'none';
+    var cd = _el('close-duel'); if (cd) { cd.onclick = function() { if (window.finishDuel) window.finishDuel(); }; cd.style.display = 'none'; }
     var ga = _el('game-area'); if (ga) ga.style.display = 'none';
     ['tut-overlay','tut-end','tut-skip-confirm'].forEach(function(id) { var e = _el(id); if (e) e.style.display = 'none'; });
     var tb = document.getElementById('mc-tabbar'); if (tb) tb.style.display = '';

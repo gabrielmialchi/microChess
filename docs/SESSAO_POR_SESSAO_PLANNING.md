@@ -228,6 +228,14 @@ Atravessa as áreas respeitando a prioridade. O **bloco crítico (v1.2.0)** vem 
 - [x] Spotlight via clip-path no backdrop (sem stacking-context trap do `#game-area`).
 - [x] Registrar T-S35 em `TESTES_PENDENTES.md`.
 
+### Ajustes S35.1 (2ª rodada de feedback)
+- [x] **Colisão justifica o Duelo:** Peão preto reposicionado em (3,3); Torre (3,1) e Peão preto movem para a MESMA casa (3,2) → choque → Duelo (antes era captura direta, que não geraria duelo).
+- [x] **Tela de dado rolável:** reusa `#duel-modal` real e as classes (`duel-card`, `dice-interactive`, `result-box`, `winner-pulse`); usuário rola o dado; resultado **controlado** (não-random) no roteiro.
+- [x] **Passo Rainha × Rei:** após a promoção, a Rainha (+5) ataca o Rei preto → Duelo → **Rei vence** o empate de total → usuário perde a Rainha.
+- [x] **Morte Súbita real ao fim:** MD3 de rolagens **aleatórias**, 0 de bônus para ambos; sem tela de win/lose/draw → vai direto à tela final do tutorial.
+- [x] **i18n:** texto dos passos em tabela isolada `TUT_TXT` (`pt`+`en` completos); rótulos do duelo reusam `T`. Plano completo em `docs/TUTORIAL_L10N_PLAN.md` (faltam es/de/it/ru/ja/ko/zh).
+- [x] **Fix:** `_cleanup` restaura os handlers inline de `#btn-ready` (setReady) e `#close-duel` (finishDuel) — antes setava `null` e quebraria o jogo real após o tutorial.
+
 ---
 
 # S34 — Emojis in-game `[F][S]` 🟢 🅿2 — fecha OT-24

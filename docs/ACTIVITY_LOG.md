@@ -513,4 +513,16 @@ corrige.
 - Substitui o overlay-sobre-jogo-real do S27. Gatilhos: 1º solo nível 1 (`confirmStartSPLevel`) + Config ▸ JOGAR TUTORIAL.
 - **Arquivos:** `html/index.html`, `server/server.js` (CSP + emoji + abandon).
 
+---
+
+## [2026-06-18] S35.1 — Ajustes do tutorial (2ª rodada de feedback) ✅
+
+- **Colisão justifica o Duelo:** Peão preto movido para (3,3); Torre e Peão preto vão para a MESMA casa (3,2) → choque → Duelo (antes a Torre capturava direto, sem duelo).
+- **Tela de dado rolável:** novo helper `_duel(cfg)` reusa `#duel-modal` real + classes (`duel-card`, `dice-interactive`, `result-box`, `winner-pulse`); usuário rola, resultado controlado.
+- **Passo Rainha × Rei:** após promoção, Rainha (+5) ataca Rei preto → Duelo → Rei vence empate de total → Rainha capturada.
+- **Morte Súbita real:** `_startSD()` roda MD3 de rolagens aleatórias, 0 bônus, sem tela de win/lose → tela final.
+- **i18n:** texto dos passos em `TUT_TXT` (pt+en); rótulos do duelo reusam `T`. Plano: `docs/TUTORIAL_L10N_PLAN.md`.
+- **Fix regressão:** `_cleanup` restaura handlers inline de `#btn-ready`/`#close-duel` (antes anulava, quebrando setReady/finishDuel no jogo real após o tutorial).
+- **Arquivos:** `html/index.html`, `docs/TUTORIAL_L10N_PLAN.md` (novo).
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

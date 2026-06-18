@@ -393,6 +393,59 @@
 
 ---
 
+### T-S35-4 — Colisão gera Duelo (não captura direta)
+**Sessão:** S35.1
+
+1. No passo de AÇÃO, mover a Torre para a casa em destaque (3,2)
+   → **Esperado:** o Peão preto se move para a MESMA casa (choque); abre a tela de Duelo
+   → *(não deve ser captura automática sem duelo)*
+
+---
+
+### T-S35-5 — Tela de rolagem de dado (idêntica ao jogo)
+**Sessão:** S35.1
+
+1. Na tela de Duelo, tocar no dado branco (seu)
+   → **Esperado:** ambos os dados giram (animação) e param sempre nos MESMOS valores roteirizados (Torre 3, Peão 5)
+   → **Esperado:** Torre vence (total 7 × 6), card da Torre pulsa, botão RESOLVER aparece
+2. Tocar RESOLVER
+   → **Esperado:** Peão preto é capturado, Torre avança, tutorial segue
+
+---
+
+### T-S35-6 — Rainha ataca o Rei → Rei vence
+**Sessão:** S35.1
+
+1. Após promover a Rainha, mover a Rainha sobre o Rei preto (casa em destaque)
+   → **Esperado:** abre Duelo; ao rolar, empate de total (4+5 × 4+5 = 9×9); **Rei (preto) vence**
+2. RESOLVER
+   → **Esperado:** Rainha é capturada (usuário perde a Rainha); ambos os Reis seguem vivos
+
+---
+
+### T-S35-7 — Morte Súbita real ao fim
+**Sessão:** S35.1
+
+1. Após o card de Morte Súbita, tocar "Entendi ▸"
+   → **Esperado:** inicia a Morte Súbita real — fundo vermelho, status "MORTE SÚBITA · rodada/3 · placar", 0 de bônus
+2. Rolar cada rodada (até 3, ou até alguém fazer 2)
+   → **Esperado:** rolagens ALEATÓRIAS (diferentes a cada tentativa); SEM tela de vitória/derrota/empate
+3. Ao fim das rodadas
+   → **Esperado:** vai direto para a tela final "Você aprendeu!"
+
+---
+
+### T-S35-8 — i18n do tutorial (pt/en) + não quebra o jogo real
+**Sessão:** S35.1
+
+1. Configurações → Inglês → JOGAR TUTORIAL
+   → **Esperado:** cards, HUD, PRONTO, chips e tela final em inglês; duelo já traduzido
+2. Concluir o tutorial → iniciar uma partida real (solo ou PvP)
+   → **Esperado:** botão PRONTO e RESOLVER JOGADA do duelo funcionam normalmente
+   → *(regressão do fix de `_cleanup` que antes anulava os handlers)*
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |
