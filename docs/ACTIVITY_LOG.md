@@ -27,8 +27,26 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
-## [2026-06-17] S26 — Rebalance draft: promoção do Peão
+## [2026-06-18] S28+S32+S29 — Design: contorno de peças, coesão visual, tipografia
 **Status:** ✅ Implementado — pendente playtest
+**Área:** G — Identidade visual
+
+### Feito
+- **Revert S26**: promoção do Peão revertida para Rainha (Q, bônus 5). Decisão: dado de 52,7% é especulativo sem teste controlado; manter Queen até confirmação com dados.
+- **S28/P1 — Contorno das peças** (`index.html` ~linha 622): `.piece.white` e `.piece.black` trocam `filter: var(--white/black-glow)` por `text-shadow` 8 direções (2 camadas 0.7px + 1.4px). Brancas: contorno `#14100a` + aura laranja. Pretas: contorno `#f4ead7` + aura índigo. Independente de tema e cor de casa.
+- **S32/P2 — Coesão menu ↔ jogo** (`index.html`):
+  - `:root` legado (tema dark do jogo): vars aquecidas — `--bg: #0b0907`, `--cell-light: #2a231a`, `--cell-dark: #4c3c28`, `--accent: #ff6a33`
+  - `body`: `background` fixo em `radial-gradient(ellipse at 50% 32%, #16110b 0%, #0b0907 100%)`
+  - JS init de tema: `else apply('light')` adicionado — nunca cai no fallback sem atributo
+- **S29/P3 — Tipografia** (`index.html`): 5 fontes → 2. `<link>` Google Fonts: removidos Cinzel, Cinzel Decorative, IBM Plex Mono; mantidos Inter (adicionado peso 800) + JetBrains Mono. Find-replace completo em todas as ocorrências no arquivo.
+
+### Decisão de design (P3)
+Opção A aprovada (Sans unificado): Inter para texto/títulos, JetBrains Mono para números/labels. Cinzel removido para simplificar e melhorar leitura em mobile.
+
+---
+
+## [2026-06-17] S26 — Rebalance draft: promoção do Peão (REVERTIDO)
+**Status:** ⏪ Revertido em 2026-06-18
 **Área:** F — Retenção / balanceamento
 
 ### Feito

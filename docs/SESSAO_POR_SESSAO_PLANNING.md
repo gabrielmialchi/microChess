@@ -181,29 +181,33 @@ Atravessa as áreas respeitando a prioridade. O **bloco crítico (v1.2.0)** vem 
 ## ✅ S25 — Suavizar níveis 1–3 do solo `[S]` 🟡 🅿2 — fecha OT-05
 - [x] L1 recruta: 1 Peão (1pt), 70% passa. L2 aprendiz: 2 Peões nos cantos, 50% passa. L3 defensor: aleatório ≤3pts.
 
-## ✅ S26 — Rebalance do draft / valor das peças `[S][D]` 🟡 🅿2 — fecha OT-06
-- [x] Investigado: domínio é estratégia ótima real (P→Q = win trivial). Fix: promoção P→N (Cavalo, bônus 3).
+## ⏳ S26 — Rebalance do draft / valor das peças `[S][D]` 🟡 🅿2 — fecha OT-06
+- [ ] Revertido 2026-06-18: promoção volta a P→Q. Dado de 52,7% é especulativo; aguardar confirmação com playtest controlado antes de aplicar fix.
 
 ## S27 — Tutorial scriptado pós-login `[F][S]` 🔴 🅿2 — fecha OT-04 (maior alavanca de retenção)
-- [ ] **Sessão de design dedicada primeiro.** Partida-tutorial scriptada contra bot fraco,
-      passos roteirizados (draft → posicionar → revelar → duelo), com **dica "arraste a peça"**.
-- [ ] Absorve a clareza de captura da S04 (se for gap de comunicação). Quebrar em sub-sessões após o design.
+**Spec: `design/P4 - Tutorial Spec.dc.html` + `design/DECISOES-AJUSTES.md §P4`**
+- [ ] **Gatilho:** automático na 1ª partida pós-conta + botão em Configurações ▸ Como Jogar.
+- [ ] **Visual:** backdrop escurecido + spotlight no elemento focado (tabuleiro nunca some) + card de dica na base. Pular sempre visível no topo direito. Pontos de progresso.
+- [ ] **Interação:** passos bloqueantes (comprar/posicionar/arrastar/promover) — a ação real libera o passo, sem botão "próximo". Passos livres (duelos/vácuo/morte súbita) avançam ao tocar.
+- [ ] **Arrastar:** glow pulsante na peça + trilha pontilhada animada até a casa-alvo + ring laranja pulsante + rótulo "arraste ▸".
+- [ ] **Bot roteirizado:** movimentos e dados fixos por passo.
+- [ ] **10 passos:** Draft bônus · Posicionar território · ACTION simultâneo+arrastar · Duelo 1d6+bônus · Ordem duelos (maior bônus 1º; empate=rolagem desempate) · Empate=vácuo · Rei vence empates · Promoção P→Q · Morte Súbita · Fim "Você aprendeu!"+CTA.
+- [ ] **⚠ Bônus do Rei:** renderizar do código, não fixar "+4".
+- [ ] Absorve a clareza de captura da S04. Quebrar em sub-sessões (S27-A overlay engine · S27-B bot script · S27-C tela conclusão).
 
 ---
 
 # ÁREA G — Identidade visual & design (handoff Claude Design — [[project_design_handoff]])
 `[F][D]` — um briefing de design único cobre as três sessões abaixo.
 
-## S28 — Contorno das peças dark/light `[F][D]` 🟡 🅿1 — fecha OT-15
-- [ ] Contorno preto nas peças brancas, branco nas pretas; outline reforçado no dark mode.
-- [ ] Melhora legibilidade (queixa repetida) e ajuda a clareza da S04/OT-06.
+## ✅ S28 — Contorno das peças dark/light `[F][D]` 🟡 🅿1 — fecha OT-15
+- [x] `text-shadow` 8-direções (0.7px + 1.4px): brancas contorno `#14100a` + aura laranja; pretas contorno `#f4ead7` + aura índigo. Independente de tema. (`index.html` ~linha 622)
 
-## S32 — Coesão visual menu ↔ partida `[F][D]` 🟡 🅿2 — fecha OT-26
-- [ ] Tela de jogo (tabuleiro/HUD) hoje é preta e destoa da identidade bege/laranja do menu (Vivi).
-- [ ] Alinhar paleta/identidade da partida com o menu.
+## ✅ S32 — Coesão visual menu ↔ partida `[F][D]` 🟡 🅿2 — fecha OT-26
+- [x] `:root` legado aquecido: `--bg #0b0907`, cells marrons, `--accent #ff6a33`. `body` com radial-gradient quente. JS init sempre aplica tema (sem fallback vazio).
 
-## S29 — Tipografia sem serifa `[F][D]` 🟢 🅿2 — fecha OT-16
-- [ ] Avaliar fonte sem serifa para corpo de texto (manter serifada só em títulos?).
+## ✅ S29 — Tipografia sem serifa `[F][D]` 🟢 🅿2 — fecha OT-16
+- [x] 5 fontes → 2: Inter (texto/títulos, pesos 400-800) + JetBrains Mono (números/labels). Cinzel, Cinzel Decorative e IBM Plex Mono removidos do `<link>` e find-replaced em todo o arquivo.
 
 ---
 
