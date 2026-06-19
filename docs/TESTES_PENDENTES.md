@@ -552,6 +552,23 @@
 
 ---
 
+### T-S44-1 — i18n popup retornar + reconexão + eyebrows + matchmaking/créditos
+**Sessão:** S44 | **Arquivo:** `html/index.html`
+
+1. Trocar idioma para EN. Provocar o prompt de retorno (reconexão dupla)
+   → **Esperado:** "RETURN TO GAME?" + sub + "YES (n)" com contador + "NO" em EN
+2. Desconexão do oponente → overlay de reconexão
+   → **Esperado:** eyebrow "Opponent disconnected" + título "AWAITING RECONNECTION" no idioma
+3. Abrir modais de conta (logout, excluir conta, alterar senha, ban)
+   → **Esperado:** os eyebrows (Account/Permanent action/Security/Restricted access) no idioma
+4. Iniciar uma partida → tela de contagem regressiva
+   → **Esperado:** "Prepare your strategy" no idioma escolhido
+5. Configurações → Créditos
+   → **Esperado:** "Thanks for playing. / Feedback is very welcome." no idioma
+6. Repetir em FR/RU/JA conferindo acentuação/caracteres
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |

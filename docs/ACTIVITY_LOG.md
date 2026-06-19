@@ -606,4 +606,19 @@ corrige.
 - Aplicadas em `refreshOverlays` (init + `selectLanguage`). Verificado que os subtítulos não têm versão dinâmica (sem conflito).
 - **Arquivo:** `html/index.html`.
 
+---
+
+## [2026-06-19] S44 — i18n popup retornar + varredura final ✅
+
+- `#return-to-game-popup`: título + sub + "SIM (n)" (label `#rtg-yes-label` separado do contador) + "NÃO". Chaves `rtg_title`/`rtg_sub`; SIM/NÃO reusam `yes`/`no`.
+- **Varredura final** dos resíduos hardcoded:
+  - `#reconnect-overlay`: título `#reconnect-msg` (chave `reconnect_waiting` existia mas faltava wiring) + eyebrow.
+  - 5 `.sysmodal-eyebrow` (ban/logout/excluir/senha/reconexão) ganharam id + chaves `eyebrow_*`.
+  - Matchmaking: "Prepare sua estratégia" (`#mm-prepare-sub`) localizado nos 3 setters do countdown.
+  - Créditos: `#crd-thanks-text` localizado (showScreen + selectLanguage), `credits_thanks` com `<br>`.
+- 9 chaves novas nos **10 idiomas**; aplicadas em `refreshOverlays` e nos setters de tela.
+- Resíduos restantes do scan são apenas valores iniciais de HTML sobrescritos por `refresh*` (sem gap funcional).
+- **Conclui o sweep i18n (S38→S44).** Backlog: `TUT_TXT` dos 8 idiomas não-pt/en (tutorial cai para pt).
+- **Arquivo:** `html/index.html`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

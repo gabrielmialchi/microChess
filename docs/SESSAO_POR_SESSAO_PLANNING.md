@@ -98,10 +98,15 @@ Detalhes por data em `docs/ACTIVITY_LOG.md`.
 - [x] `#exc-leave-overlay`: título + aviso de W.O./banimento + "Sair mesmo assim" / "Continuar jogando".
 - [x] 9 chaves novas nos **10 idiomas**; aplicadas em `refreshOverlays`. Confirmado que os subtítulos não têm versão dinâmica (sem conflito).
 
-## ⏳ S44 — i18n popup retornar + varredura final `[F]` 🟢 🅿2
-- [ ] `#return-to-game-popup`: "RETORNAR AO JOGO?", sub, "SIM (n)", "NÃO".
-- [ ] Varredura final: `grep` por acentuação/strings PT em `html/index.html` e `*.js`; migrar resíduos para `t()`.
-- [ ] Conferir `screen-how-to-play` e textos estáticos de telas que não passam por um `refresh*`.
+## ✅ S44 — i18n popup retornar + varredura final `[F]` 🟢 🅿2
+- [x] `#return-to-game-popup`: título + sub + "SIM (n)" (label/contador separados) + "NÃO" (reusa `yes`/`no`).
+- [x] **Varredura:** corrigidos os gaps reais encontrados —
+  - `#reconnect-overlay`: título (`reconnect_waiting`, faltava wiring) + eyebrow "Oponente desconectou".
+  - 5 `.sysmodal-eyebrow` (ban/logout/excluir/senha/reconexão) — antes sem id/i18n.
+  - Matchmaking: "Prepare sua estratégia" (`mm-prepare-sub`) nos 3 setters do countdown.
+  - Créditos: `#crd-thanks-text` (wired em showScreen + selectLanguage).
+- [x] 9 chaves novas (`rtg_title/_sub`, 5 `eyebrow_*`, `prepare_strategy`, `credits_thanks`) nos **10 idiomas**; aplicadas em `refreshOverlays`/setters.
+- [~] Resíduos cosméticos restantes são apenas **valores iniciais** de HTML sobrescritos por `refresh*`/setters (ex: `#btn-pr-copy-text`) — sem gap funcional.
 
 ---
 
