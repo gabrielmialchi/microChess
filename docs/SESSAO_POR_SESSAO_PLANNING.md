@@ -110,9 +110,29 @@ Detalhes por data em `docs/ACTIVITY_LOG.md`.
 
 ---
 
+# TUTORIAL — localização dos idiomas faltantes (`TUT_TXT`)
+
+> Plano detalhado (49 chaves, regras de tradução, processo) em `docs/TUTORIAL_L10N_PLAN.md`.
+> `pt`+`en` prontos. Cada sessão adiciona blocos completos ao `TUT_TXT` (independentes,
+> qualquer ordem; `_tt` cai para `pt` até o idioma existir). Reusam os rótulos de duelo de `T`.
+
+## ⏳ S45 — Tutorial: romanas (fr + es + it) `[F]` 🟢 🅿2
+- [ ] Adicionar blocos `fr`, `es`, `it` ao `TUT_TXT` (49 chaves cada; `fr` fecha a lacuna da S40).
+- [ ] Escapar apóstrofos (`\'`) em fr/it; manter tags `<b>`, `▸`, `→`.
+- [ ] Validar sintaxe + paridade de chaves com `en`.
+
+## ⏳ S46 — Tutorial: de + ru `[F]` 🟢 🅿2
+- [ ] Adicionar blocos `de`, `ru` ao `TUT_TXT`.
+- [ ] Conferir comprimento no card (mais longos) — encurtar se estourar mobile 360px.
+
+## ⏳ S47 — Tutorial: CJK (ja + ko + zh) `[F]` 🟡 🅿2
+- [ ] Adicionar blocos `ja`, `ko`, `zh` ao `TUT_TXT`.
+- [ ] **Marcar para revisão humana** (termos de xadrez variam por comunidade).
+
+---
+
 ## Backlog (não comprometido — avaliar)
 - [ ] OT-23 — Boss a cada 10 níveis no solo (conteúdo).
-- [ ] Localização completa do tutorial (`TUT_TXT`: es/de/it/ru/ja/ko/zh/**fr**) — `docs/TUTORIAL_L10N_PLAN.md`.
 
 ---
 
