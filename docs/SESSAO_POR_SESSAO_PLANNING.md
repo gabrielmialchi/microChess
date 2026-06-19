@@ -126,9 +126,10 @@ Detalhes por data em `docs/ACTIVITY_LOG.md`.
 - [x] Sintaxe OK; paridade de chaves com `en` (0 faltando/extra). `<b>`/`▸`/`→` preservados.
 - [~] Comprimento (de/ru): conferir em mobile 360px no QA manual (T-S46-1).
 
-## ⏳ S47 — Tutorial: CJK (ja + ko + zh) `[F]` 🟡 🅿2
-- [ ] Adicionar blocos `ja`, `ko`, `zh` ao `TUT_TXT`.
-- [ ] **Marcar para revisão humana** (termos de xadrez variam por comunidade).
+## ✅ S47 — Tutorial: CJK (ja + ko + zh) `[F]` 🟡 🅿2
+- [x] Blocos `ja`, `ko`, `zh` adicionados ao `TUT_TXT` (49 chaves cada). **TUT_TXT agora com 10 idiomas completos.**
+- [x] Sintaxe OK; paridade de chaves com `en` (0 faltando/extra). `<b>`/`▸`/`→` preservados.
+- [⚠] **Marcado para revisão humana** antes de teste público (termos de xadrez CJK variam por comunidade).
 
 ---
 

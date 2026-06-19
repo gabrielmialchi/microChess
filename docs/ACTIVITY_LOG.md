@@ -644,4 +644,15 @@ corrige.
 - Falta só CJK (ja/ko/zh) — S47.
 - **Arquivo:** `html/index.html`.
 
+---
+
+## [2026-06-19] S47 — Tutorial: CJK (ja + ko + zh) ✅ — localização do tutorial COMPLETA
+
+- Blocos `ja` (japonês), `ko` (coreano), `zh` (chinês) adicionados ao `TUT_TXT` — 49 chaves cada.
+- **`TUT_TXT` agora cobre os 10 idiomas** (pt/en/es/de/it/ru/ja/ko/zh/fr). Fim do plano `docs/TUTORIAL_L10N_PLAN.md`.
+- `<b>`, `▸`, `→` preservados; sem apóstrofos a escapar (CJK).
+- Validação: 7 blocos `<script>` sem erro; paridade de chaves com `en` (49/49) confirmada por script; contagem de idiomas no TUT_TXT = 10.
+- ⚠️ **Revisão humana recomendada** para ja/ko/zh antes de teste público (convenções de termos de xadrez variam).
+- **Arquivo:** `html/index.html`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

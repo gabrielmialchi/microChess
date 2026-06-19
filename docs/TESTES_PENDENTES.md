@@ -594,6 +594,17 @@
 
 ---
 
+### T-S47-1 — Tutorial em ja / ko / zh (CJK)
+**Sessão:** S47 | **Arquivo:** `html/index.html`
+
+1. Configurações → **日本語** / **한국어** / **中文** → JOGAR TUTORIAL
+   → **Esperado:** tutorial completo no idioma (cards, HUD,准备好/준비/準備完了, chips, tela final, pular)
+2. Caracteres CJK renderizam corretamente (sem □/tofu)
+3. Mobile 360px: CJK costuma caber, mas conferir s3/s10 (mais longos)
+4. **Revisão humana** dos termos de xadrez (車/兵/后/王 · 룩/폰/퀸/킹 · ルーク/ポーン/クイーン/キング) antes de teste público
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |
