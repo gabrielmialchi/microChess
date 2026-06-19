@@ -569,6 +569,19 @@
 
 ---
 
+### T-S45-1 — Tutorial em fr / es / it
+**Sessão:** S45 | **Arquivo:** `html/index.html`
+
+1. Configurações → trocar para **Français** → JOGAR TUTORIAL
+   → **Esperado:** todos os cards, HUD, PRONTO (PRÊT), chips, tela final e PULAR em francês; acentuação correta (é, à, ç)
+2. Repetir em **Español** e **Italiano**
+   → **Esperado:** tutorial completo no idioma; nada caindo para português
+3. Verificar passos com `<b>`: nomes de peças traduzidos mas bônus mantido (ex: <b>Tour (+4)</b> / <b>Torre (+4)</b>)
+4. Conferir que o duelo (CONFLITO/tipos) e a Morte Súbita já aparecem traduzidos (vêm de `T`)
+5. Mobile 360px: texto não estoura o card
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |

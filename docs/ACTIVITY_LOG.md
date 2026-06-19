@@ -621,4 +621,16 @@ corrige.
 - **Conclui o sweep i18n (S38→S44).** Backlog: `TUT_TXT` dos 8 idiomas não-pt/en (tutorial cai para pt).
 - **Arquivo:** `html/index.html`.
 
+---
+
+## [2026-06-19] S45 — Tutorial: romanas (fr + es + it) ✅
+
+- 3 blocos completos adicionados ao `TUT_TXT` (`html/index.html`): `fr`, `es`, `it` — 49 chaves cada.
+- `fr` fecha a lacuna deixada pela S40 (idioma adicionado, mas tutorial caía para pt).
+- Tags `<b>`, símbolos `▸`/`→` preservados; apóstrofos escapados (`l\'inventaire`, `dell\'inventario`, `sull\'ultima`, etc.).
+- Rótulos do duelo continuam vindo de `T` (já localizados).
+- Validação: 7 blocos `<script>` sem erro; paridade de chaves com `en` confirmada por script (49/49, 0 faltando/extra) para os 3 idiomas.
+- Faltam para o tutorial: `de`, `ru` (S46) e `ja`, `ko`, `zh` (S47).
+- **Arquivo:** `html/index.html`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).
