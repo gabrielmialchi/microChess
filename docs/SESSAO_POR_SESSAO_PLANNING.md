@@ -87,10 +87,10 @@ Detalhes por data em `docs/ACTIVITY_LOG.md`.
 > (ou um `_refreshGameOverlays()` chamado também ao **abrir** cada popup, pois alguns não
 > passam por `refreshOverlays`). Reusar chaves existentes onde fizer sentido (`yes`,`no`,`cancel`).
 
-## ⏳ S42 — i18n overlays de inatividade `[F]` 🟢 🅿1
-- [ ] `#inactivity-self-popup`: "INATIVO POR MAIS DE 60 SEGUNDOS", botão "VOLTAR (n)" (palavra + contador), "ABANDONAR PARTIDA".
-- [ ] `#inactivity-opp-popup`: "OPONENTE INATIVO", "AGUARDANDO AÇÃO", botão "VOLTAR".
-- [ ] Chaves novas nos blocos de `T`; aplicar ao mostrar os popups (e em `selectLanguage`).
+## ✅ S42 — i18n overlays de inatividade `[F]` 🟢 🅿1
+- [x] `#inactivity-self-popup`: título + "VOLTAR (n)" (label separado do contador) + "ABANDONAR PARTIDA".
+- [x] `#inactivity-opp-popup`: título + "AGUARDANDO AÇÃO" + "VOLTAR".
+- [x] 5 chaves (`inactive_title`,`return_btn`,`abandon_match`,`opp_inactive_title`,`awaiting_action`) nos **10 idiomas**; aplicadas em `refreshOverlays` (init + `selectLanguage`).
 
 ## ⏳ S43 — i18n overlays de abandono / cancelamento / sair `[F]` 🟢 🅿1
 - [ ] `#abandon-confirm-popup`: "ABANDONAR PARTIDA?", sub, "SIM — ABANDONAR", "CANCELAR".

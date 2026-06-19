@@ -527,6 +527,18 @@
 
 ---
 
+### T-S42-1 — i18n dos popups de inatividade
+**Sessão:** S42 | **Arquivo:** `html/index.html`
+
+1. Trocar idioma para EN (ou outro). Numa partida PvP, ficar inativo ~60s
+   → **Esperado (jogador inativo):** popup com título, botão "RETURN (n)" com contador funcionando, e "ABANDON MATCH" — tudo no idioma escolhido
+2. Do lado do oponente
+   → **Esperado:** "OPPONENT INACTIVE" / "AWAITING ACTION" / "RETURN" no idioma escolhido
+3. Conferir o contador do botão VOLTAR/RETURN decrementa normalmente (não quebrou)
+4. Repetir em FR/JA/RU para checar acentuação/caracteres
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |

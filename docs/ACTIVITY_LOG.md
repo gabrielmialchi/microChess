@@ -586,4 +586,14 @@ corrige.
 - `_langBuildList` (idempotente via `_built`) + `_langUpdateBtn` chamados em `refreshSettingsScreen` (disparado ao abrir Configurações e em `selectLanguage`).
 - **Arquivo:** `html/index.html`.
 
+---
+
+## [2026-06-18] S42 — i18n overlays de inatividade ✅
+
+- `#inactivity-self-popup` e `#inactivity-opp-popup` deixam de ser PT hardcoded.
+- HTML: ids adicionados aos textos; botão "VOLTAR (n)" separado em label (`#inactivity-return-label`) + contador (`#inactivity-return-timer`).
+- 5 chaves novas (`inactive_title`, `return_btn`, `abandon_match`, `opp_inactive_title`, `awaiting_action`) nos **10 idiomas** do objeto `T`.
+- `refreshOverlays()` (chamado no init e em `selectLanguage`) agora aplica esses textos — localizam no load e na troca de idioma.
+- **Arquivo:** `html/index.html`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).
