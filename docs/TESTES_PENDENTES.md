@@ -1,10 +1,16 @@
 # microChess — Testes Pendentes
 
+> **▶ Para executar:** use o roteiro priorizado em [`docs/QA_ROTEIRO.md`](QA_ROTEIRO.md) (P0→P3).
+> Este arquivo guarda os **passos detalhados** de cada teste (referenciados pela tag no roteiro).
+>
 > **Como usar este documento**
 > - 🟢 **Não-bloqueante** → acumula aqui; testa tudo de uma vez na rodada de QA.
 > - 🔴 **Bloqueante** → Claude sinalizará no chat antes de continuar; precisa de confirmação.
 >
 > **PRÉ-REQUISITO GLOBAL:** servidor rodando em `npm run dev` (pasta `server/`), acesso via `localhost:3000`.
+>
+> ⚠️ **Obsoletos:** T-S27-1/2/3 testavam o tutorial antigo (overlay sobre jogo real),
+> substituído pelo TUT2 (S35). Não executar — cobertos por T-S35-*.
 
 ---
 
