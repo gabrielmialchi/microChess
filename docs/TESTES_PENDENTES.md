@@ -499,6 +499,19 @@
 
 ---
 
+### T-S40-1 — Idioma Francês
+**Sessão:** S40 | **Arquivo:** `html/index.html`, `server/server.js`
+
+1. Configurações → seletor de idioma → escolher **🇫🇷 FR**
+   → **Esperado:** menu, perfil, ranking, configurações em francês; bandeira da França no botão
+2. Entrar numa partida e provocar um duelo
+   → **Esperado:** fases (RECRUTEMENT/PLACEMENT/ACTION), HUD e tipos de duelo (DISPUTE DE CASE, DÉFENSE DU ROI, etc.) em francês
+3. Conta logada: trocar para FR, recarregar a página
+   → **Esperado:** continua em FR (preferência salva no servidor via `/auth/lang`)
+4. Verificar acentuação correta (É, È, Ç, À) sem caracteres quebrados
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |

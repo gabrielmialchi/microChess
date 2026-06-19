@@ -271,7 +271,7 @@ app.patch('/auth/profile', async (req, res) => {
 app.patch('/auth/lang', (req, res) => {
     const decoded = requireAuth(req.headers.authorization);
     if (!decoded) return res.status(401).json({ error: 'Não autenticado' });
-    const SUPPORTED = ['pt','es','en','de','it','ru','ja','ko','zh'];
+    const SUPPORTED = ['pt','es','en','de','it','ru','ja','ko','zh','fr'];
     const lang = req.body?.lang;
     if (!lang || !SUPPORTED.includes(lang)) return res.status(400).json({ error: 'Idioma inválido' });
     db.prepare('UPDATE players SET lang=? WHERE id=?').run(lang, decoded.id);

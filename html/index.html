@@ -25,6 +25,7 @@
     .fi-jp{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/jp.svg")}
     .fi-kr{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/kr.svg")}
     .fi-cn{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/cn.svg")}
+    .fi-fr{background-image:url("https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/flags/4x3/fr.svg")}
     </style>
 
     <!-- ═══════════════════════════════════════════════════════════
@@ -2447,6 +2448,7 @@
                 <button class="dk-lang-btn" data-lang="ja" onclick="selectLanguage('ja')"><span class="dk-flag fi fi-jp fis"></span>JA</button>
                 <button class="dk-lang-btn" data-lang="ko" onclick="selectLanguage('ko')"><span class="dk-flag fi fi-kr fis"></span>KO</button>
                 <button class="dk-lang-btn" data-lang="zh" onclick="selectLanguage('zh')"><span class="dk-flag fi fi-cn fis"></span>ZH</button>
+                <button class="dk-lang-btn" data-lang="fr" onclick="selectLanguage('fr')"><span class="dk-flag fi fi-fr fis"></span>FR</button>
             </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;">
@@ -4148,9 +4150,112 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             sp_lvl11_name:'包围者', sp_lvl12_name:'诱饵者', sp_lvl13_name:'女王', sp_lvl14_name:'大师', sp_lvl15_name:'传奇',
             sp_victory:'胜利', sp_defeat:'失败', sp_next_level:'下一关', sp_retry:'重试', sp_back_to_map:'返回地图',
         },
+        fr: {
+            new_game:'NOUVELLE PARTIE', how_to_play:'COMMENT JOUER', play_tutorial:'JOUER LE TUTORIEL', credits:'CRÉDITS', settings:'PARAMÈTRES', quit:'QUITTER', back:'RETOUR',
+            searching:'RECHERCHE D\'ADVERSAIRE', waiting_adv:'En attente de l\'adversaire...', match_found:'ADVERSAIRE TROUVÉ !',
+            battle_begins:'LA BATAILLE COMMENCE DANS...', cancel:'← ANNULER', prepare:'PRÉPAREZ-VOUS !',
+            ready:'PRÊT', waiting_opp:'En attente de l\'adversaire...', preparing_action:'Préparation de l\'action...', revealing:'Révélation...',
+            confirm_draft_pts:'Il vous reste des points à utiliser.', confirm_draft_sub:'Continuer sans utiliser les points ?',
+            confirm_position_pieces:'Il vous reste des pièces à placer.', confirm_position_sub:'Continuer sans placer toutes les pièces ?',
+            confirm_action_move:'Vous n\'avez fait aucun mouvement.', confirm_action_sub:'Passer le tour sans bouger ?',
+            opp_ready:'Adversaire : PRÊT', opp_thinking:'Adversaire : réflexion...', pts:'Pts', my_pts:'Mes Pts',
+            conflict:'CONFLIT !', duel_space:'DISPUTE DE CASE', duel_tiebreak:'DÉPARTAGE', duel_king_defense:'DÉFENSE DU ROI', duel_king_capture:'CAPTURE DU ROI', sudden_death:'MORT SUBITE !', white_wins:'LES BLANCS GAGNENT !', black_wins:'LES NOIRS GAGNENT !', draw:'ÉGALITÉ !',
+            tap_roll:'touchez pour lancer', resolve:'RÉSOUDRE LE COUP', you:'VOUS', opponent:'ADVERSAIRE',
+            you_win:'Vous avez gagné !', you_lose:'Vous avez perdu !', game_over_title:'Fin de partie', play_again:'REJOUER', menu:'MENU',
+            language:'LANGUE', profile:'PROFIL', nickname:'PSEUDO', avatar:'AVATAR',
+            wins:'Victoires', losses:'Défaites', wo_wins:'W.O. gagnés', wo_losses:'W.O. perdus', draws:'Égalités', save:'ENREGISTRER',
+            avatar_white:'Blancs', avatar_black:'Noirs', create_account:'CRÉER UN COMPTE', create_account_cta:'Créez un compte pour sauvegarder votre progression',
+            piece_K:'Roi', piece_Q:'Reine', piece_R:'Tour', piece_B:'Fou', piece_N:'Cavalier', piece_P:'Pion',
+            recruit_label:'composez votre armée', position_label:'placez vos pièces', reveal_label:'le plateau dévoilé', action_label:'planifiez votre mouvement',
+            phase_draft:'RECRUTEMENT', phase_position:'PLACEMENT', phase_reveal:'RÉVÉLATION !', phase_action:'ACTION',
+            feedback:'Donnez votre avis. Cliquez ici.',
+            // Profile
+            stats_label:'STATISTIQUES', change_password:'CHANGER LE MOT DE PASSE', sign_out:'SE DÉCONNECTER',
+            delete_account:'SUPPRIMER LE COMPTE', match_history:'HISTORIQUE DES PARTIES',
+            // Screens
+            history_title:'HISTORIQUE', replay_title:'REPLAY', ranking_title:'CLASSEMENT',
+            leaderboard_title:'CLASSEMENT', leaderboard_global:'🏆 CLASSEMENT MONDIAL',
+            turn_label:'Tour', turn_positioning:'Placement', replay_prev:'⏮ PRÉCÉDENT', replay_auto:'▶ AUTO', replay_next:'SUIVANT ⏭',
+            // Ranking
+            how_it_works:'COMMENT ÇA MARCHE',
+            ranking_desc:'Chaque division a <span style="color:var(--accent);">0–100 Points d\'Expérience (XP)</span>.<br>Gagnez des parties pour accumuler de l\'XP et monter de division.<br>À 100 XP, vous êtes <span style="color:var(--success);">promu</span> automatiquement.<br>En changeant de <em>groupe</em>, vous recevez un <span style="color:var(--accent);">Bouclier ×3</span> qui absorbe les rétrogradations.',
+            divisions:'DIVISIONS', single_div:'Division unique', max_rank:'Rang maximum · Division unique',
+            div_apprentice:'Apprenti', div_hardworking:'Assidu', div_elite:'Élite',
+            rank_pawn:'PION', rank_bishop:'FOU', rank_knight:'CAVALIER', rank_rook:'TOUR', rank_queen:'REINE', rank_king:'ROI',
+            // Private room
+            private_room_title:'SALON PRIVÉ', create_room:'CRÉER UN SALON',
+            room_code_label:'CODE DU SALON — PARTAGEZ-LE AVEC VOTRE AMI',
+            copy:'COPIER', copied:'COPIÉ', room_expires:'expire dans 5 minutes', room_expired:'Salon expiré. Créez-en un nouveau.',
+            or_divider:'— OU —', join_with_code:'REJOINDRE AVEC UN CODE',
+            room_code_placeholder:'EX : K3R7', join:'REJOINDRE', back_to_menu:'RETOUR AU MENU', room_code_invalid:'Code invalide. Utilisez 4 caractères.',
+            // Ban
+            ban_title:'BANNISSEMENT TEMPORAIRE',
+            ban_reason:'Vous avez reçu trop de W.O. et avez été banni temporairement du matchmaking.',
+            ban_time_remaining:'Temps restant :', close:'FERMER',
+            // Logout confirm
+            logout_confirm_title:'CHANGER DE COMPTE ?',
+            logout_confirm_desc:'Êtes-vous sûr de vouloir quitter ?<br>Votre progression locale sera conservée.',
+            yes:'OUI', no:'NON',
+            // Delete account confirm
+            delete_confirm_title:'SUPPRIMER LE COMPTE ?',
+            delete_confirm_desc:'Cette action est <strong style="color:#f0ece4;">permanente et irréversible</strong>.<br>Tout votre historique et votre classement seront effacés.',
+            delete_btn:'SUPPRIMER', cancel_action:'ANNULER',
+            // Change password modal
+            current_password_ph:'Mot de passe actuel', new_password_ph:'Nouveau mot de passe (min. 6 caractères)', confirm_password_ph:'Confirmer le nouveau mot de passe',
+            // Reconnect overlay
+            reconnect_waiting:'EN ATTENTE DE RECONNEXION',
+            reconnect_desc:'Votre adversaire a perdu la connexion.<br>La partie continue s\'il revient.',
+            reconnect_wo_auto:'W.O. automatique à la fin du compte',
+            sd_subtitle:'Les Rois décident du destin', sd_banner:'la prochaine collision mène directement au duel',
+            // Dynamic
+            no_connection:'AUCUNE CONNEXION AU SERVEUR', promotion_toast:'↑ PROMOTION', demotion_toast:'↓ RÉTROGRADATION',
+            no_players_yet:'Aucun joueur pour le moment.', no_matches_yet:'Aucune partie enregistrée.',
+            match_result_win:'VICTOIRE', match_result_loss:'DÉFAITE', match_result_wo:'W.O.',
+            unranked_match:'PARTIE NON CLASSÉE',
+            warrior:'Guerrier', afk_warn:'Inactif — cliquez pour continuer !',
+            err_unknown:'Erreur inconnue.', err_connection:'Erreur de connexion au serveur.',
+            err_fill_fields:'Remplissez tous les champs.', err_passwords_mismatch:'Les mots de passe ne correspondent pas.',
+            err_change_password:'Erreur lors du changement de mot de passe.',
+            mode_title:'MODE DE JEU', mode_casual:'Détente', mode_ranked:'Classée', mode_train:'Tutoriel',
+            mode_casual_desc:'Jouez sans affecter votre XP', mode_ranked_desc:'Disputez de l\'XP et montez au classement', mode_train_desc:'Apprenez en jouant contre un bot en mode facile', ranked_requires_account:'Compte requis',
+            mode_find_match:'TROUVER UNE PARTIE',
+            sp_solo:'SOLO', sp_online:'EN LIGNE', sp_solo_desc:'15 niveaux contre l\'IA', sp_online_desc:'Vrais joueurs en ligne',
+            htp_intro:'microChess Online est un duel tactique où les échecs classiques rencontrent l\'incertitude du champ de bataille. L\'objectif est simple : capturez le Roi adverse.',
+            htp_flow_title:'LE DÉROULEMENT DU JEU',
+            htp_draft:'Recrutement (Draft) : Vous avez 5 points pour composer votre armée. Choisissez entre des Reines puissantes ou une masse de Pions et de Cavaliers.',
+            htp_position:'Placement : Placez vos pièces secrètement sur les deux premières rangées. Votre adversaire ne verra pas votre stratégie... pour l\'instant.',
+            htp_reveal:'Révélation : Les plateaux se réunissent et les formations sont dévoilées. La guerre commence !',
+            htp_action:'Action simultanée : Sélectionnez votre pièce et sa destination. Pas d\'attente ici : les deux jouent en même temps. Planifiez votre mouvement en prévoyant où sera l\'ennemi.',
+            htp_capture_title:'RÈGLES DE CAPTURE ET DE MOUVEMENT',
+            htp_capture:'Capture automatique : Si vous vous déplacez sur une case occupée par une pièce ennemie restée immobile, vous la capturez instantanément (sauf le Roi).',
+            htp_escape:'Fuite : Si vous attaquez une case mais que l\'ennemi en sort au même tour, vous occupez l\'espace vide (il s\'est échappé !).',
+            htp_duel:'Combat (Duel) : Si deux pièces tentent d\'occuper la même case, ou si vous attaquez le Roi ennemi, un duel de dés est lancé.',
+            htp_duel_title:'LE SYSTÈME DE DUEL',
+            htp_duel_desc:'Quand le conflit est inévitable, la chance et la force entrent en jeu. Lancez le dé (1D6) et ajoutez le Bonus de la Pièce.\nVictoire : Vous capturez la pièce ennemie et dominez la case.\nDéfaite : Votre pièce est retirée et l\'ennemi conquiert l\'espace.\nÉgalité : Les deux pièces sont retirées (vide). Exception : le Roi gagne toujours les égalités.',
+            htp_special_title:'SITUATIONS SPÉCIALES (Contre-attaque)',
+            htp_special:'MicroChess privilégie la défense du Roi par l\'initiative. Si un Pion Blanc attaque votre Roi, mais que votre Cavalier Noir attaque ce même Pion au même tour, le Cavalier intercepte le Pion en premier. Si le Cavalier gagne le duel, il détruit l\'envahisseur et sauve votre Roi avant même que l\'attaque ennemie ne se produise.',
+            draft_return_hint:'Inventaire · touchez pour rendre',
+            draft_clear:'Effacer ✕',
+            pdl_draw:'= 0 XP',
+            privacy_policy:'Politique de confidentialité',
+            age_gate:'Je confirme avoir 13 ans ou plus',
+            age_gate_error:'Vous devez avoir 13 ans ou plus pour créer un compte.',
+            appearance:'APPARENCE', info:'INFORMATIONS', dark_theme:'Thème sombre', htp_bonus_title:'BONUS PAR PIÈCE', htp_king_atk:'Le Roi attaque', htp_king_clash:'Le Roi rencontre l\'adversaire', htp_king_def:'Le Roi est attaqué',
+            sp_continue:'CONTINUER', sp_start:'COMMENCER', sp_new:'NOUVEAU', sp_reset_journey:'RÉINITIALISER LE PARCOURS', sp_phase:'Niveau', sp_play:'JOUER',
+            sp_continue_desc:'Reprendre où vous en étiez', sp_new_desc:'Commencer depuis le début (Niveau 1)',
+            sp_new_confirm_title:'Recommencer le parcours ?',
+            sp_completed_all:'Tous les niveaux terminés',
+            sp_completed_all_explore:'Tous les niveaux terminés — explorez librement',
+            sp_new_confirm_logged:'Recommencer réinitialise définitivement votre progression. Confirmer ?',
+            sp_new_confirm_guest:'Commencer un nouveau parcours Solo depuis le Niveau 1 ?',
+            sp_lvl1_name:'Recrue', sp_lvl2_name:'Apprenti', sp_lvl3_name:'Défenseur', sp_lvl4_name:'Tireur', sp_lvl5_name:'Chevalier',
+            sp_lvl6_name:'Évêque', sp_lvl7_name:'Tank', sp_lvl8_name:'Chasseur', sp_lvl9_name:'Stratège', sp_lvl10_name:'Duelliste',
+            sp_lvl11_name:'Encercleur', sp_lvl12_name:'Appâteur', sp_lvl13_name:'Reine', sp_lvl14_name:'Maître', sp_lvl15_name:'Légende',
+            sp_victory:'VICTOIRE', sp_defeat:'DÉFAITE', sp_next_level:'NIVEAU SUIVANT', sp_retry:'RÉESSAYER', sp_back_to_map:'Retour à la carte',
+        },
     };
 
-    const _SUPPORTED_LANGS = ['pt','es','en','de','it','ru','ja','ko','zh'];
+    const _SUPPORTED_LANGS = ['pt','es','en','de','it','ru','ja','ko','zh','fr'];
     const _savedLang = localStorage.getItem('mc_lang');
     let currentLang = (_savedLang && _SUPPORTED_LANGS.includes(_savedLang)) ? _savedLang : 'pt';
     function t(key) { return (T[currentLang] && T[currentLang][key]) || (T['en'] && T['en'][key]) || T['pt'][key] || key; }

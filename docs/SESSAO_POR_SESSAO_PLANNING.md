@@ -66,14 +66,12 @@ Detalhes por data em `docs/ACTIVITY_LOG.md`.
 > `fr`, se já criado). Assim as sessões podem ser feitas em **qualquer ordem** sem travar
 > uma à outra. O `t()` cai para `en`→`pt` se faltar chave, então nada quebra no meio.
 
-## ⏳ S40 — Adicionar idioma Francês (fr) `[F][S]` 🟢 🅿1
-**Objetivo:** 10º idioma do jogo.
-- [ ] Novo bloco `fr` completo no objeto `T` (`html/index.html`) — traduzir **todas** as chaves existentes (inclui as novas de S37: `duel_space/duel_tiebreak/duel_king_defense/duel_king_capture`; `play_tutorial`; e as de S42–S44 se já existirem).
-- [ ] Bandeira: adicionar `.fi-fr` ao CSS de flag-icons (linha ~17–27) apontando para `fr.svg` do mesmo CDN.
-- [ ] Registrar `fr` em `_SUPPORTED_LANGS` (frontend) e no `SUPPORTED` do endpoint `/auth/lang` (`server/server.js`).
-- [ ] Adicionar o idioma ao seletor de Configurações (botão `data-lang="fr"` — ou ao novo seletor da S41, se já feito).
-- [ ] (Opcional) `TUT_TXT.fr` no tutorial; sem ele, cai para `pt` — aceitável até completar.
-- [ ] Conferir: trocar para FR cobre menu, perfil, ranking, partida e duelo.
+## ✅ S40 — Adicionar idioma Francês (fr) `[F][S]` 🟢 🅿1
+- [x] Bloco `fr` completo no objeto `T` (226 chaves — verificado contra `pt`, nenhuma faltando).
+- [x] Bandeira `.fi-fr` (CDN flag-icons).
+- [x] `fr` em `_SUPPORTED_LANGS` (frontend) e `SUPPORTED` do `/auth/lang` (servidor).
+- [x] Botão `data-lang="fr"` no seletor de Configurações.
+- [~] `TUT_TXT.fr` não criado — tutorial cai para `pt` (aceitável; backlog).
 
 ## ⏳ S41 — Seletor de idioma estilo emoji (expand inline) `[F]` 🟢 🅿1
 **Objetivo:** trocar a grade fixa de bandeiras por um seletor compacto e escalável (igual ao

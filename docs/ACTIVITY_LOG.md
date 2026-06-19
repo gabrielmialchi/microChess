@@ -565,4 +565,15 @@ corrige.
 - **S39 — Replay:** removido o botão AUTO (só PREV/NEXT); duelos viram **passos navegáveis** com sobreposição (dados + tipo). Servidor: `buildDuelSnapshot` ganhou `duelType`. Sequência: `[Posição] → [Turno 1] → [Duelo 1 · Tipo] → [Turno 2] → …`.
 - **Arquivos:** `html/index.html`, `html/replay-ui.js`, `server/replay.js`.
 
+---
+
+## [2026-06-18] S40 — Idioma Francês (fr) ✅
+
+- Novo bloco `fr` no objeto `T` (`html/index.html`) — 226 chaves, todas traduzidas (verificado por script contra `pt`: nenhuma faltando; apóstrofos escapados `\'`).
+- Bandeira `.fi-fr` adicionada ao CSS de flag-icons (mesmo CDN).
+- `fr` registrado em `_SUPPORTED_LANGS` (frontend) e no `SUPPORTED` do endpoint `/auth/lang` (`server/server.js`).
+- Botão `data-lang="fr"` (🇫🇷 FR) no seletor de Configurações.
+- `TUT_TXT.fr` não criado — tutorial cai para `pt` por ora (backlog de localização do tutorial).
+- **Arquivos:** `html/index.html`, `server/server.js`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).
