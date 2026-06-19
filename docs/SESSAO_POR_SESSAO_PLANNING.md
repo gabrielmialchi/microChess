@@ -121,9 +121,10 @@ Detalhes por data em `docs/ACTIVITY_LOG.md`.
 - [x] Apóstrofos escapados (fr/it); tags `<b>`, `▸`, `→` preservadas.
 - [x] Sintaxe OK; paridade de chaves com `en` verificada por script (0 faltando, 0 extra).
 
-## ⏳ S46 — Tutorial: de + ru `[F]` 🟢 🅿2
-- [ ] Adicionar blocos `de`, `ru` ao `TUT_TXT`.
-- [ ] Conferir comprimento no card (mais longos) — encurtar se estourar mobile 360px.
+## ✅ S46 — Tutorial: de + ru `[F]` 🟢 🅿2
+- [x] Blocos `de`, `ru` adicionados ao `TUT_TXT` (49 chaves cada).
+- [x] Sintaxe OK; paridade de chaves com `en` (0 faltando/extra). `<b>`/`▸`/`→` preservados.
+- [~] Comprimento (de/ru): conferir em mobile 360px no QA manual (T-S46-1).
 
 ## ⏳ S47 — Tutorial: CJK (ja + ko + zh) `[F]` 🟡 🅿2
 - [ ] Adicionar blocos `ja`, `ko`, `zh` ao `TUT_TXT`.

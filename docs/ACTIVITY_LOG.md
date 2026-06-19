@@ -633,4 +633,15 @@ corrige.
 - Faltam para o tutorial: `de`, `ru` (S46) e `ja`, `ko`, `zh` (S47).
 - **Arquivo:** `html/index.html`.
 
+---
+
+## [2026-06-19] S46 — Tutorial: de + ru ✅
+
+- Blocos `de` (alemão) e `ru` (russo) adicionados ao `TUT_TXT` — 49 chaves cada.
+- `<b>`, `▸`, `→` preservados; sem apóstrofos a escapar (de/ru).
+- Validação: 7 blocos `<script>` sem erro; paridade de chaves com `en` (49/49) confirmada por script.
+- Atenção no QA: de/ru têm strings mais longas — conferir que não estouram o card em mobile 360px.
+- Falta só CJK (ja/ko/zh) — S47.
+- **Arquivo:** `html/index.html`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

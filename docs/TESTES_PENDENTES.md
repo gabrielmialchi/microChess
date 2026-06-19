@@ -582,6 +582,18 @@
 
 ---
 
+### T-S46-1 — Tutorial em de / ru
+**Sessão:** S46 | **Arquivo:** `html/index.html`
+
+1. Configurações → **Deutsch** → JOGAR TUTORIAL
+   → **Esperado:** tutorial completo em alemão (cards, HUD, BEREIT, chips, tela final, ÜBERSPRINGEN); umlauts (ä/ö/ü/ß) corretos
+2. Repetir em **Русский**
+   → **Esperado:** tutorial completo em russo (cirílico correto)
+3. **Mobile 360px (de/ru):** conferir que títulos/corpos mais longos NÃO estouram o card (especialmente s3, s9, s10)
+4. Duelo/Morte Súbita já traduzidos (vêm de `T`)
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |
