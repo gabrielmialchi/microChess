@@ -576,4 +576,14 @@ corrige.
 - `TUT_TXT.fr` não criado — tutorial cai para `pt` por ora (backlog de localização do tutorial).
 - **Arquivos:** `html/index.html`, `server/server.js`.
 
+---
+
+## [2026-06-18] S41 — Seletor de idioma estilo emoji ✅
+
+- Configurações: grade fixa de 10 bandeiras → linha **"Idioma"** + botão compacto (`#lang-current-btn`) com bandeira + sigla do idioma atual.
+- Clicar no botão expande inline o `#flag-grid`; escolher um idioma aplica `selectLanguage`, fecha a lista e atualiza o botão.
+- Lista **gerada do array `_LANGS`** (10 idiomas) — adicionar idioma futuro = 1 entrada no array. Reusa `.dk-lang-btn`/`.dk-flag`/`.fi-*`.
+- `_langBuildList` (idempotente via `_built`) + `_langUpdateBtn` chamados em `refreshSettingsScreen` (disparado ao abrir Configurações e em `selectLanguage`).
+- **Arquivo:** `html/index.html`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

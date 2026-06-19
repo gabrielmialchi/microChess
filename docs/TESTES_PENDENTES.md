@@ -512,6 +512,21 @@
 
 ---
 
+### T-S41-1 — Seletor de idioma compacto
+**Sessão:** S41 | **Arquivo:** `html/index.html`
+
+1. Configurações → seção IDIOMA
+   → **Esperado:** uma linha "IDIOMA" + um botão com a bandeira e a sigla do idioma atual (ex: 🇧🇷 PT); a grade de bandeiras NÃO aparece aberta
+2. Clicar no botão
+   → **Esperado:** abre inline a lista de todos os idiomas (bandeira + sigla), com o atual destacado
+3. Escolher outro idioma (ex: FR)
+   → **Esperado:** interface troca para o idioma; a lista fecha; o botão passa a mostrar 🇫🇷 FR
+4. Reabrir a lista
+   → **Esperado:** o idioma atual continua destacado
+5. Conferir que a troca persiste (conta logada → salva no servidor)
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |

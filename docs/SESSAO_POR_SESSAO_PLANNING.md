@@ -73,15 +73,11 @@ Detalhes por data em `docs/ACTIVITY_LOG.md`.
 - [x] Botão `data-lang="fr"` no seletor de Configurações.
 - [~] `TUT_TXT.fr` não criado — tutorial cai para `pt` (aceitável; backlog).
 
-## ⏳ S41 — Seletor de idioma estilo emoji (expand inline) `[F]` 🟢 🅿1
-**Objetivo:** trocar a grade fixa de bandeiras por um seletor compacto e escalável (igual ao
-picker de emoji do Perfil), permitindo crescer o número de idiomas sem estourar a tela.
-- [ ] Em Configurações: linha **"Idioma"** (tag) + **botão** mostrando **sigla + bandeira** do idioma atual (ex: `🇧🇷 PT`).
-- [ ] Clicar no botão → **expande inline** a lista de todos os idiomas (sigla + bandeira), como o `#emoji-picker-inline`.
-- [ ] Escolher um idioma → aplica (`selectLanguage`), fecha a lista e atualiza o botão.
-- [ ] Reusar o estilo `.dk-flag`/`.fi-*` existente; manter destaque do idioma atual.
-- [ ] Escalável: a lista é gerada a partir de um array de idiomas (não hardcoded por botão) — adicionar idioma novo = 1 entrada no array.
-- [ ] Substitui/oculta a `.flag-grid`/`.dk-lang-btn` atual sem quebrar `selectLanguage`.
+## ✅ S41 — Seletor de idioma estilo emoji (expand inline) `[F]` 🟢 🅿1
+- [x] Configurações: linha **"Idioma"** + botão `#lang-current-btn` com **bandeira + sigla** do idioma atual.
+- [x] Clicar → expande inline o `#flag-grid` (lista de idiomas); escolher aplica `selectLanguage`, fecha e atualiza o botão.
+- [x] Lista **gerada do array `_LANGS`** (1 entrada por idioma) — escalável; reusa `.dk-lang-btn`/`.dk-flag`/`.fi-*`.
+- [x] Destaque do idioma atual mantido (`refreshSettingsScreen`); construção idempotente (`_built`).
 
 ---
 

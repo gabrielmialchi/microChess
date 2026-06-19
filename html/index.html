@@ -2437,19 +2437,16 @@
     </div>
     <div class="dk-scroll">
         <div style="display:flex;flex-direction:column;gap:8px;">
-            <div class="dk-sec-label" id="set-lang-label">IDIOMA</div>
-            <div class="dk-lang-grid" id="flag-grid">
-                <button class="dk-lang-btn" data-lang="en" onclick="selectLanguage('en')"><span class="dk-flag fi fi-gb fis"></span>EN</button>
-                <button class="dk-lang-btn" data-lang="pt" onclick="selectLanguage('pt')"><span class="dk-flag fi fi-br fis"></span>PT</button>
-                <button class="dk-lang-btn" data-lang="es" onclick="selectLanguage('es')"><span class="dk-flag fi fi-es fis"></span>ES</button>
-                <button class="dk-lang-btn" data-lang="de" onclick="selectLanguage('de')"><span class="dk-flag fi fi-de fis"></span>DE</button>
-                <button class="dk-lang-btn" data-lang="it" onclick="selectLanguage('it')"><span class="dk-flag fi fi-it fis"></span>IT</button>
-                <button class="dk-lang-btn" data-lang="ru" onclick="selectLanguage('ru')"><span class="dk-flag fi fi-ru fis"></span>RU</button>
-                <button class="dk-lang-btn" data-lang="ja" onclick="selectLanguage('ja')"><span class="dk-flag fi fi-jp fis"></span>JA</button>
-                <button class="dk-lang-btn" data-lang="ko" onclick="selectLanguage('ko')"><span class="dk-flag fi fi-kr fis"></span>KO</button>
-                <button class="dk-lang-btn" data-lang="zh" onclick="selectLanguage('zh')"><span class="dk-flag fi fi-cn fis"></span>ZH</button>
-                <button class="dk-lang-btn" data-lang="fr" onclick="selectLanguage('fr')"><span class="dk-flag fi fi-fr fis"></span>FR</button>
+            <!-- S41: seletor compacto (tag + botão bandeira+sigla); a lista expande inline e é gerada de _LANGS -->
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div class="dk-sec-label" id="set-lang-label">IDIOMA</div>
+                <button id="lang-current-btn" onclick="window._langToggleList()" style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:var(--mc-r-md,12px);border:1px solid var(--mc-rule,rgba(24,19,12,0.12));background:var(--mc-surface,#fbf7ee);cursor:pointer;font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:12px;letter-spacing:1.5px;color:var(--mc-ink,#18130c);">
+                    <span class="dk-flag fi fi-br fis" id="lang-current-flag"></span>
+                    <span id="lang-current-code">PT</span>
+                    <span id="lang-current-caret" style="font-size:10px;opacity:0.6;">▾</span>
+                </button>
             </div>
+            <div class="dk-lang-grid" id="flag-grid" style="display:none;"></div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;">
             <div class="dk-sec-label" id="set-appearance-label">APARÊNCIA</div>
@@ -4504,8 +4501,56 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         if (el('btn-match-history'))       el('btn-match-history').textContent       = t('match_history');
     }
 
+    // S41: seletor de idioma compacto/escalável — lista gerada de _LANGS (1 entrada por idioma)
+    const _LANGS = [
+        { code:'pt', label:'PT', flag:'fi-br' },
+        { code:'en', label:'EN', flag:'fi-gb' },
+        { code:'es', label:'ES', flag:'fi-es' },
+        { code:'de', label:'DE', flag:'fi-de' },
+        { code:'it', label:'IT', flag:'fi-it' },
+        { code:'ru', label:'RU', flag:'fi-ru' },
+        { code:'ja', label:'JA', flag:'fi-jp' },
+        { code:'ko', label:'KO', flag:'fi-kr' },
+        { code:'zh', label:'ZH', flag:'fi-cn' },
+        { code:'fr', label:'FR', flag:'fi-fr' },
+    ];
+    function _langBuildList() {
+        const grid = document.getElementById('flag-grid');
+        if (!grid || grid._built) return;
+        grid.innerHTML = '';
+        _LANGS.forEach(function(L) {
+            const btn = document.createElement('button');
+            btn.className = 'dk-lang-btn';
+            btn.setAttribute('data-lang', L.code);
+            btn.innerHTML = '<span class="dk-flag fi ' + L.flag + ' fis"></span>' + L.label;
+            btn.onclick = function() {
+                window.selectLanguage(L.code);
+                const g = document.getElementById('flag-grid');
+                if (g) g.style.display = 'none';
+                _langUpdateBtn();
+            };
+            grid.appendChild(btn);
+        });
+        grid._built = true;
+    }
+    function _langUpdateBtn() {
+        const L = _LANGS.find(function(x){ return x.code === currentLang; }) || _LANGS[0];
+        const flag = document.getElementById('lang-current-flag');
+        const code = document.getElementById('lang-current-code');
+        if (flag) flag.className = 'dk-flag fi ' + L.flag + ' fis';
+        if (code) code.textContent = L.label;
+    }
+    window._langToggleList = function() {
+        _langBuildList();
+        const grid = document.getElementById('flag-grid');
+        if (!grid) return;
+        grid.style.display = (grid.style.display === 'none' || !grid.style.display) ? 'grid' : 'none';
+    };
+
     function refreshSettingsScreen() {
         const _se = id => document.getElementById(id);
+        _langBuildList();
+        _langUpdateBtn();
         if (_se('set-title'))          _se('set-title').textContent          = t('settings');
         if (_se('set-lang-label'))     _se('set-lang-label').textContent     = t('language');
         if (_se('set-appearance-label')) _se('set-appearance-label').textContent = t('appearance');
