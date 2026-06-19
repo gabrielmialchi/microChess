@@ -2995,11 +2995,11 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 <!-- Design-L: Leave confirmation -->
 <div id="exc-leave-overlay" style="display:none;position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,0.4);align-items:flex-end;justify-content:center;">
     <div style="background:var(--mc-surface,#fbf7ee);border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:14px;">
-        <div style="font-family:var(--mc-font-sans);font-size:17px;font-weight:700;color:var(--mc-ink,#18130c);">Sair da partida?</div>
-        <div style="font-family:var(--mc-font-sans);font-size:13px;color:var(--mc-muted,rgba(24,19,12,0.56));line-height:1.5;">Abandonar durante uma partida conta como W.O. e pode resultar em banimento temporário.</div>
+        <div id="exc-leave-title" style="font-family:var(--mc-font-sans);font-size:17px;font-weight:700;color:var(--mc-ink,#18130c);">Sair da partida?</div>
+        <div id="exc-leave-sub" style="font-family:var(--mc-font-sans);font-size:13px;color:var(--mc-muted,rgba(24,19,12,0.56));line-height:1.5;">Abandonar durante uma partida conta como W.O. e pode resultar em banimento temporário.</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
-            <button onclick="window.confirmLeave()" style="height:48px;border-radius:var(--mc-r-md,12px);border:1px solid rgba(229,62,62,0.25);background:rgba(229,62,62,0.10);color:var(--mc-danger,#e53e3e);font-family:var(--mc-font-sans);font-weight:600;font-size:14px;cursor:pointer;">Sair mesmo assim</button>
-            <button onclick="window.hideLeaveConfirm()" style="height:48px;border-radius:var(--mc-r-md,12px);border:none;background:var(--mc-accent,#F56200);color:var(--mc-accent-ink,#fff);font-family:var(--mc-font-sans);font-weight:600;font-size:14px;cursor:pointer;">Continuar jogando</button>
+            <button id="exc-leave-yes" onclick="window.confirmLeave()" style="height:48px;border-radius:var(--mc-r-md,12px);border:1px solid rgba(229,62,62,0.25);background:rgba(229,62,62,0.10);color:var(--mc-danger,#e53e3e);font-family:var(--mc-font-sans);font-weight:600;font-size:14px;cursor:pointer;">Sair mesmo assim</button>
+            <button id="exc-leave-no" onclick="window.hideLeaveConfirm()" style="height:48px;border-radius:var(--mc-r-md,12px);border:none;background:var(--mc-accent,#F56200);color:var(--mc-accent-ink,#fff);font-family:var(--mc-font-sans);font-weight:600;font-size:14px;cursor:pointer;">Continuar jogando</button>
         </div>
     </div>
 </div>
@@ -3111,15 +3111,15 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
 
 <!-- S16: Confirmação de abandono -->
 <div id="abandon-confirm-popup" style="display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,0.88);flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;box-sizing:border-box;">
-    <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">ABANDONAR PARTIDA?</div>
+    <div id="abandon-confirm-title" style="font-family:var(--mc-font-serif,'Inter',serif);font-size:17px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:0.5px;max-width:280px;line-height:1.4;">ABANDONAR PARTIDA?</div>
     <div id="abandon-confirm-sub" style="font-size:12px;color:rgba(245,240,232,0.65);text-align:center;font-family:var(--mc-font-sans,'JetBrains Mono',monospace);letter-spacing:1px;max-width:260px;">Esta ação não pode ser desfeita.</div>
-    <button onclick="window.abandonConfirmYes()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">SIM — ABANDONAR</button>
-    <button onclick="window.abandonConfirmNo()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:rgba(255,255,255,0.08);color:var(--mc-bg-inv,#f5f0e8);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
+    <button id="abandon-confirm-yes" onclick="window.abandonConfirmYes()" style="width:100%;max-width:280px;padding:14px;border:1.5px solid var(--mc-danger,#e74c3c);border-radius:var(--mc-r-md,8px);background:transparent;color:var(--mc-danger,#e74c3c);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">SIM — ABANDONAR</button>
+    <button id="abandon-confirm-no" onclick="window.abandonConfirmNo()" style="width:100%;max-width:280px;padding:14px;border:none;border-radius:var(--mc-r-md,8px);background:rgba(255,255,255,0.08);color:var(--mc-bg-inv,#f5f0e8);font-family:var(--mc-font-serif,'Inter',serif);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;">CANCELAR</button>
 </div>
 
 <!-- S16: Overlay de partida cancelada (pré-jogo AFK) -->
 <div id="game-cancelled-overlay" style="display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,0.92);flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;">
-    <div style="font-family:var(--mc-font-serif,'Inter',serif);font-size:20px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:1px;">PARTIDA CANCELADA</div>
+    <div id="game-cancelled-title" style="font-family:var(--mc-font-serif,'Inter',serif);font-size:20px;font-weight:700;color:var(--mc-bg-inv,#f5f0e8);text-align:center;letter-spacing:1px;">PARTIDA CANCELADA</div>
     <div id="game-cancelled-sub" style="font-size:12px;color:rgba(245,240,232,0.6);text-align:center;font-family:var(--mc-font-sans,'JetBrains Mono',monospace);letter-spacing:1px;max-width:260px;">Um jogador abandonou antes do início. Retornando ao menu...</div>
 </div>
 
@@ -3294,6 +3294,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             unranked_match:'PARTIDA NÃO RANQUEADA',
             warrior:'Guerreiro', afk_warn:'Inativo — clique para continuar!',
             inactive_title:'INATIVO POR MAIS DE 60 SEGUNDOS', return_btn:'VOLTAR', abandon_match:'ABANDONAR PARTIDA', opp_inactive_title:'OPONENTE INATIVO', awaiting_action:'AGUARDANDO AÇÃO',
+            abandon_confirm_title:'ABANDONAR PARTIDA?', abandon_confirm_sub:'Esta ação não pode ser desfeita.', abandon_confirm_yes:'SIM — ABANDONAR', match_cancelled_title:'PARTIDA CANCELADA', match_cancelled_sub:'Um jogador abandonou antes do início. Retornando ao menu...', leave_match_title:'Sair da partida?', leave_match_sub:'Abandonar durante uma partida conta como W.O. e pode resultar em banimento temporário.', leave_match_yes:'Sair mesmo assim', leave_match_no:'Continuar jogando',
             err_unknown:'Erro desconhecido.', err_connection:'Erro de conexão com o servidor.',
             err_fill_fields:'Preencha todos os campos.', err_passwords_mismatch:'As senhas não coincidem.',
             err_change_password:'Erro ao alterar senha.',
@@ -3388,6 +3389,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             unranked_match:'UNRANKED MATCH',
             warrior:'Warrior', afk_warn:'Inactive — click to continue!',
             inactive_title:'INACTIVE FOR OVER 60 SECONDS', return_btn:'RETURN', abandon_match:'ABANDON MATCH', opp_inactive_title:'OPPONENT INACTIVE', awaiting_action:'AWAITING ACTION',
+            abandon_confirm_title:'ABANDON MATCH?', abandon_confirm_sub:'This action cannot be undone.', abandon_confirm_yes:'YES — ABANDON', match_cancelled_title:'MATCH CANCELLED', match_cancelled_sub:'A player left before the start. Returning to menu...', leave_match_title:'Leave the match?', leave_match_sub:'Leaving during a match counts as a W.O. and may result in a temporary ban.', leave_match_yes:'Leave anyway', leave_match_no:'Keep playing',
             err_unknown:'Unknown error.', err_connection:'Connection error.',
             err_fill_fields:'Please fill in all fields.', err_passwords_mismatch:'Passwords do not match.',
             err_change_password:'Error changing password.',
@@ -3492,6 +3494,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             unranked_match:'PARTIDA NO CLASIFICATORIA',
             warrior:'Guerrero', afk_warn:'¡Juega ahora — el tiempo se acaba!',
             inactive_title:'INACTIVO POR MÁS DE 60 SEGUNDOS', return_btn:'VOLVER', abandon_match:'ABANDONAR PARTIDA', opp_inactive_title:'OPONENTE INACTIVO', awaiting_action:'ESPERANDO ACCIÓN',
+            abandon_confirm_title:'¿ABANDONAR PARTIDA?', abandon_confirm_sub:'Esta acción no se puede deshacer.', abandon_confirm_yes:'SÍ — ABANDONAR', match_cancelled_title:'PARTIDA CANCELADA', match_cancelled_sub:'Un jugador abandonó antes del inicio. Volviendo al menú...', leave_match_title:'¿Salir de la partida?', leave_match_sub:'Abandonar durante una partida cuenta como W.O. y puede resultar en un baneo temporal.', leave_match_yes:'Salir de todos modos', leave_match_no:'Seguir jugando',
             err_unknown:'Error desconocido.', err_connection:'Error de conexión.',
             err_fill_fields:'Completa todos los campos.', err_passwords_mismatch:'Las contraseñas no coinciden.',
             err_change_password:'Error al cambiar la contraseña.',
@@ -3596,6 +3599,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             unranked_match:'UNGEWERTETES SPIEL',
             warrior:'Krieger', afk_warn:'Jetzt spielen — Zeit läuft ab!',
             inactive_title:'ÜBER 60 SEKUNDEN INAKTIV', return_btn:'ZURÜCK', abandon_match:'PARTIE AUFGEBEN', opp_inactive_title:'GEGNER INAKTIV', awaiting_action:'WARTE AUF AKTION',
+            abandon_confirm_title:'PARTIE AUFGEBEN?', abandon_confirm_sub:'Diese Aktion kann nicht rückgängig gemacht werden.', abandon_confirm_yes:'JA — AUFGEBEN', match_cancelled_title:'PARTIE ABGEBROCHEN', match_cancelled_sub:'Ein Spieler hat vor dem Start verlassen. Zurück zum Menü...', leave_match_title:'Partie verlassen?', leave_match_sub:'Während einer Partie zu verlassen zählt als W.O. und kann zu einer vorübergehenden Sperre führen.', leave_match_yes:'Trotzdem verlassen', leave_match_no:'Weiterspielen',
             err_unknown:'Unbekannter Fehler.', err_connection:'Verbindungsfehler.',
             err_fill_fields:'Bitte alle Felder ausfüllen.', err_passwords_mismatch:'Passwörter stimmen nicht überein.',
             err_change_password:'Fehler beim Ändern des Passworts.',
@@ -3700,6 +3704,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             unranked_match:'PARTITA NON CLASSIFICATA',
             warrior:'Guerriero', afk_warn:'Gioca ora — il tempo sta per scadere!',
             inactive_title:'INATTIVO DA OLTRE 60 SECONDI', return_btn:'TORNA', abandon_match:'ABBANDONA PARTITA', opp_inactive_title:'AVVERSARIO INATTIVO', awaiting_action:'IN ATTESA DI AZIONE',
+            abandon_confirm_title:'ABBANDONARE LA PARTITA?', abandon_confirm_sub:'Questa azione non può essere annullata.', abandon_confirm_yes:'SÌ — ABBANDONA', match_cancelled_title:'PARTITA ANNULLATA', match_cancelled_sub:'Un giocatore ha abbandonato prima dell\'inizio. Ritorno al menu...', leave_match_title:'Uscire dalla partita?', leave_match_sub:'Abbandonare durante una partita conta come W.O. e può comportare un ban temporaneo.', leave_match_yes:'Esci comunque', leave_match_no:'Continua a giocare',
             err_unknown:'Errore sconosciuto.', err_connection:'Errore di connessione.',
             err_fill_fields:'Compila tutti i campi.', err_passwords_mismatch:'Le password non coincidono.',
             err_change_password:'Errore durante il cambio password.',
@@ -3804,6 +3809,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             unranked_match:'НЕРАНГОВЫЙ МАТЧ',
             warrior:'Воин', afk_warn:'Ходи — время заканчивается!',
             inactive_title:'НЕАКТИВЕН БОЛЕЕ 60 СЕКУНД', return_btn:'ВЕРНУТЬСЯ', abandon_match:'ПОКИНУТЬ ИГРУ', opp_inactive_title:'СОПЕРНИК НЕАКТИВЕН', awaiting_action:'ОЖИДАНИЕ ХОДА',
+            abandon_confirm_title:'ПОКИНУТЬ ИГРУ?', abandon_confirm_sub:'Это действие нельзя отменить.', abandon_confirm_yes:'ДА — ПОКИНУТЬ', match_cancelled_title:'ИГРА ОТМЕНЕНА', match_cancelled_sub:'Игрок вышел до начала. Возврат в меню...', leave_match_title:'Покинуть игру?', leave_match_sub:'Выход во время игры засчитывается как W.O. и может привести к временной блокировке.', leave_match_yes:'Всё равно выйти', leave_match_no:'Продолжить игру',
             err_unknown:'Неизвестная ошибка.', err_connection:'Ошибка подключения.',
             err_fill_fields:'Заполните все поля.', err_passwords_mismatch:'Пароли не совпадают.',
             err_change_password:'Ошибка смены пароля.',
@@ -3908,6 +3914,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             unranked_match:'非ランク戦',
             warrior:'戦士', afk_warn:'今すぐプレイして — 時間切れ間近!',
             inactive_title:'60秒以上操作なし', return_btn:'戻る', abandon_match:'対局を放棄', opp_inactive_title:'相手が操作なし', awaiting_action:'アクション待ち',
+            abandon_confirm_title:'対局を放棄しますか？', abandon_confirm_sub:'この操作は取り消せません。', abandon_confirm_yes:'はい — 放棄する', match_cancelled_title:'対局がキャンセルされました', match_cancelled_sub:'開始前にプレイヤーが退出しました。メニューに戻ります...', leave_match_title:'対局を離れますか？', leave_match_sub:'対局中の退出はW.O.として扱われ、一時的なBANになる場合があります。', leave_match_yes:'それでも離れる', leave_match_no:'プレイを続ける',
             err_unknown:'不明なエラー。', err_connection:'接続エラー。',
             err_fill_fields:'すべての項目を入力してください。', err_passwords_mismatch:'パスワードが一致しません。',
             err_change_password:'パスワード変更エラー。',
@@ -4012,6 +4019,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             unranked_match:'비랭크 매치',
             warrior:'전사', afk_warn:'지금 플레이하세요 — 시간이 얼마 없습니다!',
             inactive_title:'60초 이상 비활성', return_btn:'돌아가기', abandon_match:'대국 포기', opp_inactive_title:'상대 비활성', awaiting_action:'행동 대기 중',
+            abandon_confirm_title:'대국을 포기할까요?', abandon_confirm_sub:'이 작업은 되돌릴 수 없습니다.', abandon_confirm_yes:'예 — 포기', match_cancelled_title:'대국 취소됨', match_cancelled_sub:'시작 전에 플레이어가 나갔습니다. 메뉴로 돌아갑니다...', leave_match_title:'대국에서 나갈까요?', leave_match_sub:'대국 중 나가면 W.O.로 처리되며 일시적인 차단이 될 수 있습니다.', leave_match_yes:'그래도 나가기', leave_match_no:'계속 플레이',
             err_unknown:'알 수 없는 오류.', err_connection:'연결 오류.',
             err_fill_fields:'모든 필드를 채워주세요.', err_passwords_mismatch:'비밀번호가 일치하지 않습니다.',
             err_change_password:'비밀번호 변경 오류.',
@@ -4116,6 +4124,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             unranked_match:'非排名对局',
             warrior:'战士', afk_warn:'快出手 — 时间快到了!',
             inactive_title:'超过60秒未操作', return_btn:'返回', abandon_match:'放弃对局', opp_inactive_title:'对手未操作', awaiting_action:'等待行动',
+            abandon_confirm_title:'放弃对局？', abandon_confirm_sub:'此操作无法撤销。', abandon_confirm_yes:'是 — 放弃', match_cancelled_title:'对局已取消', match_cancelled_sub:'有玩家在开始前退出。正在返回菜单...', leave_match_title:'离开对局？', leave_match_sub:'对局中离开将计为 W.O.，并可能导致临时封禁。', leave_match_yes:'仍然离开', leave_match_no:'继续游戏',
             err_unknown:'未知错误。', err_connection:'连接错误。',
             err_fill_fields:'请填写所有字段。', err_passwords_mismatch:'密码不匹配。',
             err_change_password:'修改密码出错。',
@@ -4220,6 +4229,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
             unranked_match:'PARTIE NON CLASSÉE',
             warrior:'Guerrier', afk_warn:'Inactif — cliquez pour continuer !',
             inactive_title:'INACTIF DEPUIS PLUS DE 60 SECONDES', return_btn:'REVENIR', abandon_match:'ABANDONNER LA PARTIE', opp_inactive_title:'ADVERSAIRE INACTIF', awaiting_action:'EN ATTENTE D\'ACTION',
+            abandon_confirm_title:'ABANDONNER LA PARTIE ?', abandon_confirm_sub:'Cette action est irréversible.', abandon_confirm_yes:'OUI — ABANDONNER', match_cancelled_title:'PARTIE ANNULÉE', match_cancelled_sub:'Un joueur a quitté avant le début. Retour au menu...', leave_match_title:'Quitter la partie ?', leave_match_sub:'Quitter pendant une partie compte comme un W.O. et peut entraîner un bannissement temporaire.', leave_match_yes:'Quitter quand même', leave_match_no:'Continuer à jouer',
             err_unknown:'Erreur inconnue.', err_connection:'Erreur de connexion au serveur.',
             err_fill_fields:'Remplissez tous les champs.', err_passwords_mismatch:'Les mots de passe ne correspondent pas.',
             err_change_password:'Erreur lors du changement de mot de passe.',
@@ -4687,6 +4697,17 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
         set('inactivity-opp-title',    'textContent', t('opp_inactive_title'));
         set('inactivity-opp-sub',      'textContent', t('awaiting_action'));
         set('inactivity-opp-return-btn','textContent', t('return_btn'));
+        // S43 — abandon confirm / cancelled / leave
+        set('abandon-confirm-title', 'textContent', t('abandon_confirm_title'));
+        set('abandon-confirm-sub',   'textContent', t('abandon_confirm_sub'));
+        set('abandon-confirm-yes',   'textContent', t('abandon_confirm_yes'));
+        set('abandon-confirm-no',    'textContent', t('cancel_action'));
+        set('game-cancelled-title',  'textContent', t('match_cancelled_title'));
+        set('game-cancelled-sub',    'textContent', t('match_cancelled_sub'));
+        set('exc-leave-title', 'textContent', t('leave_match_title'));
+        set('exc-leave-sub',   'textContent', t('leave_match_sub'));
+        set('exc-leave-yes',   'textContent', t('leave_match_yes'));
+        set('exc-leave-no',    'textContent', t('leave_match_no'));
     }
 
     function refreshHistoryScreen() {

@@ -92,11 +92,11 @@ Detalhes por data em `docs/ACTIVITY_LOG.md`.
 - [x] `#inactivity-opp-popup`: título + "AGUARDANDO AÇÃO" + "VOLTAR".
 - [x] 5 chaves (`inactive_title`,`return_btn`,`abandon_match`,`opp_inactive_title`,`awaiting_action`) nos **10 idiomas**; aplicadas em `refreshOverlays` (init + `selectLanguage`).
 
-## ⏳ S43 — i18n overlays de abandono / cancelamento / sair `[F]` 🟢 🅿1
-- [ ] `#abandon-confirm-popup`: "ABANDONAR PARTIDA?", sub, "SIM — ABANDONAR", "CANCELAR".
-- [ ] `#game-cancelled-overlay`: "PARTIDA CANCELADA", sub.
-- [ ] `#exc-leave-overlay`: "Sair da partida?", aviso de W.O./banimento.
-- [ ] Chaves novas + aplicação ao mostrar.
+## ✅ S43 — i18n overlays de abandono / cancelamento / sair `[F]` 🟢 🅿1
+- [x] `#abandon-confirm-popup`: título + sub + "SIM — ABANDONAR" (CANCELAR reusa `cancel_action`).
+- [x] `#game-cancelled-overlay`: título + sub.
+- [x] `#exc-leave-overlay`: título + aviso de W.O./banimento + "Sair mesmo assim" / "Continuar jogando".
+- [x] 9 chaves novas nos **10 idiomas**; aplicadas em `refreshOverlays`. Confirmado que os subtítulos não têm versão dinâmica (sem conflito).
 
 ## ⏳ S44 — i18n popup retornar + varredura final `[F]` 🟢 🅿2
 - [ ] `#return-to-game-popup`: "RETORNAR AO JOGO?", sub, "SIM (n)", "NÃO".

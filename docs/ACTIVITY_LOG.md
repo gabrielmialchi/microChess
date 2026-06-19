@@ -596,4 +596,14 @@ corrige.
 - `refreshOverlays()` (chamado no init e em `selectLanguage`) agora aplica esses textos — localizam no load e na troca de idioma.
 - **Arquivo:** `html/index.html`.
 
+---
+
+## [2026-06-18] S43 — i18n overlays de abandono / cancelamento / sair ✅
+
+- `#abandon-confirm-popup`, `#game-cancelled-overlay`, `#exc-leave-overlay` deixam de ser PT hardcoded.
+- HTML: ids adicionados aos títulos/subs/botões sem id.
+- 9 chaves novas (`abandon_confirm_title/_sub/_yes`, `match_cancelled_title/_sub`, `leave_match_title/_sub/_yes/_no`) nos **10 idiomas**; "CANCELAR" reusa `cancel_action`.
+- Aplicadas em `refreshOverlays` (init + `selectLanguage`). Verificado que os subtítulos não têm versão dinâmica (sem conflito).
+- **Arquivo:** `html/index.html`.
+
 > Histórico de sessões concluídas arquivado em [`_arquivo/docs/ACTIVITY_LOG_concluido.md`](../_arquivo/docs/ACTIVITY_LOG_concluido.md).

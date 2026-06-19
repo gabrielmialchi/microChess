@@ -539,6 +539,19 @@
 
 ---
 
+### T-S43-1 — i18n dos overlays de abandono/cancelamento/sair
+**Sessão:** S43 | **Arquivo:** `html/index.html`
+
+1. Trocar idioma para EN (ou outro). Numa partida, clicar no X de abandonar
+   → **Esperado:** popup "ABANDON MATCH?" + sub + "YES — ABANDON" + "CANCEL" no idioma escolhido
+2. Provocar cancelamento de partida (dupla inatividade no pré-jogo)
+   → **Esperado:** overlay "MATCH CANCELLED" + sub no idioma
+3. Tela de sair (`exc-leave-overlay`, ao tentar deixar a partida)
+   → **Esperado:** "Leave the match?" + aviso de W.O. + "Leave anyway" / "Keep playing" no idioma
+4. Repetir em FR/DE/JA conferindo acentuação/caracteres
+
+---
+
 ## ✅ Já testados e aprovados
 
 | Sessão | Descrição | Testado por |
