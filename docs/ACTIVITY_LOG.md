@@ -27,6 +27,23 @@ para entender o estado atual antes de implementar qualquer coisa.
 
 ---
 
+## [2026-06-22] Versão única (single source) + build WebGL 1.2.0
+**Status:** ✅ Implementado — pendente playtest
+**Área:** Release / infra
+
+### Feito
+- **Problema**: versão do jogo estava hardcoded como `v1.0` em 3 lugares de `html/index.html` (subtítulo do menu `menu-version-sub`, créditos `dk-crd-version`, rodapé de ajustes `dk-ver`).
+- **Fonte única de verdade**: criado `html/version.js` com `const GAME_VERSION = '1.2.0'` — único lugar a alterar daqui em diante. Popula todos os `<span class="js-app-version">` no load (DOMContentLoaded-safe).
+- **index.html**: os três `v1.0` substituídos por `<span class="js-app-version"></span>`; sufixos (`· ONLINE`, `· 2025`, `· o6 games`) mantidos no HTML. Inserido `<script src="version.js"></script>` antes de `auth-frontend.js`.
+- **sw.js**: `/version.js` adicionado ao SHELL; `CACHE_NAME` bump `microchess-v2` → `microchess-v3` (evita servir index.html antigo do cache no deploy).
+- Versões em `server/package.json` e `package-lock.json` NÃO são a versão do jogo (deps do servidor) — intactas.
+
+### Notas para próxima sessão
+- Para futuras versões: editar **apenas** `GAME_VERSION` em `html/version.js`.
+- Fechar a build WebGL 1.2.0 após confirmar v1.2.0 nas 3 telas (menu / créditos / ajustes).
+
+---
+
 ## [2026-06-18] S27 — Tutorial scriptado (S27-A+B+C completo)
 **Status:** ✅ Implementado — pendente playtest
 **Área:** F — Retenção / onboarding

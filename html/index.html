@@ -2072,7 +2072,7 @@
   <!-- Hero + nav -->
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px 16px;">
     <div style="font-family:var(--mc-font-sans);font-weight:800;font-size:40px;color:var(--mc-ink);letter-spacing:-1.5px;line-height:1;">micro<em style="font-style:normal;color:var(--mc-accent);">Chess</em><span style="color:var(--mc-accent);">.</span></div>
-    <div style="font-family:var(--mc-font-sans);font-size:13px;color:var(--mc-muted);margin-top:8px;" id="menu-version-sub">v1.0 · ONLINE</div>
+    <div style="font-family:var(--mc-font-sans);font-size:13px;color:var(--mc-muted);margin-top:8px;" id="menu-version-sub"><span class="js-app-version"></span> · ONLINE</div>
     <nav style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin-top:40px;">
       <button class="mc-btn primary full" id="btn-novo-jogo" onclick="showScreen('game-mode')">NOVO JOGO</button>
       <button class="mc-btn full" id="btn-sala-privada" onclick="window.privateRoom.open()">Sala privada</button>
@@ -2406,7 +2406,7 @@
     <div class="dk-crd-body">
         <div>
             <div class="dk-crd-logo">micro<em>Chess</em>.</div>
-            <div class="dk-crd-version">v1.0 · 2025</div>
+            <div class="dk-crd-version"><span class="js-app-version"></span> · 2025</div>
         </div>
         <div class="dk-crd-rule"></div>
         <div>
@@ -2464,7 +2464,7 @@
                 <button class="dk-action-row" onclick="showScreen('credits')" id="set-credits-btn"><span class="dk-ico">★</span><span id="set-credits-label">CRÉDITOS</span><span class="dk-arr">→</span></button>
             </div>
         </div>
-        <div class="dk-ver">microChess v1.0 · o6 games</div>
+        <div class="dk-ver">microChess <span class="js-app-version"></span> · o6 games</div>
         <div style="text-align:center;padding:4px 0 8px;">
           <a href="#" id="link-privacy-policy" target="_blank" style="font-family:var(--mc-font-mono,'JetBrains Mono',monospace);font-size:11px;color:var(--mc-muted);text-decoration:none;opacity:0.7;"><span id="pp-link-text">Política de Privacidade</span></a>
         </div>
@@ -6631,6 +6631,7 @@ body.theme-dark #opp-status, [data-theme="dark"] #opp-status {
     <span id="tab-lbl-profile">Perfil</span>
   </button>
 </nav>
+<script src="version.js"></script>
 <script src="auth-frontend.js"></script>
 <script src="rank-ui.js"></script>
 <script src="replay-ui.js"></script>

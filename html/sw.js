@@ -1,8 +1,9 @@
 'use strict';
 
-const CACHE_NAME = 'microchess-v2';
+const CACHE_NAME = 'microchess-v3';
 const SHELL = [
     '/',
+    '/version.js',
     '/auth-frontend.js',
     '/rank-ui.js',
     '/replay-ui.js',
