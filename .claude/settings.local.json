@@ -69,7 +69,11 @@
       "Bash(git branch *)",
       "Bash(cp db/microchess.db /tmp/test-reset.db)",
       "Bash(node -e \"const d=require\\('./analytics/microchess-export-1781226642033.json'\\); console.log\\('players',d.players.length\\); console.log\\('matches',d.matches.length\\); console.log\\('events',d.events.length\\); console.log\\('ccu',d.ccu_snapshots.length\\); console.log\\('sp',d.singleplayer_progress.length\\); console.log\\('exportedAt',d.exportedAt\\);\")",
-      "Bash(node analytics/analisar.js)"
+      "Bash(node analytics/analisar.js)",
+      "Bash(grep -v \"//\\\\|duel\\\\|roll\\\\|bonus\\\\|showGameOver\\\\|wo_count\\\\|wo-w\\\\|wo-l\\\\|wo_against\\\\|WO-\\\\|W\\\\.O\\\\.\\\\|\\\\.woff\\\\|wo_white\\\\|wo_black\\\\|word\\\\|grow\\\\|widow\\\\|shadow\\\\|two\\\\|now\\\\|know\\\\|flow\\\\|below\\\\|show\\\\|window\\\\|follow\\\\|overflow\\\\|arrow\\\\|yellow\\\\|elbow\")",
+      "Bash(ls -la _arquivo/docs/)",
+      "Bash(ls -la _arquivo/docs/SESSAO_POR_SESSAO_PLANNING_concluido.md)",
+      "Bash(node --check html/version.js)"
     ]
   }
 }
