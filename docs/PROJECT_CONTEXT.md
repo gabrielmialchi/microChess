@@ -39,7 +39,7 @@ microChess/
     ├── PROJECT_CONTEXT.md  ← Este arquivo
     ├── SESSAO_POR_SESSAO_PLANNING.md
     ├── ACTIVITY_LOG.md
-    ├── POS_OPEN_TEST_1_DIRETRIZES.md
+    ├── BACKLOG_SUGESTOES.md  ← pendências não-operacionais (OT-06, OT-23)
     └── TESTES.md           ← roteiro único de QA (P0→P3, passos embutidos)
 ```
 
@@ -123,8 +123,10 @@ Ver `docs/SESSAO_POR_SESSAO_PLANNING.md` para detalhes por sessão. Resumo:
 ## Próximo — Backlog
 
 - **OP-1**: Limpar banco de usuários (one-shot, só na véspera do próximo teste)
-- **S34 (OT-24)**: Sistema de emojis in-game (ver SESSAO_POR_SESSAO_PLANNING.md)
-- **OT-23**: Boss a cada 10 níveis no solo (não comprometido)
+- **Sugestões não-operacionais** (OT-06 domínio do Peão, OT-23 boss no solo): ver `docs/BACKLOG_SUGESTOES.md`
+
+> Ciclo pós-1º Open Test concluído: 24 dos 26 itens (OT-01..OT-26) implementados.
+> Análise/alinhamento arquivado em `_arquivo/docs/POS_OPEN_TEST_1_DIRETRIZES.md`.
 
 ---
 
@@ -137,7 +139,7 @@ Evento registrado no banco como `result = 'wo'`. Ocorre quando:
 
 > ⚠️ **Revisado v1.2.x (15/06):** AFK em DRAFT/POSITION **não gera mais WO** — a partida é
 > **cancelada** (`result = 'cancelled'`), ambos voltam ao lobby, com penalidade leve
-> anti-abuso para quem ficou AFK. Spec em `POS_OPEN_TEST_1_DIRETRIZES.md` §7 / sessão S16.
+> anti-abuso para quem ficou AFK. Spec em `_arquivo/docs/POS_OPEN_TEST_1_DIRETRIZES.md` §7 / sessão S16.
 
 Consequências:
 - Oponente recebe vitória + MMR normal
@@ -160,7 +162,7 @@ O servidor já valida moves. Adicional:
 - Não desconectar automaticamente (pode ser bug de cliente), apenas logar
 - Validar que o `uid` no token JWT bate com o `uid` que está na sala
 
-### AFK Timeout (revisado v1.2.x — ver `POS_OPEN_TEST_1_DIRETRIZES.md` §7)
+### AFK Timeout (revisado v1.2.x — ver `_arquivo/docs/POS_OPEN_TEST_1_DIRETRIZES.md` §7)
 - ACTION phase: AFK + não retorna → WO para o ativo (após checagem silenciosa de reconexão)
 - DRAFT/POSITION: ~50s sem clique → banner + countdown; não retornou → **partida `cancelled`**
   (ambos ao lobby; penalidade leve anti-abuso para quem ficou AFK). **Não é WO.**

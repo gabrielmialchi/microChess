@@ -1,3 +1,7 @@
+> ⚠️ **ARQUIVADO.** Ciclo concluído: 24 dos 26 itens (OT-01..OT-26) implementados (ver
+> `docs/ACTIVITY_LOG.md`). As 2 pendências não-operacionais (OT-06, OT-23) seguem em
+> `docs/BACKLOG_SUGESTOES.md`. Mantido como registro histórico do alinhamento.
+
 # microChess — Diretrizes Pós 1º Open Test
 ## Análise cruzada (feedback + dados) → alinhamento de expectativas antes de implementar
 ### Criado em 2026-06-15

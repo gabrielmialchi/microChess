@@ -13,4 +13,5 @@ Nada aqui é usado pelo jogo em execução.
 - docs/CHECKLIST_v1.2.html — checklist interativo do ciclo v1.2.x (concluído)
 - docs/CHECKLIST_TESTE_OPERADOR.md + docs/GUIA_DE_TESTES.md — artefatos do 1º Open Test (template reutilizável)
 - docs/TUTORIAL_L10N_PLAN.md — plano de localização do tutorial; 100% executado (S45/S46/S47)
+- docs/POS_OPEN_TEST_1_DIRETRIZES.md — alinhamento do ciclo pós-1º Open Test; 24/26 itens feitos (pendências em docs/BACKLOG_SUGESTOES.md)
 
