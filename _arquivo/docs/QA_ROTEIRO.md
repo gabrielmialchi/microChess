@@ -1,3 +1,6 @@
+> ⚠️ **ARQUIVADO.** Consolidado em `docs/TESTES.md` (roteiro único P0→P3 com passos embutidos).
+> Mantido só como referência histórica.
+
 # microChess — Roteiro de QA priorizado
 
 > Execução do backlog de `docs/TESTES_PENDENTES.md` em ordem de risco. Cada item lista a

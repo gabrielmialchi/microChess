@@ -39,7 +39,8 @@ microChess/
     ├── PROJECT_CONTEXT.md  ← Este arquivo
     ├── SESSAO_POR_SESSAO_PLANNING.md
     ├── ACTIVITY_LOG.md
-    └── TESTES_PENDENTES.md
+    ├── POS_OPEN_TEST_1_DIRETRIZES.md
+    └── TESTES.md           ← roteiro único de QA (P0→P3, passos embutidos)
 ```
 
 ### Arquivos que NÃO devem ser reescritos

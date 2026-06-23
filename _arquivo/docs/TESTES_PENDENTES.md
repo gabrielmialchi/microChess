@@ -1,3 +1,6 @@
+> ⚠️ **ARQUIVADO.** Consolidado em `docs/TESTES.md` (roteiro único P0→P3 com passos embutidos).
+> Mantido só como referência histórica.
+
 # microChess — Testes Pendentes
 
 > **▶ Para executar:** use o roteiro priorizado em [`docs/QA_ROTEIRO.md`](QA_ROTEIRO.md) (P0→P3).

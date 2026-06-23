@@ -141,5 +141,5 @@ Detalhes por data em `docs/ACTIVITY_LOG.md`.
 ## Critério de conclusão por sessão
 - [ ] Itens commitados (commits pequenos).
 - [ ] `node --check server/server.js` passa; blocos `<script>` sem erro de sintaxe; sem regressão.
-- [ ] Registrar no `ACTIVITY_LOG.md` e em `TESTES_PENDENTES.md`.
+- [ ] Registrar no `ACTIVITY_LOG.md` e em `TESTES.md`.
 - [ ] Validação do Gabriel.
